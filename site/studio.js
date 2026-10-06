@@ -258,10 +258,11 @@ const previewFont = (v) => {
   return { family: [family], weight: v.weight ?? 400, src: faceUrl(family, v.weight ?? 400) };
 };
 const bytes = new Map(), loaded = new Map();
-/** A face's bytes, fetched once for every chart on the page (`loaded` once they're in). */
-function loadFace(url) {
+/** A face's bytes, fetched once for every chart on the page (`loaded` once they're in). One the
+ * reader is waiting for goes ahead of the charts' own downloads; one fetched ahead goes after. */
+function loadFace(url, priority = "high") {
   if (!bytes.has(url)) {
-    const p = fetch(url).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status}`)))).then((b) => new Uint8Array(b));
+    const p = fetch(url, { priority }).then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status}`)))).then((b) => new Uint8Array(b));
     p.then((b) => loaded.set(url, b), () => bytes.delete(url));
     bytes.set(url, p);
   }
@@ -365,7 +366,7 @@ const tiles = [];
 let current = (() => {
   const { viewMode, tokens } = layer(mode);
   const host = Object.fromEntries(Object.entries(tokens).map(([k, v]) => [k, isFont(v) ? previewFont(v) : v]));
-  facesOf(host).forEach(loadFace);
+  facesOf(host).forEach((u) => loadFace(u));
   return { m: mode, viewMode, host, resolved: null };
 })();
 
@@ -385,7 +386,9 @@ if (isHex(papers()[mode])) wall.style.setProperty("--tile-paper", papers()[mode]
 const seen = new IntersectionObserver((entries) => {
   for (const e of entries) {
     const t = tiles.find((x) => x.view === e.target);
-    if (t) t.seen = e.isIntersecting;
+    if (!t) continue;
+    t.seen = e.isIntersecting;
+    if (t.seen && t.stale) deliver(t, null, false);
   }
 });
 // Charts well off screen take a change when they come near (a slider dragged re-lays out only
@@ -423,6 +426,9 @@ studio.addEventListener("chartmount", (e) => {
   // for an element it started watching before that.
   queueMicrotask(() => { seen.observe(view); near.observe(view); });
 });
+// The charts may mount now (site.js held back any that came near before this script ran).
+studio.dataset.ownLook = "ready";
+document.dispatchEvent(new Event("ownlookready"));
 
 /** Hand a chart the current layer. */
 function deliver(tile, from, animate) {
@@ -484,7 +490,7 @@ function step(now) {
   else blendStart = 0;
 }
 
-let applying = 0;
+let applying = 0, staleTimer = 0;
 /** Resolve the theme for the mode on show and hand it to every chart (and the editor). */
 async function apply({ animate = false, touched = null } = {}) {
   const run = ++applying;
@@ -492,11 +498,14 @@ async function apply({ animate = false, touched = null } = {}) {
   if (run !== applying) return;
   const res = resolve(mode);
   const host = hostLayer(mode, res);
+  // The editor shows the change at once; the charts take it when its faces are in (a chart never
+  // draws a face it hasn't got, so they wait rather than show a fallback).
+  render(res, touched);
   const faces = facesOf(host);
-  const missing = faces.filter((u) => !bytes.has(u));
-  if (missing.length) status("Fetching the faces…");
+  const missing = Object.values(host).filter((v) => isFont(v) && !loaded.has(v.src));
+  if (missing.length) status(`Fetching ${[...new Set(missing.map((v) => v.family[0]))].join(" and ")}…`);
   try {
-    await Promise.all(faces.map(loadFace));
+    await Promise.all(faces.map((u) => loadFace(u)));
   } catch {
     if (run === applying) fontFailed(faces);
     return;
@@ -505,22 +514,41 @@ async function apply({ animate = false, touched = null } = {}) {
   const from = current;
   current = { m: mode, viewMode: res.viewMode, host, resolved: res.resolved };
   for (const slot of $$(".chart", wall)) slot.dataset.mode = res.viewMode;
+  paper(res.resolved.paper);
   const t0 = performance.now();
   let n = 0;
+  // The charts on screen take it now; the others when the reader stops (a slider being dragged
+  // re-lays out only what's seen) or when they come near.
   for (const tile of tiles) {
     if (!tile.view.isConnected) continue;
-    if (!tile.near && !animate) { tile.stale = true; continue; } // when it's near (`near`)
+    if (!tile.seen && !animate) { tile.stale = true; continue; }
     if (tile.seen) n++;
     deliver(tile, from, animate);
   }
+  clearTimeout(staleTimer);
+  staleTimer = setTimeout(() => { for (const t of tiles) if (t.stale && t.near && t.view.isConnected) deliver(t, null, false); }, 300);
   const ms = performance.now() - t0;
   const charts = `<b>${n} chart${n === 1 ? "" : "s"}</b> on screen`;
   if (!n || !from.resolved) status(null); // nothing seen changing (or the page opening)
   else if (animate && !reduced && from?.resolved) status(`${charts} easing to the new look: every frame's inks handed over by <code>setTokens()</code>, nothing else re-rendered.`);
   else status(`${charts} took the change in ${ms < 10 ? ms.toFixed(1) : Math.round(ms)} ms — <code>setTokens()</code> on each, nothing else re-rendered.`);
-  render(res, touched);
   later();
 }
+/** The charts' frames take their paper, so a chart reads as one surface to its edge (and it's kept
+ * for the next visit: the frames open in it). */
+function paper(hex) {
+  if (!isHex(hex)) return;
+  wall.style.setProperty("--tile-paper", hex);
+  try { localStorage.setItem(`${STORE}-paper`, JSON.stringify({ sig: signature(), papers: { ...papers(), [mode]: hex } })); } catch { /* private mode */ }
+}
+/** The faces the presets use, fetched while the reader looks (or hovers there), so picking one
+ * rarely waits for its type. */
+function prefetchPresetFaces() {
+  for (const id of ["newsprint", "nordic", "neon", "sunset", "ledger"]) for (const v of Object.values(presetTheme(id).tokens)) if (isFont(v)) loadFace(previewFont(v).src, "low");
+}
+$(".studio-presets").addEventListener("pointerenter", prefetchPresetFaces, { once: true });
+$(".studio-presets").addEventListener("focusin", prefetchPresetFaces, { once: true });
+(window.requestIdleCallback ?? ((f) => setTimeout(f, 3000)))(prefetchPresetFaces, { timeout: 6000 });
 let rafApply = 0, pending = null;
 /** Apply at the next frame (a slider or a colour being dragged sends many inputs per frame). */
 function soon(touched) {
@@ -529,9 +557,13 @@ function soon(touched) {
   rafApply = requestAnimationFrame(() => { rafApply = 0; apply({ touched: pending }); });
 }
 
+const statusEl = $("#wall-status"), OPENING = statusEl.innerHTML;
+/** The line over the wall: what the last change cost, or what's being waited for. Nothing to say
+ * keeps the last line (or the opening one, after a wait). */
 function status(html) {
-  const el = $("#wall-status");
-  if (html) el.innerHTML = html;
+  if (html) statusEl.innerHTML = html;
+  else if (statusEl.dataset.waiting) statusEl.innerHTML = OPENING;
+  statusEl.dataset.waiting = html?.startsWith("Fetching") ? "1" : "";
 }
 
 // ---- editing ---------------------------------------------------------------------------------
@@ -852,16 +884,21 @@ function showScope() {
   scope.textContent = show ? note : "";
 }
 
+/** The choices that need no resolving — mode, preset, name, locks: shown as the page opens, so a
+ * returning reader's theme is what the editor says from the first paint. */
+function showChoices() {
+  for (const b of $$("[data-studio-mode]")) b.setAttribute("aria-pressed", String(b.dataset.studioMode === mode));
+  // The preset this theme started from (an edited one stays marked).
+  for (const b of $$("[data-studio-preset]")) b.setAttribute("aria-pressed", String(theme.from?.replace(/\*$/, "") === b.dataset.studioPreset));
+  const name = $("#theme-name");
+  if (document.activeElement !== name) name.value = theme.name;
+  for (const c of $$("[data-lock]")) c.checked = LOCKS[c.dataset.lock].every((t) => theme.locked.includes(t));
+}
+
 function render(res, touched) {
   const r = res.resolved;
-  for (const b of $$("[data-studio-mode]")) b.setAttribute("aria-pressed", String(b.dataset.studioMode === mode));
+  showChoices();
   showScope();
-  // The charts' frames take their paper: the chart reads as one surface to its edge. Kept for the
-  // next visit, so the frames open in it.
-  if (isHex(r.paper)) {
-    wall.style.setProperty("--tile-paper", r.paper);
-    try { localStorage.setItem(`${STORE}-paper`, JSON.stringify({ sig: signature(), papers: { ...papers(), [mode]: r.paper } })); } catch { /* private mode */ }
-  }
   const bad = res.errors;
   for (const row of $$(".tok[data-token]")) {
     const token = row.dataset.token, kind = row.dataset.kind;
@@ -910,11 +947,6 @@ function render(res, touched) {
     }
   }
   renderPalettes(r);
-  // The presets: the one this theme started from (an edited one stays marked).
-  for (const b of $$("[data-studio-preset]")) b.setAttribute("aria-pressed", String(theme.from?.replace(/\*$/, "") === b.dataset.studioPreset));
-  const name = $("#theme-name");
-  if (document.activeElement !== name) name.value = theme.name;
-  for (const c of $$("[data-lock]")) c.checked = LOCKS[c.dataset.lock].every((t) => theme.locked.includes(t));
   if (!$("#sp-export").hidden) renderExport();
   if (touched) hit(touched);
 }
@@ -1087,23 +1119,26 @@ function themeJson() {
   if (theme.locked.length) out.locked = theme.locked;
   return out;
 }
-/** A value laid out as code: short lists and small objects on one line, long ones wrapped. */
-function code(v, indent, ts) {
+/** A value laid out as code: short lists and small objects on one line, long ones wrapped. `ts`:
+ * JavaScript (bare keys, trailing commas) rather than JSON; `google`: font tokens as the SDK's
+ * `font.google(…)`. */
+function code(v, indent, { ts = false, google = false } = {}) {
   const pad = "  ".repeat(indent);
-  if (ts && isFont(v)) return `font.google(${JSON.stringify(v.google ?? v.family?.[0])}${v.weight && v.weight !== 400 ? `, { weight: ${v.weight} }` : ""})`;
+  const inner = (x) => code(x, indent + 1, { ts, google });
+  if (google && isFont(v)) return `font.google(${JSON.stringify(v.google ?? v.family?.[0])}${v.weight && v.weight !== 400 ? `, { weight: ${v.weight} }` : ""})`;
   if (Array.isArray(v)) {
-    const items = v.map((x) => code(x, indent + 1, ts));
+    const items = v.map(inner);
     if (items.join(", ").length < 70) return `[${items.join(", ")}]`;
     const rows = [];
     for (let i = 0; i < items.length; i += 4) rows.push(items.slice(i, i + 4).join(", "));
-    return `[\n${rows.map((r) => `${pad}  ${r}`).join(",\n")},\n${pad}]`.replace(/,\n(\s*)\]$/, ts ? ",\n$1]" : "\n$1]");
+    return `[\n${rows.map((r) => `${pad}  ${r}`).join(",\n")}${ts ? "," : ""}\n${pad}]`;
   }
   if (v && typeof v === "object") {
     const key = (k) => (ts && /^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k));
-    const entries = Object.entries(v).map(([k, x]) => `${key(k)}: ${code(x, indent + 1, ts)}`);
-    const flat = `{ ${entries.join(", ")} }`;
+    const entries = Object.entries(v).map(([k, x]) => `${key(k)}: ${inner(x)}`);
     if (!entries.length) return "{}";
-    if (flat.length < 72 && !flat.includes("\n")) return ts ? flat : `{ ${Object.entries(v).map(([k, x]) => `${JSON.stringify(k)}: ${code(x, indent + 1, ts)}`).join(", ")} }`;
+    const flat = `{ ${entries.join(", ")} }`;
+    if (flat.length < 72 && !flat.includes("\n")) return flat;
     return `{\n${entries.map((e) => `${pad}  ${e}`).join(",\n")}${ts ? "," : ""}\n${pad}}`;
   }
   return JSON.stringify(v);
@@ -1111,13 +1146,13 @@ function code(v, indent, ts) {
 const camel = (s) => s.replace(/[^A-Za-z0-9]+(.)?/g, (_, c) => (c ? c.toUpperCase() : "")).replace(/^[^A-Za-z_$]/, "_$&") || "myTheme";
 function exportText() {
   const t = themeJson();
-  if (format === "json") return { lang: "js", text: code(t, 0, false) };
+  if (format === "json") return { lang: "js", text: code(t, 0) };
   if (format === "ts") {
     const fonts = JSON.stringify(t).includes('"google"');
-    return { lang: "ts", text: `import { ${fonts ? "font, " : ""}theme } from "@datars/sdk";\n\nexport const ${camel(theme.name)} = theme(${code(t, 0, true)});\n\n// export default doc({ theme: ${camel(theme.name)}, … }) — or publish it for your apps.` };
+    return { lang: "ts", text: `import { ${fonts ? "font, " : ""}theme } from "@datars/sdk";\n\nexport const ${camel(theme.name)} = theme(${code(t, 0, { ts: true, google: true })});\n\n// export default doc({ theme: ${camel(theme.name)}, … }) — or publish it for your apps.` };
   }
   const host = current?.host ?? {};
-  return { lang: "js", text: `// What this page runs on every chart, in ${mode === "high-contrast" ? "high contrast" : `${mode} mode`}: a host layer\n// over any published chart (an app passes one per mode). Faces with a file to fetch.\nconst view = document.querySelector("datars-view");\nview.setAttribute("mode", ${JSON.stringify(current?.viewMode ?? mode)});\nview.setTokens(${code(host, 0, true)});` };
+  return { lang: "js", text: `// What this page runs on every chart, in ${mode === "high-contrast" ? "high contrast" : `${mode} mode`}: a host layer\n// over any published chart (an app passes one per mode). Faces with a file to fetch.\nconst view = document.querySelector("datars-view");\nview.setAttribute("mode", ${JSON.stringify(current?.viewMode ?? mode)});\nview.setTokens(${code(host, 0, { ts: true })});` };
 }
 function renderExport() {
   const { lang, text } = exportText();
@@ -1143,7 +1178,7 @@ $('[data-copy="code"]').addEventListener("click", (e) => copy(exportText().text,
 $('[data-copy="link"]').addEventListener("click", (e) => copy(`${location.origin}${location.pathname}#theme=${shareCode()}`, e.currentTarget));
 $("[data-download]").addEventListener("click", () => {
   const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([`${code(themeJson(), 0, false)}\n`], { type: "application/json" }));
+  a.href = URL.createObjectURL(new Blob([`${code(themeJson(), 0)}\n`], { type: "application/json" }));
   a.download = `${theme.name}.json`;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
@@ -1170,4 +1205,5 @@ $("[data-wear]").addEventListener("click", () => {
 
 // ---- start -------------------------------------------------------------------------------------
 
+showChoices();
 apply();

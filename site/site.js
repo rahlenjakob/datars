@@ -51,7 +51,13 @@ function heightFor(slot, width) {
   return Math.max(min, Math.round(width * aspect));
 }
 
+/** Slots a page styles itself, near before its script is there to style them: they wait for it
+ * (`data-own-look="ready"` and an `ownlookready` event), so they never open in the wrong look. */
+const unstyled = [];
+document.addEventListener("ownlookready", () => unstyled.splice(0).forEach(mount));
 function mount(slot) {
+  const own = slot.closest("[data-own-look]");
+  if (own && own.dataset.ownLook !== "ready") return void unstyled.push(slot);
   const view = document.createElement("datars-view");
   view.setAttribute("src", slot.dataset.src);
   if (slot.dataset.steps) view.setAttribute("steps", slot.dataset.steps);

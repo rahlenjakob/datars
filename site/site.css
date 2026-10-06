@@ -1050,6 +1050,9 @@ table.hd-picks td.no { color: var(--muted); font-size: 12.5px; }
 /* The frame is the chart's paper (studio.js sets it), so a dark theme has no light rim. */
 .tile .frame { padding: 8px; background: var(--tile-paper, var(--surface)); transition: background-color .45s; }
 .tile .caption { margin: 8px 6px 2px; }
+/* A bundle's poster is drawn in the built-in theme: here the frame's paper (and the shimmer) wait
+   for the chart instead, which opens in the reader's theme. */
+.tile datars-view::part(poster) { visibility: hidden; }
 .tile-tokens { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 2px 0; }
 .tile-tokens code { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--muted); }
 /* A chart's token lights up as it changes: these are the charts that read it. */
