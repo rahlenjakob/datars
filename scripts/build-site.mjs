@@ -18,6 +18,7 @@ import { highlight, highlightPage } from "./site/highlight.mjs";
 import { DOCS_NAV, FEATURES, docsPrevNext, docsSidebar, docsToc, featureIcon, lookAccents, lookPresets, page, urlOf } from "./site/layout.mjs";
 import { STD_GROUPS, figureAlias, firstSentence, stdPages } from "./site/std.mjs";
 import { sdkApi } from "./site/sdk.mjs";
+import { chartTokens, studioChecks, studioData, studioJson, studioTab } from "./site/studio.mjs";
 import { delivered, engineTable, missesTable, nativeSummary, nativeTable, scrollTable, transitionsSummary, transitionsTable, webCards } from "./site/perf.mjs";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
@@ -392,8 +393,9 @@ for (const f of ["Inter-Regular.ttf", "Inter-SemiBold.ttf", "Inter-Bold.ttf", "I
 // The type a reader can pick in "Make it yours" (site.js): whole faces, fetched only when chosen.
 for (const f of ["Newsreader-Regular.ttf", "Newsreader-SemiBold.ttf", "Newsreader-OFL.txt"]) copyFileSync(join(root, "assets/fonts", f), join(out, "fonts", f));
 for (const f of readdirSync(join(root, "site/fonts"))) copyFileSync(join(root, "site/fonts", f), join(out, "fonts", f));
-// motion.js: the animation page's playground and showcase controls (only that page loads it).
-for (const f of ["site.css", "site.js", "motion.js"]) copyFileSync(join(siteDir, f), join(out, f));
+// motion.js and studio.js: the animation page's playground and the theme studio (only their pages
+// load them).
+for (const f of ["site.css", "site.js", "motion.js", "studio.js"]) copyFileSync(join(siteDir, f), join(out, f));
 // Screenshots and other images the pages (and the README) show.
 if (existsSync(join(siteDir, "img"))) {
   mkdirSync(join(out, "img"), { recursive: true });
@@ -534,6 +536,18 @@ function variantBars(alias) {
 
 // ---- pages -------------------------------------------------------------------------------------
 
+/** The theme studio's starting data (the built-in theme, resolved by the CLI per mode), once. */
+let studioCache = null;
+const studio = () => (studioCache ??= studioData(root, cli));
+/** A chart's first state as the engine resolves it (`datars inspect`): the inks it draws with. */
+function drawnInks(alias) {
+  try {
+    return execFileSync(cli, ["inspect", staged[alias]], { cwd: dirname(staged[alias]), maxBuffer: 1 << 28, stdio: ["ignore", "pipe", "ignore"] }).toString();
+  } catch {
+    return "";
+  }
+}
+
 /** Fill a page body's placeholders and chart slots (see site/README.md). */
 function fill(html, where) {
   const known = (a) => {
@@ -568,6 +582,10 @@ function fill(html, where) {
     .replace(/\{\{run:([^}]+)\}\}/g, (_, p) => run(p))
     .replace(/\{\{strip:([^}]+)\}\}/g, (_, p) => strip(p))
     .replace(/\{\{perf:([^}]+)\}\}/g, (_, p) => perf(p))
+    .replace(/\{\{studio:(colours|type|shape|maps)\}\}/g, (_, t) => studioTab(t, studio()))
+    .replace(/\{\{studio:checks\}\}/g, () => studioChecks(studio()))
+    .replace(/\{\{studio:data\}\}/g, () => studioJson(studio()))
+    .replace(/\{\{tokens:([a-z0-9_-]+)\}\}/g, (_, a) => `<p class="tile-tokens" aria-label="Theme tokens this chart reads">${chartTokens(docs[known(a)], std, drawnInks(a)).map((t) => `<code data-tok="${t}">${escapeHtml(t)}</code>`).join("")}</p>`)
     .replace(/\{\{sdk:([^}]+)\}\}/g, (_, n) => sdk.entry(n, where))
     .replace(/\{\{sig:([^}]+)\}\}/g, (_, n) => sdk.sig(n, where));
   // A chart slot names its alias; the page mounts <datars-view src="c/<alias>"> at the document's
