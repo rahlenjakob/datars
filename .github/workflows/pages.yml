@@ -1,6 +1,7 @@
 # The website (site/) on GitHub Pages: static pages, the web runtime and every chart published as a
 # bundle — no server. Built with scripts/build-site.mjs. Enable Pages with "Source: GitHub Actions"
-# in the repository settings.
+# in the repository settings. While the repository is private (Pages isn't enabled then) the jobs
+# are skipped rather than failing every push.
 name: pages
 on:
   push:
@@ -21,6 +22,7 @@ env:
 
 jobs:
   build:
+    if: ${{ !github.event.repository.private }}
     runs-on: ubuntu-latest
     env:
       WASI_SDK: /opt/wasi-sdk
