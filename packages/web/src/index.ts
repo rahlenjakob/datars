@@ -1353,16 +1353,19 @@ export class DatarsView extends ElementBase {
   private triggerSteps(selector: string): () => void {
     const steps = [...document.querySelectorAll<HTMLElement>(selector)];
     const io = new IntersectionObserver((entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        const el = e.target as HTMLElement;
-        const name = el.dataset.state;
-        if (name) this.send(`goto:${name}`);
-        else {
-          const i = steps.indexOf(el);
-          if (i >= 0 && this.view?.goto(i)) { this.kick(); this.syncChrome(); }
-        }
-      }
+      // The step at the middle now: steps a fast scroll crossed in the same frame would each plan
+      // a transition only for the next to replace it.
+      const hits = entries.filter((e) => e.isIntersecting);
+      const el = hits[hits.length - 1]?.target as HTMLElement | undefined;
+      if (!el) return;
+      const name = el.dataset.state;
+      if (name) return this.send(`goto:${name}`);
+      const i = steps.indexOf(el);
+      if (i < 0 || !this.view) return;
+      // The engine's clock is the last frame's: a chart that has been still while the reader read
+      // the step would start the transition seconds in the past, and it would jump to its end.
+      this.now();
+      if (this.timed(() => this.view.goto(i))) { this.kick(); this.syncChrome(); }
     }, { rootMargin: "-50% 0px -50% 0px" });
     steps.forEach((s) => io.observe(s));
     return () => io.disconnect();
