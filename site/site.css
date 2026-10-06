@@ -963,3 +963,67 @@ table.hd-picks td.no { color: var(--muted); font-size: 12.5px; }
 .more-row { display: flex; flex-wrap: wrap; gap: 4px 28px; }
 #account-pills { margin-bottom: 10px; }
 .phone-demo { max-width: 420px; width: 100%; margin: 0 auto; }
+/* The animation page (motion.js): the motion playground — the chart stays in view (sticky) while
+   the reader works down the rule's controls — the scroll-scrubbed story and the reduced-motion pair. */
+.mp-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+/* A chart's phone ratio (`data-phone-ratio`) is the page script's choice for a slot narrower than
+   600 px, whatever the window — a half-width card on a laptop is one. The reserved space follows the
+   slot's own width the same way, through its parent as a size container (a card's chart has 14 px
+   of padding a side; a frame's sits in its content box), so nothing moves when the chart mounts. */
+.mp-cq { container-type: inline-size; }
+@container (max-width: 627.98px) { .card.mp-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+@container (max-width: 599.98px) { .frame.mp-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.mp-stage { position: sticky; top: 76px; z-index: 2; }
+.mp-layouts { margin: 2px 2px 10px; }
+.mp-transport { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+.mp-replay { flex: none; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: var(--accent); color: var(--accent-ink); cursor: pointer; }
+.mp-replay svg { width: 16px; height: 16px; fill: currentColor; margin-left: 2px; }
+.mp-scrub { flex: 1; min-width: 0; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.mp-speed { flex: none; width: 92px; }
+.mp-speed button { padding: 6px 4px; }
+.mp-status { display: flex; justify-content: space-between; gap: 12px; margin: 8px 2px 0; min-height: 1.5em; font-size: 13px; line-height: 1.5; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mp-fps { flex: none; }
+.mp-panel .chips button { font-size: 12.5px; padding: 6px 10px; }
+.mp-panel .mp-sub { margin-top: 10px; }
+.mp-panel .mp-sub button { font-size: 12px; padding: 4px 9px; }
+.mp-ranges { display: grid; grid-template-columns: 1fr; gap: 2px 0; margin-top: 12px; }
+.mp-ranges[hidden], .mp-panel [hidden] { display: none; }
+.mp-ranges label { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-top: 4px; }
+.mp-ranges output { font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mp-ranges input { width: 100%; margin: 4px 0; accent-color: var(--accent); cursor: pointer; }
+.mp-bezier { grid-template-columns: 1fr 1fr; gap: 2px 16px; }
+.mp-bezier label { grid-row: auto; }
+.mp-hint { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.mp-switch { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; cursor: pointer; }
+.mp-switch input { margin: 2px 0 0; width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.mp-code { max-height: none; margin-top: 0; }
+.mp-panel .fine { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.mp-panel .fine a { color: var(--accent); }
+.mp-strip { margin-top: 28px; }
+.mp-strip > img.strip { display: block; width: 100%; height: auto; padding: 0; border: 1px solid var(--rule); border-radius: 12px; background: #fff; }
+.mp-custom { margin-bottom: 24px; }
+.mp-gap { margin-top: 24px; }
+.mp-flight { margin-top: 24px; }
+.card pre { margin: 4px 0 0; font-size: 11.5px; }
+.mp-scrub-track { position: relative; height: 330vh; }
+.mp-scrub-stage { position: sticky; top: 76px; }
+.mp-scrub-stage datars-view::part(card), .mp-scrub-stage datars-view::part(controls) { display: none; }
+.mp-scrolly pre { margin-top: 24px; }
+.mp-rm-pills { margin-bottom: 14px; }
+.mp-rm { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.mp-rm .frame { padding: 8px; }
+.mp-rm-note { margin: 16px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.mp-rm-note[hidden] { display: none; }
+@media (max-width: 1000px) {
+  .mp-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  /* On a phone the chart still stays in view while the controls scroll under it. */
+  .mp-stage { top: 60px; background: var(--bg); padding: 6px 0 8px; margin: -6px 0 0; }
+  .mp-stage .frame { padding: 10px; }
+  .mp-scrub-stage { top: 64px; }
+}
+@media (max-width: 720px) {
+  .mp-rm { grid-template-columns: minmax(0, 1fr); }
+  .mp-status { font-size: 12px; margin-top: 6px; }
+  .mp-layouts { margin-bottom: 8px; }
+  .mp-transport { margin-top: 8px; }
+}

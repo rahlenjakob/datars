@@ -1,81 +1,371 @@
 ---
-title: Animation included — every change morphs by key · datars
-description: In datars every change animates — story steps, filters, live data, edits. Marks keep their identity, so bars become slices, units split out of bars and countries fly into rankings, with motion rules instead of animation code.
-og: shapes
+title: Animation included — play with the motion engine · datars
+description: Every change in datars animates by key — morphs across chart types, bars splitting into units, rescaling axes, numbers counting, camera flights. Play with the motion rule live (easing, springs, choreography, routes, ghosts), scrub any transition, and see the TypeScript that makes it.
+og: motion-scroll
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Animation included</p>
-    <h1>Every change animates — by key, with no animation code</h1>
-    <p class="lede-2">Marks in datars carry the key of their data row. When anything changes — a story step, a filter, new data, an edit to the document — the engine matches old marks to new ones by key and plans the motion: shapes morph, a bar splits into its units, a country lifts off the map into its bar, text counts up. You describe states; the motion comes with them, for built-in charts and your own scenes alike.</p>
+    <h1>Every change animates — by key, and the way you direct it</h1>
+    <p class="lede-2">Marks in datars carry the key of their data row. When anything changes — a story step, a filter, new data, an edit — the engine pairs old marks with new ones by key and plans the move: shapes morph across chart types, a bar shatters into its units, a country flies off the map into its bar, numbers count, the camera flies. You describe states; motion rules say how they move. The playground below runs the real engine: change the rule, replay, scrub, slow it down.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
+<section class="section mp" id="playground" style="padding-top:8px">
   <div class="wrap">
-    <article class="card wide">
-      <div class="card-text">
-        <span class="tag">Live · one motion rule</span>
-        <h3>One dataset, many shapes</h3>
-        <p>Bars → treemap → waffle → dots. Every party keeps its key, so each change of chart type is one keyed transition: rectangles become tiles, tiles split into a hundred squares, squares become dots, and back. The whole motion spec is one line.</p>
-<pre><code data-lang="ts">motion: motion({ select: { role: "datum" }, matcher: "by-key", duration: 1.1 }),
-program: story({ steps: ["bars", "treemap", "waffle", "dots"]
-  .map((s) =&gt; step(s, { set: { shape: s } })) }),</code></pre>
-        {{alt:shapes}}
+    <div class="mp-grid">
+      <div class="mp-stage">
+        <div class="frame mp-cq">
+          <div class="pills small mp-layouts" id="motion-playground-pills" role="group" aria-label="Layout">
+            <button type="button" data-state="bars" aria-pressed="true">Bars</button>
+            <button type="button" data-state="map" aria-pressed="false">Map</button>
+            <button type="button" data-state="spiral" aria-pressed="false">Spiral</button>
+            <button type="button" data-state="grid" aria-pressed="false">Grid</button>
+            <button type="button" data-state="top" aria-pressed="false">Top 8</button>
+          </div>
+          <div class="chart" data-chart="motion-playground" data-min="230" data-phone-ratio="0.75"></div>
+          <div class="mp-transport">
+            <button type="button" class="mp-replay" aria-label="Replay the transition" title="Replay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5.5v13l11-6.5z"/></svg></button>
+            <input type="range" class="mp-scrub" min="0" max="1000" step="1" value="0" aria-label="Scrub through the transition">
+            <div class="seg mp-speed" role="group" aria-label="Speed">
+              <button type="button" data-speed="1" aria-pressed="true">1×</button>
+              <button type="button" data-speed="4" aria-pressed="false" title="Slow motion: four times longer">¼×</button>
+            </div>
+          </div>
+          <p class="mp-status"><span class="mp-what">Pick a layout to play its transition.</span><span class="mp-fps" aria-hidden="true"></span></p>
+        </div>
       </div>
-      <div class="chart" data-chart="shapes" data-caption></div>
-    </article>
+      <aside class="theme-panel mp-panel" aria-label="Motion rule">
+        <h3>Start from</h3>
+        <div class="chips" role="group" aria-label="Preset" data-mp="preset">
+          <button type="button" data-v="calm" aria-pressed="true">Calm</button>
+          <button type="button" data-v="springy" aria-pressed="false">Springy</button>
+          <button type="button" data-v="cinematic" aria-pressed="false">Cinematic</button>
+          <button type="button" data-v="playful" aria-pressed="false">Playful</button>
+          <button type="button" data-v="mechanical" aria-pressed="false">Mechanical</button>
+        </div>
+
+        <div class="mp-ranges">
+          <label for="mp-duration"><span>Duration</span><output for="mp-duration"></output></label>
+          <input type="range" id="mp-duration" data-mp="duration" min="0.2" max="3" step="0.1" value="1.2">
+        </div>
+
+        <h3>Easing</h3>
+        <div class="chips" role="group" aria-label="Easing" data-mp="easing">
+          <button type="button" data-v="cubic-in-out" aria-pressed="true">cubic-in-out</button>
+          <button type="button" data-v="linear" aria-pressed="false">linear</button>
+          <button type="button" data-v="expo-out" aria-pressed="false">expo-out</button>
+          <button type="button" data-v="back-out" aria-pressed="false">back-out</button>
+          <button type="button" data-v="elastic-out" aria-pressed="false">elastic-out</button>
+          <button type="button" data-v="bounce-out" aria-pressed="false">bounce-out</button>
+          <button type="button" data-v="spring" aria-pressed="false">spring</button>
+          <button type="button" data-v="bezier" aria-pressed="false">cubic-bezier</button>
+          <button type="button" data-v="steps" aria-pressed="false">steps</button>
+        </div>
+        <div class="mp-ranges" data-for-easing="spring" hidden>
+          <label for="mp-stiffness"><span>Stiffness</span><output for="mp-stiffness"></output></label>
+          <input type="range" id="mp-stiffness" data-mp="stiffness" min="20" max="400" step="5" value="170">
+          <label for="mp-damping"><span>Damping</span><output for="mp-damping"></output></label>
+          <input type="range" id="mp-damping" data-mp="damping" min="2" max="40" step="1" value="14">
+        </div>
+        <div class="mp-ranges mp-bezier" data-for-easing="bezier" hidden>
+          <label for="mp-x1"><span>x1</span><output for="mp-x1"></output></label>
+          <input type="range" id="mp-x1" data-mp="x1" min="0" max="1" step="0.05" value="0.2">
+          <label for="mp-y1"><span>y1</span><output for="mp-y1"></output></label>
+          <input type="range" id="mp-y1" data-mp="y1" min="-0.6" max="1.6" step="0.05" value="0.9">
+          <label for="mp-x2"><span>x2</span><output for="mp-x2"></output></label>
+          <input type="range" id="mp-x2" data-mp="x2" min="0" max="1" step="0.05" value="0.1">
+          <label for="mp-y2"><span>y2</span><output for="mp-y2"></output></label>
+          <input type="range" id="mp-y2" data-mp="y2" min="-0.6" max="1.6" step="0.05" value="1">
+        </div>
+        <div class="mp-ranges" data-for-easing="steps" hidden>
+          <label for="mp-steps"><span>Steps</span><output for="mp-steps"></output></label>
+          <input type="range" id="mp-steps" data-mp="steps" min="2" max="12" step="1" value="5">
+        </div>
+
+        <h3>Choreography</h3>
+        <div class="chips" role="group" aria-label="Choreography" data-mp="choreo">
+          <button type="button" data-v="together" aria-pressed="true">together</button>
+          <button type="button" data-v="stagger" aria-pressed="false">stagger</button>
+          <button type="button" data-v="wave" aria-pressed="false">wave</button>
+          <button type="button" data-v="ripple" aria-pressed="false">ripple</button>
+          <button type="button" data-v="phased" aria-pressed="false">phased</button>
+        </div>
+        <div data-for-choreo="stagger" hidden>
+          <div class="chips mp-sub" role="group" aria-label="Order" data-mp="order">
+            <button type="button" data-v="data" aria-pressed="false">data</button>
+            <button type="button" data-v="left" aria-pressed="false">left</button>
+            <button type="button" data-v="right" aria-pressed="false">right</button>
+            <button type="button" data-v="center-out" aria-pressed="false">center-out</button>
+            <button type="button" data-v="value" aria-pressed="true">value</button>
+            <button type="button" data-v="random" aria-pressed="false">random</button>
+          </div>
+        </div>
+        <div class="mp-ranges" data-for-choreo="stagger wave ripple" hidden>
+          <label for="mp-spread"><span>Spread</span><output for="mp-spread"></output></label>
+          <input type="range" id="mp-spread" data-mp="spread" min="0" max="0.95" step="0.05" value="0.5">
+        </div>
+        <div class="mp-ranges" data-for-choreo="wave" hidden>
+          <label for="mp-angle"><span>Angle</span><output for="mp-angle"></output></label>
+          <input type="range" id="mp-angle" data-mp="angle" min="0" max="345" step="15" value="0">
+        </div>
+        <div class="mp-ranges" data-for-choreo="phased" hidden>
+          <label for="mp-exit"><span>Exits</span><output for="mp-exit"></output></label>
+          <input type="range" id="mp-exit" data-mp="exit" min="0" max="1" step="0.05" value="0.3">
+          <label for="mp-update"><span>Moves</span><output for="mp-update"></output></label>
+          <input type="range" id="mp-update" data-mp="update" min="0" max="1" step="0.05" value="0.4">
+          <label for="mp-enter"><span>Entries</span><output for="mp-enter"></output></label>
+          <input type="range" id="mp-enter" data-mp="enter" min="0" max="1" step="0.05" value="0.3">
+        </div>
+
+        <h3>Route</h3>
+        <div class="chips" role="group" aria-label="Route" data-mp="route">
+          <button type="button" data-v="straight" aria-pressed="true">straight</button>
+          <button type="button" data-v="arc" aria-pressed="false">arc</button>
+          <button type="button" data-v="elbow" aria-pressed="false">elbow</button>
+          <button type="button" data-v="spiral" aria-pressed="false">spiral</button>
+          <button type="button" data-v="explode" aria-pressed="false">explode</button>
+          <button type="button" data-v="hop" aria-pressed="false">hop</button>
+          <button type="button" data-v="drift" aria-pressed="false">drift</button>
+          <button type="button" data-v="drop" aria-pressed="false">drop</button>
+        </div>
+        <div class="mp-ranges" data-for-route="arc" hidden>
+          <label for="mp-arc"><span>Height</span><output for="mp-arc"></output></label>
+          <input type="range" id="mp-arc" data-mp="arc" min="0.05" max="1" step="0.05" value="0.45">
+        </div>
+        <div class="mp-ranges" data-for-route="spiral" hidden>
+          <label for="mp-turns"><span>Turns</span><output for="mp-turns"></output></label>
+          <input type="range" id="mp-turns" data-mp="turns" min="0.25" max="3" step="0.25" value="1">
+        </div>
+        <div class="mp-ranges" data-for-route="hop" hidden>
+          <label for="mp-hop"><span>Height</span><output for="mp-hop"></output></label>
+          <input type="range" id="mp-hop" data-mp="hop" min="5" max="90" step="5" value="30">
+        </div>
+        <div class="mp-ranges" data-for-route="drift" hidden>
+          <label for="mp-drift"><span>Amount</span><output for="mp-drift"></output></label>
+          <input type="range" id="mp-drift" data-mp="drift" min="5" max="90" step="5" value="40">
+        </div>
+        <div class="mp-ranges" data-for-route="drop" hidden>
+          <label for="mp-bounce"><span>Bounce</span><output for="mp-bounce"></output></label>
+          <input type="range" id="mp-bounce" data-mp="bounce" min="0" max="1" step="0.05" value="0.35">
+        </div>
+
+        <h3>Shape morph</h3>
+        <div class="chips" role="group" aria-label="Shape morph" data-mp="morph">
+          <button type="button" data-v="disc" aria-pressed="true">disc</button>
+          <button type="button" data-v="resample" aria-pressed="false">resample</button>
+          <button type="button" data-v="crossfade" aria-pressed="false">crossfade</button>
+        </div>
+        <p class="mp-hint">For bars becoming circles and back.</p>
+
+        <h3>Enter and exit</h3>
+        <div class="chips" role="group" aria-label="Enter and exit" data-mp="ghost">
+          <button type="button" data-v="fade" aria-pressed="true">fade</button>
+          <button type="button" data-v="grow" aria-pressed="false">grow</button>
+          <button type="button" data-v="pop" aria-pressed="false">pop</button>
+          <button type="button" data-v="slide" aria-pressed="false">slide</button>
+        </div>
+        <p class="mp-hint">For the sixteen countries that leave the top eight, and come back.</p>
+
+        <h3>Reduced motion</h3>
+        <label class="mp-switch"><input type="checkbox" data-mp="reduced"><span>Play it as a reader who asked for less motion</span></label>
+        <p class="mp-hint mp-reduced-note" hidden>Your device asks for reduced motion, so the engine plays every change as a short crossfade. Untick to see the full motion.</p>
+
+        <h3>The motion rule</h3>
+<pre class="live-code mp-code"><code data-lang="ts" id="mp-code">motion({ duration: 1.2, easing: "cubic-in-out" })</code></pre>
+        <p class="fine">Applied with <code>view.setDocument(doc)</code>: the engine replans the transition from the new rule. Every frame is the engine's own — the same plan a phone, a video export or a test plays. <a href="/docs/motion/">Motion guide →</a></p>
+      </aside>
+    </div>
+    {{alt:motion-playground}}
   </div>
 </section>
 
 <section class="section">
   <div class="wrap">
     <header class="section-head">
-      <p class="eyebrow">Motion rules</p>
-      <h2>Defaults that look right, rules when you want more</h2>
-      <p>Recipes bring sensible motion: bars grow from their baseline, lines draw on, slices and tiles morph. Rules override any of it — for a role, a key path, or a pair of states — as data, not callbacks.</p>
+      <p class="eyebrow">Why it moves well</p>
+      <h2>Identity, plans and time, kept apart</h2>
+      <p>Most chart libraries tween whatever pixels changed. datars knows what each mark <em>is</em>, plans the whole move once, and evaluates it as a pure function of time — which is what makes every trick on this page possible.</p>
     </header>
-    <div class="cards2">
-      <article>
-<pre><code data-lang="ts">motion: motion(
-  // Everything: 2.2 s, eased.
-  { duration: 2.2, easing: "cubic-in-out", matcher: "by-path" },
-  // Globe → orbits: data marks spiral out, rippling from the centre.
-  { when: { from: "globe", to: "orbits" }, select: { role: "datum" },
-    route: route.spiral(0.35), choreo: choreo.ripple(0.55) },
-  // Orbits → spiral: arcs, the biggest last.
-  { when: { from: "orbits", to: "spiral" }, select: { role: "datum" },
-    route: route.arc(0.3), choreo: choreo.stagger("value", 0.5) },
-  // Entering lines draw on; exiting ones draw off.
-  { select: { kind: "polyline" }, enter: { trim: 0 }, exit: { trim: 0 } },
-),</code></pre>
-      </article>
-      <article>
-        <h3>Matchers — who becomes whom</h3>
-        <p><code>by-key</code> pairs marks by their data key across different charts; <code>by-path</code> by their place in the scene; <code>nearest</code> by position; a hierarchy matcher splits one mark into its children — a bar into its seats — and merges them back.</p>
-        <h3 style="margin-top:16px">Choreography — when each moves</h3>
-        <p><code>together</code>, <code>stagger</code> by data order, position, value or a seeded shuffle, <code>phased</code> exits–updates–enters, a <code>wave</code> across the screen, a <code>ripple</code> from a point.</p>
-        <h3 style="margin-top:16px">Routes — the path they take</h3>
-        <p><code>straight</code>, <code>arc</code>, <code>elbow</code>, <code>spiral</code>, <code>explode</code>, <code>hop</code>, <code>drift</code>, <code>drop</code> with a bounce. Easings from <code>cubic-in-out</code> to <code>cubic-bezier(…)</code>, <code>spring(170, 26)</code> and <code>steps(4)</code>.</p>
-        <h3 style="margin-top:16px">Enter and exit</h3>
-        <p>Fade, grow from an origin, come from the parent, slide in, or draw on along the shape's length.</p>
-      </article>
+    <div class="cards3">
+      <article><h3>Keys carry identity</h3><p>A mark is keyed by its data row, so a bar, a slice, a map region and a dot of the same row are the same element in different shapes. Pairing by key, a parent splitting into its units by key path — no transition code, ever.</p></article>
+      <article><h3>Plans are functions of <i>t</i></h3><p>A change builds a plan — who becomes whom, each element's window, easing, route and morph — once. A frame is <code>plan.at(t)</code>: the scrub above seeks it, scroll can drive it, a second change retargets from the current frame with its velocity.</p></article>
+      <article><h3>Deterministic everywhere</h3><p>The same plan gives the same frames on the web, iOS, Android and desktop, in an MP4 from <code>datars video</code>, a filmstrip from <code>datars film</code>, and the 64-frame goldens <code>datars test</code> checks for flashes, pops and NaN.</p></article>
     </div>
+    <figure class="fig mp-strip">
+      {{strip:site/figures/motion/scroll.ts|map|spiral|6}}
+      <figcaption>The map-to-spiral move from the scroll story below, as <code>datars film</code> draws it at build time: six frames of the same plan the page plays. <a href="/docs/motion/#checking-motion">Checking motion</a></figcaption>
+    </figure>
   </div>
 </section>
 
 <section class="section">
   <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The vocabulary</p>
+      <h2>What a change can look like</h2>
+      <p>Each of these is a small document with one or two motion rules — step through them, or let them play while they're on screen.</p>
+    </header>
+
+    <article class="card wide mp-custom mp-cq">
+      <div class="card-text">
+        <span class="tag">Your scene → the standard library</span>
+        <h3>A rose you drew becomes std's bars and pie</h3>
+        <p>The petals are plain <code>geom.arc</code> shapes in a scene of your own — no recipe, no chart type. The bars and the pie come from <code>@datars/std</code>. Because each petal, bar and slice is keyed by its party, one rule pairs them across all three.</p>
+<pre><code data-lang="ts">repeat("votes", shape(geom.arc({ cx, cy, r0, r1: e(petal), a0, a1 }),
+  { key: e("d.party"), fill: e("key.color(d.party)"), semantics: { role: "datum" } })),
+// … then plot({ children: [bar()] }) and pie(), keyed by the same rows
+motion: motion({ select: { role: "datum" }, matcher: "by-key", duration: 1.3,
+  choreo: choreo.stagger("value", 0.35) }),</code></pre>
+        <p class="hint"><a href="{{src}}/site/figures/motion/custom.ts">Figure source</a> · <a href="/docs/custom-recipes/">Custom scenes</a></p>
+        {{alt:motion-custom}}
+      </div>
+      <div class="chart" data-chart="motion-custom" data-caption data-autoplay="4200" data-phone-ratio="0.95"></div>
+    </article>
+
     <div class="grid">
-      <article class="card">
-        <div class="chart" data-chart="riksdag" data-caption></div>
-        <div class="card-text"><span class="tag">Units → bars</span><h3>349 seats regroup into parties</h3><p>Each seat is a keyed dot; step to bars and they fly into place.</p>{{alt:riksdag}}</div>
+      <article class="card mp-cq">
+        <div class="chart" data-chart="motion-regions" data-caption data-autoplay="4600" data-phone-ratio="0.9"></div>
+        <div class="card-text">
+          <span class="tag">Keyed morphs across chart types</span>
+          <h3>A country becomes its bar</h3>
+          <p>Regions from the built-in atlas and bars from a plot, both keyed by ISO code: each outline travels through an area-matched disc into its rectangle, so nothing folds on the way.</p>
+<pre><code data-lang="ts">{ select: { role: "region" }, matcher: "by-key" },
+{ select: { role: "datum" }, matcher: "by-key" },</code></pre>
+          {{alt:motion-regions}}
+        </div>
       </article>
-      <article class="card">
-        <div class="chart" data-chart="warming" data-caption></div>
-        <div class="card-text"><span class="tag">Line → stripes</span><h3>Every point becomes its stripe</h3><p>Two shapes of one series, joined by year.</p>{{alt:warming}}</div>
+      <article class="card mp-cq">
+        <div class="chart" data-chart="motion-units" data-caption data-autoplay="4800" data-phone-ratio="0.9"></div>
+        <div class="card-text">
+          <span class="tag">Units split and merge</span>
+          <h3>Seats into bars into squares</h3>
+          <p>Seats are keyed <code>(party, seat i)</code>, so the engine knows a bar is their parent: they gather into it, and it breaks into squares — its rectangle partitioned into cells that fly to their places. No rule asks for it.</p>
+<pre><code data-lang="ts">motion({ select: { role: "datum" }, duration: 1.6,
+  choreo: choreo.stagger("left", 0.45) })</code></pre>
+          {{alt:motion-units}}
+        </div>
       </article>
     </div>
+    <article class="card wide mp-cq mp-gap">
+      <div class="card-text">
+        <span class="tag">Choreography</span>
+        <h3>Together, staggered, in a wave, rippling</h3>
+        <p>One duration, spread over the elements: by data order, position, value or a seeded shuffle; a wave across the scene at any angle; a ripple from a point; or exits, moves and entries in phases.</p>
+        {{alt:sdk-motion-choreos}}
+      </div>
+      <div class="chart" data-chart="sdk-motion-choreos" data-caption data-autoplay="3600" data-phone-ratio="0.83"></div>
+    </article>
+    <div class="grid">
+      <article class="card mp-cq">
+        <div class="chart" data-chart="motion-rescale" data-caption data-autoplay="4400" data-phone-ratio="0.8"></div>
+        <div class="card-text">
+          <span class="tag">Axes rescale</span>
+          <h3>Gridlines travel with their values</h3>
+          <p>Ticks and gridlines are keyed by the value they mark, so a rescale moves them with the data; the line keeps its points as vertices, and points cut off by a zoom slide out through the edge.</p>
+          {{alt:motion-rescale}}
+        </div>
+      </article>
+      <article class="card mp-cq">
+        <div class="chart" data-chart="motion-counting" data-caption data-autoplay="4000" data-phone-ratio="0.95"></div>
+        <div class="card-text">
+          <span class="tag">Numbers count</span>
+          <h3>Text that is a number ticks</h3>
+          <p>A text with <code>number: { value, format }</code> counts through the values in between, formatted every frame in the document's locale, while the bars grow.</p>
+<pre><code data-lang="ts">text("", [0, y], { number: { value: e("people"), format: ".1f" } })</code></pre>
+          {{alt:motion-counting}}
+        </div>
+      </article>
+    </div>
+    <article class="card wide mp-cq mp-gap">
+      <div class="card-text">
+        <span class="tag">Routes</span>
+        <h3>Eight paths from here to there</h3>
+        <p>Straight, arc, elbow, spiral, explode, hop, drift and drop — detours that are exactly zero at both ends, so every settled state is exact.</p>
+        {{alt:sdk-motion-routes}}
+      </div>
+      <div class="chart" data-chart="sdk-motion-routes" data-caption data-autoplay="3800" data-phone-ratio="1.56"></div>
+    </article>
+    <div class="grid">
+      <article class="card mp-cq">
+        <div class="chart" data-chart="motion-morphs" data-caption data-autoplay="3600" data-min="190"></div>
+        <div class="card-text">
+          <span class="tag">Path morphs</span>
+          <h3>A star into a bar, three ways</h3>
+          <p>When a mark changes kind its outline must become another. <code>morph: "disc"</code> travels through an area-matched disc that never folds (the default), <code>"resample"</code> goes point by point along equal-length outlines, <code>"crossfade"</code> swaps them.</p>
+          {{alt:motion-morphs}}
+        </div>
+      </article>
+      <article class="card mp-cq">
+        <div class="chart" data-chart="motion-clock" data-caption data-phone-ratio="0.85"></div>
+        <div class="card-text">
+          <span class="tag">Clocks · ambient motion</span>
+          <h3>Planets that go round by themselves</h3>
+          <p>A signal with a rate — <code>signal.clock(1)</code> — counts up while the settled chart reads it. It pauses for transitions (a morph never jumps), off screen and for reduced motion; renders see its default.</p>
+          {{alt:motion-clock}}
+        </div>
+      </article>
+    </div>
+
+    <article class="card wide mp-flight mp-cq">
+      <div class="card-text">
+        <span class="tag">Camera flights</span>
+        <h3>The camera flies, the reader keeps their place</h3>
+        <p>A view's camera is interpolated too — along the van Wijk path, which zooms out to travel and back in to land. A step only says which keys to fit:</p>
+<pre><code data-lang="ts">map({ …, camera: { fit: { keys: "=focus" }, padding: 16 } }),
+step("asia", { set: { focus: ["IND", "CHN", "PAK", "BGD", "IDN"] } }),</code></pre>
+        <p class="hint">The same flight goes from the world to a street corner over streamed vector tiles: <a href="/features/maps/">maps without a tile server →</a></p>
+        {{alt:motion-camera}}
+      </div>
+      <div class="chart" data-chart="motion-camera" data-caption data-autoplay="5200" data-phone-ratio="0.8"></div>
+    </article>
+  </div>
+</section>
+
+<section class="section mp-scrolly" id="scrub">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Scroll scrubs the plan</p>
+      <h2>Your scroll is the clock</h2>
+      <p>With <code>&lt;datars-view scrub&gt;</code> the page's scroll position <em>is</em> the position in the story: every frame of every transition, forwards and backwards, exactly — because a frame is a function of <i>t</i>, not of how long ago something started.</p>
+    </header>
+  </div>
+  <div class="mp-scrub-track" data-scrub>
+    <div class="mp-scrub-stage">
+      <div class="wrap">
+        <div class="frame mp-cq"><div class="chart" data-chart="motion-scroll" data-scrubbed data-min="250" data-phone-ratio="0.82"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+<pre><code data-lang="ts">motion(
+  { duration: 1.6, easing: "cubic-in-out" },
+  { when: { from: "bars", to: "map" }, select: { role: "datum" }, route: route.arc(0.35), choreo: choreo.stagger("value", 0.5) },
+  { when: { from: "map", to: "spiral" }, select: { role: "datum" }, route: route.spiral(0.5), choreo: choreo.ripple(0.55) },
+  { when: { from: "spiral", to: "grid" }, select: { role: "datum" }, choreo: choreo.wave(0.6, 0) },
+)</code></pre>
+<pre><code data-lang="html">&lt;datars-view src="c/motion-scroll" scrub&gt;&lt;/datars-view&gt;  &lt;!-- inside a tall [data-scrub] box --&gt;</code></pre>
+  </div>
+</section>
+
+<section class="section" id="reduced-motion">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Reduced motion</p>
+      <h2>Polite by default</h2>
+      <p>A reader who asks their system for less motion gets every transition as a short crossfade — on the web, iOS and Android — with autoplay and clocks paused. Nothing to author: it's the engine's, for every document. The same chart, the same steps, side by side:</p>
+    </header>
+    <div class="pills small mp-rm-pills" id="motion-scroll-pills" role="group" aria-label="Layout for both charts">
+      <button type="button" data-state="bars" aria-pressed="true">Bars</button>
+      <button type="button" data-state="map" aria-pressed="false">Map</button>
+      <button type="button" data-state="spiral" aria-pressed="false">Spiral</button>
+      <button type="button" data-state="grid" aria-pressed="false">Grid</button>
+    </div>
+    <div class="mp-rm">
+      <figure class="fig"><div class="frame mp-cq"><div class="chart" data-chart="motion-scroll" data-rm="full" data-min="200" data-phone-ratio="0.82"></div></div><figcaption><b>Full motion</b> — the document's rules: arcs, a spiral, a wave.</figcaption></figure>
+      <figure class="fig"><div class="frame mp-cq"><div class="chart" data-chart="motion-scroll" data-rm="reduced" data-min="200" data-phone-ratio="0.82"></div></div><figcaption><b>Reduced motion</b> — what the engine plays instead: a 0.25 s crossfade.</figcaption></figure>
+    </div>
+    <p class="fine mp-rm-note" hidden>Your device asks for reduced motion, so the left chart follows it too. <button type="button" class="btn btn-ghost small mp-rm-force">Show the full motion on the left</button></p>
   </div>
 </section>
 
@@ -84,26 +374,12 @@ program: story({ steps: ["bars", "treemap", "waffle", "dots"]
     <header class="section-head">
       <p class="eyebrow">Stories steer themselves</p>
       <h2>A story is a list of states</h2>
-      <p>A step sets signals; marks read them. The same program can be stepped with buttons and arrow keys, scrubbed by the page's scroll, triggered by scroll steps, or played on a timer — and the camera flies, the marks morph and the narration updates without a line of animation code.</p>
+      <p>A step sets signals; marks read them; the motion comes with it. The same program is stepped with buttons and arrow keys, scrubbed by scroll, triggered by scroll steps, or played on a timer.</p>
     </header>
     <div class="cards3">
-      <article><h3>Scroll stories</h3><p><code>&lt;datars-view steps=".step"&gt;</code> advances as your page's step elements scroll into view; <code>scrub</code> ties the position in the story to the scroll position, exactly — any frame of any transition.</p></article>
       <article><h3>Live data animates too</h3><p>A live source re-requests on schedule; each snapshot animates into place — keyed bars move to their new ranks on election night.</p></article>
       <article><h3>Edits animate</h3><p>In <code>datars dev</code>, saving the document morphs the chart from what's on screen to the new version, so you see what changed.</p></article>
-    </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Motion you can trust</p>
-      <h2>Seekable, testable, and polite</h2>
-    </header>
-    <div class="cards3">
-      <article><h3>Pure functions of time</h3><p>A frame is a function of the plan and the time, so a transition can be scrubbed, rendered frame-exactly to video, and drawn as a filmstrip with motion trails by <code>datars film</code>.</p></article>
-      <article><h3>Tested frame by frame</h3><p><code>datars test</code> samples 64 frames of every transition of every example against goldens, and checks invariants: no flash, no blink, no pop, no NaN, exact endpoints.</p></article>
-      <article><h3>Reduced motion</h3><p>When the reader asks for less motion — on the web, iOS or Android — transitions become short crossfades, and autoplay and ambient clocks pause.</p></article>
+      <article><h3>Interruptions retarget</h3><p>A click mid-flight plans onward from the frame on screen, carrying each element's velocity into springs — try it in the playground: pick a layout while one is still moving.</p></article>
     </div>
   </div>
 </section>
@@ -117,8 +393,10 @@ program: story({ steps: ["bars", "treemap", "waffle", "dots"]
       </div>
       <div class="cta">
         <a class="btn btn-primary" href="/docs/motion/">Motion guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/sdk/motion/">Motion API</a>
         <a class="btn btn-ghost" href="/docs/stories/">States and stories</a>
       </div>
     </div>
   </div>
 </section>
+<script type="module" src="/motion.js"></script>
