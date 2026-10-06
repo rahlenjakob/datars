@@ -2,7 +2,8 @@
 // document's aspect ratio, in the space the page reserved for it), and wires the page's controls to
 // the runtime's public API — `send("goto:<state>")`, the `state` event, `setAttribute("mode", …)`
 // and `setTokens(…)` (the reader's look: "Make it yours"). Also the menus (disclosures that close
-// on Escape and outside clicks).
+// on Escape and outside clicks). Charts inside `[data-own-look]` (the theme studio) are left to the
+// page's own script: each slot fires `chartmount` with its view before the view starts.
 
 const root = document.documentElement;
 const views = [];
@@ -17,9 +18,9 @@ function setPageTheme(mode) {
   root.dataset.theme = mode;
   try { localStorage.setItem("datars-theme", mode); } catch { /* private mode */ }
   for (const { slot, view } of views) {
-    if (slot.dataset.mode) continue; // the hero always plays dark
-    view.setAttribute("mode", mode);
-    if (!isPlain()) view.setTokens(lookTokens(mode)); // the look has a palette per mode
+    if (slot.dataset.mode) continue; // the hero always plays dark (the studio's charts: its mode)
+    view.setAttribute("mode", viewModeOf(slot));
+    if (!isPlain() && !ownLook(slot)) view.setTokens(lookTokens(mode)); // the look has a palette per mode
   }
   showLook();
 }
@@ -57,13 +58,16 @@ function mount(slot) {
   // `data-scrubbed`: the page's scroll scrubs the story — through the nearest `[data-scrub]` box's
   // passage through the viewport (the runtime's `scrub` attribute).
   if ("scrubbed" in slot.dataset) view.setAttribute("scrub", "");
-  view.setAttribute("mode", slot.dataset.mode ?? root.dataset.theme);
+  view.setAttribute("mode", viewModeOf(slot));
   lookAtMount(view, slot);
   const style = getComputedStyle(slot);
   const inner = slot.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
   view.setAttribute("height", String(heightFor(slot, inner)));
   view.setAttribute("aria-label", slot.dataset.label ?? slot.dataset.chart);
   slot.classList.add("pending");
+  // The page's own script may style it first (the theme studio): before it starts, so its first
+  // frame is already right.
+  slot.dispatchEvent(new CustomEvent("chartmount", { bubbles: true, detail: { view } }));
   slot.appendChild(view);
   views.push({ slot, view });
   // Keep the aspect ratio as the column resizes (the view re-lays itself out on resize).
@@ -265,7 +269,7 @@ const mono = (w) => face("Space Mono", w, w >= 600 ? "SpaceMono-Bold" : "SpaceMo
 const inter = (w, file) => ({ family: ["Inter"], weight: w, src: `datars:fonts/${file}.ttf` });
 const seq = (colors) => ({ kind: "sequential", colors });
 const typeSet = (f) => ({ "font.title": f(700), "font.strong": f(700), "font.body": f(400), "font.number": f(400) });
-const BRANDS = {
+export const BRANDS = {
   default: { name: "Default", shape: {}, light: {}, dark: {} },
   newsprint: {
     name: "Newsprint",
@@ -324,7 +328,10 @@ const TYPES = {
   manrope: { name: "Manrope", tokens: typeSet(manrope) },
   mono: { name: "Space Mono", tokens: typeSet(mono) },
 };
-const PLAIN = { preset: "default", accent: null, palette: "preset", type: null, corners: null, lines: null };
+// `custom`: a whole theme from the theme studio (/themes/) instead of a preset and choices —
+// `{ name, modes: { light|dark|high-contrast: { mode, tokens } }, swatch: { <mode>: [a, b, c] } }`,
+// a view mode and token layer per page mode (a dark-first theme plays dark in light mode).
+const PLAIN = { preset: "default", accent: null, palette: "preset", type: null, corners: null, lines: null, custom: null };
 const LOOK_KEY = "datars-look";
 
 function storedLook() {
@@ -353,6 +360,7 @@ const alike = (a, b) => rgb(a).reduce((d, v, i) => d + Math.abs(v - rgb(b)[i]), 
 
 /** The tokens the reader's look sets for a chart in `mode`. */
 function lookTokens(mode) {
+  if (look.custom) return { ...(look.custom.modes?.[mode]?.tokens ?? {}) };
   const b = BRANDS[look.preset] ?? BRANDS.default;
   const colours = mode === "high-contrast" ? null : (mode === "dark" ? b.dark : b.light ?? b.dark);
   const t = { ...b.shape, ...(colours ?? {}) };
@@ -397,10 +405,14 @@ function answerFaces(view) {
 }
 
 const modeOf = (slot) => slot.dataset.mode ?? root.dataset.theme;
+/** Charts the page styles itself (the theme studio's): the reader's look leaves them alone. */
+const ownLook = (slot) => !!slot.closest("[data-own-look]");
+/** The mode a chart plays in: its page's (or its own), unless the reader's theme is dark-first. */
+const viewModeOf = (slot) => (!ownLook(slot) && look.custom?.modes?.[modeOf(slot)]?.mode) || modeOf(slot);
 /** Style a chart about to mount: its tokens are there before its first frame. */
 function lookAtMount(view, slot) {
   answerFaces(view);
-  if (!isPlain()) view.setTokens(lookTokens(modeOf(slot)));
+  if (!isPlain() && !ownLook(slot)) view.setTokens(lookTokens(modeOf(slot)));
 }
 let applying = 0;
 /** Apply the look to every chart on the page (after the faces it names are in). */
@@ -409,7 +421,11 @@ async function applyLook() {
   const modes = new Set(views.map(({ slot }) => modeOf(slot)).concat(root.dataset.theme));
   await Promise.all([...modes].flatMap((m) => facesOf(lookTokens(m))).map((p) => loadFace(p).catch(() => {})));
   if (run !== applying) return; // a newer choice came meanwhile
-  for (const { slot, view } of views) view.setTokens(lookTokens(modeOf(slot)));
+  for (const { slot, view } of views) {
+    if (ownLook(slot)) continue;
+    view.setAttribute("mode", viewModeOf(slot));
+    view.setTokens(lookTokens(modeOf(slot)));
+  }
   showLook();
 }
 function setLook(change) {
@@ -422,14 +438,16 @@ function setLook(change) {
  * the header's swatch, and the code the page ran. */
 function showLook() {
   const t = lookTokens(root.dataset.theme);
-  const b = BRANDS[look.preset];
-  const pal = t.categorical ?? (root.dataset.theme === "dark" ? b.dark : b.light ?? b.dark)?.categorical ?? NEUTRAL.categorical;
-  const accent = t.accent ?? (root.dataset.theme === "dark" ? b.dark : b.light ?? b.dark)?.accent ?? NEUTRAL[root.dataset.theme === "dark" ? "dark" : "light"].accent;
+  const b = BRANDS[look.preset] ?? BRANDS.default;
+  // A studio theme's tokens may be expressions or generators: it brings its resolved colours.
+  const swatch = look.custom?.swatch?.[root.dataset.theme];
+  const pal = swatch ?? t.categorical ?? (root.dataset.theme === "dark" ? b.dark : b.light ?? b.dark)?.categorical ?? NEUTRAL.categorical;
+  const accent = swatch?.[0] ?? t.accent ?? (root.dataset.theme === "dark" ? b.dark : b.light ?? b.dark)?.accent ?? NEUTRAL[root.dataset.theme === "dark" ? "dark" : "light"].accent;
   root.style.setProperty("--look-a", accent);
   root.style.setProperty("--look-b", pal[1] ?? accent);
   root.style.setProperty("--look-c", pal[2] ?? accent);
   const pressed = (sel, on) => { for (const el of document.querySelectorAll(sel)) el.setAttribute("aria-pressed", String(on(el))); };
-  pressed("[data-look-preset]", (el) => el.dataset.lookPreset === look.preset);
+  pressed("[data-look-preset]", (el) => !look.custom && el.dataset.lookPreset === look.preset);
   pressed("[data-look-accent]", (el) => (el.dataset.lookAccent || null) === look.accent);
   pressed("[data-look-palette]", (el) => el.dataset.lookPalette === look.palette);
   pressed("[data-look-type]", (el) => (el.dataset.lookType || null) === look.type);
@@ -444,7 +462,11 @@ function showLook() {
     if (out) out.textContent = look[k] == null ? "preset" : `${v} px`;
   }
   for (const el of document.querySelectorAll("[data-look-reset]")) el.disabled = isPlain();
-  for (const el of document.querySelectorAll("[data-look-status]")) el.textContent = isPlain() ? "The site's own look." : `${b.name}${look.accent || look.type || look.palette !== "preset" || look.corners != null || look.lines != null ? ", your way" : ""} — saved in this browser.`;
+  for (const el of document.querySelectorAll("[data-look-status]")) {
+    el.textContent = isPlain() ? "The site's own look."
+      : look.custom ? `Your theme “${look.custom.name}” — saved in this browser.`
+      : `${b.name}${look.accent || look.type || look.palette !== "preset" || look.corners != null || look.lines != null ? ", your way" : ""} — saved in this browser.`;
+  }
   const code = document.getElementById("look-code");
   if (code) {
     // The code the showcase chart ran (in its own mode, where the page gives it one).
@@ -478,18 +500,27 @@ document.addEventListener("click", (e) => {
     view?.setTokens(lookTokens(el.dataset.slotMode));
     return showLook();
   }
-  if (el.dataset.lookPreset) setLook({ preset: el.dataset.lookPreset, accent: null, palette: "preset", type: null, corners: null, lines: null });
-  else if ("lookAccent" in el.dataset) setLook({ accent: el.dataset.lookAccent || null });
-  else if (el.dataset.lookPalette) setLook({ palette: el.dataset.lookPalette });
-  else if ("lookType" in el.dataset) setLook({ type: el.dataset.lookType || null });
+  // A choice here replaces a theme from the studio (the choices build on a preset, not on it).
+  if (el.dataset.lookPreset) setLook({ ...PLAIN, preset: el.dataset.lookPreset });
+  else if ("lookAccent" in el.dataset) setLook({ accent: el.dataset.lookAccent || null, custom: null });
+  else if (el.dataset.lookPalette) setLook({ palette: el.dataset.lookPalette, custom: null });
+  else if ("lookType" in el.dataset) setLook({ type: el.dataset.lookType || null, custom: null });
   else if (el.dataset.lookMode) setPageTheme(el.dataset.lookMode);
   else if ("lookReset" in el.dataset) setLook({ ...PLAIN });
 });
 document.addEventListener("input", (e) => {
   const el = e.target;
-  if (el.matches?.("input[data-look-custom]")) setLook({ accent: el.value });
-  else if (el.matches?.("input[data-look-range]")) setLook({ [el.dataset.lookRange]: Number(el.value) });
+  if (el.matches?.("input[data-look-custom]")) setLook({ accent: el.value, custom: null });
+  else if (el.matches?.("input[data-look-range]")) setLook({ [el.dataset.lookRange]: Number(el.value), custom: null });
 });
+
+/** The theme studio's "Wear it on every page": its theme becomes the reader's look (`custom`
+ * above), or none. */
+export function wearTheme(custom) {
+  setLook({ ...PLAIN, custom });
+}
+/** The studio theme the reader wears now, if any. */
+export const wornTheme = () => look.custom;
 
 // ---- replayed feeds ----------------------------------------------------------------------------
 // A live chart on a static host: `data-feed-for="<alias>"` on an element with `data-src` (a folder of
@@ -535,7 +566,7 @@ const LANGS = {
 };
 LANGS.js = LANGS.ts;
 
-function highlight(el) {
+export function highlight(el) {
   const lang = LANGS[el.dataset.lang];
   if (!lang) return;
   const text = el.textContent;
