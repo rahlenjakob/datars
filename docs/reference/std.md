@@ -1603,7 +1603,7 @@ Theme tokens: `categorical`, `paper`, `ink`, `ink-2`, `size.label`, `size.title`
 | `label` | prop |  | Tile label (tooltip, accessible name): an expression over the tile row; default `name: value`. |
 | `layout` | string | `"us"` | `us` (50 states and DC), `europe` (40 countries), or the name of a table with columns `id`, `col`, `row` (and optional `abbr`, `name`). |
 | `legend` | bool | `true` | A colour ramp (or swatches) under the grid. |
-| `shape` | enum | `"square"` | Square tiles, or hexagons (odd rows shifted half a tile). |
+| `shape` | enum | `"square"` | Square tiles, or hexagons (odd rows half a tile right). The built-in layouts have a grid of their own for hexagons, so neighbours still touch; a layout table of yours is read as hexagon coordinates. |
 | `stops` | string |  | Piecewise colour stops: '#22c55e 2 · #f5a524 4 · #f97362 6.5'. |
 | `value` | field |  | The value to colour by. |
 | `values` | bool | `false` | The value under each abbreviation, where tiles are big enough. |
