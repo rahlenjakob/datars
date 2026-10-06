@@ -161,8 +161,8 @@ fn finish(mut t: Table, decl: &Source) -> Result<Table, String> {
     coerce(&mut t, decl)?;
     if !decl.key.is_empty() {
         let keys: Vec<&str> = decl.key.iter().map(|s| s.as_str()).collect();
+        // `with_key` checks the keys: unique, none missing.
         t = t.with_key(&keys).map_err(|e| e.to_string())?;
-        t.validate_keys().map_err(|e| e.to_string())?;
     }
     Ok(t)
 }

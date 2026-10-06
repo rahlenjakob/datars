@@ -285,10 +285,17 @@ pub struct AnyHit {
 
 /// Every element under `p`, topmost first (the last drawn wins, as on screen).
 pub fn pick_all(scene: &Scene, p: Vec2) -> Vec<AnyHit> {
+    pick_many(scene, &[p]).pop().unwrap_or_default()
+}
+
+/// [`pick_all`] for several points in one walk of the scene: each shape's box and outline are
+/// worked out once for all of them. (A card's placement samples sixty points; walked once per
+/// point, a contour chart's paths had their bounds taken sixty times — 25 ms of its first frame.)
+pub fn pick_many(scene: &Scene, pts: &[Vec2]) -> Vec<Vec<AnyHit>> {
     /// A floating node, its parent's path, transform, opacity and role: gone through last.
     type Later<'a> = (&'a Node, KeyPath, Affine, f64, Option<&'a str>);
     #[allow(clippy::too_many_arguments)]
-    fn go<'a>(n: &'a Node, path: &KeyPath, parent: Affine, acc: f64, p: Vec2, role: Option<&'a str>, out: &mut Vec<AnyHit>, later: &mut Vec<Later<'a>>) {
+    fn go<'a>(n: &'a Node, path: &KeyPath, parent: Affine, acc: f64, pts: &[Vec2], role: Option<&'a str>, out: &mut [Vec<AnyHit>], later: &mut Vec<Later<'a>>) {
         let acc = seen(n, acc);
         if acc <= INVISIBLE {
             return;
@@ -312,7 +319,7 @@ pub fn pick_all(scene: &Scene, p: Vec2) -> Vec<AnyHit> {
                     if c.common.floats() {
                         later.push((c, here.clone(), xf, acc, role));
                     } else {
-                        go(c, &here, xf, acc, p, role, out, later);
+                        go(c, &here, xf, acc, pts, role, out, later);
                     }
                 }
             }
@@ -324,55 +331,65 @@ pub fn pick_all(scene: &Scene, p: Vec2) -> Vec<AnyHit> {
                     if c.common.floats() {
                         later.push((c, here.clone(), xf.mul(cam), acc, role));
                     } else {
-                        go(c, &here, xf.mul(cam), acc, p, role, out, later);
+                        go(c, &here, xf.mul(cam), acc, pts, role, out, later);
                     }
                 }
             }
             NodeKind::Text(t) if !t.text.trim().is_empty() => {
                 let b = datars_math::Rect::new(t.origin.x + t.bounds.x, t.origin.y + t.bounds.y, t.bounds.w, t.bounds.h);
                 let r = crate::bounds::transform_rect(b, &xf);
-                if r.inset(-2.0).contains(p) {
-                    out.push(AnyHit { path: path.push(&n.key).to_string(), kind: "text".into(), role: role_of(own_role()), label: label(), text: Some(t.text.clone()), bounds: [r.x, r.y, r.w, r.h] });
+                for (k, p) in pts.iter().enumerate() {
+                    if r.inset(-2.0).contains(*p) {
+                        out[k].push(AnyHit { path: path.push(&n.key).to_string(), kind: "text".into(), role: role_of(own_role()), label: label(), text: Some(t.text.clone()), bounds: [r.x, r.y, r.w, r.h] });
+                    }
                 }
             }
             NodeKind::Shape { geom, fill, .. } => {
                 if let Some(inv) = xf.inverse() {
-                    let lp = inv.apply(p);
                     let closed = hit_inside(geom, fill.is_some());
                     // Outside the shape's box (with the reach of an open line), it can't be a hit.
                     let bounds = geom.bounds();
-                    if !bounds.inset(if closed { -0.5 } else { -4.0 }).contains(lp) {
-                        return;
-                    }
-                    let polys = geom.flatten(0.5);
-                    let inside = if closed { polys.iter().any(|(pts, _)| point_in_poly(lp, pts)) } else { polys.iter().any(|(pts, _)| pts.windows(2).any(|w| dist_seg(lp, w[0], w[1]) < 4.0)) };
-                    if inside {
-                        out.push(AnyHit { path: path.push(&n.key).to_string(), kind: geom.kind_name().into(), role: role_of(own_role()), label: label(), text: None, bounds: rect(bounds) });
+                    let reach = bounds.inset(if closed { -0.5 } else { -4.0 });
+                    let mut polys = None;
+                    for (k, p) in pts.iter().enumerate() {
+                        let lp = inv.apply(*p);
+                        if !reach.contains(lp) {
+                            continue;
+                        }
+                        let polys = polys.get_or_insert_with(|| geom.flatten(0.5));
+                        let inside = if closed { polys.iter().any(|(pts, _)| point_in_poly(lp, pts)) } else { polys.iter().any(|(pts, _)| pts.windows(2).any(|w| dist_seg(lp, w[0], w[1]) < 4.0)) };
+                        if inside {
+                            out[k].push(AnyHit { path: path.push(&n.key).to_string(), kind: geom.kind_name().into(), role: role_of(own_role()), label: label(), text: None, bounds: rect(bounds) });
+                        }
                     }
                 }
             }
             NodeKind::Instances(inst) => {
-                if let Some((i, _)) = instance_at(inst, &xf, acc, p) {
-                    let l = inst.labels.as_ref().and_then(|ls| ls.get(i).cloned()).or_else(label);
-                    let r = instance_bounds(inst, &xf, i);
-                    let b = [r.x, r.y, r.w, r.h];
-                    out.push(AnyHit { path: path.push(&n.key).push(&inst.keys[i]).to_string(), kind: "instance".into(), role: role_of(own_role()), label: l, text: None, bounds: b });
+                for (k, p) in pts.iter().enumerate() {
+                    if let Some((i, _)) = instance_at(inst, &xf, acc, *p) {
+                        let l = inst.labels.as_ref().and_then(|ls| ls.get(i).cloned()).or_else(label);
+                        let r = instance_bounds(inst, &xf, i);
+                        let b = [r.x, r.y, r.w, r.h];
+                        out[k].push(AnyHit { path: path.push(&n.key).push(&inst.keys[i]).to_string(), kind: "instance".into(), role: role_of(own_role()), label: l, text: None, bounds: b });
+                    }
                 }
             }
             _ => {}
         }
     }
-    let mut out = Vec::new();
+    let mut out = vec![Vec::new(); pts.len()];
     let mut later = Vec::new();
-    go(&scene.root, &KeyPath::default(), Affine::IDENTITY, 1.0, p, None, &mut out, &mut later);
+    go(&scene.root, &KeyPath::default(), Affine::IDENTITY, 1.0, pts, None, &mut out, &mut later);
     while !later.is_empty() {
         let mut all = std::mem::take(&mut later);
         all.sort_by_key(|l| l.0.common.z);
         for (n, path, xf, acc, role) in all {
-            go(n, &path, xf, acc, p, role, &mut out, &mut later);
+            go(n, &path, xf, acc, pts, role, &mut out, &mut later);
         }
     }
-    out.reverse();
+    for hits in &mut out {
+        hits.reverse();
+    }
     out
 }
 

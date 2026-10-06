@@ -463,6 +463,21 @@ impl Table {
                 return Err(DataError::NullKey { column: k.clone(), row });
             }
         }
+        // Whether any key repeats: the rows sorted by key, then equal neighbours — no allocation per
+        // row. (The map below, built for every table, took 150 ms of a contour chart's opening on a
+        // phone-class CPU.) Only a table with a repeat goes on to it, for the error's details. The
+        // comparison is `Value`'s order, so the two agree on what counts as the same key.
+        let by: Vec<(&Column, bool)> = cols.iter().map(|c| (*c, false)).collect();
+        let same = |a: usize, b: usize| crate::transform::cmp_rows(&by, a, b) == std::cmp::Ordering::Equal;
+        // Keys already in order (generated ids, rows sorted upstream) need no sort: one pass.
+        if (1..self.len()).all(|i| crate::transform::cmp_rows(&by, i - 1, i) == std::cmp::Ordering::Less) {
+            return Ok(());
+        }
+        let mut idx: Vec<usize> = (0..self.len()).collect();
+        idx.sort_unstable_by(|&a, &b| crate::transform::cmp_rows(&by, a, b));
+        if !idx.windows(2).any(|w| same(w[0], w[1])) {
+            return Ok(());
+        }
         let mut seen: BTreeMap<Vec<Value>, Vec<usize>> = BTreeMap::new();
         let mut order: Vec<Vec<Value>> = Vec::new(); // duplicated keys, in order of first repeat
         let mut count = 0;

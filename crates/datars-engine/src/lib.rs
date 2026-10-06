@@ -581,7 +581,10 @@ impl Engine {
         let on_screen = self.current_scene();
         let state = self.program.state_name();
         let (w, h, dpr) = (self.viewport.width, self.viewport.height, self.viewport.dpr);
+        let clock = self.clock_last;
         let diags = self.load(doc);
+        // The same host clock goes on: what was drawn is on screen to morph from.
+        self.clock_last = clock;
         self.viewport.width = w;
         self.viewport.height = h;
         self.viewport.dpr = dpr;
@@ -1873,6 +1876,15 @@ impl Engine {
     /// Plan a transition from what's on screen to the current state's scene.
     fn transition_to_current(&mut self, from_state: Option<String>) {
         let target = self.resolve_now();
+        // Before the first frame nothing is on screen to move from: a chart opening at its box's
+        // size (a resize right after load), with the page's theme or signals, takes the new scene
+        // as is. Planning a transition from the unseen one cost a heavy chart 50–90 ms of its
+        // opening — a long task as the page scrolls.
+        if self.clock_last.is_none() {
+            self.shown = Some(target);
+            self.active = None;
+            return;
+        }
         let current = self.current_scene();
         match current {
             Some(cur) if cur != target.scene => {
@@ -1906,7 +1918,7 @@ impl Engine {
     /// point: a host placing a card samples dozens of points over a scene of thousands of marks).
     pub fn hit_test_many(&self, pts: &[Vec2]) -> Vec<Vec<pick::AnyHit>> {
         match self.current_scene() {
-            Some(s) => pts.iter().map(|p| pick::pick_all(&s, *p)).collect(),
+            Some(s) => pick::pick_many(&s, pts),
             None => vec![Vec::new(); pts.len()],
         }
     }
@@ -2013,8 +2025,9 @@ impl Engine {
     pub fn frame(&mut self, now: f64) -> FrameOutput {
         self.rec(session::Input::Frame { t: now });
         self.clock = now;
-        // Clocks run on frame time, a step at most 0.1 s: a host that slept doesn't make them jump.
-        let dt = self.clock_last.map(|l| (now - l).clamp(0.0, 0.1)).unwrap_or(0.0);
+        // Clocks run on frame time, a step at most 0.25 s: a host that slept doesn't make them jump,
+        // and one that draws a clock less often on a slow device (see the web host) keeps its pace.
+        let dt = self.clock_last.map(|l| (now - l).clamp(0.0, 0.25)).unwrap_or(0.0);
         self.clock_last = Some(now);
         if self.shown.is_none() && self.active.is_none() {
             self.transition_to_current(None);

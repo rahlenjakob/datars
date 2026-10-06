@@ -873,6 +873,8 @@ export class DatarsView extends ElementBase {
   private renderGen = -1;
   /** The last moving frame's rAF timestamp (0: the previous frame didn't move). */
   private lastTick = 0;
+  /** When a frame only a clock asks for may run next (see `tick`). */
+  private clockAt = 0;
 
   private applyMode() {
     const m = this.getAttribute("mode") ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
@@ -1014,6 +1016,13 @@ export class DatarsView extends ElementBase {
         this.raf = requestAnimationFrame(tick);
         return;
       }
+      // A clock (a turning globe) moves the scene a fraction of a pixel a frame: on a slow device,
+      // where re-drawing it costs most of a frame, it draws less often (the clock runs on time, so
+      // as fast) and leaves the main thread to the reader — a tap, a scroll, the next step.
+      if (this.drawn && now < this.clockAt && !this.view.transitioning?.()) {
+        this.raf = requestAnimationFrame(tick);
+        return;
+      }
       // The page's render scale changed (see `noteGpu`): this canvas follows, before drawing.
       if (this.renderGen !== renderGen) this.resizeCanvas();
       const t0 = performance.now();
@@ -1031,6 +1040,9 @@ export class DatarsView extends ElementBase {
         this.canvas.style.opacity = "1"; // the first frame is drawn: fade it in (see `.stage canvas`)
       }
       const transition = animating && (this.view.transitioning?.() ?? true);
+      // At most 40% of the main thread for clock frames: the next waits 1.5× this one's work (a
+      // frame under ~10 ms waits for nothing).
+      this.clockAt = animating && !transition ? now + 1.5 * (performance.now() - t0) : 0;
       setMoving(this, transition);
       // The text layer follows the settled chart: hidden while a transition carries the text
       // elsewhere, rebuilt a moment after the last frame (a clock or tiles arriving keep frames

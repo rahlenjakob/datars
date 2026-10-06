@@ -36,3 +36,16 @@ fn a_new_version_morphs_in_and_keeps_the_state() {
     assert!(end.scene.snapshot().contains("\"After\""), "{}", end.scene.snapshot());
     assert_eq!((end.scene.width, end.scene.height), (400.0, 120.0), "the host's viewport stays");
 }
+
+#[test]
+fn before_the_first_frame_a_chart_takes_its_box_without_a_morph() {
+    let mut e = Engine::new();
+    e.load(doc([10.0, 20.0, 30.0], "Before"));
+    // The host sizes the chart to its box before drawing anything: there's nothing to move from.
+    e.resize(400.0, 120.0, 2.0);
+    e.goto(1);
+    let first = e.frame(0.0);
+    assert!(!first.animating, "the first frame is the settled scene");
+    assert_eq!((first.scene.width, first.scene.height), (400.0, 120.0));
+    assert!(first.scene.snapshot().contains("\"Before\""));
+}

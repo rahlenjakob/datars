@@ -35,12 +35,12 @@ fn a_clock_runs_while_the_scene_reads_it() {
     let f = e.frame(0.05);
     assert!(f.animating, "a scene that reads a clock keeps frames coming");
     assert!((dot_x(&f.scene) - 0.5).abs() < 1e-9);
-    // Steps are capped: a host that slept for a minute moves the clock by 0.1 s, not 60.
-    assert!((dot_x(&e.frame(60.0).scene) - 1.5).abs() < 1e-9);
+    // Steps are capped: a host that slept for a minute moves the clock by 0.25 s, not 60.
+    assert!((dot_x(&e.frame(60.0).scene) - 3.0).abs() < 1e-9);
     // Paused off screen (the host stops playback): the value holds.
     e.set_playing(false);
     let held = dot_x(&e.frame(60.05).scene);
-    assert!((held - 1.5).abs() < 1e-9, "{held}");
+    assert!((held - 3.0).abs() < 1e-9, "{held}");
 }
 
 #[test]

@@ -130,3 +130,35 @@ fn stable_hash_and_json_form() {
 }
 
 const PINNED_HASH: u64 = 0x8e2f_5223_a02a_ca1b;
+
+/// Key validation finds repeats however far apart, over several key columns, and counts −0 as 0, as
+/// `Value` does (a NaN key is a missing one, rejected first): the fast check (rows sorted by key) and the detailed one
+/// (the error's examples) agree on what the same key is. Unique keys pass, quickly — a 200,000-row
+/// table once took 150 ms of a chart's opening on a slow CPU.
+#[test]
+fn keys_repeat_anywhere_in_a_big_table() {
+    let n = 200_000;
+    let a: Vec<f64> = (0..n).map(|i| (i / 2) as f64).collect();
+    let b: Vec<f64> = (0..n).map(|i| (i % 2) as f64).collect();
+    let unique = Table::from_columns("t", vec![("a", Column::Num(a.clone())), ("b", Column::Num(b.clone()))]).unwrap();
+    assert!(unique.with_key(&["a", "b"]).is_ok());
+    // The last row repeats the first: rows 0 and n − 1.
+    let (mut a2, mut b2) = (a.clone(), b.clone());
+    a2[n - 1] = a2[0];
+    b2[n - 1] = b2[0];
+    let e = Table::from_columns("t", vec![("a", Column::Num(a2)), ("b", Column::Num(b2))]).unwrap().with_key(&["a", "b"]).unwrap_err();
+    assert!(matches!(&e, DataError::DuplicateKeys { count: 1, examples, .. } if examples[0].1 == vec![0, n - 1]), "{e}");
+    // −0 is 0, in order or not.
+    let e = Table::from_columns("t", vec![("k", Column::Num(vec![-0.0, 1.0, 0.0]))]).unwrap().with_key(&["k"]).unwrap_err();
+    assert!(matches!(&e, DataError::DuplicateKeys { count: 1, .. }), "{e}");
+    let e = Table::from_columns("t", vec![("k", Column::Num(vec![-0.0, 0.0, 1.0]))]).unwrap().with_key(&["k"]).unwrap_err();
+    assert!(matches!(&e, DataError::DuplicateKeys { count: 1, .. }), "{e}");
+    // Keys in order (the quick pass), in reverse, and in order with one repeat side by side.
+    let ids: Vec<f64> = (0..n).map(|i| i as f64).collect();
+    let one = |v: Vec<f64>| Table::from_columns("t", vec![("id", Column::Num(v))]).unwrap().with_key(&["id"]);
+    assert!(one(ids.clone()).is_ok());
+    assert!(one(ids.iter().rev().copied().collect()).is_ok());
+    let mut rep = ids.clone();
+    rep[1000] = rep[999];
+    assert!(matches!(one(rep).unwrap_err(), DataError::DuplicateKeys { count: 1, .. }));
+}
