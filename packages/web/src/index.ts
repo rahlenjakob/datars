@@ -242,7 +242,8 @@ const CSS = `
 .stage { position: relative; width: 100%; }
 canvas, .poster { position: absolute; inset: 0; width: 100%; height: 100%; }
 canvas { transition: opacity .22s ease-out; }
-@media (prefers-reduced-motion: reduce) { canvas { transition: none; } }
+@media (prefers-reduced-motion: reduce) { :host(:not([reduced-motion="no-preference"])) canvas { transition: none; } }
+:host([reduced-motion="reduce"]) canvas, :host([reduced-motion=""]) canvas { transition: none; }
 .poster svg { width: 100%; height: 100%; }
 .poster[hidden], canvas[hidden] { display: none; }
 /* Native pickers over engine-drawn selects on touch screens: invisible, but a tap opens the
@@ -272,7 +273,7 @@ ${TEXT_CSS}`;
 const ElementBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as typeof HTMLElement) : HTMLElement;
 
 export class DatarsView extends ElementBase {
-  static observedAttributes = ["src", "doc", "state", "mode", "height", "no-controls"];
+  static observedAttributes = ["src", "doc", "state", "mode", "height", "no-controls", "reduced-motion"];
   /** Runtime files the page supplies (see `runtimeAssets`). */
   static assets = runtimeAssets;
   private root: ShadowRoot;
@@ -316,6 +317,10 @@ export class DatarsView extends ElementBase {
   private stopScrub: (() => void) | null = null;
   private stopSteps: (() => void) | null = null;
   private stopPlayback: (() => void) | null = null;
+  /** Re-applies playback and reduced motion (see `watchPlayback`). */
+  private applyPlayback: (() => void) | null = null;
+  /** A `seek` asked for before the chart opened: applied when it does. */
+  private pendingSeek: number | null = null;
   /** The frame profiler and stats panel (`perf`, Shift+D), and the state names it labels
    * transitions with. */
   private profiler: FrameProfiler | null = null;
@@ -516,7 +521,7 @@ export class DatarsView extends ElementBase {
     document.removeEventListener("pointerdown", this.onPagePress, { capture: true });
     this.textLayer?.reset();
     for (const stop of [this.stopScrub, this.stopSteps, this.stopPlayback]) stop?.();
-    this.stopScrub = this.stopSteps = this.stopPlayback = null;
+    this.stopScrub = this.stopSteps = this.stopPlayback = this.applyPlayback = null;
     this.view?.free();
     this.view = null;
     this.profiler = null;
@@ -535,6 +540,7 @@ export class DatarsView extends ElementBase {
   attributeChangedCallback(name: string) {
     if (name === "height") this.reserveHeight();
     if (name === "no-controls") this.showControls();
+    if (name === "reduced-motion") this.applyPlayback?.();
     if (!this.view) return;
     if (name === "mode") this.applyMode();
     if (name === "state") {
@@ -804,6 +810,7 @@ export class DatarsView extends ElementBase {
     else dropPoster();
     this.syncChrome();
     this.watchPlayback();
+    if (this.pendingSeek !== null) this.seek(this.pendingSeek);
     if (this.hasAttribute("scrub")) {
       const onScroll = () => this.scrub();
       addEventListener("scroll", onScroll, { passive: true });
@@ -1300,9 +1307,34 @@ export class DatarsView extends ElementBase {
     const box = (this.closest("[data-scrub]") ?? this.parentElement ?? this).getBoundingClientRect();
     const span = box.height - innerHeight;
     const progress = span > 0 ? Math.min(1, Math.max(0, -box.top / span)) : 0;
+    this.seek(progress * Math.max(0, this.view.state_count() - 1));
+  }
+
+  /** Put the program at `position`, in states: `0` is the first state, `states − 1` the last, and
+   * a fraction is the transition between two states that far through — the frame it would show
+   * then, exactly. For scrubbers and scroll-driven stories (`scrub` uses it). Nothing animates on
+   * its own: the chart holds the position until the next `seek`, step or event. Asked before the
+   * chart has opened, it's applied when it does. */
+  seek(position: number) {
+    if (!Number.isFinite(position)) return;
+    if (!this.view?.ready()) {
+      this.pendingSeek = position;
+      return;
+    }
+    this.pendingSeek = null;
     const n = Math.max(0, this.view.state_count() - 1);
-    this.view.seek(progress * n);
+    this.now();
+    this.view.seek(Math.min(n, Math.max(0, position)));
     this.kick();
+  }
+
+  /** Whether the chart plays reduced motion now: the `reduced-motion` attribute when it says
+   * (`reduce`, or `no-preference` for a reader who opted in to the full motion), else the reader's
+   * `prefers-reduced-motion`. */
+  get reducedMotion(): boolean {
+    const a = this.getAttribute("reduced-motion");
+    if (a === null) return typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    return a !== "no-preference";
   }
 
   /** Scroll trigger (`steps=".step"`): each matching element on the page is a story step; when one
@@ -1326,14 +1358,21 @@ export class DatarsView extends ElementBase {
     return () => io.disconnect();
   }
 
-  /** Autoplay runs only while visible and when the reader hasn't asked for reduced motion. */
+  /** Autoplay runs only while visible and without reduced motion (the reader's setting, or the
+   * `reduced-motion` attribute: see `reducedMotion`). */
   private watchPlayback() {
     const reduced = matchMedia("(prefers-reduced-motion: reduce)");
     let visible = true;
-    const apply = () => { this.view?.set_reduced_motion(reduced.matches); this.view?.set_playing(visible && !reduced.matches); this.kick(); };
+    const apply = () => {
+      const r = this.reducedMotion;
+      this.view?.set_reduced_motion(r);
+      this.view?.set_playing(visible && !r);
+      this.kick();
+    };
     const io = new IntersectionObserver((es) => { visible = es.some((e) => e.isIntersecting); apply(); });
     io.observe(this);
     reduced.addEventListener("change", apply);
+    this.applyPlayback = apply;
     this.stopPlayback = () => { io.disconnect(); reduced.removeEventListener("change", apply); };
     apply();
   }

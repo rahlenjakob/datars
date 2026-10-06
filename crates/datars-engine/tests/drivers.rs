@@ -84,6 +84,30 @@ fn scroll_scrub_is_exact_in_both_directions() {
 }
 
 #[test]
+fn a_seeked_position_holds_through_a_resize_until_a_step() {
+    let mut e = engine(story(serde_json::json!([])));
+    e.frame(0.0);
+    e.seek(0.5);
+    // The host resizes (or the page sets a signal, or the theme changes): the same position, at the
+    // new size — not the state the program is on.
+    e.resize(200.0, 60.0, 2.0);
+    let (_, _, plan) = e.plan_states(0, 1);
+    let mid = e.plan_at(&plan, 0.5).hash();
+    let f = e.frame(0.1);
+    assert_eq!((f.scene.width, f.scene.hash()), (200.0, mid), "still half-way, at 200 px");
+    assert!(!f.animating, "held, not moving");
+    // A step to the state it's on settles there, moving from the frame on screen.
+    assert!(!e.goto(0), "the program was already on state 0");
+    assert!(e.frame(0.2).animating, "it moves back to state 0");
+    let a = e.scene_for_state(0).hash();
+    assert_eq!(e.frame(10.0).scene.hash(), a);
+    // Settled: a resize now shows the state.
+    e.resize(180.0, 60.0, 2.0);
+    e.frame(10.1);
+    assert_eq!(e.frame(20.0).scene.hash(), e.scene_for_state(0).hash());
+}
+
+#[test]
 fn live_sources_are_rerequested_and_updates_animate() {
     let doc = serde_json::json!({
         "datars": 1, "size": { "width": 100, "height": 60 },

@@ -99,6 +99,7 @@ Mounting charts as they come near the viewport keeps a long article light: each 
 | `state` | number | Go to this program state (0-based); the transition plays. |
 | `steps` | CSS selector | Scroll-triggered story: each matching element on the page is a step (see below). |
 | `scrub` | — | Scroll-scrubbed story: the page's scroll position drives the program (see below). |
+| `reduced-motion` | `reduce`, `no-preference` | Reduced motion for this chart: `reduce` always (short crossfades, no autoplay), `no-preference` never — for a reader who asked for reduced motion and then opted in to see the full motion here. Without it the chart follows the reader's `prefers-reduced-motion`, live. |
 | `no-script` | — | Refuse bundles that need the recipe sandbox (T3); the chart plays a pre-expanded variant or its poster. |
 | `allow-script` | — | Allow the sandbox even if `no-script` is also set. |
 | `publishers` | keys | Space-separated `ed25519:…` keys; only manifests signed by one of them play. (The CLI doesn't sign bundles yet.) |
@@ -136,6 +137,8 @@ chart.addEventListener("state", (e) => {
 | `setTokens(tokens)` | Override theme tokens (colours, sizes, corners, strokes, font tokens) on a published chart; the theme's locked tokens are kept. Colours re-ink on the next frame; type and shapes morph. A font token switches to a face the bundle carries, or to the TTF or OTF at the `src` it names (fetched like a data source, through `datarequest`); a Google Fonts name is for the build step and never fetched at runtime. Set before the chart opens, its faces arrive before the first frame (it waits up to 1.5 s), and no poster shows — the poster is the published look, and it would flash. See [themes](/docs/theming/). |
 | `provideData(name, data)` | Fill a [data slot](/docs/publishing/#data-slots-each-readers-own-data) (or replace a source): CSV or JSON text, bytes, or rows (records or columns). Can be called before the chart has loaded; throws if the rows lack columns the chart needs. |
 | `data = { slot: rows, … }` | Every slot at once. |
+| `seek(position)` | Put the program at a position in states: `0` the first, `states − 1` the last, and a fraction the transition between two states that far through — the exact frame it would show then. For your own scrubbers and scroll-driven stories (`scrub` uses it). The chart holds the position until the next `seek`, step or event; asked before the chart has opened, it's applied when it does. |
+| `reducedMotion` | Whether the chart plays reduced motion now: the `reduced-motion` attribute when set, else the reader's `prefers-reduced-motion`. |
 | `setDocument(doc)` | Show a document held by the page (JSON text or object) — an editor's working copy; morphs from what's on screen. |
 | `reload()` | Fetch the `doc` attribute's document again and morph to it (the edit loop). |
 | `status` | The current state, all states, narration, the accessibility tree, resolved tokens, diagnostics. `null` until loaded. |
@@ -211,7 +214,7 @@ The element sets the chart's resolved theme colours on itself as custom properti
 - **Poster first, never a flash.** On a slow first load the chart's SVG poster shows while the engine downloads; a chart that's ready within 0.6 s shows no poster at all, and the live canvas fades in over it.
 - **Renders only when something moves.** No frames while the chart is still; autoplay holds and live refreshes wake it at the right time.
 - **Pauses off screen.** A chart out of view draws nothing and its autoplay stops; it resumes where it was.
-- **Reduced motion.** With `prefers-reduced-motion: reduce`, transitions become short crossfades and autoplay stays paused.
+- **Reduced motion.** With `prefers-reduced-motion: reduce`, transitions become short crossfades and autoplay stays paused. The `reduced-motion` attribute overrides it per chart: `reduce` to force it, `no-preference` for a reader who opted in to the full motion.
 - **Fair to the chart being read.** Charts loading further down wait while another is mid-transition, and busy charts off the reader's focus draw at a lower rate.
 - **Prepares the next step.** While the reader is on a step, the engine resolves and plans the neighbouring steps in idle time and fetches the map tiles their flights will need.
 - **Accessible.** A hidden list mirrors the chart's semantics (roles, labels, reading order), story narration is announced through a live region, and engine-drawn sliders become native range inputs. See [accessibility](/docs/accessibility/).

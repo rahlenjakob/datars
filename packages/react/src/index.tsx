@@ -48,6 +48,9 @@ export interface DatarsViewHandle {
   goto(state: string | number): void;
   next(): void;
   prev(): void;
+  /** Put the program at a position in states — a fraction is the transition that far through
+   * (a scrubber, a scroll-driven story). See the element's `seek`. */
+  seek(position: number): void;
   /** Set a signal (filters, sliders, app state). */
   setSignal(name: string, value: unknown): void;
   /** Override theme tokens (brand colours, fonts); the theme's locks hold. */
@@ -71,6 +74,9 @@ export interface DatarsViewProps extends Omit<HTMLAttributes<HTMLDivElement>, "c
   state?: string | number;
   /** Colour mode (default: follows `prefers-color-scheme`). */
   mode?: "light" | "dark" | "high-contrast";
+  /** Reduced motion: `"reduce"` always, `"no-preference"` never (a reader who opted in to the
+   * full motion); default: follows `prefers-reduced-motion`. */
+  reducedMotion?: "reduce" | "no-preference";
   /** The box's height (px or any CSS length). Default: the chart's aspect across the width. */
   height?: number | string;
   /** Width / height, when the chart doesn't say (a `src` bundle before it loads). */
@@ -164,7 +170,7 @@ function changed(prev: Record<string, unknown> | undefined, next: Record<string,
 }
 
 export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function DatarsView(props, ref) {
-  const { chart: chartProp, document: documentProp, src: srcProp, doc: docUrl, state, mode, height, aspectRatio, signals, tokens, data, lazy = true, runtime, label, attributes, onStateChange, onReady, onError, style, ...rest } = props;
+  const { chart: chartProp, document: documentProp, src: srcProp, doc: docUrl, state, mode, reducedMotion, height, aspectRatio, signals, tokens, data, lazy = true, runtime, label, attributes, onStateChange, onReady, onError, style, ...rest } = props;
 
   // A chart file edited in dev: the plugin's module hands the new version to views showing it.
   const [update, setUpdate] = useState<{ for: unknown; chart: DatarsChart } | null>(null);
@@ -200,6 +206,7 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
     },
     next: () => el.current?.send("next"),
     prev: () => el.current?.send("prev"),
+    seek: (pos) => el.current?.seek(pos),
     setSignal: (n, v) => el.current?.setSignal(n, v),
     setTokens: (t) => el.current?.setTokens(t),
     setData: (n, d) => el.current?.provideData(n, d),
@@ -251,6 +258,7 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
     setAttr(v, "src", now.src);
     setAttr(v, "doc", now.src ? undefined : now.docUrl);
     setAttr(v, "mode", p.mode);
+    setAttr(v, "reduced-motion", p.reducedMotion);
     setAttr(v, "aria-label", p.label);
     setAttr(v, "height", Math.round(host.clientHeight) || undefined);
     // Where the reader was (back near the viewport, or a new version of the chart), else the prop.
@@ -333,6 +341,9 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
   useEffect(() => {
     if (el.current) setAttr(el.current, "mode", mode);
   }, [mode]);
+  useEffect(() => {
+    if (el.current) setAttr(el.current, "reduced-motion", reducedMotion);
+  }, [reducedMotion]);
   useEffect(() => {
     if (el.current) setAttr(el.current, "aria-label", label);
   }, [label]);

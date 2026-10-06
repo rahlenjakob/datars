@@ -381,6 +381,9 @@ pub struct Engine {
     snapshots: BTreeSet<String>,
     /// Scrub cache: the transition plan from state i to i + 1.
     scrub: Option<(usize, datars_motion::Plan)>,
+    /// Where `seek` left the program part-way between two states, until a step or event moves it:
+    /// a resize, a theme or a signal shows that position again, not the state it's on.
+    seeked: Option<f64>,
     drag: Option<Drag>,
     /// The element under the pointer that `hover()` asked about (the innermost), if any.
     hovered: Option<KeyPath>,
@@ -477,6 +480,7 @@ impl Engine {
             live_due: BTreeMap::new(),
             snapshots: BTreeSet::new(),
             scrub: None,
+            seeked: None,
             drag: None,
             hovered: None,
             cursor: Cursor::Default,
@@ -507,6 +511,7 @@ impl Engine {
         self.live_due.clear();
         self.snapshots.clear();
         self.scrub = None;
+        self.seeked = None;
         self.recording = None;
         if !self.doc_fonts.is_empty() || !self.theme_faces.is_empty() {
             self.doc_fonts.clear();
@@ -1165,11 +1170,15 @@ impl Engine {
 
     fn event_inner(&mut self, ev: &str) -> bool {
         let from = self.program.state_name();
+        let seeked = self.seeked.take();
         let changed = self.program.event(ev);
         if changed {
             self.clear_state_overrides();
             self.settled_at = None;
             self.transition_to_current(Some(from));
+        } else if seeked.is_some() {
+            // Part-way to the next state, sent to the one it's on: it settles there, moving.
+            self.transition_to_current(None);
         }
         changed
     }
@@ -1177,11 +1186,14 @@ impl Engine {
     pub fn goto(&mut self, index: usize) -> bool {
         self.rec(session::Input::Goto { index });
         let from = self.program.state_name();
+        let seeked = self.seeked.take();
         let changed = self.program.goto_index(index);
         if changed {
             self.clear_state_overrides();
             self.settled_at = None;
             self.transition_to_current(Some(from));
+        } else if seeked.is_some() {
+            self.transition_to_current(None);
         }
         changed
     }
@@ -1712,6 +1724,11 @@ impl Engine {
     /// same frames. Returns the state index now current.
     pub fn seek(&mut self, pos: f64) -> usize {
         self.rec(session::Input::Seek { pos });
+        self.show_seek(pos)
+    }
+
+    /// [`Engine::seek`]'s frame, kept as the position until a step or event moves the program.
+    fn show_seek(&mut self, pos: f64) -> usize {
         let n = self.program.state_names().len();
         let (i, frac) = drivers::split(pos, n);
         if self.program.index() != i {
@@ -1720,6 +1737,7 @@ impl Engine {
         }
         self.active = None;
         self.settled_at = None;
+        self.seeked = (frac > 0.0).then_some(pos);
         if frac <= 0.0 {
             self.shown = Some(self.resolve_now());
             return i;
@@ -1875,6 +1893,16 @@ impl Engine {
 
     /// Plan a transition from what's on screen to the current state's scene.
     fn transition_to_current(&mut self, from_state: Option<String>) {
+        // Held part-way by `seek` (a scrubber, a scroll story): a new size, theme or signal shows
+        // the same position, planned anew. A program moved elsewhere (autoplay) lets it go.
+        if let Some(pos) = self.seeked {
+            if drivers::split(pos, self.program.state_names().len()).0 == self.program.index() {
+                self.scrub = None;
+                self.show_seek(pos);
+                return;
+            }
+            self.seeked = None;
+        }
         let target = self.resolve_now();
         // Before the first frame nothing is on screen to move from: a chart opening at its box's
         // size (a resize right after load), with the page's theme or signals, takes the new scene
