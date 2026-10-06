@@ -1244,9 +1244,9 @@ impl Engine {
             self.clock_time = saved;
             return r.clone();
         }
-        let (a, _, placements) = self.resolve_pinned(&self.all_signals(), false, None);
+        let (a, _, placements) = self.resolve_pinned(&self.all_signals(), false, None, None);
         self.clock_time = 1.0;
-        let b = self.resolve_pinned(&self.all_signals(), false, Some(&placements)).0.scene;
+        let b = self.resolve_pinned(&self.all_signals(), false, Some(&placements), None).0.scene;
         self.clock_time = saved;
         let reads = (a.scene != b).then_some(placements);
         self.clock_reads.insert(key, reads.clone());
@@ -1273,7 +1273,7 @@ impl Engine {
         // A running clock gives every frame its own signature (those scenes aren't worth keeping)
         // and keeps the cards where the state first put them.
         let pins = if self.clock_time != 0.0 { self.clock_pins() } else { None };
-        let (resolved, _, _) = self.resolve_pinned(&signals, false, pins.as_ref());
+        let (resolved, _, _) = self.resolve_pinned(&signals, false, pins.as_ref(), None);
         let resolved = Rc::new(resolved);
         if self.clock_time == 0.0 {
             // Exploring gives every camera position its own signature too: keep the cache bounded.
@@ -1287,14 +1287,15 @@ impl Engine {
     }
 
     /// Resolve the scene for `signals` (no cache), recording every node's origin if asked.
-    fn resolve_fresh(&mut self, signals: &BTreeMap<String, Value>, record: bool) -> (Resolved, Vec<resolve::Origin>) {
-        let (r, origins, _) = self.resolve_pinned(signals, record, None);
+    /// `focus`: an instance to record an origin for too (see `Resolver::focus`).
+    fn resolve_fresh(&mut self, signals: &BTreeMap<String, Value>, record: bool, focus: Option<&str>) -> (Resolved, Vec<resolve::Origin>) {
+        let (r, origins, _) = self.resolve_pinned(signals, record, None, focus);
         (r, origins)
     }
 
     /// [`Engine::resolve_fresh`], with cards placed as `pins` say (else where they fit best), and
     /// where they went.
-    fn resolve_pinned(&mut self, signals: &BTreeMap<String, Value>, record: bool, pins: Option<&Placements>) -> (Resolved, Vec<resolve::Origin>, Placements) {
+    fn resolve_pinned(&mut self, signals: &BTreeMap<String, Value>, record: bool, pins: Option<&Placements>, focus: Option<&str>) -> (Resolved, Vec<resolve::Origin>, Placements) {
         let size_class = self.viewport.size_class();
         #[cfg(feature = "sandbox")]
         let expander: Option<&dyn Expand> = self.expander.as_ref().map(|e| e as &dyn Expand);
@@ -1305,6 +1306,7 @@ impl Engine {
         r.hovered = self.hovered.clone();
         if record {
             r.record_origins();
+            r.focus = focus.map(str::to_string);
         }
         if let Some(p) = pins {
             r.dodge_pins = p.anchors.clone();
@@ -1348,8 +1350,8 @@ impl Engine {
     /// returned, in scene order. Baked (T1) scenes have no templates to explain.
     pub fn explain(&mut self, query: &str) -> Vec<Explanation> {
         let signals = self.all_signals();
-        let (resolved, origins) = self.resolve_fresh(&signals, true);
         let q = query.trim().trim_matches('/');
+        let (resolved, origins) = self.resolve_fresh(&signals, true, Some(q));
         let hit = |p: &str| p == q || p.ends_with(&format!("/{q}"));
         // Layout measures children by resolving them before the final pass: the last origin
         // recorded for a path is the drawn node's, and measuring-only paths aren't in the scene.
@@ -1365,19 +1367,24 @@ impl Engine {
             .enumerate()
             .filter(|(i, _)| keep.contains(i))
             .filter_map(|(_, origin)| {
-                let node = pick::node_at_str(&resolved.scene, &origin.path)?;
-                Some((origin, node))
-            })
-            .map(|(origin, node)| {
-                let node = Some(node);
-                let intents = resolved.actions.iter().find(|(p, _)| p.to_string() == origin.path).map(|(_, a)| a.keys().cloned().collect()).unwrap_or_default();
-                Explanation {
-                    node: node.map(|(n, _)| n.snapshot_line()).unwrap_or_default(),
+                // A node, or one instance of an instances node (its path's last key is the
+                // instance's): drawn as the node's line, outlined as the instance.
+                let (node, bounds) = match pick::node_at_str(&resolved.scene, &origin.path) {
                     // `node_at` includes the node's own transform, which its bounds apply again.
-                    bounds: node.and_then(|(n, xf)| n.common.transform.inverse().map(|own| bounds::drawn_bounds(n, xf.mul(own)))).filter(|r| !r.is_empty()).map(|r| [r.x, r.y, r.w, r.h]),
-                    intents,
-                    origin,
-                }
+                    Some((n, xf)) => (n.snapshot_line(), n.common.transform.inverse().map(|own| bounds::drawn_bounds(n, xf.mul(own)))),
+                    None => {
+                        let (parent, key) = origin.path.rsplit_once('/')?;
+                        let (n, xf) = pick::node_at_str(&resolved.scene, parent)?;
+                        let datars_scene::NodeKind::Instances(inst) = &n.kind else { return None };
+                        let i = inst.keys.iter().position(|k| k.to_string() == key)?;
+                        (n.snapshot_line(), Some(pick::instance_bounds(inst, &xf, i)))
+                    }
+                };
+                Some((origin, node, bounds))
+            })
+            .map(|(origin, node, bounds)| {
+                let intents = resolved.actions.iter().find(|(p, _)| p.to_string() == origin.path).map(|(_, a)| a.keys().cloned().collect()).unwrap_or_default();
+                Explanation { node, bounds: bounds.filter(|r| !r.is_empty()).map(|r| [r.x, r.y, r.w, r.h]), intents, origin }
             })
             .collect()
     }

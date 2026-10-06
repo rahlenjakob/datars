@@ -575,7 +575,14 @@ view.addEventListener("pick", (e) => {
   const hit = hits.find((h) => h.role === "datum" || h.role === "region") ?? hits.find((h) => h.role && h.role !== "group") ?? hits[0];
   if (!hit) { hideOutline(); return; }
   const why = view.explain(hit.path)?.[0];
-  if (!why) return;
+  if (!why) {
+    // Say so rather than do nothing: a click that changes nothing reads as a broken tab.
+    hideOutline();
+    el("explain").innerHTML = `<h3>${esc(hit.label ?? hit.path.split("/").pop())}</h3><div class=path>${esc(hit.path)}</div>
+<div class=empty><b>Nothing to explain for this ${esc(hit.kind ?? "element")}</b>It has no source in the document as resolved — a dot of a point pyramid (<code>lod</code>), or a baked scene.</div>`;
+    tab("explain");
+    return;
+  }
   if (why.bounds) {
     const [x, y, w, h] = why.bounds, o = el("outline");
     Object.assign(o.style, { left: `${view.offsetLeft + x - 3}px`, top: `${view.offsetTop + y - 3}px`, width: `${w + 6}px`, height: `${h + 6}px` });

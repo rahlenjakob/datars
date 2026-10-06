@@ -215,6 +215,18 @@ fn hit_inside(geom: &datars_scene::Geom, filled: bool) -> bool {
 /// [`REACH`] px of its edge. Measured on screen, so marks that keep their screen size under a
 /// zooming camera are hit where they're drawn. `acc` is the node's opacity with its ancestors':
 /// instances that come out [`INVISIBLE`] aren't hit.
+/// Where instance `i` is drawn, in root px: a screen-sized symbol around its projected centre,
+/// else its geometry through `xf` (what a hit reports and `explain` outlines).
+pub(crate) fn instance_bounds(inst: &datars_scene::Instances, xf: &Affine, i: usize) -> datars_math::Rect {
+    if inst.screen_size {
+        let c = xf.apply(Vec2::new(inst.x[i], inst.y[i]));
+        let r = inst.size_at(i);
+        datars_math::Rect::new(c.x - r, c.y - r, 2.0 * r, 2.0 * r)
+    } else {
+        crate::bounds::transform_rect(inst.geom(i).bounds(), xf)
+    }
+}
+
 pub(crate) fn instance_at(inst: &datars_scene::Instances, xf: &Affine, acc: f64, p: Vec2) -> Option<(usize, f64)> {
     instance_within(inst, xf, acc, p, REACH)
 }
@@ -342,13 +354,8 @@ pub fn pick_all(scene: &Scene, p: Vec2) -> Vec<AnyHit> {
             NodeKind::Instances(inst) => {
                 if let Some((i, _)) = instance_at(inst, &xf, acc, p) {
                     let l = inst.labels.as_ref().and_then(|ls| ls.get(i).cloned()).or_else(label);
-                    let b = if inst.screen_size {
-                        let c = xf.apply(Vec2::new(inst.x[i], inst.y[i]));
-                        let r = inst.size_at(i);
-                        [c.x - r, c.y - r, 2.0 * r, 2.0 * r]
-                    } else {
-                        rect(inst.geom(i).bounds())
-                    };
+                    let r = instance_bounds(inst, &xf, i);
+                    let b = [r.x, r.y, r.w, r.h];
                     out.push(AnyHit { path: path.push(&n.key).push(&inst.keys[i]).to_string(), kind: "instance".into(), role: role_of(own_role()), label: l, text: None, bounds: b });
                 }
             }

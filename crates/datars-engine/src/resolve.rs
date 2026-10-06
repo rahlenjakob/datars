@@ -192,6 +192,10 @@ pub struct Resolver<'a> {
     pub(crate) points: RefCell<Vec<(String, Rc<crate::points::Binding>)>>,
     /// Where each node came from, when recording ([`Resolver::record_origins`]).
     pub origins: Option<RefCell<Vec<Origin>>>,
+    /// While recording: an instance's path (`…/node/(key,)`, or its tail) to record an origin for
+    /// too. Instances share one node, so they have no origin of their own; `explain` asks for the
+    /// one it was given, and only it is evaluated per row.
+    pub focus: Option<String>,
     /// Groups that place their content after layout (`dodge`), placed by `resolve_root`.
     dodges: RefCell<Vec<Dodge>>,
     /// Groups whose texts keep off each other (`declutter`), sorted out by `resolve_root`.
@@ -245,7 +249,7 @@ impl<'a> Resolver<'a> {
         geo: &'a crate::geo::GeoStore,
         tables: crate::tables::TableStore,
     ) -> Resolver<'a> {
-        Resolver { doc, signals, theme, fonts, expander, size_class, geo, tables: RefCell::new(tables), exprs: SharedExprs::default(), fixed: RefCell::new(BTreeMap::new()), inks: RefCell::new(BTreeMap::new()), diags: RefCell::new(Vec::new()), actions: RefCell::new(Vec::new()), tiles: RefCell::new(Vec::new()), points: RefCell::new(Vec::new()), origins: None, dodges: RefCell::new(Vec::new()), declutters: RefCell::new(BTreeSet::new()), motion: RefCell::new(Vec::new()), banded: BTreeSet::new(), crowded: RefCell::new(Vec::new()), dodge_pins: BTreeMap::new(), dodge_chosen: RefCell::new(BTreeMap::new()), hovered: None, hover_asked: RefCell::new(Vec::new()), hover_last: RefCell::new(None) }
+        Resolver { doc, signals, theme, fonts, expander, size_class, geo, tables: RefCell::new(tables), exprs: SharedExprs::default(), fixed: RefCell::new(BTreeMap::new()), inks: RefCell::new(BTreeMap::new()), diags: RefCell::new(Vec::new()), actions: RefCell::new(Vec::new()), tiles: RefCell::new(Vec::new()), points: RefCell::new(Vec::new()), origins: None, focus: None, dodges: RefCell::new(Vec::new()), declutters: RefCell::new(BTreeSet::new()), motion: RefCell::new(Vec::new()), banded: BTreeSet::new(), crowded: RefCell::new(Vec::new()), dodge_pins: BTreeMap::new(), dodge_chosen: RefCell::new(BTreeMap::new()), hovered: None, hover_asked: RefCell::new(Vec::new()), hover_last: RefCell::new(None) }
     }
 
     /// Record every node's [`Origin`] while resolving (for `explain`; costs a template clone and
@@ -564,6 +568,9 @@ impl<'a> Resolver<'a> {
                 self.apply_common(&mut n, t, cx, &path);
                 pin_text_at_its_point(&mut n);
                 self.record(t, cx, &path);
+                if let (TKind::Instances(ti), NodeKind::Instances(inst)) = (&t.kind, &n.kind) {
+                    self.record_instance(t, ti, inst, cx, &path);
+                }
                 vec![n]
             }
         }
@@ -1384,6 +1391,24 @@ impl<'a> Resolver<'a> {
                     }
                 }
                 (name, 400)
+            }
+        }
+    }
+
+    /// The origin of the instance `focus` names, if it's one of `inst`'s: the node's template
+    /// evaluated with that instance's row as `d`, so one dot of a scatter explains like a mark
+    /// of a repeat — its row and every expression's value for it. (Point pyramids, `lod`, resolve
+    /// to placeholders and aren't explained per instance.)
+    fn record_instance(&self, t: &Template, ti: &TInstances, inst: &Instances, cx: &Cx, path: &KeyPath) {
+        let (Some(_), Some(focus)) = (&self.origins, &self.focus) else { return };
+        let tail = format!("/{focus}");
+        let Some(table) = self.table_for(&ti.from, cx) else { return };
+        for (i, key) in inst.keys.iter().enumerate().take(table.len()) {
+            let at = path.push(key);
+            let s = at.to_string();
+            if s == *focus || s.ends_with(&tail) {
+                let ncx = Cx { row: Some(Rc::new(Row { table: table.clone(), row: i })), fields: None, ..cx.clone() };
+                self.record(t, &ncx, &at);
             }
         }
     }
