@@ -1273,7 +1273,7 @@
           ]
         },
         "points": {
-          "description": "The most rows one frame draws (default 150,000): a view holding more draws a uniform\nsample of them this size, a view holding fewer draws every one.",
+          "description": "The most rows one frame draws (default 150,000): a view holding more draws a uniform\nsample of them this size, a view holding fewer draws every one. It's for the document's\nown size: a smaller view draws its share of it (by area, at least a fifth), so the sample\nkeeps the same density per pixel on a phone.",
           "format": "double",
           "type": [
             "number",

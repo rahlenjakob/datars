@@ -77,6 +77,9 @@ pub enum Request {
     Range { name: String, url: String, offset: u64, length: u64 },
 }
 
+/// The smallest share of a `lod` node's point budget a small view draws (see `area_point_scale`).
+const MIN_AREA_POINT_SCALE: f64 = 0.2;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Viewport {
     pub width: f64,
@@ -846,6 +849,20 @@ impl Engine {
         self.tiles.borrow().points.stats
     }
 
+    /// A `lod` node's budget of points is for the document's own size: a smaller view (a phone's
+    /// column) draws that share of it, so the sample keeps the same density per pixel — the same
+    /// look — instead of piling the full budget into a fifth of the area (a galaxy's 30,000 soft
+    /// glow discs some 23 deep on a phone, five-fold the fill and the per-frame rebuild of a
+    /// desktop's). Never more than the budget in a bigger view, and never under a fifth of it.
+    fn area_point_scale(&self) -> f64 {
+        let doc = self.doc.size.width * self.doc.size.height;
+        let view = self.viewport.width * self.viewport.height;
+        if !(doc > 0.0 && view > 0.0) {
+            return 1.0;
+        }
+        (view / doc).clamp(MIN_AREA_POINT_SCALE, 1.0)
+    }
+
     /// Draw every `lod` node with `scale` × its budget of points (1 restores it): the publish
     /// compiler draws a chart's poster — a placeholder shown until the runtime takes over — from a
     /// thinner sample than the live view.
@@ -1459,7 +1476,7 @@ impl Engine {
             state: &self.tiles,
             bindings: &bindings,
             points: &points,
-            point_scale: self.point_scale,
+            point_scale: self.point_scale * self.area_point_scale(),
             work: self.work,
             fetch: self.range_fetch.as_deref(),
             now: build_budget.map(|_| self.clock),

@@ -393,3 +393,30 @@ fn a_zoom_step_spreads_its_work_over_frames() {
     let last = drawn(&e.frame(10.0).scene);
     assert_eq!(last.len(), settled.len(), "{frames:?}");
 }
+
+/// A `lod` node's budget is for the document's size: a smaller view draws that share of it (the
+/// same density per pixel — on a phone the galaxy's glow lay five times deeper than on a desktop),
+/// a bigger one never more than the budget, and a tiny one still a fifth of it.
+#[test]
+fn a_smaller_view_draws_its_share_of_the_points() {
+    let settled = |e: &mut Engine, w: f64, h: f64, t0: f64| {
+        e.resize(w, h, 1.0);
+        let mut n = 0;
+        for k in 0..40 {
+            n = drawn(&e.frame(t0 + k as f64 * 0.05).scene).len();
+        }
+        n
+    };
+    let mut e = engine(table_doc());
+    let full = settled(&mut e, 400.0, 400.0, 0.0);
+    let quarter = settled(&mut e, 200.0, 200.0, 10.0);
+    let bigger = settled(&mut e, 800.0, 800.0, 20.0);
+    let tiny = settled(&mut e, 40.0, 40.0, 30.0);
+    assert!(full > 1000, "{full}");
+    // Whole cells are drawn, so the share is about a quarter, not exactly.
+    assert!(quarter * 2 < full && quarter * 8 > full, "a quarter of the area: {quarter} of {full}");
+    assert!(bigger <= full * 11 / 10, "never more than the budget: {bigger} vs {full}");
+    assert!(tiny * 10 > full && tiny <= quarter, "a fifth at least: {tiny} vs {full} (levels are whole: a quarter and a fifth may share one)");
+    // Back at its own size, the full sample again.
+    assert_eq!(settled(&mut e, 400.0, 400.0, 40.0), full);
+}

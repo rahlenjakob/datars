@@ -190,7 +190,8 @@ export interface InstancesOpts extends NodeOpts {
   reach?: number;
   /** Level of detail for rows beyond what a frame can draw (millions): indexed once into a pyramid,
    * each frame draws a density-preserving sample of the rows in view — at most `points` of them
-   * (150,000), every row once they fit. Rows sit at their `x`/`y` (which may read the row only);
+   * (150,000) at the document's size, that share of it in a smaller view (the same density on a
+   * phone), every row once they fit. Rows sit at their `x`/`y` (which may read the row only);
    * put the node in a view or under a transform to map them to the screen. `budget`: rows per
    * tile of the index at average density (2048). */
   lod?: boolean | { points?: number; budget?: number };

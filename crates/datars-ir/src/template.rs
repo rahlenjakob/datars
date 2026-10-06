@@ -433,7 +433,9 @@ pub struct TInstances {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct TLod {
     /// The most rows one frame draws (default 150,000): a view holding more draws a uniform
-    /// sample of them this size, a view holding fewer draws every one.
+    /// sample of them this size, a view holding fewer draws every one. It's for the document's
+    /// own size: a smaller view draws its share of it (by area, at least a fifth), so the sample
+    /// keeps the same density per pixel on a phone.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub points: Option<f64>,
     /// Rows per tile of the index at average density (default 2048): how finely the rows are

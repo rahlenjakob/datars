@@ -214,21 +214,28 @@ const hooks = {
     view.addEventListener("pointermove", (e) => { if (e.buttons) active(600); });
     view.addEventListener("wheel", () => active(600), { passive: true });
     const size = (n) => (n < 1048576 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1048576).toFixed(1)} MB`);
-    let visible = false, last = 0, deltas = [];
+    let visible = false, last = 0, deltas = [], shown = 0;
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) requestAnimationFrame(tick); }, { threshold: 0 }).observe(view);
+    // A readout, not an animation: written a few times a second and only when it changes. Text
+    // replaced every frame (even with the same text) made the browser lay the bar out again on
+    // every frame of a flight — dropped frames in Safari, on a phone most of all.
+    const put = (el, t) => { if (el.textContent !== t) el.textContent = t; };
     function tick(now) {
       if (!visible) return;
-      const st = view.stats;
-      if (st) {
-        drawn.textContent = st.drawn.toLocaleString("en");
-        bytes.textContent = size(st.bytes);
-      }
       if (now < activeUntil && last) {
         deltas.push(now - last);
         if (deltas.length > 40) deltas.shift();
-        if (deltas.length >= 10) {
+      }
+      if (now - shown >= 250) {
+        shown = now;
+        const st = view.stats;
+        if (st) {
+          put(drawn, st.drawn.toLocaleString("en"));
+          put(bytes, size(st.bytes));
+        }
+        if (now < activeUntil && deltas.length >= 10) {
           const sorted = [...deltas].sort((a, b) => a - b);
-          fps.textContent = String(Math.min(120, Math.round(1000 / sorted[sorted.length >> 1])));
+          put(fps, String(Math.min(120, Math.round(1000 / sorted[sorted.length >> 1]))));
         }
       }
       last = now;
