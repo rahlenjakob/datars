@@ -345,6 +345,7 @@ step("asia", { set: { focus: ["IND", "CHN", "PAK", "BGD", "IDN"] } }),</code></p
   { when: { from: "spiral", to: "grid" }, select: { role: "datum" }, choreo: choreo.wave(0.6, 0) },
 )</code></pre>
 <pre><code data-lang="html">&lt;datars-view src="c/motion-scroll" scrub&gt;&lt;/datars-view&gt;  &lt;!-- inside a tall [data-scrub] box --&gt;</code></pre>
+<pre><code data-lang="js">chart.seek(1.5);  // or your own scrubber: half-way from the second step to the third</code></pre>
   </div>
 </section>
 
@@ -366,6 +367,9 @@ step("asia", { set: { focus: ["IND", "CHN", "PAK", "BGD", "IDN"] } }),</code></p
       <figure class="fig"><div class="frame mp-cq"><div class="chart" data-chart="motion-scroll" data-rm="reduced" data-min="200" data-phone-ratio="0.82"></div></div><figcaption><b>Reduced motion</b> — what the engine plays instead: a 0.25 s crossfade.</figcaption></figure>
     </div>
     <p class="fine mp-rm-note" hidden>Your device asks for reduced motion, so the left chart follows it too. <button type="button" class="btn btn-ghost small mp-rm-force">Show the full motion on the left</button></p>
+    <p>A page can decide per chart, too — this comparison does, and so can an opt-in “show me the motion” button:</p>
+<pre><code data-lang="html">&lt;datars-view src="c/sales" reduced-motion="reduce"&gt;&lt;/datars-view&gt;         &lt;!-- always reduced --&gt;
+&lt;datars-view src="c/sales" reduced-motion="no-preference"&gt;&lt;/datars-view&gt;  &lt;!-- the reader opted in --&gt;</code></pre>
   </div>
 </section>
 

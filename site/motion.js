@@ -7,10 +7,8 @@
 // page draws nothing itself. The document it sends has two states, the layout on screen and the one
 // picked, so a transition between any two layouts is the step from the first to the second.
 //
-// Two engine calls aren't on <datars-view>'s public API, so this reaches the element's running
-// engine (`view.view`) for them: `seek(pos)` — what its `scrub` attribute calls, a frame of the plan
-// at any t — and `set_reduced_motion(on)`, which the element only ever sets from the reader's media
-// query. A public `seek()` and a `reduced-motion` attribute on the element would replace both.
+// All through <datars-view>'s public API: `seek(position)` for the scrubber (a frame of the plan at
+// any t, exactly) and the `reduced-motion` attribute for the comparison and the opt-in.
 import { highlight } from "./site.js";
 
 const reducedQuery = matchMedia("(prefers-reduced-motion: reduce)");
@@ -21,7 +19,7 @@ function whenReady(slot) {
     const look = () => {
       const v = slot.querySelector("datars-view");
       if (!v) return false;
-      if (v.dataset.renderer && v.view) resolve(v);
+      if (v.status) resolve(v);
       else v.addEventListener("state", () => resolve(v), { once: true });
       return true;
     };
@@ -33,24 +31,14 @@ function whenReady(slot) {
 
 /** Show the plan of the step from state `floor(pos)` at fraction `pos % 1` — exactly, both ways. */
 function seek(v, pos) {
-  v.view?.seek(pos);
-  v.kick?.(); // draw it: the element renders on demand
+  v.seek(pos);
 }
 
 /** Reduced motion for one view: `true` or `false` whatever the reader's setting, `null` to follow it
- * again. Kept across the element's own updates (it re-applies the media query when the chart comes
- * into view), which call the engine's setter. */
+ * again. */
 function setReduced(v, on) {
-  const engine = v.view;
-  if (!engine) return;
-  const set = Object.getPrototypeOf(engine).set_reduced_motion;
-  if (on === null) {
-    delete engine.set_reduced_motion;
-    set.call(engine, reducedQuery.matches);
-  } else {
-    engine.set_reduced_motion = () => set.call(engine, on);
-    set.call(engine, on);
-  }
+  if (on === null) v.removeAttribute("reduced-motion");
+  else v.setAttribute("reduced-motion", on ? "reduce" : "no-preference");
 }
 
 // ---- the playground ---------------------------------------------------------------------------
