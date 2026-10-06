@@ -572,6 +572,8 @@ const LANGS = {
 };
 LANGS.js = LANGS.ts;
 
+// Exported for page scripts: motion.js writes the playground's motion rule as the reader changes
+// it, studio.js its exports.
 export function highlight(el) {
   const lang = LANGS[el.dataset.lang];
   if (!lang) return;
@@ -588,5 +590,3 @@ export function highlight(el) {
 document.querySelectorAll("pre code[data-lang]:not([data-hl])").forEach(highlight);
 showLook(); // after the highlighter's tables above exist
 
-// For page scripts (motion.js writes the playground's motion rule as the reader changes it).
-export { highlight };
