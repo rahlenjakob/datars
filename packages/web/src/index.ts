@@ -37,6 +37,15 @@ function oneAtATime<T>(f: () => Promise<T>): Promise<T> {
  * further down the page doesn't make the one being read stutter. */
 const moving = new Set<object>();
 let quiet: (() => void)[] = [];
+/** Give back a canvas's WebGL context now, once its engine is freed. A context outlives its
+ * canvas until garbage collection, and browsers allow only a handful at once (Safari's limit is
+ * hit after a page re-adds a few charts): a chart taken off the page must not hold one. A canvas
+ * drawn with WebGPU or the CPU has no WebGL context, and `getContext` returns null for it. */
+function releaseGl(canvas: HTMLCanvasElement | undefined) {
+  const gl = canvas?.getContext("webgl2") as WebGL2RenderingContext | null | undefined;
+  gl?.getExtension("WEBGL_lose_context")?.loseContext();
+}
+
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
   return actions.map((a) => `${a.path}\t${a.label}`).join("\n");
@@ -532,8 +541,10 @@ export class DatarsView extends ElementBase {
     this.textLayer?.reset();
     for (const stop of [this.stopScrub, this.stopSteps, this.stopPlayback]) stop?.();
     this.stopScrub = this.stopSteps = this.stopPlayback = this.applyPlayback = null;
+    const drewOnGpu = this.dataset.renderer === "gpu";
     this.view?.free();
     this.view = null;
+    if (drewOnGpu) releaseGl(this.canvas);
     this.profiler = null;
     setMoving(this, false);
     this.lastIndex = -1;
@@ -789,10 +800,15 @@ export class DatarsView extends ElementBase {
     await scrollPause(pauseUntil, onScreen);
     if (!live()) return abandon();
     const attachAt = performance.now();
-    const mode = await oneAtATime<string>(() => view.attach(this.canvas, this.size.w, this.size.h, renderDpr(), this.hasAttribute("cpu")));
+    const canvas = this.canvas;
+    const mode = await oneAtATime<string>(() => view.attach(canvas, this.size.w, this.size.h, renderDpr(), this.hasAttribute("cpu")));
     this.renderGen = renderGen;
     this.startLog?.phases.push(["attach (wall)", Math.round(attachAt), Math.round((performance.now() - attachAt) * 10) / 10]);
-    if (!live()) return abandon();
+    if (!live()) {
+      abandon();
+      if (mode === "gpu") releaseGl(canvas);
+      return;
+    }
     this.view = view;
     // The page's work share from the first frame (the engine starts at a native desktop's).
     if (view.set_work_scale) view.set_work_scale((this.workScale = workScale));
