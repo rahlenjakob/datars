@@ -1,0 +1,243 @@
+---
+title: Theme studio — build a theme for your charts · datars
+description: Build a datars theme in the browser — colours and colour expressions, palettes generated from your brand colour, Google Fonts, sizes, corners, strokes, maps and cards, in light, dark and high contrast — on ten live charts, with contrast and colour-blindness checks, and export it as JSON or TypeScript.
+og: brand
+---
+<section class="page-head studio-head">
+  <div class="wrap">
+    <p class="eyebrow">Theme studio</p>
+    <h1>Build a theme. Watch every chart wear it.</h1>
+    <p class="lede-2">Every colour, face, size, corner and stroke below is a theme token, and these are ten published charts — the page only calls <code>setTokens()</code> and sets their <code>mode</code>. Start from a preset or your brand colour, change anything, check it in dark mode and high contrast and for colour-blind readers, then take the theme with you as JSON or TypeScript.</p>
+  </div>
+</section>
+
+<section class="studio" id="studio" data-own-look>
+  <div class="wrap studio-grid">
+    <div class="studio-wall">
+      <div class="wall-bar">
+        <p class="wall-status" aria-live="polite" id="wall-status"><b>Ten published charts</b>, themed live by this page.</p>
+        <div class="seg seg-small" role="group" aria-label="Simulate colour vision">
+          <button type="button" data-vision="" aria-pressed="true" title="Normal colour vision">Normal</button>
+          <button type="button" data-vision="deuteranopia" aria-pressed="false" title="Deuteranopia: no green cones (the most common)">Deutan</button>
+          <button type="button" data-vision="protanopia" aria-pressed="false" title="Protanopia: no red cones">Protan</button>
+          <button type="button" data-vision="tritanopia" aria-pressed="false" title="Tritanopia: no blue cones (rare)">Tritan</button>
+        </div>
+      </div>
+      <div class="wall" id="wall">
+        <figure class="tile"><div class="frame"><div class="chart" data-chart="studio-bars" data-min="210"></div></div><figcaption>{{tokens:studio-bars}}</figcaption></figure>
+        <figure class="tile"><div class="frame"><div class="chart" data-chart="studio-lines" data-min="210"></div></div><figcaption>{{tokens:studio-lines}}</figcaption></figure>
+        <figure class="tile wide"><div class="frame"><div class="chart" data-chart="studio-world" data-min="220"></div></div><figcaption>{{tokens:studio-world}}</figcaption></figure>
+        <figure class="tile"><div class="frame"><div class="chart" data-chart="studio-kpi" data-min="230" data-phone-ratio="1.1"></div></div><figcaption>{{tokens:studio-kpi}}</figcaption></figure>
+        <figure class="tile"><div class="frame"><div class="chart" data-chart="studio-donut" data-min="210"></div></div><figcaption>{{tokens:studio-donut}}</figcaption></figure>
+        <figure class="tile wide"><div class="frame"><div class="chart" data-chart="studio-story" data-min="260" data-phone-ratio="0.95" data-autoplay="4200"></div></div><figcaption>{{tokens:studio-story}}</figcaption></figure>
+        <figure class="tile"><div class="frame"><div class="chart" data-chart="studio-scatter" data-min="210"></div></div><figcaption>{{tokens:studio-scatter}}</figcaption></figure>
+        <figure class="tile"><div class="frame"><div class="chart" data-chart="studio-waterfall" data-min="210"></div></div><figcaption>{{tokens:studio-waterfall}}</figcaption></figure>
+        <figure class="tile wide"><div class="frame"><div class="chart" data-chart="studio-stripes" data-min="170"></div></div><figcaption>{{tokens:studio-stripes}}</figcaption></figure>
+        <figure class="tile wide"><div class="frame"><div class="chart" data-chart="studio-streets" data-min="240" data-phone-ratio="0.9"></div></div><figcaption>{{tokens:studio-streets}}</figcaption></figure>
+      </div>
+      <svg class="cvd-filters" aria-hidden="true" focusable="false" width="0" height="0">
+        <!-- The engine's own simulations (datars-color `simulate_cvd`): the same matrices, on linear RGB. -->
+        <filter id="cvd-protanopia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.152286 1.052583 -0.204868 0 0  0.114503 0.786281 0.099216 0 0  -0.003882 -0.048116 1.051998 0 0  0 0 0 1 0"/></filter>
+        <filter id="cvd-deuteranopia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.367322 0.860646 -0.227968 0 0  0.280085 0.672501 0.047413 0 0  -0.011820 0.042940 0.968881 0 0  0 0 0 1 0"/></filter>
+        <filter id="cvd-tritanopia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1.255528 -0.076749 -0.178779 0 0  -0.078411 0.930809 0.147602 0 0  0.004733 0.691367 0.303900 0 0  0 0 0 1 0"/></filter>
+      </svg>
+    </div>
+
+    <aside class="studio-panel" id="studio-panel" aria-label="Theme editor">
+      <div class="sp-head">
+        <div class="seg" role="group" aria-label="Mode">
+          <button type="button" data-studio-mode="light" aria-pressed="true">Light</button>
+          <button type="button" data-studio-mode="dark" aria-pressed="false">Dark</button>
+          <button type="button" data-studio-mode="high-contrast" aria-pressed="false" aria-label="High contrast"><span class="hc-l">High contrast</span><span class="hc-s" aria-hidden="true">Contrast</span></button>
+        </div>
+        <button type="button" class="icon-btn sp-undo" data-studio-undo aria-label="Undo" title="Undo" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button>
+        <button type="button" class="icon-btn sp-fold" data-studio-fold aria-label="Hide the editor" aria-expanded="true" title="Hide the editor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      </div>
+      <div class="sp-tabs" role="tablist" aria-label="Token groups">
+        <button type="button" role="tab" id="tab-start" aria-controls="sp-start" aria-selected="true">Start</button>
+        <button type="button" role="tab" id="tab-colours" aria-controls="sp-colours" aria-selected="false" tabindex="-1">Colours</button>
+        <button type="button" role="tab" id="tab-palettes" aria-controls="sp-palettes" aria-selected="false" tabindex="-1">Palettes</button>
+        <button type="button" role="tab" id="tab-type" aria-controls="sp-type" aria-selected="false" tabindex="-1">Type</button>
+        <button type="button" role="tab" id="tab-shape" aria-controls="sp-shape" aria-selected="false" tabindex="-1">Shape</button>
+        <button type="button" role="tab" id="tab-maps" aria-controls="sp-maps" aria-selected="false" tabindex="-1">Maps &amp; cards</button>
+        <button type="button" role="tab" id="tab-checks" aria-controls="sp-checks" aria-selected="false" tabindex="-1">Checks <span class="ck-badge" id="ck-badge" hidden></span></button>
+        <button type="button" role="tab" id="tab-export" aria-controls="sp-export" aria-selected="false" tabindex="-1">Export</button>
+      </div>
+      <div class="sp-body" id="sp-body">
+        <p class="sp-scope" id="sp-scope" hidden></p>
+
+        <section class="sp-tab" role="tabpanel" id="sp-start" aria-labelledby="tab-start">
+          <h3>Start from</h3>
+          <div class="swatches studio-presets" role="group" aria-label="Presets">
+            <button type="button" data-studio-preset="default" aria-pressed="true"><span class="sw" style="--a:#4269d0;--b:#efb118;--c:#ff725c"></span>datars</button>
+            <button type="button" data-studio-preset="newsprint" aria-pressed="false"><span class="sw" style="--a:#b3261e;--b:#1d3f6e;--c:#f4eee2"></span>Newsprint</button>
+            <button type="button" data-studio-preset="nordic" aria-pressed="false"><span class="sw" style="--a:#0f766e;--b:#6cb8d0;--c:#e8a33d"></span>Nordic</button>
+            <button type="button" data-studio-preset="neon" aria-pressed="false"><span class="sw" style="--a:#ff2bd6;--b:#22e5ff;--c:#0b0620"></span>Neon</button>
+            <button type="button" data-studio-preset="sunset" aria-pressed="false"><span class="sw" style="--a:#e8590c;--b:#c2185b;--c:#fff4ea"></span>Sunset</button>
+            <button type="button" data-studio-preset="ledger" aria-pressed="false"><span class="sw" style="--a:#1f3a5f;--b:#d9a441;--c:#f7f5ef"></span>Ledger</button>
+          </div>
+          <h3>Or from your brand colour</h3>
+          <div class="brand-row">
+            <label class="tok-sw big" style="--c:#b3261e"><input type="color" id="brand-colour" value="#b3261e" aria-label="Your brand colour"></label>
+            <input class="tok-val" id="brand-hex" type="text" value="#b3261e" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Brand colour as hex">
+            <button type="button" class="btn btn-primary small" id="brand-go">Build the theme</button>
+          </div>
+          <div class="seg seg-small brand-paper" role="group" aria-label="Page">
+            <button type="button" data-brand-paper="white" aria-pressed="true">White paper</button>
+            <button type="button" data-brand-paper="tinted" aria-pressed="false">Tinted paper</button>
+            <button type="button" data-brand-paper="dark" aria-pressed="false" title="A dark page in every mode (scheme: dark)">All dark</button>
+          </div>
+          <p class="fine">One colour becomes a theme: the accent, a categorical palette the engine generates around it (as far apart as it can, for colour-blind readers too), a sequential ramp and a diverging one to its opposite hue — plus a lighter accent for dark mode, as expressions you can read in Export.</p>
+          <h3>Name</h3>
+          <input class="tok-val wide" id="theme-name" type="text" value="my-theme" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="Theme name">
+          <p class="fine">Your theme is kept in this browser as you go. <button type="button" class="linkish" data-studio-reset>Start over</button></p>
+          <p class="fine">Not enough? <a href="/features/extensibility/">Eject any built-in chart</a> and change how it draws, or <a href="/docs/custom-recipes/">build your own</a> — it reads the same tokens, so this theme dresses it too.</p>
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-colours" aria-labelledby="tab-colours" hidden>
+          <p class="fine sp-lead">A value is a colour or an expression over other tokens — <code>mix($ink, $paper, 0.3)</code>, <code>lighten($accent, 0.1)</code>, <code>on($accent)</code> — resolved by the engine as you type. Greyed values are inherited.</p>
+          {{studio:colours}}
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-palettes" aria-labelledby="tab-palettes" hidden>
+          <div class="pal-block" data-palette="categorical">
+            <h3><code>categorical</code> <small>a colour per series or category</small></h3>
+            <div class="pal-strip" data-strip="categorical" role="group" aria-label="Categorical colours"></div>
+            <div class="chips pal-presets" role="group" aria-label="Categorical palettes">
+              <button type="button" data-pal-preset="categorical:neutral">datars</button>
+              <button type="button" data-pal-preset="categorical:generate">Generated from the accent</button>
+              <button type="button" data-pal-preset="categorical:okabe">Okabe–Ito</button>
+              <button type="button" data-pal-preset="categorical:tableau">Tableau 10</button>
+              <button type="button" data-pal-preset="categorical:shades">Shades of the accent</button>
+            </div>
+            <div class="cvd" aria-label="The first eight colours as colour-blind readers see them">
+              <div class="cvd-row" data-cvd=""><span>Normal</span><i class="cvd-sw"></i><b></b></div>
+              <div class="cvd-row" data-cvd="deuteranopia"><span>Deutan</span><i class="cvd-sw"></i><b></b></div>
+              <div class="cvd-row" data-cvd="protanopia"><span>Protan</span><i class="cvd-sw"></i><b></b></div>
+              <div class="cvd-row" data-cvd="tritanopia"><span>Tritan</span><i class="cvd-sw"></i><b></b></div>
+            </div>
+            <p class="fine">ΔE is the smallest difference between any two of the first eight colours (OKLab × 100), as the theme check measures it. Tap a colour to change it.</p>
+          </div>
+          <div class="pal-block" data-palette="sequential">
+            <h3><code>sequential</code> <small>low to high: choropleths, heatmaps</small></h3>
+            <div class="pal-ramp" data-strip="sequential"></div>
+            <div class="chips pal-presets" role="group" aria-label="Sequential ramps">
+              <button type="button" data-pal-preset="sequential:neutral">datars</button>
+              <button type="button" data-pal-preset="sequential:generate">From the accent</button>
+              <button type="button" data-pal-preset="sequential:viridis">Viridis</button>
+              <button type="button" data-pal-preset="sequential:magma">Magma</button>
+              <button type="button" data-pal-preset="sequential:greens">Greens</button>
+            </div>
+          </div>
+          <div class="pal-block" data-palette="diverging">
+            <h3><code>diverging</code> <small>below and above a midpoint</small></h3>
+            <div class="pal-ramp" data-strip="diverging"></div>
+            <div class="chips pal-presets" role="group" aria-label="Diverging ramps">
+              <button type="button" data-pal-preset="diverging:neutral">datars</button>
+              <button type="button" data-pal-preset="diverging:generate">Accent to its opposite</button>
+              <button type="button" data-pal-preset="diverging:purple-green">Purple–green</button>
+              <button type="button" data-pal-preset="diverging:teal-brown">Teal–brown</button>
+            </div>
+          </div>
+          <p class="fine">Generated palettes stay generators in the theme you export (<code>{ generate: "categorical", from: "$accent", n: 8 }</code>): change the accent and they follow, in every mode.</p>
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-type" aria-labelledby="tab-type" hidden>
+          <p class="fine sp-lead">Any Google Fonts family. The build step downloads the faces once and ships subsets inside each chart's bundle, so readers never fetch a font from Google; this page previews them from Fontsource's copy.</p>
+          {{studio:type}}
+          <datalist id="google-families"></datalist>
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-shape" aria-labelledby="tab-shape" hidden>
+          <p class="fine sp-lead">Sizes, corners and strokes are read when a chart lays itself out: a change re-lays it, and it morphs there like any other change.</p>
+          {{studio:shape}}
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-maps" aria-labelledby="tab-maps" hidden>
+          <p class="fine sp-lead">The basemap is drawn by the engine from vector tiles, so its water, parks, roads and names are tokens like everything else.</p>
+          {{studio:maps}}
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-checks" aria-labelledby="tab-checks" hidden>
+          <p class="fine sp-lead">The checks every theme inherits from <code>datars/neutral</code>, run on the colours the engine resolves for each mode — the same tests as <code>datars lint</code>.</p>
+          {{studio:checks}}
+          <p class="fine ck-key"><span class="ck pass">7.1</span> passes · <span class="ck warn">3.9</span> below the bar · <span class="ck fail">2.1</span> fails (contrast under 3:1)</p>
+        </section>
+
+        <section class="sp-tab" role="tabpanel" id="sp-export" aria-labelledby="tab-export" hidden>
+          <div class="seg seg-small" role="group" aria-label="Format">
+            <button type="button" data-export="ts" aria-pressed="true">TypeScript</button>
+            <button type="button" data-export="json" aria-pressed="false">Theme JSON</button>
+            <button type="button" data-export="host" aria-pressed="false">Runtime</button>
+          </div>
+<pre class="live-code export-code"><code data-lang="ts" id="export-code">import { theme } from "@datars/sdk";</code></pre>
+          <div class="export-actions">
+            <button type="button" class="btn btn-ghost small" data-copy="code">Copy</button>
+            <button type="button" class="btn btn-ghost small" data-download>Download .json</button>
+            <button type="button" class="btn btn-ghost small" data-copy="link">Copy link</button>
+          </div>
+          <h3>Locks</h3>
+          <div class="locks" role="group" aria-label="Lock tokens">
+            <label><input type="checkbox" data-lock="colours"> Brand colours <small>paper, ink, accent</small></label>
+            <label><input type="checkbox" data-lock="palettes"> Palettes</label>
+            <label><input type="checkbox" data-lock="fonts"> Type</label>
+          </div>
+          <p class="fine">A locked token can't be changed by a later layer — a document's own tokens, or an app's <code>setTokens()</code>: the override is ignored and reported.</p>
+          <h3>On this site</h3>
+          <div class="export-actions">
+            <button type="button" class="btn btn-primary small" data-wear>Wear it on every page</button>
+            <span class="fine" data-wear-status></span>
+          </div>
+          <p class="fine">Every chart on this site (articles keep theirs) takes your theme, as the palette menu in the header does with its presets.</p>
+        </section>
+      </div>
+    </aside>
+  </div>
+  <div class="sp-resolver" inert aria-hidden="true" id="sp-resolver"></div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2>Inks, not colours — resolved every frame</h2>
+      <p>The charts above were published once. A colour in them is an <em>ink</em> — <code>$accent</code>, <code>$categorical[2]</code>, <code>$ink@0.4</code> — looked up in the active theme when each frame is drawn. So a theme change needs no new data and no new page: the studio hands each chart a layer of tokens, and the next frame wears it.</p>
+    </header>
+    <div class="cards3">
+      <article>
+        <h3>Set a few, derive the rest</h3>
+        <p>The built-in theme derives its greys, gridlines, surfaces and the ink on your accent from <code>paper</code>, <code>ink</code> and <code>accent</code> with colour expressions, and they re-derive in every mode. Change <code>ink</code> and watch <code>grid</code> and <code>muted</code> follow.</p>
+      </article>
+      <article>
+        <h3>Three modes in one theme</h3>
+        <p>Light, dark and high contrast are layers of the same theme: base tokens first, then the mode's. A brand that only sets its accent keeps the built-in theme's tuned dark surfaces; a dark-first brand says <code>scheme: "dark"</code>.</p>
+      </article>
+      <article>
+        <h3>Checked as you go</h3>
+        <p>Contrast of text on its background, palettes that stay distinct for colour-blind readers, ramps that only get darker — measured on what the engine resolves, the way <code>datars lint</code> measures them.</p>
+      </article>
+    </div>
+    <div class="next" style="margin-top:28px">
+      <div>
+        <h2>Use your theme</h2>
+        <p>Pass it as a document's <code>theme</code>, publish it for your apps, or hand its tokens to charts you already published.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/theming/">Themes and brands <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/features/theming/">Theming at runtime</a>
+      </div>
+    </div>
+    <div class="next studio-more">
+      <div>
+        <h2>Not enough? Change how a chart draws</h2>
+        <p>Tokens go a long way, but a brand sometimes needs a different mark, a different label, a different chart. Eject any built-in chart as TypeScript and change it, or write a recipe of your own — either way it reads these same tokens, so your theme still dresses it.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/features/extensibility/">Eject or build your own <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/custom-recipes/">Custom recipes</a>
+      </div>
+    </div>
+  </div>
+</section>
+{{studio:data}}
+<script type="module" src="/studio.js"></script>

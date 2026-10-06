@@ -95,7 +95,7 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 }
 
 /** "Make it yours" in the header: the reader restyles every chart on the site (site.js keeps the
- * choice and applies it); the full editor is on the home page. */
+ * choice and applies it); more choices on the home page, a whole theme in the studio (/themes/). */
 const LOOK_PRESETS = [["default", "Default", "#4269d0", "#efb118", "#ff725c"], ["newsprint", "Newsprint", "#b3261e", "#1d3f6e", "#f4eee2"], ["nordic", "Nordic", "#0f766e", "#6cb8d0", "#e8a33d"], ["neon", "Neon", "#ff2bd6", "#22e5ff", "#0b0620"], ["sunset", "Sunset", "#e8590c", "#c2185b", "#fff4ea"]];
 const LOOK_ACCENTS = [["#4269d0", "Blue"], ["#0f766e", "Teal"], ["#2f8f5b", "Green"], ["#e8a33d", "Amber"], ["#e8590c", "Orange"], ["#c8423b", "Red"], ["#c2185b", "Magenta"], ["#6a3fb5", "Violet"]];
 export const lookPresets = (cls = "") => LOOK_PRESETS.map(([id, name, a, b, c]) => `<button type="button" class="${cls}" data-look-preset="${id}" aria-pressed="${id === "default"}"><span class="sw" style="--a:${a};--b:${b};--c:${c}"></span>${name}</button>`).join("");
@@ -108,14 +108,14 @@ const LOOK_MENU = `<details class="dd look" id="look-menu">
           <div class="look-presets" role="group" aria-label="Preset">${lookPresets()}</div>
           <p class="look-l">Accent</p>
           <div class="dots" role="group" aria-label="Accent">${lookAccents()}</div>
-          <div class="look-foot"><a href="/#make-it-yours">Type, palette, corners →</a><button type="button" class="btn btn-ghost small" data-look-reset disabled>Reset</button></div>
+          <div class="look-foot"><a href="/themes/">Build your own theme →</a><button type="button" class="btn btn-ghost small" data-look-reset disabled>Reset</button></div>
         </div>
       </details>`;
 
 function nav(current, repo) {
   const is = (p) => (current === p || (p !== "/" && current.startsWith(p)) ? ' aria-current="page"' : "");
   const featureLinks = FEATURES.map((f) => `<a href="/features/${f.slug}/"${is(`/features/${f.slug}/`)}>${featureIcon(f)}<span><b>${escapeHtml(f.name)}</b><small>${escapeHtml(f.blurb)}</small></span></a>`).join("");
-  const main = [["/gallery/", "Gallery"], ["/docs/", "Docs"], ["/performance/", "Performance"], ["/why/", "Why datars"], ["/articles/", "Articles"]];
+  const main = [["/gallery/", "Gallery"], ["/themes/", "Theme studio"], ["/docs/", "Docs"], ["/performance/", "Performance"], ["/why/", "Why datars"], ["/articles/", "Articles"]];
   return `<a class="skip" href="#main">Skip to content</a>
 <header class="nav">
   <div class="wrap nav-inner">
