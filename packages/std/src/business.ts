@@ -853,11 +853,20 @@ const US_TILES = "AK 0 0 Alaska|ME 10 0 Maine|WI 5 1 Wisconsin|VT 9 1 Vermont|NH
 /** European countries on a 9 × 9 grid: `alpha-3 alpha-2 col row name`, `|`-separated. */
 const EUROPE_TILES = "ISL IS 0 0 Iceland|NOR NO 4 0 Norway|SWE SE 5 0 Sweden|FIN FI 6 0 Finland|IRL IE 1 1 Ireland|GBR GB 2 1 United Kingdom|EST EE 6 1 Estonia|NLD NL 3 2 Netherlands|DNK DK 4 2 Denmark|LVA LV 6 2 Latvia|BEL BE 3 3 Belgium|DEU DE 4 3 Germany|POL PL 5 3 Poland|LTU LT 6 3 Lithuania|BLR BY 7 3 Belarus|FRA FR 2 4 France|LUX LU 3 4 Luxembourg|CZE CZ 4 4 Czechia|SVK SK 5 4 Slovakia|UKR UA 6 4 Ukraine|PRT PT 0 5 Portugal|ESP ES 1 5 Spain|CHE CH 3 5 Switzerland|AUT AT 4 5 Austria|HUN HU 5 5 Hungary|ROU RO 6 5 Romania|MDA MD 7 5 Moldova|ITA IT 3 6 Italy|SVN SI 4 6 Slovenia|HRV HR 5 6 Croatia|SRB RS 6 6 Serbia|BGR BG 7 6 Bulgaria|MLT MT 3 7 Malta|BIH BA 5 7 Bosnia and Herzegovina|MNE ME 6 7 Montenegro|MKD MK 7 7 North Macedonia|TUR TR 8 7 Türkiye|ALB AL 6 8 Albania|GRC GR 7 8 Greece|CYP CY 8 8 Cyprus";
 
+/** The same places on hexagon grids (odd rows half a tile right). Hexagons touch along six sides,
+ * not a square's four sides and four corners: shifting the square grid's rows (as hex tiles once
+ * did) split real neighbours — Florida floated free of Georgia and Alabama, Türkiye of its
+ * neighbours. These are laid out for the hexagon grid: every place touches a real neighbour, and
+ * most borders hold (the US 87 of 107, Europe 54 of 69, against 74 and 47 shifted). */
+const US_HEX_TILES = "AK 0 0 Alaska|ME 10 0 Maine|VT 8 1 Vermont|NH 9 1 New Hampshire|WA 0 2 Washington|ID 1 2 Idaho|ND 2 2 North Dakota|MN 3 2 Minnesota|WI 4 2 Wisconsin|MI 6 2 Michigan|NY 8 2 New York|MA 9 2 Massachusetts|OR 0 3 Oregon|MT 1 3 Montana|SD 2 3 South Dakota|IA 3 3 Iowa|IL 4 3 Illinois|IN 5 3 Indiana|OH 6 3 Ohio|PA 7 3 Pennsylvania|NJ 8 3 New Jersey|CT 9 3 Connecticut|RI 10 3 Rhode Island|CA 0 4 California|NV 1 4 Nevada|WY 2 4 Wyoming|NE 3 4 Nebraska|MO 4 4 Missouri|KY 5 4 Kentucky|WV 6 4 West Virginia|VA 7 4 Virginia|MD 8 4 Maryland|DE 9 4 Delaware|AZ 0 5 Arizona|UT 1 5 Utah|CO 2 5 Colorado|KS 3 5 Kansas|AR 4 5 Arkansas|TN 5 5 Tennessee|NC 6 5 North Carolina|SC 7 5 South Carolina|DC 8 5 District of Columbia|NM 2 6 New Mexico|OK 3 6 Oklahoma|LA 4 6 Louisiana|MS 5 6 Mississippi|AL 6 6 Alabama|GA 7 6 Georgia|HI 0 7 Hawaii|TX 2 7 Texas|FL 6 7 Florida";
+const EUROPE_HEX_TILES = "ISL IS 0 0 Iceland|NOR NO 5 0 Norway|SWE SE 6 0 Sweden|FIN FI 7 0 Finland|IRL IE 1 1 Ireland|GBR GB 2 1 United Kingdom|EST EE 7 1 Estonia|NLD NL 5 2 Netherlands|DNK DK 6 2 Denmark|LVA LV 8 2 Latvia|BEL BE 4 3 Belgium|DEU DE 5 3 Germany|POL PL 6 3 Poland|LTU LT 7 3 Lithuania|BLR BY 8 3 Belarus|FRA FR 4 4 France|LUX LU 5 4 Luxembourg|CZE CZ 6 4 Czechia|SVK SK 7 4 Slovakia|UKR UA 8 4 Ukraine|PRT PT 2 5 Portugal|ESP ES 3 5 Spain|CHE CH 4 5 Switzerland|AUT AT 5 5 Austria|HUN HU 6 5 Hungary|ROU RO 7 5 Romania|MDA MD 8 5 Moldova|ITA IT 4 6 Italy|SVN SI 5 6 Slovenia|HRV HR 6 6 Croatia|SRB RS 7 6 Serbia|BGR BG 8 6 Bulgaria|BIH BA 5 7 Bosnia and Herzegovina|MNE ME 6 7 Montenegro|MKD MK 7 7 North Macedonia|TUR TR 8 7 Türkiye|MLT MT 4 8 Malta|ALB AL 6 8 Albania|GRC GR 7 8 Greece|CYP CY 9 8 Cyprus";
+
 /** A built-in grid layout as columns: `id` (the key data joins on), `abbr` (the tile's text), `name`, `col`, `row`. */
-function tileLayout(name: string, codes: string): Record<string, unknown[]> {
+function tileLayout(name: string, codes: string, hex: boolean): Record<string, unknown[]> {
   const out: Record<string, unknown[]> = { id: [], abbr: [], name: [], col: [], row: [] };
   const europe = name === "europe";
-  for (const entry of (europe ? EUROPE_TILES : US_TILES).split("|")) {
+  const grid = europe ? (hex ? EUROPE_HEX_TILES : EUROPE_TILES) : hex ? US_HEX_TILES : US_TILES;
+  for (const entry of grid.split("|")) {
     const parts = entry.split(" ");
     const [a3, a2] = europe ? [parts[0], parts[1]] : [parts[0], parts[0]];
     const rest = parts.slice(europe ? 2 : 1);
@@ -879,7 +888,7 @@ export const tileMap = recipe<TileMapParams>({
     data: t.table("Values per place."), key: t.field("The data column holding each place's id (a postal code, an ISO code, your layout's `id`)."), value: t.field("The value to colour by."),
     layout: t.string("us", "`us` (50 states and DC), `europe` (40 countries), or the name of a table with columns `id`, `col`, `row` (and optional `abbr`, `name`)."),
     codes: t.oneOf(["alpha3", "alpha2"] as const, "alpha3", "The `europe` layout's ids: ISO 3166 alpha-3 (`DEU`, as the countries atlas) or alpha-2 (`DE`)."),
-    shape: t.oneOf(["square", "hex"] as const, "square", "Square tiles, or hexagons (odd rows shifted half a tile)."),
+    shape: t.oneOf(["square", "hex"] as const, "square", "Square tiles, or hexagons (odd rows half a tile right). The built-in layouts have a grid of their own for hexagons, so neighbours still touch; a layout table of yours is read as hexagon coordinates."),
     colorType: t.oneOf(["sequential", "diverging", "categorical", "piecewise"] as const, "sequential"),
     stops: t.string(undefined, "Piecewise colour stops: '#22c55e 2 · #f5a524 4 · #f97362 6.5'."),
     format: t.string(",.1~f", "Number format in tooltips, values and the legend."),
@@ -894,7 +903,7 @@ export const tileMap = recipe<TileMapParams>({
     const vals = cx.table("tile-values", p.data, op.derive("id", e(`String(${fld(p.key)})`)));
     const builtIn = p.layout === "us" || p.layout === "europe" || !p.layout;
     const tiles = builtIn
-      ? cx.table("tiles", p.data, op.values(tileLayout(p.layout || "us", p.codes), { key: "id" }), op.join(vals, "id", "left"))
+      ? cx.table("tiles", p.data, op.values(tileLayout(p.layout || "us", p.codes, p.shape === "hex"), { key: "id" }), op.join(vals, "id", "left"))
       : cx.table("tiles", p.layout, op.derive("id", e("String(d.id)")), op.join(vals, "id", "left"));
     const Tq = q(tiles);
     const hex = p.shape === "hex";

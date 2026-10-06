@@ -1016,3 +1016,41 @@ test("tileMap: a built-in grid as its own rows (op.values), data joined on the i
   const own = tileMap.__expand({ data: "c", key: "id", value: "v", layout: "myGrid" }, {});
   assert.ok(Object.values(own.tables).some((t) => t.from === "myGrid"), "or a layout table of your own");
 });
+
+// Real land borders, for checking that the built-in grids keep neighbours touching.
+const US_BORDERS = "AL FL GA MS TN|AZ CA NM NV UT|AR LA MO MS OK TN TX|CA NV OR|CO KS NE NM OK UT WY|CT MA NY RI|DE MD NJ PA|DC MD VA|FL GA|GA NC SC TN|ID MT NV OR UT WA WY|IL IA IN KY MO WI|IN KY MI OH|IA MN MO NE SD WI|KS MO NE OK|KY MO OH TN VA WV|LA MS TX|ME NH|MD PA VA WV|MA NH NY RI VT|MI OH WI|MN ND SD WI|MS TN|MO NE OK TN|MT ND SD WY|NE SD WY|NV OR UT|NH VT|NJ NY PA|NM OK TX|NY PA VT|NC SC TN VA|ND SD|OH PA WV|OK TX|OR WA|PA WV|SD WY|TN VA|UT WY|VA WV";
+const EU_BORDERS = "NOR SWE FIN|SWE FIN|IRL GBR|EST LVA|NLD BEL DEU|DNK DEU|LVA LTU BLR|BEL DEU LUX FRA|DEU LUX FRA CHE AUT CZE POL|POL CZE SVK UKR BLR LTU|LTU BLR|BLR UKR|FRA LUX CHE ITA ESP|CZE SVK AUT|SVK UKR HUN AUT|UKR HUN ROU MDA|PRT ESP|CHE AUT ITA|AUT HUN SVN ITA|HUN ROU SRB HRV SVN|ROU MDA BGR SRB|ITA SVN|SVN HRV|HRV SRB BIH MNE|SRB BGR MKD BIH MNE|BGR MKD GRC TUR|MNE BIH ALB|MKD GRC ALB|GRC ALB TUR";
+const borders = (text) => text.split("|").flatMap((l) => { const [a, ...bs] = l.split(" "); return bs.map((b) => [a, b]); });
+/** Does tile b touch tile a? Squares by an edge or a corner; hexagons by a side (odd rows half a
+ * tile right, as the recipe draws them). */
+function touching(a, b, hex) {
+  const dc = b.col - a.col, dr = b.row - a.row;
+  if (!hex) return Math.max(Math.abs(dc), Math.abs(dr)) === 1;
+  if (dr === 0) return Math.abs(dc) === 1;
+  if (Math.abs(dr) !== 1) return false;
+  return a.row % 2 === 0 ? dc === -1 || dc === 0 : dc === 0 || dc === 1;
+}
+
+test("tileMap: in every built-in grid, square or hex, neighbours touch — no place cut off from all of them", () => {
+  for (const [layout, text, codes] of [["us", US_BORDERS, undefined], ["europe", EU_BORDERS, "alpha3"]]) {
+    for (const shape of ["square", "hex"]) {
+      const v = bizOps(tileMap.__expand({ data: "d", key: "k", value: "v", layout, codes, shape }, {})).find((o) => o.op === "values").values;
+      const tile = Object.fromEntries(v.id.map((id, i) => [id, { col: v.col[i], row: v.row[i] }]));
+      const cells = new Set(v.id.map((id) => `${tile[id].col},${tile[id].row}`));
+      assert.equal(cells.size, v.id.length, `${layout} ${shape}: one place per tile`);
+      const pairs = borders(text);
+      for (const [a, b] of pairs) assert.ok(tile[a] && tile[b], `${layout}: ${a}, ${b} in the grid`);
+      const kept = pairs.filter(([a, b]) => touching(tile[a], tile[b], shape === "hex"));
+      const ids = [...new Set(pairs.flat())];
+      const cut = ids.filter((id) => !kept.some(([a, b]) => a === id || b === id));
+      // Florida once floated free of Georgia and Alabama in the hex grid (the square grid's rows,
+      // shifted): every place with a land border touches at least one neighbour.
+      assert.deepEqual(cut, [], `${layout} ${shape}: cut off from every neighbour`);
+      // And most borders hold: the floors sit just under each grid's own (a hexagon touches six
+      // tiles, a square eight with its corners). The square grids' rows shifted kept 69% (US) and
+      // 68% (Europe) as hexagons.
+      const floor = { "us square": 0.85, "us hex": 0.8, "europe square": 0.88, "europe hex": 0.76 }[`${layout} ${shape}`];
+      assert.ok(kept.length / pairs.length >= floor, `${layout} ${shape}: ${kept.length} of ${pairs.length} borders kept`);
+    }
+  }
+});
