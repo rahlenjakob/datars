@@ -156,7 +156,10 @@ const near = new IntersectionObserver((entries) => {
     near.unobserve(e.target);
     mount(e.target);
   }
-}, { rootMargin: "700px 0px" });
+  // A screen and a half ahead (as @datars/react's <DatarsView>): a chart starts while it's still
+  // off screen, so it's drawn by the time the reader gets there. 700 px was under a second ahead
+  // at a reading scroll, less than a start on a slow connection.
+}, { rootMargin: "150% 0px" });
 document.querySelectorAll(".chart[data-src]").forEach((s) => near.observe(s));
 
 // ---- per-chart wiring ------------------------------------------------------------------------

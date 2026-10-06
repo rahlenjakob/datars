@@ -53,17 +53,21 @@ function quietTurn(maxMs = 1500): Promise<void> {
   });
 }
 
-/** The page's scrolling: a chart coming into view opens once the reader pauses (its poster shows
- * meanwhile) — opening a document is one long task, and in the middle of a scroll it's a hitch. */
+/** The page's scrolling: a chart coming into view prefers to open while the reader pauses — its
+ * poster shows meanwhile — so its short tasks (a chunk opened, the canvas attached: a few ms to a
+ * few tens) don't land mid-scroll. A preference with a budget: a start waits for a pause at most
+ * `START_PAUSE_MS` in all, and not at all once the chart is on screen. Waiting up to 3 s at each
+ * of its steps, a chart scrolled to during a long scroll sat on its poster for seconds while in
+ * view — slower than any hitch it saved. */
 let lastScroll = -1e9;
+const START_PAUSE_MS = 400;
 // (Imported on a server — SSR of a page that uses charts — the module loads and does nothing.)
 if (typeof addEventListener === "function") addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true, capture: true });
-async function scrollPause(maxMs = 3000): Promise<void> {
-  const until = performance.now() + maxMs;
-  while (performance.now() - lastScroll < 180 && performance.now() < until) {
+async function scrollPause(until: number, onScreen: () => boolean): Promise<void> {
+  while (performance.now() - lastScroll < 180 && performance.now() < until && !onScreen()) {
     await new Promise((r) => setTimeout(r, 60));
   }
-  await quietTurn();
+  if (!onScreen()) await quietTurn();
 }
 
 /** The page's share of the engines' per-frame work budgets (points built, tiles decoded, map
@@ -688,6 +692,9 @@ export class DatarsView extends ElementBase {
     if (this.startLog) ((window as any).__datarsStarts ??= []).push(this.startLog);
     // Still wanted after an await? The element may have left the page (or started again) meanwhile.
     const live = () => gen === this.generation && this.isConnected;
+    // One budget for the whole start to wait for the page to stop scrolling (`scrollPause`).
+    const pauseUntil = performance.now() + START_PAUSE_MS;
+    const onScreen = () => this.onScreen;
     const publishers = (this.getAttribute("publishers") ?? "").split(/\s+/).filter(Boolean);
     const allowScript = this.hasAttribute("allow-script") || !this.hasAttribute("no-script");
     const src = this.getAttribute("src");
@@ -734,9 +741,9 @@ export class DatarsView extends ElementBase {
       while (need.length) {
         this.showPoster(view);
         const got = await Promise.all(need.map(async (h) => [h, await fetchChunk(`${base}/chunks/${h.replace(":", "_")}`)] as const));
-        // Opening the document (the last chunk in) is the heavy part: not while another chart moves
-        // or the page scrolls.
-        await scrollPause();
+        // Opening the document (the last chunk in) is the heavy part: preferably not while another
+        // chart moves or the page scrolls.
+        await scrollPause(pauseUntil, onScreen);
         if (!live()) return abandon();
         for (const [h, b] of got) need = this.timed_("open", () => view.provide_chunk(h, b));
       }
@@ -763,7 +770,7 @@ export class DatarsView extends ElementBase {
     const brief = view.chrome?.() ?? view.status(); // no semantics tree
     this.stateCount = brief.states?.length ?? 0;
     this.showControls();
-    await scrollPause();
+    await scrollPause(pauseUntil, onScreen);
     if (!live()) return abandon();
     const attachAt = performance.now();
     const mode = await oneAtATime<string>(() => view.attach(this.canvas, this.size.w, this.size.h, renderDpr(), this.hasAttribute("cpu")));
