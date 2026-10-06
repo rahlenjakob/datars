@@ -357,7 +357,7 @@ og: votes
 <h3>Choosing a backend in the browser</h3>
 <p>The renderer asks for a WebGPU adapter and device <em>before</em> touching the canvas. A WebGPU surface claims its canvas for good, and a browser that offers WebGPU without an adapter would otherwise leave nothing for the fallbacks, and no chart. If there's no adapter, the <code>core-gl</code> engine tries WebGL2 (every Safari since iOS 15 has it). If that fails too, the CPU reference draws into a 2D canvas.</p>
 <h3>The CPU reference</h3>
-<p>One renderer is written to be <em>identical everywhere</em> rather than fast. Geometry is flattened at 0.1 device px and stroked in double precision using only basic IEEE operations (+, −, ×, ÷, √, rounding) plus the engine's own maths for round joins and caps. Rust never fuses or reorders float operations, so this is bit-identical on every CPU. Coverage is computed in 24.8 fixed point with integer accumulation, which gives exact-area anti-aliasing. Compositing is integer arithmetic on premultiplied RGBA8, with one correctly rounded division by 255 per result. It's single-threaded, with no hash maps, no time and no IO. The bytes it produces are the same on x86-64, arm64 and WebAssembly, which makes it the anchor of every test. It renders goldens, server-side images and the fallback, and, for now, the iOS and Android views. SVG and PDF backends draw the same display list as vectors.</p>
+<p>One renderer is written to be <em>identical everywhere</em> rather than fast. Geometry is flattened at 0.1 device px and stroked in double precision using only basic IEEE operations (+, −, ×, ÷, √, rounding) plus the engine's own maths for round joins and caps. Rust never fuses or reorders float operations, so this is bit-identical on every CPU. Coverage is computed in 24.8 fixed point with integer accumulation, which gives exact-area anti-aliasing. Compositing is integer arithmetic on premultiplied RGBA8, with one correctly rounded division by 255 per result. It's single-threaded, with no hash maps, no time and no IO. The bytes it produces are the same on x86-64, arm64 and WebAssembly, which makes it the anchor of every test. It renders goldens, server-side images and the fallback. The iOS and Android views draw on the GPU; they draw with the CPU reference only before their surface is attached, when wgpu gets no device for that surface, and after a frame loses the device, until the host attaches again. SVG and PDF backends draw the same display list as vectors.</p>
 </section>
 
 <section id="determinism">
@@ -378,8 +378,8 @@ og: votes
   <ul class="hd-targets">
     <li><b>Native, CPU reference</b><span>x86-64 and arm64: <code>datars test</code> records the goldens</span><em>scene hash · pixel hash</em></li>
     <li><b>WebAssembly</b><span>the web runtime, run in Node</span><em>= the goldens' pixels</em></li>
-    <li><b>Swift</b><span>DatarsKit's tests, through the C ABI</span><em>= the goldens' pixels</em></li>
-    <li><b>Android</b><span>the C ABI on an emulator</span><em>= the goldens' pixels</em></li>
+    <li><b>Swift</b><span>DatarsKit's tests, on the C ABI's CPU pixels</span><em>= the goldens' pixels</em></li>
+    <li><b>Android</b><span>the C ABI's CPU pixels on an emulator</span><em>= the goldens' pixels</em></li>
     <li class="hd-gpu"><b>GPU, wgpu</b><span><code>datars gpu</code>, against the CPU pixels</span><em>≈ within the ΔE limits</em></li>
   </ul>
 </div>
@@ -420,6 +420,7 @@ og: votes
 <tr><td>Notebooks</td><td>The Python package: the web runtime as a notebook widget</td><td>As on the web</td></tr>
 </tbody></table></div>
 <p>The C ABI is small on purpose. It creates a view, loads a document or opens a manifest and provides its chunks, and answers the engine's data and range requests. It forwards frames, pointer and wheel events, gotos, signals, modes and tokens, and reads back pixels and status as JSON. Strings cross as UTF-8 pointers and lengths. Swift and Kotlin wrap it in native views, so the app and site both install the runtime once, and charts arrive later as bundles by URL.</p>
+<p>Before a view attaches its surface, the C ABI hands back the CPU reference's pixels, and that is what the Swift and Android golden tests compare. Once the surface is attached, frames go to the GPU. Android emulators try GLES first, because the emulator's Vulkan aborts the process on a macOS host. The GPU path has run in the iOS simulator, on macOS and on the Android emulator, not yet on a physical phone.</p>
 </section>
 
 <section id="delivery">

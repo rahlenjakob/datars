@@ -6,13 +6,14 @@ What is built, how it is verified, and what is still open, measured against the 
 ## How to verify everything
 
 ```sh
-cargo test --workspace --release              # Rust: unit + integration tests (~1,000)
+cargo test --workspace --release              # Rust: unit + integration tests (~1,100)
 target/release/datars test                    # goldens: every example state, 64-sample sweeps of every transition, motion invariants
 target/release/datars gpu                     # wgpu vs CPU reference on this machine's GPU (ΔE, solid-region check)
 target/release/datars budgets                 # bundle and runtime sizes against budgets.json
 bash scripts/build-wasm.sh && node --test packages/web/test/*.test.mjs   # wasm = goldens; publish → serve → open → republish
 (cd apple/DatarsKit && swift test)            # macOS; the iOS simulator via xcodebuild after scripts/build-apple.sh
 scripts/test-android.sh                       # C-ABI goldens on an Android emulator
+scripts/test-ios-sample.sh && scripts/test-android-sample.sh   # sample apps: play a chart published afterwards, frames on the GPU
 node --experimental-websocket scripts/browser-check.mjs http://127.0.0.1:8787/ out/browser.png   # <datars-view> in Chrome
 ```
 
@@ -21,9 +22,13 @@ node --experimental-websocket scripts/browser-check.mjs http://127.0.0.1:8787/ o
 The same example states produce **the same pixel hashes** on macOS arm64 and x86_64 (the C-ABI golden
 test, `crates/datars-ffi/tests/goldens.rs`), wasm32 in Node (`packages/web/test/determinism.test.mjs`),
 the iOS simulator (DatarsKit `DeterminismTests`) and an Android arm64 emulator
-(`scripts/test-android.sh`). The goldens are written by `datars test` on any machine. GPU output
-matches the CPU reference perceptually for every state (`datars gpu`: mean ΔE ≤ 0.15, no
-solid-difference regions). Bundle tiers are equivalent: T1 (baked scenes), T2 (pre-expanded) and T3
+(`scripts/test-android.sh`). The goldens are written by `datars test` on any machine. These hashes
+are of CPU reference frames: the Swift and Android tests read the C ABI's CPU pixels, not the GPU
+surface the views draw on. GPU output matches the CPU reference perceptually for all 56 example
+states (`datars gpu` with Metal on an Apple M3 Pro: limits mean ΔE ≤ 1, at most 0.5 % of pixels
+visibly different, at most 8 pixels in solid-difference regions; measured: mean ΔE under 0.16 for
+every state but the galaxy example's three, 0.41 at most, and one solid-difference pixel, on the
+globe's rim). Bundle tiers are equivalent: T1 (baked scenes), T2 (pre-expanded) and T3
 (source) give the golden scenes (`crates/datars-build/tests/tiers.rs`). Sessions replay bit-exactly
 (`crates/datars-engine/tests/replay.rs`), including sessions recorded in the wasm runtime and
 replayed natively.
@@ -33,13 +38,13 @@ replayed natively.
 | Phase | State | Evidence and notes |
 |---|---|---|
 | **0 Determinism harness** | done | libm wrapper and clippy bans (`clippy.toml`); hashes and CPU pixels identical across five targets (above) |
-| **1 Primitives, text, GPU, platforms** | done | Every node kind; `harfrust` shaping, our own line breaking; CPU, SVG, PDF and wgpu backends (WebGPU, optional WebGL2, Metal, Vulkan, GLES, DX12); hosts: web (`<datars-view>`), desktop (`datars-view`), iOS/macOS (DatarsKit), Android (JNI + Kotlin view, AAR) |
+| **1 Primitives, text, GPU, platforms** | done | Every node kind; `harfrust` shaping, our own line breaking; CPU, SVG, PDF and wgpu backends (WebGPU, optional WebGL2, Metal, Vulkan, GLES, DX12); hosts: web (`<datars-view>`), desktop (`datars-view`), iOS/macOS (DatarsKit), Android (JNI + Kotlin view, AAR). **Native views draw on the GPU** through wgpu: Metal on a `CAMetalLayer` (iOS, macOS), Vulkan, else GLES, on the `TextureView`'s surface (Android; GLES first on emulators). The CPU reference is the fallback: before a surface is attached, where wgpu gets no device for it, after a lost device (until the host re-attaches), and in builds without the `gpu` feature. The sample-app scripts fail unless frames are on the GPU: Metal in the iOS simulator, GLES on the Android emulator. Vulkan on Android hasn't run yet |
 | **2 Motion and bundles** | done | Matchers (path, key, hierarchy, nearest), choreographies, routes, disc/resample morphs, motion rules; lines that run on grow along themselves and markers ride their point (`crates/datars-motion/tests/riders.rs`); 64-sample sweeps and invariants (flash, blink, pop, NaN, exact endpoints) on every transition; bundles and the loader in every host; **a chart published after the hosts were built plays in them and a republish updates them** (web: `packages/web/test/delivery.test.mjs`; Android: `scripts/test-android-sample.sh`; iOS: `scripts/test-ios-sample.sh`) |
 | **3 Data, expressions, interaction** | done | Typed keyed tables, vectorized expressions (bytecode, WGSL), scales, signals; intents: inspect, activate, brush (continuous and band), explore (drag pan, wheel and pinch zoom), drag, chapters; **touch**: a tap inspects with a finger's reach and a tap on nothing clears it; **line charts show values anywhere along the line** (`crates/datars-engine/tests/hover.rs`); session record/replay; linked views by brushing (the **prices** example); `datars explain` and `datars data profile`. **Point pyramids** (`instances` with `lod`, `std/cloud`): tables of any size indexed into seeded density-preserving levels, published as archives read by range — the **galaxy** example (4,000,000 stars, `crates/datars-engine/tests/points.rs`, `packages/web/test/points.test.mjs`) |
-| **4 Recipes and the standard library** | done | QuickJS sandbox with deterministic `Math`; `@datars/sdk` and `@datars/std` (~60 recipes) with zero chart vocabulary in engine crates; every chart in [15](15-chart-coverage.md) as a recipe, including **financial charts** (`examples/stocks`: candlesticks and OHLC on a trading-day axis, volume, SMA/EMA, Bollinger bands, indexed and drawdown comparisons, sparklines). `datars test` also fails data marks that cross the canvas edge and labels a reader can't read (overlapping, or cut off). `datars eject` round-trips. Open: a pointer-following crosshair |
-| **5 Programs** | done | Statechart runtime (states, edges, chapters); drivers: steps and keys, autoplay (holds, pause, `wake_at` so hosts sleep), scroll scrub and scroll triggers (verified in Chrome), live sources (the **election** example replays a feed through `datars serve`); films in any aspect ratio (`datars video`, WebVTT captions); an image server (`datars serve` → `/render/<alias>.png\|svg\|pdf`); engine-drawn controls, offered as native controls (`<input type=range>` in the web mirror, adjustable VoiceOver and TalkBack elements) |
+| **4 Recipes and the standard library** | done | QuickJS sandbox with deterministic `Math`; `@datars/sdk` and `@datars/std` (88 recipes, `docs/reference/std.md`) with zero chart vocabulary in engine crates; networks and hierarchies (network, chord, tree, sunburst…), distributions (histogram, boxplot, violin, ridgeline…), business and editorial charts (kpi, bullet, gauge, gantt, timeline, dataTable, tileMap…), big data (hexbin, heatmap2d, contours, manyLines) and **controls** (range, segmented, select, toggle, checklist, button); every chart in [15](15-chart-coverage.md) as a recipe, including **financial charts** (`examples/stocks`: candlesticks and OHLC on a trading-day axis, volume, SMA/EMA, Bollinger bands, indexed and drawdown comparisons, sparklines). `datars test` also fails data marks that cross the canvas edge and labels a reader can't read (overlapping, or cut off). `datars eject` round-trips. Open: a pointer-following crosshair |
+| **5 Programs** | done | Statechart runtime (states, edges, chapters); drivers: steps and keys, autoplay (holds, pause, `wake_at` so hosts sleep), scroll scrub and scroll triggers (verified in Chrome), live sources (the **election** example replays a feed through `datars serve`); films in any aspect ratio (`datars video`, WebVTT captions); an image server (`datars serve` → `/render/<alias>.png\|svg\|pdf`); engine-drawn controls, offered as native controls (`<input type=range>` in the web mirror, adjustable VoiceOver and TalkBack elements; a `select` opens the platform's own picker on phones and tablets); `hover()` states and the cursor the engine asks for (`Engine::cursor`, shown by the web, desktop and macOS hosts) |
 | **6 Geo** | done | Projections, atlases, choropleths, camera fit, map ↔ chart morphs (renewables); **vector tiles** from our own OSM-derived PMTiles (sans-IO range requests, per-frame fill from the camera, label placement, crossfades that never show bare background while zooming either way — `crates/datars-engine/src/tiles/`), van Wijk flights (the **descent** example, world → Stockholm, streamed by HTTP Range in the browser, on Android, in DatarsKit and headless); **automatic basemaps** (`tiles: "auto"`, [09](09-geo.md#automatic-basemaps-tiles-auto)): the build cuts an archive to the document's own cameras from open data cached locally (`examples/rio`: world → Copacabana, 1.2 MB). GPU output matches the CPU reference down to street level (`datars gpu descent`). Open: a cell source fit for batch builds (public Overpass instances are for authors, within a daily budget) |
-| **7 Publish compiler, agents, 1.0** | in progress | `datars build/bundle/publish/serve` with tiers and a cost model, shared data chunks, simplified accessible SVG posters, gzip size reports (`--explain`), size budgets (`datars budgets`); **fonts travel with charts** (subsets per chart, licences in the manifest; no font compiled into the web runtime); `datars dev` morphs each edit in from what is on screen; the MCP server; video and PDF; reduced motion everywhere; **T3 pinned to the publisher's std/sdk** (content hashes): a runtime with another std plays T2 (`crates/datars-build/tests/tiers.rs`); **IR 1 as a JSON Schema** generated from the Rust types (`docs/reference/ir.schema.json`) with migrations (`datars migrate`). CI: `.github/workflows/ci.yml` (engine tests, goldens, JS packages). Open: packages on registries, the bundle format frozen as 1.0, signing exposed in the CLI |
+| **7 Publish compiler, agents, 1.0** | in progress | `datars build/bundle/publish/serve` with tiers and a cost model, shared data chunks, simplified accessible SVG posters, gzip size reports (`--explain`), size budgets (`datars budgets`); **fonts travel with charts** (subsets per chart, licences in the manifest; no font compiled into the web runtime); `datars dev` morphs each edit in from what is on screen; the MCP server; video and PDF; reduced motion everywhere; **T3 pinned to the publisher's std/sdk** (content hashes): a runtime with another std plays T2 (`crates/datars-build/tests/tiers.rs`); **IR 1 as a JSON Schema** generated from the Rust types (`docs/reference/ir.schema.json`) with migrations (`datars migrate`); **React, Vite and Next.js packages** (`@datars/react`, `@datars/vite`, `@datars/next`: charts imported like modules); live data from web APIs (`rows` paths, declared types applied, the published snapshot refreshed on open), and pages that answer a chart's data requests (`datarequest`). CI: `.github/workflows/ci.yml` (engine tests, goldens, JS packages). Open: packages on registries, the bundle format frozen as 1.0, signing exposed in the CLI |
 
 ## Notebooks (Python) — first version
 
@@ -61,9 +66,9 @@ PyO3 module over `datars-headless`, brush and selection signals mirrored to Pyth
 | Simple animated bar story (votes), first load | 24 KB (most of it the chart's Inter subsets) | ≤ 10 KB ✗ since fonts travel with each chart |
 | Same, poster and accessible text only (the fallback tier) | 7.5 KB | — |
 | World choropleth (renewables), first load | 116 KB (the countries atlas is most of it, shared by hash) | ≤ 150 KB for a national choropleth ✓ |
-| Web runtime, core (WebGPU + CPU renderers; plays T0–T2, the default) | 1.40 MB | — |
-| Web runtime, full (+ QuickJS for T3 and raw documents; loaded only when needed) | 1.72 MB | — |
-| Web runtime with the WebGL2 fallback compiled in (a build option) | 2.04 MB | — |
+| Web runtime, core (WebGPU + CPU renderers; plays T0–T2, the default) | 1.45 MB | — |
+| Web runtime, full (+ QuickJS for T3 and raw documents; loaded only when needed) | 1.83 MB | — |
+| Web runtime, core-gl (core + the WebGL2 fallback; loaded only by browsers without a WebGPU adapter) | 2.10 MB | — |
 
 Atlases and region files ship as **decimal topologies** (borders stored once, integer deltas, decoded
 by dividing by 10^d so every coordinate is the double the GeoJSON parsed to): charts stay
@@ -101,8 +106,11 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
 - **One published bundle, every host, no rebuilds** — done: the descent from `datars publish` +
   `datars serve` plays in a web page, the SwiftUI sample app, the Android sample app and the desktop
   viewer, tiles streamed by HTTP Range in each, and renders to PNG/SVG/PDF through the image server.
-- **Devices:** the iOS library is verified on macOS and in the simulator, the Android library on an
-  emulator (arm64 and x86_64 builds in the AAR). Neither has run on a physical phone yet.
+- **Devices:** the iOS library is verified on macOS and in the simulator (frames on Metal), the
+  Android library on an emulator (arm64 and x86_64 builds in the AAR; frames on GLES, since the
+  emulator's Vulkan can't run on a macOS host). Neither has run on a physical phone yet, so the GPU
+  path on real phones, and Vulkan on Android at all, are untested. The performance page's native
+  figures are from the simulator and the emulator.
 - **Accessibility:** semantics with frames; the web mirror (ARIA list, live narration, native range
   inputs, buttons for interactive marks); iOS VoiceOver; macOS children; labelled SVG posters;
   reduced motion everywhere; Android TalkBack through an AccessibilityNodeProvider (the node tree

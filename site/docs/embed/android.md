@@ -1,7 +1,7 @@
 ---
 title: Android
 description: Show published datars charts natively in Android apps with the datars AAR — a Kotlin view for layouts and Jetpack Compose, private data slots, TalkBack, charts shipped in the app.
-lede: Add the library once. Charts arrive by URL, play natively — the same engine and the same pixels as on the web and iOS — and update without a Play Store release.
+lede: Add the library once. Charts arrive by URL, play natively — the same engine and the same renderer as on the web and iOS — and update without a Play Store release.
 ---
 
 ## A chart in an Activity
@@ -22,7 +22,7 @@ class ElectionActivity : Activity() {
 
 `load` takes the chart's manifest — the `c/<alias>` file [`datars publish`](/docs/publishing/) wrote — on any static host, or a `.datars` file by URL. Republish the chart and the app shows the new version on its next load; nothing about the chart is compiled into the app.
 
-`DatarsView` is an ordinary `android.view.View`. It runs the datars engine natively through JNI: text shaped with the chart's own fonts, layout, motion and each frame drawn by the engine's reference renderer — the same pixels as on the web, iOS and in the test goldens. Network requests run on a background thread; the engine only ever runs on the main thread.
+`DatarsView` is an ordinary `TextureView`. It runs the datars engine natively through JNI: text shaped with the chart's own fonts, layout, motion, and each frame drawn on the GPU with Vulkan, else OpenGL ES, through the same wgpu renderer as on the web and iOS. Where the view gets no GPU, the engine's CPU reference draws the frames into a bitmap instead: the renderer the test goldens are made with, pixel for pixel the same on every platform. Network requests run on a background thread; the engine only ever runs on the main thread.
 
 ## Add the library
 
@@ -114,7 +114,7 @@ adb shell am start -n dev.datars.sample/.MainActivity --es url http://127.0.0.1:
 
 `scripts/test-android-sample.sh` does the whole round trip on an emulator: it installs the app, publishes a chart *afterwards*, plays it, republishes it and checks the app shows the new version on relaunch.
 
-> **Status** The library builds into an AAR, its pixel hashes match every other target, and the sample app plays charts published after it was installed — including the world-to-Stockholm map flight with tiles streamed by range — on an Android emulator. It hasn't run on a physical device yet, and TalkBack's node tree has been checked but not yet driven by TalkBack itself. See the project's [status page]({{src}}/docs/19-status.md).
+> **Status** The library builds into an AAR, its CPU reference's pixel hashes match every other target, and on an Android emulator the sample app draws with OpenGL ES (the emulator's Vulkan can't run on a macOS host) and plays charts published after it was installed — including the world-to-Stockholm map flight with tiles streamed by range. It hasn't run on a physical device yet, and TalkBack's node tree has been checked but not yet driven by TalkBack itself. See the project's [status page]({{src}}/docs/19-status.md).
 
 ## Next
 

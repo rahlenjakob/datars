@@ -1,7 +1,7 @@
 ---
 title: iOS and macOS
 description: Show published datars charts natively in iOS, iPadOS and macOS apps with DatarsKit — SwiftUI and UIKit views, story state from Swift, private data slots, VoiceOver.
-lede: Add the DatarsKit Swift package once. Charts then arrive by URL, play natively — the same engine and the same pixels as on the web — and update without an App Store release.
+lede: Add the DatarsKit Swift package once. Charts then arrive by URL, play natively — the same engine and the same renderer as on the web — and update without an App Store release.
 ---
 
 ## A chart in SwiftUI
@@ -24,7 +24,7 @@ struct ElectionView: View {
 
 `source` is the chart's manifest — the `c/<alias>` file [`datars publish`](/docs/publishing/) wrote — on any static host. When `state` changes, the chart transitions to that program state (0-based), from wherever it is. Republish the chart and the app shows the new version on its next load; nothing about the chart is compiled into the app.
 
-This is not a web view. DatarsKit runs the datars engine natively: it shapes the text with the chart's own fonts, lays out, animates and draws each frame with the engine's reference renderer. The result is pixel-identical to what the web runtime and the test goldens draw.
+This is not a web view. DatarsKit runs the datars engine natively: it shapes the text with the chart's own fonts, lays out, animates and draws each frame on the GPU with Metal, through the same wgpu renderer the web runtime uses. Where the view gets no GPU, the engine's CPU reference draws the frames instead: the renderer the test goldens are made with, pixel for pixel the same on every platform. The GPU's frames are checked against it perceptually (`datars gpu`).
 
 ## Add DatarsKit
 
@@ -165,7 +165,7 @@ open apple/DatarsSample.swiftpm       # run it in a simulator; DATARS_URL=http:/
 
 `scripts/test-ios-sample.sh` does the whole round trip in the iOS simulator: it builds the app, publishes the world-to-Stockholm map flight *afterwards*, serves it, and screenshots the app playing it with map tiles streamed by HTTP range requests.
 
-> **Status** DatarsKit is verified on macOS and in the iOS simulator: pixel hashes match every other target, charts published after the app was built play and update, and map tiles stream by range. It hasn't shipped in an App Store app yet. See the project's [status page]({{src}}/docs/19-status.md).
+> **Status** DatarsKit is verified on macOS and in the iOS simulator: frames draw with Metal, the CPU reference's pixel hashes match every other target, charts published after the app was built play and update, and map tiles stream by range. It hasn't run on a physical iPhone or iPad, or shipped in an App Store app, yet. See the project's [status page]({{src}}/docs/19-status.md).
 
 ## Next
 
