@@ -1027,6 +1027,7 @@ table.hd-picks td.no { color: var(--muted); font-size: 12.5px; }
   .mp-status { font-size: 12px; margin-top: 6px; }
   .mp-layouts { margin-bottom: 8px; }
   .mp-transport { margin-top: 8px; }
+}
 
 /* ---- theme studio (pages/themes.html, studio.js) ---- */
 /* The editor beside a wall of live charts on a desktop; on a phone or tablet, a tray held at the
