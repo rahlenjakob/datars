@@ -32,7 +32,7 @@ the site links there only as "how it works".
 | `/features/big-data/` | Four million points, point pyramids, streaming archives | `pages/features/big-data.html` |
 | `/features/platforms/` | Web, iOS, Android, desktop, video, PNG/SVG/PDF | `pages/features/platforms.html` |
 | `/features/maps/` | Automatic basemaps, world-to-street flights, no tile server | `pages/features/maps.html` |
-| `/features/animation/` | Keyed morphs, motion rules, stories | `pages/features/animation.html` |
+| `/features/animation/` | The motion playground (the reader edits a motion rule on the live engine), the vocabulary of moves, scroll scrubbing, reduced motion | `pages/features/animation.html` + `motion.js`; figures in `figures/motion/` |
 | `/features/interaction/` | Signals, intents, linked views, brushes, sliders, explorable views | `pages/features/interaction.html` |
 | `/features/accessibility/` | Semantics, screen readers, keyboard, reduced motion, text alternatives | `pages/features/accessibility.html` |
 | `/features/extensibility/` | Recipes in TypeScript, custom scenes, eject | `pages/features/extensibility.html` |
@@ -74,8 +74,11 @@ head with canonical/OG/Twitter tags, nav, footer), then fills placeholders:
 
 **Figures.** Every document in `figures/<section>/<name>.ts` is a chart too, alias
 `<section>-<name>` — the chart reference's examples (`std/`), the SDK reference's (`sdk/`), the
-explanations' diagrams (`how/`) — live like the rest, but not counted or listed with the site's
-charts. `thumb(alias)` in the build renders one's first state as light and dark SVG thumbnails.
+explanations' diagrams (`how/`), the animation page's (`motion/`) — live like the rest, but not
+counted or listed with the site's charts. `thumb(alias)` in the build renders one's first state as
+light and dark SVG thumbnails. A figure a page rebuilds in the browser (the motion playground, via
+`setDocument`) is also published as its document, at `/play/<alias>.json` (the build's `raw` list).
+A page's own script (`motion.js`) is copied beside `site.js` and loaded by that page alone.
 Screenshots live in `img/` (a light and a dark capture where the page's theme should pick).
 
 Docs are Markdown (`docs/**/*.md`, a small CommonMark subset: headings, lists, tables, fenced
