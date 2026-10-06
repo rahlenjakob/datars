@@ -39,6 +39,7 @@ the site links there only as "how it works".
 | `/features/delivery/` | Charts are content: bundles, tiers, republishing | `pages/features/delivery.html` |
 | `/features/developers/` | CLI, live page, lint/explain/film/profile, MCP, llms.txt | `pages/features/developers.html` |
 | `/gallery/` | Every live chart, with its document | `pages/gallery.html` |
+| `/themes/` | The theme studio: edit every token of a theme (presets, a brand colour, colours and expressions, generated palettes, Google Fonts, sizes, shapes, maps, cards) on ten live charts in light, dark and high contrast, with the theme's checks, and export it as TypeScript, JSON or a runtime layer | `pages/themes.html`, `studio.js` (the editor; a hidden `<datars-view>` resolves the theme per mode), `scripts/site/studio.mjs` (its markup); the charts are `figures/studio/` |
 | `/articles/` | Ten data stories in one house style, every chart live (`scripts/build-articles.mjs`) | `articles/` |
 | `/performance/` | Measured numbers, the method, the tools | `pages/performance.html` + `perf/*.json` |
 | `/why/` | What datars does, what it costs, when to pick it | `pages/why.html` |
@@ -70,6 +71,8 @@ head with canonical/OG/Twitter tags, nav, footer), then fills placeholders:
 | `{{perf:…}}` | headline cards and tables computed from the benchmark JSON in `perf/` |
 | `{{std:list}}`, `{{mcp:tools}}`, `{{count:recipes}}` | generated lists and numbers |
 | `{{look:presets}}`, `{{look:accents}}` | the "Make it yours" preset and accent buttons (the header's menu uses the same markup); `site.js` wires every `data-look-*` control on a page to the reader's look, saved in `localStorage` and applied to every chart but the articles' |
+| `{{studio:colours}}` (`type`, `shape`, `maps`), `{{studio:checks}}`, `{{studio:data}}` | the theme studio's token rows and checks table, written with the built-in theme's values (resolved per mode by `datars theme --json`), and that data for `studio.js` |
+| `{{tokens:x}}` | the theme tokens chart `x` reads, as chips: what its recipes declare, plus the inks its scene and its first resolved state draw with |
 | `{{sdk:group}}`, `{{sig:geom.rect}}`, `{{sdk:index}}` | an SDK export's entry (heading, signature, doc comment, source line), its signature in a table cell, every export by module — read from `packages/sdk/src` |
 
 **Figures.** Every document in `figures/<section>/<name>.ts` is a chart too, alias
