@@ -1,0 +1,67 @@
+# The website (site/) on GitHub Pages: static pages, the web runtime and every chart published as a
+# bundle — no server. Built with scripts/build-site.mjs. Enable Pages with "Source: GitHub Actions"
+# in the repository settings.
+name: pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+env:
+  CARGO_TERM_COLOR: always
+  # Automatic basemaps come from the archives committed next to their documents; CI never asks the
+  # public Overpass instances for more.
+  DATARS_OVERPASS_BUDGET: "0,0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      WASI_SDK: /opt/wasi-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: wasm-bindgen-cli@0.2.128 }
+      - name: wasi-sdk (clang + libc for QuickJS) and libclang for bindgen
+        run: |
+          curl -sSL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz | sudo tar xz -C /opt
+          sudo mv /opt/wasi-sdk-24.0-x86_64-linux $WASI_SDK
+          sudo apt-get update && sudo apt-get install -y libclang-dev
+      - uses: pnpm/action-setup@v4
+        with: { version: 8.15.1 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: pnpm install --frozen-lockfile
+      - run: cargo build --release -p datars-cli
+      - name: Build the web runtime
+        run: LLVM=$WASI_SDK WASI_SYSROOT=$WASI_SDK/share/wasi-sysroot LIBCLANG_PATH=$(llvm-config --libdir 2>/dev/null || echo /usr/lib/llvm-18/lib) bash scripts/build-wasm.sh
+      - run: pnpm -C packages/web build
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Build the site (pages, charts published as bundles, the runtime, films and exports)
+        run: node scripts/build-site.mjs --out out/pages
+        env:
+          DATARS_REPO_URL: https://github.com/${{ github.repository }}
+          # Canonical links, Open Graph and the sitemap need the site's absolute address.
+          DATARS_SITE_URL: ${{ steps.pages.outputs.base_url }}
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: out/pages }
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

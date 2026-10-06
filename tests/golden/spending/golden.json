@@ -1,0 +1,22 @@
+{
+  "states": [
+    {
+      "name": "months",
+      "scene": "ce1d9b3cfbb7ea31",
+      "pixels": "ac70574206023441"
+    },
+    {
+      "name": "categories",
+      "scene": "e2ba17f88964bd93",
+      "pixels": "53047bcb6f05e4e6"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "months",
+      "to": "categories",
+      "sweep": "cbe635ffd7e8a3d4",
+      "samples": 64
+    }
+  ]
+}

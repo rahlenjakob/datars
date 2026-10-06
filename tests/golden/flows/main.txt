@@ -1,0 +1,41 @@
+scene 760.00×420.00 background=$paper
+  group ("root",)
+    group ("sankey",) transform=[1.00 0.00 0.00 1.00 90.00 16.00]
+      group ("links",)
+        ("h-g",) path els=5 bounds=[14.00 0.00 552.00 136.15] fill=$categorical[0] opacity=0.42 role=datum "Hydro → Grid: 66"
+        ("n-g",) path els=5 bounds=[14.00 136.15 552.00 123.40] fill=$categorical[2] opacity=0.42 role=datum "Nuclear → Grid: 49"
+        ("w-g",) path els=5 bounds=[14.00 243.42 552.00 75.57] fill=$categorical[3] opacity=0.42 role=datum "Wind → Grid: 20"
+        ("w-e",) path els=5 bounds=[14.00 306.99 552.00 28.51] fill=$categorical[3] opacity=0.42 role=datum "Wind → Export: 8"
+        ("h-e",) path els=5 bounds=[14.00 136.15 552.00 170.84] fill=$categorical[0] opacity=0.42 role=datum "Hydro → Export: 5"
+        ("n-g2",) path els=5 bounds=[14.00 237.23 552.00 28.51] fill=$categorical[2] opacity=0.42 role=datum "Nuclear → Grid: 3"
+        ("i-l",) path els=5 bounds=[14.00 347.50 552.00 15.05] fill=$categorical[5] opacity=0.42 role=datum "Industry → Loss: 4"
+        ("h-l",) path els=5 bounds=[14.00 362.55 552.00 11.39] fill=$categorical[7] opacity=0.42 role=datum "Homes → Loss: 3"
+        ("t-l",) path els=5 bounds=[14.00 368.74 552.00 19.26] fill=$categorical[8] opacity=0.42 role=datum "Transport → Loss: 1"
+      group ("nodes",)
+        group ("Hydro",)
+          ("node",) rect x=0.00 y=0.00 w=14.00 h=146.47 fill=$categorical[0] role=datum "Hydro: 71"
+          ("label",) text "Hydro" at (20.00, 73.23) size=11.00 ink=$ink
+        group ("Grid",)
+          ("node",) rect x=566.00 y=0.00 w=14.00 h=284.68 fill=$categorical[1] role=datum "Grid: 138"
+          ("label",) text "Grid" at (560.00, 142.34) size=11.00 ink=$ink
+        group ("Nuclear",)
+          ("node",) rect x=0.00 y=158.47 w=14.00 h=107.27 fill=$categorical[2] role=datum "Nuclear: 52"
+          ("label",) text "Nuclear" at (20.00, 212.10) size=11.00 ink=$ink
+        group ("Wind",)
+          ("node",) rect x=0.00 y=277.74 w=14.00 h=57.76 fill=$categorical[3] role=datum "Wind: 28"
+          ("label",) text "Wind" at (20.00, 306.62) size=11.00 ink=$ink
+        group ("Export",)
+          ("node",) rect x=566.00 y=296.68 w=14.00 h=26.82 fill=$categorical[4] role=datum "Export: 13"
+          ("label",) text "Export" at (560.00, 310.09) size=11.00 ink=$ink
+        group ("Industry",)
+          ("node",) rect x=0.00 y=347.50 w=14.00 h=8.25 fill=$categorical[5] role=datum "Industry: 4"
+          ("label",) text "Industry" at (20.00, 351.62) size=11.00 ink=$ink
+        group ("Loss",)
+          ("node",) rect x=566.00 y=354.30 w=14.00 h=16.50 fill=$categorical[6] role=datum "Loss: 8"
+          ("label",) text "Loss" at (560.00, 362.55) size=11.00 ink=$ink
+        group ("Homes",)
+          ("node",) rect x=0.00 y=367.75 w=14.00 h=6.19 fill=$categorical[7] role=datum "Homes: 3"
+          ("label",) text "Homes" at (20.00, 370.84) size=11.00 ink=$ink
+        group ("Transport",)
+          ("node",) rect x=0.00 y=385.94 w=14.00 h=2.06 fill=$categorical[8] role=datum "Transport: 1"
+          ("label",) text "Transport" at (20.00, 386.97) size=11.00 ink=$ink

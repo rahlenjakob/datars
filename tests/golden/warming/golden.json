@@ -1,0 +1,22 @@
+{
+  "states": [
+    {
+      "name": "line",
+      "scene": "53cc2cc48951810c",
+      "pixels": "af8bb8a0ccc819f3"
+    },
+    {
+      "name": "stripes",
+      "scene": "751393b990be671c",
+      "pixels": "2e6fe77547e770d8"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "line",
+      "to": "stripes",
+      "sweep": "70405e698e1751fb",
+      "samples": 64
+    }
+  ]
+}

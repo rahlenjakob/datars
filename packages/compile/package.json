@@ -1,0 +1,42 @@
+{
+  "name": "@datars/compile",
+  "version": "0.1.0",
+  "description": "Compile datars chart files (doc.ts) in Node for bundler plugins: the document's JSON, the files it reads, and — with the datars CLI — published bundles. Used by @datars/vite and @datars/next.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/compile"
+  },
+  "keywords": ["datars", "charts", "compiler", "bundler", "data-visualization"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18.18"
+  },
+  "dependencies": {
+    "esbuild": ">=0.21 <1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@datars/sdk": "workspace:*",
+    "@datars/std": "workspace:*",
+    "@datars/web": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "node --test test/*.test.mjs"
+  }
+}

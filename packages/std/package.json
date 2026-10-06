@@ -1,0 +1,21 @@
+{
+  "name": "@datars/std",
+  "version": "0.1.0",
+  "description": "The datars standard library: every chart, guide, map style, motion and program preset — written with the public SDK.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/std"
+  },
+  "keywords": ["datars", "data-visualization", "charts", "maps", "recipes"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "dependencies": { "@datars/sdk": "workspace:*" },
+  "scripts": {
+    "build": "tsc -p . && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=es2020 --external:@datars/sdk --outfile=dist/std.bundle.js",
+    "test": "node --test test/*.test.js"
+  }
+}

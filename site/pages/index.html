@@ -1,0 +1,574 @@
+---
+title: datars — one chart engine for every screen
+description: An engine for charts, maps and data stories that runs natively on the web, in iOS and Android apps, on the desktop, in video and in print. Write the chart once in TypeScript; every screen gets the same pixels and motion, and you update it like an article — no deploy, no app release.
+og: worlds
+---
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="eyebrow">Source available · Rust + TypeScript</p>
+      <h1>One chart.<br> <span class="grad nowrap">Every screen.</span></h1>
+      <p class="lede">datars is an engine for charts, maps and data stories that runs natively on the web, in iOS and Android apps, on the desktop, in video and in print. Write the chart once in TypeScript: every screen gets the same pixels, the same line breaks and the same motion — and you update it like an article, with no deploy and no app release.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/getting-started/">Get started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost on-dark" href="/why/">Why datars</a>
+      </div>
+      <dl class="stats">
+        <div><dt>{{count:recipes}}</dt><dd>ready-made recipes</dd></div>
+        <div><dt>4,000,000</dt><dd>points, at 60 fps</dd></div>
+        <div><dt>6 platforms</dt><dd>one engine</dd></div>
+      </dl>
+    </div>
+    <figure class="hero-chart">
+      <div class="chart" data-chart="worlds"></div>
+      <figcaption>
+        <div class="pills" id="worlds-pills" role="group" aria-label="Layout">
+          <button type="button" data-state="globe" aria-pressed="true">Globe</button>
+          <button type="button" data-state="orbits">Planets</button>
+          <button type="button" data-state="spiral">Spiral</button>
+          <button type="button" data-state="blocks">Blocks</button>
+        </div>
+        <p>Every country on a spinning globe lifts off as a planet the size of its population, falls into a golden spiral and packs into blocks — one custom recipe, keyed by country, so each coastline becomes its planet. It plays by itself; pick a layout to take over.</p>
+      </figcaption>
+      {{alt:worlds}}
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="problem">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Why it exists</p>
+      <h2>Today, every screen gets its own copy of the chart</h2>
+      <p>Web chart libraries don't run in native apps, app chart libraries don't run on the web, and neither makes your video or your print page. So a chart that matters is built again for every screen, by different people with different tools, and the copies drift apart. With datars it's one document, and every host plays it.</p>
+    </header>
+    <figure class="why-fig">
+      <div class="frame"><div class="chart" data-chart="why-builds" data-min="300" data-phone-ratio="1.45" data-autoplay="6000" data-caption></div></div>
+      {{alt:why-builds}}
+    </figure>
+    <p><a class="more" href="/why/">Why datars exists, and when to pick something else <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section" id="platforms">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Every platform</p>
+      <h2>One engine in every host, one line to embed</h2>
+      <p>Not a web view, not a screenshot: the same Rust engine runs natively in each host — shaping the text, laying out, animating and drawing — so the chart in your app is the chart on your site, frame for frame. Every example produces identical pixel hashes on macOS, in wasm, on the iOS simulator and on Android.</p>
+    </header>
+    <div class="split">
+      <div>
+        <ul class="platforms" style="grid-template-columns: minmax(0, 1fr)">
+          <li>
+            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18"/></svg>Web</h3>
+<pre><code data-lang="html">&lt;script type="module" src="/runtime/datars.js"&gt;&lt;/script&gt;
+&lt;datars-view src="https://charts.example.com/c/worlds"&gt;&lt;/datars-view&gt;</code></pre>
+          </li>
+          <li>
+            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg>iOS &amp; macOS — DatarsKit, SwiftUI</h3>
+<pre><code data-lang="swift">DatarsChart(source: .url(URL(string: "https://charts.example.com/c/worlds")!),
+            state: step)   // the story follows your SwiftUI state</code></pre>
+          </li>
+          <li>
+            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M6.5 6h11M6.5 18h11"/></svg>Android — Kotlin view</h3>
+<pre><code data-lang="kotlin">val chart = DatarsView(context)
+chart.load("https://charts.example.com/c/worlds")</code></pre>
+          </li>
+          <li>
+            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/></svg>Video, PNG, SVG, PDF</h3>
+<pre><code data-lang="sh">datars video worlds.ts --size 360x640 --dpr 3   # 1080×1920 MP4 + captions
+datars render worlds.ts --out worlds.pdf         # vector PDF, searchable text</code></pre>
+          </li>
+        </ul>
+        <a class="more" href="/features/platforms/">Platforms in depth <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="video-row" style="justify-content:center">
+        <figure class="v916">
+          {{film:worlds-9x16}}
+          <figcaption>The globe at the top of this page as a 1080×1920 video, rendered by <code>datars video</code> when this site was built — the phone layout, not a crop — with captions from the story's narration ({{filmsize:worlds-9x16}}).</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="who">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Who it's for</p>
+      <h2>For teams whose charts have to go everywhere</h2>
+    </header>
+    <div class="aud">
+      <article>
+        <h3>Newsrooms</h3>
+        <p class="aud-promise">Publish tonight's election map into the app that shipped in the spring.</p>
+        <ul>
+          <li>Scroll stories and step-through explainers, with every change animated</li>
+          <li>Maps from the whole world down to a street, with no tile server or per-view bill</li>
+          <li>The same document as a vertical video for social and a PDF for print</li>
+        </ul>
+        <a class="more" href="/articles/">Ten example articles <span aria-hidden="true">→</span></a>
+      </article>
+      <article>
+        <h3>Product and app teams</h3>
+        <p class="aud-promise">Ship a new chart in your app without an App Store review.</p>
+        <ul>
+          <li>Install the runtime once; charts arrive as bundles you update and roll back</li>
+          <li>Native drawing on the GPU: Metal on iOS, Vulkan or OpenGL ES on Android</li>
+          <li>A bundle can leave a slot for the app's own data, so each user's rows stay on their phone</li>
+        </ul>
+        <a class="more" href="/features/delivery/">Charts are content <span aria-hidden="true">→</span></a>
+      </article>
+      <article>
+        <h3>Analysts and dashboards</h3>
+        <p class="aud-promise">Millions of rows, linked views and live data, at 60 frames a second.</p>
+        <ul>
+          <li>Filters, brushes and linked views declared in the document, with no glue code</li>
+          <li>Data in the bundle, fetched live, from the app, or read by range as the camera needs it</li>
+          <li>Your brand and dark mode as theme tokens, applied to every chart at once</li>
+        </ul>
+        <a class="more" href="/features/big-data/">Big data, 60 fps <span aria-hidden="true">→</span></a>
+      </article>
+      <article>
+        <h3>Developers and coding agents</h3>
+        <p class="aud-promise">Charts in TypeScript, with tools that check the work.</p>
+        <ul>
+          <li>Documents your editor type-checks, and a live page that morphs each edit in</li>
+          <li><code>lint</code> and <code>explain</code>: colliding labels, low contrast, unstable keys, and why every mark looks the way it does</li>
+          <li>The same tools as an MCP server, so an agent can build a chart and verify it</li>
+        </ul>
+        <a class="more" href="/features/developers/">The toolchain <span aria-hidden="true">→</span></a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="proof">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Checked, not claimed</p>
+      <h2>The big claims come with tests and numbers</h2>
+    </header>
+    <div class="proof">
+      <div>
+        <h3>The same pixels everywhere</h3>
+        <p>Every example hashes to identical pixels on macOS, in wasm, on the iOS simulator and on an Android emulator, and GPU output is checked against a bit-exact CPU reference.</p>
+        <a href="{{src}}/docs/19-status.md">What's verified</a>
+      </div>
+      <div>
+        <h3>Smooth in a real browser</h3>
+        <p>{{perf:summary:transitions:steady}} of this site's chart transitions hold a steady 59–60 fps in Chrome. The method and the misses are published with the numbers.</p>
+        <a href="/performance/">Performance</a>
+      </div>
+      <div>
+        <h3>Light after the first chart</h3>
+        <p>The runtime is {{runtime}} gzipped and cached once for every chart on your site; each chart after it weighs {{size:riksdag}} to {{size:brand}}.</p>
+        <a href="/features/delivery/">Delivery</a>
+      </div>
+      <div>
+        <h3>Motion under test</h3>
+        <p>64 sampled frames of every transition are checked against exact goldens, so a one-frame flash can't slip through to readers.</p>
+        <a href="/under-the-hood/">Under the hood</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="interactive">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Interactive</p>
+      <h2>Not a movie: every chart answers back</h2>
+      <p>Hover for a tooltip, click to filter, drag to brush a range, pull a slider, pan and zoom — declared in the document as signals and intents, drawn and handled by the engine. Views link without glue code, and the same interactions work with a mouse, a finger, a keyboard or a screen reader — the engine does the handling, so a host app only forwards pointer events. Try them:</p>
+    </header>
+    <article class="card wide">
+      <div class="card-text"><span class="tag">Click a bar</span><h3>Linked views</h3><p>Click a region: the trend beside it filters to that region, and its lines morph as series come and go. Click it again to clear. One key-set signal, no event handlers.</p>{{alt:dashboard}}</div>
+      <div class="chart" data-chart="dashboard"></div>
+    </article>
+    <div class="grid">
+      <article class="card">
+        <div class="chart" data-chart="prices"></div>
+        <div class="card-text"><span class="tag">Drag across the lower chart</span><h3>Brush and zoom</h3><p>Brush a stretch of the year below; the detail above zooms to it and the mean updates. The brush is a signal like any other.</p>{{alt:prices}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="budget"></div>
+        <div class="card-text"><span class="tag">Drag the slider</span><h3>An explorable in one document</h3><p>The slider is drawn by the engine — on the web, in apps and in video alike — and every bar reads it in an expression.</p>{{alt:budget}}</div>
+      </article>
+    </div>
+    <p><a class="more" href="/features/interaction/">How interaction works <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section story" id="stories">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Animation included</p>
+      <h2>Stories that steer themselves</h2>
+      <p>Scroll. The page tells the chart which step it's on; the engine flies the camera and morphs every country into its bar. No animation code — a story is a list of states, and every change between them animates by key.</p>
+    </header>
+    <div class="story-grid">
+      <div class="story-steps">
+        <div class="rstep" data-state="world"><span class="num">1</span><h3>A world of renewables</h3><p>A choropleth over the built-in countries atlas, shipped as a compact topology and cached by hash across every chart that uses it.</p></div>
+        <div class="rstep" data-state="europe"><span class="num">2</span><h3>Fly to Europe</h3><p>The camera fits the countries with data. Setting a signal is all a step does: <code>set: { focus: europe }</code>.</p></div>
+        <div class="rstep" data-state="nordics"><span class="num">3</span><h3>The Nordics lead</h3><p>Zoom again. Every frame of the flight is a pure function of the plan and the time — the same on a phone, in a video export, in a test.</p></div>
+        <div class="rstep" data-state="ranked"><span class="num">4</span><h3>Regions become bars</h3><p>Each country's region morphs into its bar, because both are keyed by the ISO code. That is the whole trick.</p></div>
+      </div>
+      <div class="story-stick">
+        <div class="frame">
+          <div class="chart" data-chart="renewables" data-steps=".rstep"></div>
+        </div>
+        {{alt:renewables}}
+        <details class="code">
+          <summary><span>The document</span><span class="size">{{size:renewables}} incl. the world atlas</span></summary>
+<pre><code data-lang="ts">export default doc({
+  data: { world: data.atlas("countries"), renew: data.values(rows, { key: "id" }) },
+  signals: { focus: signal.keyset(), shape: signal.str("map") },
+  motion: motion({ select: { role: "region" }, matcher: "by-key" }),
+  scene: group({ children: [
+    view({ camera: { fit: { keys: "=focus" } }, when: e('shape == "map"'),
+      children: [map({ source: "world", data: "renew", key: "id", value: "share" })] }),
+    plot({ data: "nordic", x: "share", y: "name", children: [bar({ labels: true })] },
+      { when: e('shape == "bars"') }),
+  ] }),
+  program: story({ steps: [
+    step("world",   { set: { focus: [] } }),
+    step("europe",  { set: { focus: europe } }),
+    step("nordics", { set: { focus: nordics } }),
+    step("ranked",  { set: { shape: "bars" } }),
+  ] }),
+});</code></pre>
+        </details>
+      </div>
+    </div>
+    <p><a class="more" href="/features/animation/">How motion works <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section" id="maps">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Maps, no tile server</p>
+      <h2>From the globe to a street corner, in one camera</h2>
+      <p>Maps are part of the engine: countries are keyed shapes like bars, the basemap is a node in the scene, and the camera flies from space to a street in one move. Write <code>data.tiles.auto()</code> and the publish step cuts a basemap from OpenStreetMap and Natural Earth to exactly the places your story visits. No tile server, no API key, no per-view bill.</p>
+    </header>
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Automatic basemap · {{archive:rio}}</span>
+        <h3>World → Rio de Janeiro → Copacabana</h3>
+        <p>The basemap for this flight was made automatically for its own cameras: streets, water, parks, buildings and names, read by HTTP range requests from one static file. Step through it with the buttons.</p>
+        <a class="more" href="/features/maps/">Maps in depth <span aria-hidden="true">→</span></a>
+        {{alt:rio}}
+      </div>
+      <div class="chart" data-chart="rio" data-caption></div>
+    </article>
+  </div>
+</section>
+
+<section class="section space" id="big-data">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Big data, 60 fps</p>
+      <h2>Four million stars. {{size:galaxy}} to start.</h2>
+      <p>A synthetic barred spiral: every dot is one star of four million, and you can zoom from the whole galaxy down to a single one. The engine indexes the rows once into a pyramid of tiles; each frame draws only what the camera shows — a sample that keeps the galaxy's density from afar, every star up close. Camera tours run at 59–60 fps in Chrome.</p>
+    </header>
+    <figure class="space-stage">
+      <div class="chart" data-chart="galaxy"></div>
+      <figcaption class="space-bar">
+        <div class="pills" id="galaxy-pills" role="group" aria-label="Tour">
+          <button type="button" data-state="galaxy" aria-pressed="true">Galaxy</button>
+          <button type="button" data-state="arm">Spiral arm</button>
+          <button type="button" data-state="bar">The bar</button>
+          <button type="button" data-state="cluster">A cluster</button>
+          <button type="button" data-state="local">One neighbourhood</button>
+        </div>
+        <dl class="space-stats">
+          <div><dt id="galaxy-drawn">—</dt><dd>stars drawn now</dd></div>
+          <div><dt id="galaxy-bytes">—</dt><dd>fetched of {{archive:galaxy}}</dd></div>
+          <div><dt id="galaxy-fps">—</dt><dd>frames a second</dd></div>
+        </dl>
+      </figcaption>
+      <p class="space-narration" id="galaxy-text" aria-hidden="true">Drag to pan, scroll or pinch to zoom, hover a star.</p>
+      {{alt:galaxy}}
+    </figure>
+    <div class="space-notes">
+      <div>
+        <h3>Indexed once</h3>
+        <p>The rows go into a quadtree whose levels are seeded samples of the data. Panning and zooming never re-read a row: tiles come and go, and a tile's stars are drawn from its cache.</p>
+      </div>
+      <div>
+        <h3>Only what you see</h3>
+        <p>The publish step ships the pyramid as an archive the page reads by byte range, from any static host. The first view needs a few hundred kilobytes; each zoom fetches the tiles it shows, and nothing else.</p>
+      </div>
+      <div>
+        <h3>Sampled, never guessed</h3>
+        <p>Every dot is a real row. A far-away view draws a uniform share of the stars — dense stays dense, sparse stays sparse — and the deeper levels fade in as you zoom until every one is there.</p>
+      </div>
+    </div>
+    <p><a class="more" href="/features/big-data/" style="color:#9fb6ff">How big data stays fast <span aria-hidden="true">→</span></a> &nbsp; <a class="more" href="/performance/" style="color:#9fb6ff">Measured numbers <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section" id="charts">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Batteries included</p>
+      <h2>{{count:recipes}} charts, maps and guides, ready to use</h2>
+      <p>Bars, lines, areas, scatters, pies and donuts, treemaps, waffles, funnels, waterfalls, sankeys, beeswarms, calendars, parliaments, choropleths, basemaps, point clouds, cards and sliders — the standard library covers the charts newsrooms and dashboards actually ship. Each is a recipe with typed parameters, sensible defaults and its own motion — and because every mark keeps its key, any of them can turn into any other.</p>
+      <ul class="bullets">
+        <li><b>Axes, legends and labels that fit.</b> The engine measures text with the chart's own fonts; labels that would collide or be cut off at the edge are caught by <code>datars lint</code>.</li>
+        <li><b>Themed, not hard-coded.</b> Every recipe draws with theme tokens, so your brand and dark mode apply to all of them.</li>
+        <li><b>Yours to change.</b> <code>datars eject std/treemap</code> copies the recipe into your project as TypeScript.</li>
+      </ul>
+      <a class="more" href="/features/charts/">The whole catalogue <span aria-hidden="true">→</span></a>
+    </div>
+    <article class="card">
+      <div class="chart" data-chart="shapes" data-caption></div>
+      <div class="card-text">
+        <span class="tag">bar · treemap · waffle · dots</span>
+        <p>Four standard recipes over one dataset. Step through: rectangles become tiles, tiles break into a hundred squares, squares become dots — and back.</p>
+        {{alt:shapes}}
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section themes" id="make-it-yours">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Make it yours</p>
+      <h2>Every chart on this site, in your look</h2>
+      <p>A look is theme tokens — type, corners, strokes, paper, data colours, maps, cards — and a page or app sets them at runtime, on charts it didn't publish. Pick a preset, or your own accent, palette and type: every chart on this site restyles as you go (colours re-ink at the next frame, type and shapes morph in), and keeps your look on every page you open. Articles keep theirs.</p>
+    </header>
+    <div class="theme-grid">
+      <div class="frame look-stage">
+        <div class="chart" data-chart="brand"></div>
+        {{alt:brand}}
+      </div>
+      <aside class="theme-panel look-editor" aria-label="Make it yours">
+        <h3>Preset</h3>
+        <div class="swatches" role="group" aria-label="Preset">{{look:presets}}</div>
+        <h3>Accent</h3>
+        <div class="dots" role="group" aria-label="Accent">{{look:accents}}</div>
+        <h3>Palette</h3>
+        <div class="chips" role="group" aria-label="Palette">
+          <button type="button" data-look-palette="preset" aria-pressed="true">Preset's</button>
+          <button type="button" data-look-palette="safe" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#0072b2 0 20%,#e69f00 20% 40%,#009e73 40% 60%,#cc79a7 60% 80%,#56b4e9 80%)"></span>Colour-blind safe</button>
+          <button type="button" data-look-palette="warm" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#e8590c 0 20%,#c2185b 20% 40%,#f2a541 40% 60%,#8d6e63 60% 80%,#6a3fb5 80%)"></span>Warm</button>
+          <button type="button" data-look-palette="cool" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#0f766e 0 20%,#4269d0 20% 40%,#6cb8d0 40% 60%,#8497a4 60% 80%,#a6cf7d 80%)"></span>Cool</button>
+          <button type="button" data-look-palette="shades" aria-pressed="false"><span class="pal shades"></span>Shades of the accent</button>
+        </div>
+        <h3>Type</h3>
+        <div class="chips" role="group" aria-label="Type">
+          <button type="button" data-look-type="" aria-pressed="true">Preset's</button>
+          <button type="button" data-look-type="inter" aria-pressed="false" style="font-family:Inter,var(--font)">Inter</button>
+          <button type="button" data-look-type="newsreader" aria-pressed="false" style="font-family:Georgia,serif">Newsreader</button>
+          <button type="button" data-look-type="manrope" aria-pressed="false">Manrope</button>
+          <button type="button" data-look-type="mono" aria-pressed="false" style="font-family:ui-monospace,Menlo,monospace">Space Mono</button>
+        </div>
+        <div class="look-ranges">
+          <label for="look-corners"><span>Corners</span><output for="look-corners">preset</output></label>
+          <input type="range" id="look-corners" data-look-range="corners" min="0" max="12" step="1" value="0">
+          <label for="look-lines"><span>Lines</span><output for="look-lines">preset</output></label>
+          <input type="range" id="look-lines" data-look-range="lines" min="1" max="4" step="0.2" value="2">
+        </div>
+        <h3>Mode</h3>
+        <div class="seg" role="group" aria-label="Mode">
+          <button type="button" data-look-mode="light" aria-pressed="true">Light</button>
+          <button type="button" data-look-mode="dark" aria-pressed="false">Dark</button>
+        </div>
+        <div class="look-foot"><span class="fine" data-look-status>The site's own look.</span><button type="button" class="btn btn-ghost small" data-look-reset disabled>Reset</button></div>
+        <details class="look-code">
+          <summary>What the page ran</summary>
+<pre class="live-code"><code data-lang="js" id="look-code">view.setTokens({});</code></pre>
+        </details>
+        <p class="fine">Neon is a dark-first preset: it keeps its night palette in light mode. An accent you pick is lightened on dark paper until it reads. The faces travel inside the charts' bundles or load once for the page. <a href="/features/theming/">How theming works →</a></p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="content">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Charts are content</p>
+      <h2>Publish charts like articles, not like app releases</h2>
+      <p>A chart is published as a manifest and immutable chunks — to any bucket, CDN or, like this site, GitHub Pages. Sites and apps install the runtime once; republishing a chart updates every embed without redeploying the site or shipping an app update. Each runtime picks the smallest variant it can play.</p>
+    </header>
+    <ol class="tiers">
+      <li><b>T0</b><span>SVG poster + accessible text. Shows before any script runs; works in email and RSS.</span></li>
+      <li><b>T1</b><span>Baked scenes per state, for playback-only runtimes.</span></li>
+      <li><b>T2</b><span>Recipes pre-expanded, data by hash. What this site plays.</span></li>
+      <li><b>T3</b><span>The source document, for runtimes with the recipe sandbox.</span></li>
+    </ol>
+<pre><code data-lang="sh">datars publish chart.ts --alias election --to site/
+# site/c/election       ← the live manifest: embeds follow it
+# site/chunks/b3_…      ← content-addressed, immutable, cached forever</code></pre>
+    <p class="fine">The charts on this site weigh {{size:riksdag}} (the Riksdag hemicycle) to {{size:brand}} (the brand playground with its five brands' fonts), gzipped, after a {{runtime}} runtime that's cached once. <a href="/features/delivery/">Delivery in depth →</a></p>
+  </div>
+</section>
+
+<section class="section" id="accessible">
+  <div class="wrap split flip">
+    <div>
+      <p class="eyebrow">Accessible</p>
+      <h2>Every mark knows what it means</h2>
+      <p>Semantics — role, label, value, reading order — are part of every mark, so the runtime can tell a screen reader what the chart <em>says</em>, not that there is a picture: <em>“SD: 73”</em>, not <em>“rect”</em>. On the web that's an ARIA mirror with live narration for story steps; in apps it's VoiceOver and TalkBack; engine-drawn sliders become native range controls.</p>
+      <ul class="bullets">
+        <li><b>Keyboard</b> access to interactive marks, in reading order.</li>
+        <li><b>Reduced motion</b> honoured on every platform: transitions become short crossfades.</li>
+        <li><b>A text alternative ships in every bundle</b> — before any script runs — with an SVG poster.</li>
+        <li><b>Checked</b>: <code>datars lint</code> flags interactive marks without a label, colliding labels and the theme's failed contrast checks.</li>
+      </ul>
+      <a class="more" href="/features/accessibility/">Accessibility in depth <span aria-hidden="true">→</span></a>
+    </div>
+    <div>
+      <article class="card">
+        <div class="chart" data-chart="riksdag"></div>
+        <div class="card-text">
+          <p class="hint">What a screen reader gets from this chart's second step — the output of <code>datars semantics</code>, captured when this page was built:</p>
+          {{run:semantics examples/riksdag/doc.json --state 1|14}}
+          {{alt:riksdag}}
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="custom">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Extendable</p>
+      <h2>The globe at the top of this page is sixty-seven lines of TypeScript</h2>
+      <p>No chart library ships a globe whose countries become planets. In datars it's one custom recipe — typed parameters and an <code>expand</code> function returning keyed shapes whose positions are expressions over each row — written with the same public API as the {{count:recipes}} standard recipes. Because every country keeps its key, coastlines morph into planets for free; the flights between layouts are motion rules.</p>
+<pre><code data-lang="ts">motion: motion(
+  { duration: 2.2, easing: "cubic-in-out", matcher: "by-path" },
+  { when: { from: "globe", to: "orbits" }, select: { role: "datum" },
+    route: route.spiral(0.35), choreo: choreo.ripple(0.55) },
+  { when: { from: "orbits", to: "spiral" }, select: { role: "datum" },
+    route: route.arc(0.3), choreo: choreo.stagger("value", 0.5) },
+  { when: { from: "spiral", to: "blocks" }, select: { role: "datum" },
+    choreo: choreo.wave(0.5, 0) },
+),</code></pre>
+      <p class="fine">Custom scenes get everything the built-in charts get: motion, themes, accessibility, every platform. Or start from a standard recipe: <code>datars eject std/bar</code>.</p>
+      <a class="more" href="/features/extensibility/">Write your own recipes <span aria-hidden="true">→</span></a>
+    </div>
+    <div class="code-scroll">{{code:examples/worlds/recipes/worlds.ts}}</div>
+  </div>
+</section>
+
+<section class="section" id="developers">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">For developers and agents</p>
+      <h2>Tools that answer “why does it look like that?”</h2>
+      <p>Documents are TypeScript, so your editor type-checks them. <code>datars dev</code> opens a live page that morphs each edit in, previews phone widths and dark mode, and explains any mark you click. <code>check</code> reports what the engine couldn't do; <code>lint</code> catches colliding labels, low contrast and unstable keys; <code>explain</code> traces any element back to its recipe, data row and expression values; <code>film</code> draws a transition as a filmstrip; <code>profile</code> times every frame. The same tools are an MCP server, so a coding agent can build a chart and check its own work.</p>
+      <a class="more" href="/features/developers/">The toolchain <span aria-hidden="true">→</span></a>
+    </div>
+    <div>
+      <figure class="shot"><img class="thumb thumb-light" src="/img/dev-explain.png" alt="The datars dev page: a bar chart, its states, and the Explain panel with the recipes, data row and expression values behind the clicked bar" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-explain-dark.png" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"></figure>
+<pre><code data-lang="sh">datars new mychart --template story   # a working document
+datars dev mychart/doc.ts             # live page, morphs on save
+datars lint mychart/doc.ts            # chart checks, with fixes
+datars film mychart/doc.ts --from 0 --to 1</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="showcase">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">In context</p>
+      <h2>Whole articles, in one newsroom's house style</h2>
+      <p>Ten articles put the charts where they belong — between paragraphs, in scroll stories that change the chart as you read, with the sources under every figure. Every chart in them is a live datars document with its TypeScript source a click away.</p>
+    </header>
+    <div class="cards3">
+      <article>
+        <h3><a href="/articles/oil-2020/">The day oil was worth less than nothing</a></h3>
+        <p>April 20, 2020, when American crude fell to minus $36.98 a barrel: candles, storage, volatility bands and the long climb back.</p>
+      </article>
+      <article>
+        <h3><a href="/articles/us-debt/">$40 trillion, to the penny</a></h3>
+        <p>What the United States owes, fetched live from the Treasury each time the page opens, and how the total got past $40 trillion.</p>
+      </article>
+      <article>
+        <h3><a href="/articles/us-election-2024/">How Trump swept the swing states</a></h3>
+        <p>A 312-to-226 Electoral College win built on seven states decided by a few points each — state by state, county by county.</p>
+      </article>
+      <article>
+        <h3><a href="/articles/warming/">A warming world, in four records</a></h3>
+        <p>The planet's temperature, the gas behind it, the ice it is melting, and who is putting that gas into the air.</p>
+      </article>
+      <article>
+        <h3><a href="/articles/westeros/">The Seven Kingdoms, charted</a></h3>
+        <p>A map of a continent that does not exist, drawn from scratch: its great houses, the road that starts the story, and the show.</p>
+      </article>
+      <article>
+        <h3><a href="/articles/greece-debt-crisis/">Greece's lost decade, and the debt it left behind</a></h3>
+        <p>Three bailouts, a quarter of the economy gone and a debt that is still the heaviest in the European Union.</p>
+      </article>
+    </div>
+    <p class="fine" style="margin-top:18px"><a href="/articles/">All ten articles →</a> · Measured on this site's own charts: {{perf:summary:transitions:steady}} transitions held a steady 59–60 fps in Chrome — <a href="/performance/">the numbers</a>.</p>
+  </div>
+</section>
+
+<section class="section" id="included">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">In the box</p>
+      <h2>Everything that's included</h2>
+    </header>
+    {{features:grid}}
+  </div>
+</section>
+
+<section class="section start" id="start">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Get started</p>
+      <h2>From a template to a published chart in four commands</h2>
+    </header>
+    <div class="steps">
+      <div class="step-card">
+        <h3><span>1</span> Write a document</h3>
+<pre><code data-lang="ts">import { doc, data, group } from "@datars/sdk";
+import { plot, bar } from "@datars/std";
+
+export default doc({
+  title: "Sales by region", size: [720, 420],
+  data: { sales: data.values(
+    { region: ["N", "S", "E", "W"], sales: [120, 98, 143, 87] },
+    { key: "region" }) },
+  scene: group({ children: [
+    plot({ data: "sales", x: "region", y: "sales",
+      children: [bar({ labels: true })] }),
+  ] }),
+});</code></pre>
+      </div>
+      <div class="step-card">
+        <h3><span>2</span> Preview, lint, explain</h3>
+<pre><code data-lang="sh">datars new mychart --template story
+datars dev mychart/doc.ts      # live page, morphs on save
+datars lint mychart/doc.ts     # chart checks, with fixes</code></pre>
+        <h3><span>3</span> Publish anywhere static</h3>
+<pre><code data-lang="sh">datars publish mychart/doc.ts --alias sales --to site/
+# site/c/sales + site/chunks/…  → any bucket, CDN or Pages</code></pre>
+        <h3><span>4</span> Embed</h3>
+<pre><code data-lang="html">&lt;script type="module" src="runtime/datars.js"&gt;&lt;/script&gt;
+&lt;datars-view src="c/sales"&gt;&lt;/datars-view&gt;</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="closer" id="ship">
+  <div class="wrap"><div class="closer-in">
+    <h2>Build the chart once.<br> <span class="grad">Ship it to every screen.</span></h2>
+    <p>No account, no API key, no chart server: a published chart is static files on any host, and self-hosting always works.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="/docs/getting-started/">Get started <span aria-hidden="true">→</span></a>
+      <a class="btn btn-ghost on-dark" href="/why/">Why datars</a>
+      <a class="btn btn-ghost on-dark" href="{{repo}}">Source on GitHub</a>
+    </div>
+  </div></div>
+</section>

@@ -1,0 +1,328 @@
+{
+ "datars": 1,
+ "id": "renewables",
+ "title": "Renewable share of energy use, Europe",
+ "size": {
+  "width": 760,
+  "height": 480
+ },
+ "locale": "en",
+ "data": {
+  "world": {
+   "atlas": "countries"
+  },
+  "renew": {
+   "values": {
+    "id": [
+     "ISL",
+     "NOR",
+     "SWE",
+     "FIN",
+     "LVA",
+     "DNK",
+     "EST",
+     "PRT",
+     "AUT",
+     "LTU",
+     "HRV",
+     "SVN",
+     "ROU",
+     "GRC",
+     "ESP",
+     "DEU",
+     "FRA",
+     "CYP",
+     "ITA",
+     "BGR",
+     "CZE",
+     "SVK",
+     "POL",
+     "HUN",
+     "NLD",
+     "GBR",
+     "LUX",
+     "BEL",
+     "MLT",
+     "IRL"
+    ],
+    "name": [
+     "Iceland",
+     "Norway",
+     "Sweden",
+     "Finland",
+     "Latvia",
+     "Denmark",
+     "Estonia",
+     "Portugal",
+     "Austria",
+     "Lithuania",
+     "Croatia",
+     "Slovenia",
+     "Romania",
+     "Greece",
+     "Spain",
+     "Germany",
+     "France",
+     "Cyprus",
+     "Italy",
+     "Bulgaria",
+     "Czechia",
+     "Slovakia",
+     "Poland",
+     "Hungary",
+     "Netherlands",
+     "United Kingdom",
+     "Luxembourg",
+     "Belgium",
+     "Malta",
+     "Ireland"
+    ],
+    "share": [
+     85,
+     75,
+     66,
+     48,
+     43,
+     42,
+     38,
+     35,
+     34,
+     30,
+     29,
+     25,
+     24,
+     23,
+     22,
+     21,
+     20,
+     19,
+     19,
+     19,
+     18,
+     18,
+     17,
+     15,
+     15,
+     14,
+     14,
+     14,
+     13,
+     13
+    ]
+   },
+   "key": [
+    "id"
+   ]
+  }
+ },
+ "tables": {
+  "nordic": {
+   "from": "renew",
+   "ops": [
+    {
+     "op": "filter",
+     "expr": {
+      "expr": "[\"ISL\",\"NOR\",\"SWE\",\"FIN\",\"DNK\"].includes(d.id)"
+     }
+    },
+    {
+     "op": "sort",
+     "by": [
+      [
+       "share",
+       "desc"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "signals": {
+  "focus": {
+   "type": "keyset",
+   "default": []
+  },
+  "shape": {
+   "type": "str",
+   "default": "map"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "view",
+    "key": "chart",
+    "when": {
+     "expr": "shape == \"map\""
+    },
+    "camera": {
+     "fit": {
+      "keys": "=focus"
+     },
+     "padding": 24
+    },
+    "children": [
+     {
+      "kind": "use",
+      "recipe": "@datars/std/map",
+      "params": {
+       "source": "world",
+       "data": "renew",
+       "key": "id",
+       "value": "share",
+       "projection": "equal-earth",
+       "format": ".0f"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "nordic",
+     "x": "share",
+     "y": "name",
+     "xType": "linear",
+     "yType": "band",
+     "title": "Renewable share of energy use (%)",
+     "format": ".0f",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "fill": "$accent"
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "shape == \"bars\""
+    }
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "region"
+    }
+   },
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "datum"
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "world",
+    "set": {
+     "focus": [],
+     "shape": "map"
+    },
+    "narration": {
+     "title": "Renewables",
+     "text": "Share of energy use from renewable sources."
+    }
+   },
+   {
+    "name": "europe",
+    "set": {
+     "focus": [
+      "ISL",
+      "NOR",
+      "SWE",
+      "FIN",
+      "LVA",
+      "DNK",
+      "EST",
+      "PRT",
+      "AUT",
+      "LTU",
+      "HRV",
+      "SVN",
+      "ROU",
+      "GRC",
+      "ESP",
+      "DEU",
+      "FRA",
+      "CYP",
+      "ITA",
+      "BGR",
+      "CZE",
+      "SVK",
+      "POL",
+      "HUN",
+      "NLD",
+      "GBR",
+      "LUX",
+      "BEL",
+      "MLT",
+      "IRL"
+     ],
+     "shape": "map"
+    },
+    "narration": {
+     "text": "Across Europe the share ranges from 13% to 85%."
+    }
+   },
+   {
+    "name": "nordics",
+    "set": {
+     "focus": [
+      "ISL",
+      "NOR",
+      "SWE",
+      "FIN",
+      "DNK"
+     ],
+     "shape": "map"
+    },
+    "narration": {
+     "text": "The Nordic countries lead."
+    }
+   },
+   {
+    "name": "ranked",
+    "set": {
+     "focus": [
+      "ISL",
+      "NOR",
+      "SWE",
+      "FIN",
+      "DNK"
+     ],
+     "shape": "bars"
+    },
+    "narration": {
+     "text": "Iceland and Norway run mostly on hydro and geothermal power."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

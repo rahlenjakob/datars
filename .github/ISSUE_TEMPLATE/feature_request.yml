@@ -1,0 +1,55 @@
+name: Feature request
+description: Suggest a capability, recipe, host API or tool.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For open-ended ideas and questions, [GitHub Discussions](https://github.com/rahlenjakob/datars/discussions) is the better place. Use this form for a concrete proposal.
+
+        Keep in mind: the engine knows primitives, not chart types (docs/02-principles.md, P4). Many chart-level features belong in the standard library as recipes, or can be built as your own recipe without changing the engine.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you're trying to do, and what gets in the way today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: What you'd like to happen. A sketch of the document, SDK call or CLI command helps.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      multiple: true
+      options:
+        - Engine primitive / IR
+        - Standard library recipe (@datars/std)
+        - SDK (@datars/sdk)
+        - Motion / transitions
+        - Interaction / programs
+        - Maps / geo
+        - Rendering backends
+        - Web runtime and integrations
+        - iOS / macOS / Android / desktop hosts
+        - Delivery (bundles, publish, serve)
+        - CLI / dev tools / MCP
+        - Python package
+        - Docs
+        - Other
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you've tried, such as your own recipe or an ejected std recipe, and why they fall short.
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd be willing to work on this (see CONTRIBUTING.md).

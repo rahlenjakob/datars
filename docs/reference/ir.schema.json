@@ -1,0 +1,2012 @@
+{
+  "$defs": {
+    "Action": {
+      "anyOf": [
+        {
+          "description": "One value for `pick` among `options` (each said by the matching `labels` entry, else by\nitself): what a host offers with its own picker — the platform's select on touch screens —\nin place of the chart's drawn list. No pointer intent runs it.",
+          "properties": {
+            "labels": {
+              "items": {
+                "$ref": "#/$defs/Prop"
+              },
+              "type": "array"
+            },
+            "options": {
+              "items": true,
+              "type": "array"
+            },
+            "pick": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "pick",
+            "options"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "set": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "set",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "toggle": {
+              "type": "string"
+            },
+            "value": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "toggle",
+            "value"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "event": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "event"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "chapter": {
+              "type": "string"
+            },
+            "key": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "chapter",
+            "key"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Drag across the node to select a range along a scale: `axis` `x` or `y`, the scale of that\nname unless `scale` says otherwise. Continuous scales write `<brush>.lo` / `<brush>.hi`\n(data units); band scales write the keyset `<brush>` of the bands covered. Both set\n`<brush>.active`; a click without a drag clears the brush.\nPress or drag on the node to set `scrub` to the data value under the pointer along `axis`\n(through the scale of that name, or `scale`) — sliders, time scrubbers.",
+          "properties": {
+            "axis": {
+              "default": "x",
+              "type": "string"
+            },
+            "max": {
+              "$ref": "#/$defs/Prop"
+            },
+            "min": {
+              "$ref": "#/$defs/Prop",
+              "description": "Keep the value at or above / below these (numbers or expressions, read when the scene\nresolves): a range's low thumb stops at the high one's value."
+            },
+            "scale": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "scrub": {
+              "type": "string"
+            },
+            "step": {
+              "description": "Snap to multiples of this step (0 = continuous).",
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "scrub"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "axis": {
+              "default": "x",
+              "type": "string"
+            },
+            "brush": {
+              "type": "string"
+            },
+            "scale": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "brush"
+          ],
+          "type": "object"
+        }
+      ],
+      "description": "What an intent does: set or toggle a signal, fire a program event, or enter a chapter."
+    },
+    "Chapter": {
+      "properties": {
+        "param": {
+          "description": "The parameter bound to the activating datum's key (`{c}` in names, a signal in expressions).",
+          "type": "string"
+        },
+        "program": {
+          "$ref": "#/$defs/Program"
+        }
+      },
+      "required": [
+        "param",
+        "program"
+      ],
+      "type": "object"
+    },
+    "Derived": {
+      "description": "A derived table: `from` + ops, each op a small JSON object interpreted by the engine\n(`filter`, `derive`, `aggregate`, `sort`, `top`, `bin`, `window`, `join`, `pivot`, `unpivot`,\n`interpolate`, and layout algorithms like `stack`, `pie`, `treemap`, `beeswarm`, …).",
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "ops": {
+          "default": [],
+          "items": true,
+          "type": "array"
+        }
+      },
+      "required": [
+        "from"
+      ],
+      "type": "object"
+    },
+    "Edge": {
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "on": {
+          "description": "`next`, `prev`, `goto:<state>`, `activate`, `data`, `timer`, or a custom event name.",
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "from",
+        "on",
+        "to"
+      ],
+      "type": "object"
+    },
+    "GenColumn": {
+      "description": "One generated column: its name and its expression.",
+      "properties": {
+        "as": {
+          "type": "string"
+        },
+        "expr": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "as",
+        "expr"
+      ],
+      "type": "object"
+    },
+    "Generate": {
+      "description": "A generated table: `rows` rows; each column an expression over the row, evaluated in order —\n`d.i` is the row number and `d.<name>` any column before it — with `rand(key, stream)` and\n`randn(key, stream)` for seeded randomness (the same rows on every platform). `keep` names\nthe columns the table ends up with (default: all); the others are working values.",
+      "properties": {
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/GenColumn"
+          },
+          "type": "array"
+        },
+        "keep": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "rows": {
+          "format": "uint64",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rows",
+        "columns"
+      ],
+      "type": "object"
+    },
+    "KeyMeta": {
+      "properties": {
+        "color": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Layout": {
+      "properties": {
+        "align": {
+          "description": "Cross-axis alignment: `start | center | end | stretch` (default stretch).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "columns": {
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "gap": {
+          "default": 0.0,
+          "format": "double",
+          "type": "number"
+        },
+        "padding": {
+          "$ref": "#/$defs/PaddingInput",
+          "default": [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          "description": "Padding `[top, right, bottom, left]`; CSS shorthand accepted on input: `12`, `[12]`,\n`[vertical, horizontal]`, `[top, horizontal, bottom]`."
+        },
+        "type": {
+          "default": "stack",
+          "description": "`stack` (default: children share the box), `rows`, `columns`, `grid` (equal cells, `columns`\nacross; a repeat fills one cell per item), or `flow` (resolved nodes left to right by their\nsize, wrapping at the box edge; a repeat's nodes flow too).",
+          "type": "string"
+        },
+        "wrap": {
+          "description": "`columns` only: in a box narrower than this (px), the children stack as rows instead, each\nan equal share of the height (their widths dropped) — two charts side by side on a desktop,\none above the other on a phone.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "LiveDecl": {
+      "properties": {
+        "every": {
+          "default": 0.0,
+          "description": "Seconds between refreshes (poll), or 0 for push.",
+          "format": "double",
+          "type": "number"
+        },
+        "mode": {
+          "default": "snapshot",
+          "description": "`snapshot` (absent keys exit) or `upsert`/`append`.",
+          "type": "string"
+        },
+        "window": {
+          "format": "uint",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Narration": {
+      "properties": {
+        "anchor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "text": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "PackageRef": {
+      "properties": {
+        "hash": {
+          "description": "Content hash of the package (pins exact behaviour, P1).",
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "source": {
+          "description": "Inline JS source (dev) — published bundles carry bytecode chunks instead.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "PaddingInput": {
+      "anyOf": [
+        {
+          "format": "double",
+          "type": "number"
+        },
+        {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": "array"
+        }
+      ],
+      "description": "What `padding` accepts on input (CSS shorthand): one number, or 1–4 numbers."
+    },
+    "Program": {
+      "description": "A program: a small statechart (docs/08-programs.md).",
+      "properties": {
+        "chapters": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Chapter"
+          },
+          "description": "Parameterized sub-programs entered by an event with a key (chapters, drill-down).",
+          "type": "object"
+        },
+        "drivers": {
+          "description": "Drivers: `steps`, `scroll` (`{\"scroll\": \"scrub\" | \"trigger\"}`), `autoplay`, `keys`, `timer`.",
+          "items": true,
+          "type": "array"
+        },
+        "edges": {
+          "items": {
+            "$ref": "#/$defs/Edge"
+          },
+          "type": "array"
+        },
+        "initial": {
+          "type": "string"
+        },
+        "preset": {
+          "description": "Preset name for tooling (`story`, `dashboard`, `interactive`, `film`, `loop`, `static`).",
+          "type": "string"
+        },
+        "states": {
+          "items": {
+            "$ref": "#/$defs/State"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "states"
+      ],
+      "type": "object"
+    },
+    "Prop": {
+      "description": "A property value: a literal JSON value, or an expression (`{\"expr\": \"…\"}` or `\"=…\"`)."
+    },
+    "RepeatFrom": {
+      "anyOf": [
+        {
+          "description": "Rows of a table (`\"votes\"`, or `\"@group\"`).",
+          "type": "string"
+        },
+        {
+          "description": "One child per group of rows: `{ \"groups\": \"points\", \"by\": \"series\" }`; inside, `\"@group\"` is\nthat group's rows and `d` its first row.",
+          "properties": {
+            "by": {
+              "type": "string"
+            },
+            "groups": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "groups",
+            "by"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "One child per tick of a scale: `{ \"ticks\": \"y\", \"count\": 5 }`; `d.value`, `d.label`. The\ncount is a hint (0 or none: from the axis length), and may be an expression — so many ticks\nas labels of their measured width fit along the axis.",
+          "properties": {
+            "count": {
+              "$ref": "#/$defs/Prop"
+            },
+            "ticks": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "ticks"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "One child per entry of a categorical/colour scale's domain: `d.value`, `d.ink`, `d.index`.",
+          "properties": {
+            "legend": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "legend"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "`n` children with `d.index`.",
+          "properties": {
+            "count": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "count"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ScaleDecl": {
+      "additionalProperties": true,
+      "description": "A scale declaration.",
+      "properties": {
+        "domain": {
+          "description": "`{\"data\": table, \"field\": col}`, `{\"data\", \"expr\"}`, a literal array, or `{\"values\": [...]}`."
+        },
+        "exponent": {
+          "description": "`pow` only: values map through `sign(x)·|x|^exponent` (default 1, linear; `sqrt` is pow 0.5).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "nice": {
+          "type": "boolean"
+        },
+        "padding": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "range": {
+          "description": "`\"width\"`, `\"height\"`, `\"-height\"` (inverted), `[a, b]` (numbers or expressions), a palette\ntoken (`\"$categorical\"`), or a list of inks."
+        },
+        "type": {
+          "description": "`linear | log | sqrt | pow | symlog | time | band | point | ordinal | quantize | quantile |\nthreshold | sequential | diverging | categorical | piecewise`",
+          "type": "string"
+        },
+        "zero": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "SignalDecl": {
+      "properties": {
+        "clock": {
+          "description": "A clock signal: its value runs at this rate (units per second) while a settled scene reads\nit — a globe that turns, a slow drift — and pauses during transitions, off screen and for\nreduced motion. Resolving outside a running view (bake, render, goldens) sees its default.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "control": {
+          "description": "A host-bound control, if any (`slider`, `toggle`, `select`) with its parameters."
+        },
+        "default": true,
+        "type": {
+          "description": "`num | str | bool | key | keyset | range | point | json`",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "type": "object"
+    },
+    "Size": {
+      "properties": {
+        "height": {
+          "format": "double",
+          "type": "number"
+        },
+        "width": {
+          "format": "double",
+          "type": "number"
+        }
+      },
+      "required": [
+        "width",
+        "height"
+      ],
+      "type": "object"
+    },
+    "SizeSpec": {
+      "description": "A size along one axis: px, `\"auto\"` (measured content), `\"fill\"` / `{\"fill\": weight}`, `\"30%\"`,\nor an expression over the parent box in px (`{\"expr\": \"min(260, box.w - 24)\"}`).",
+      "properties": {
+        "h": true,
+        "w": true
+      },
+      "type": "object"
+    },
+    "Source": {
+      "description": "A data source. The engine never fetches (P10): `url` sources become requests the host fulfils.",
+      "oneOf": [
+        {
+          "description": "Inline columns `{ \"col\": [values…] }` or records `[{…}, …]`.",
+          "properties": {
+            "values": true
+          },
+          "required": [
+            "values"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Inline CSV text.",
+          "properties": {
+            "csv": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "csv"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A URL the host fetches (CSV or JSON by extension or `format`).",
+          "properties": {
+            "url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Provided by the host at runtime (a data slot, docs/12-delivery.md).",
+          "properties": {
+            "slot": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "slot"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Inline GeoJSON (a FeatureCollection): a geo source — a table of feature ids + properties,\nand geometry the engine projects through a `geo` coordinate system.",
+          "properties": {
+            "geojson": true
+          },
+          "required": [
+            "geojson"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Inline TopoJSON (shared borders simplify consistently).",
+          "properties": {
+            "topojson": true
+          },
+          "required": [
+            "topojson"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A built-in atlas (`\"countries\"`, `\"admin1\"`, …) from the runtime or an atlas package.",
+          "properties": {
+            "atlas": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "atlas"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A vector-tile archive (PMTiles v3) by URL. Never fetched whole: the engine asks the host for\nbyte ranges — the header and directories, then the tiles the visible views need at their\nzoom (`Request::Range`). Drawn by `tiles` template nodes. [`AUTO_TILES`] (`\"auto\"`) asks the\nbuild for an archive cut to the document's own cameras ([`tiles_file`]).",
+          "properties": {
+            "tiles": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "tiles"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A font file (TrueType/OpenType) by URL, fetched like any source: its families join every\ntext's fallback chain, so labels in other scripts (Hebrew, Arabic, CJK) find their glyphs.",
+          "properties": {
+            "font": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "font"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Rows the engine generates: synthetic data too big to write down (simulations, load tests,\nprocedural datasets) as a few expressions instead of millions of values.",
+          "properties": {
+            "generate": {
+              "$ref": "#/$defs/Generate"
+            }
+          },
+          "required": [
+            "generate"
+          ],
+          "type": "object"
+        }
+      ],
+      "properties": {
+        "id": {
+          "description": "Geo sources: the feature property holding the id (default `id`, else the feature's own id).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "key": {
+          "description": "Key column(s): the identity of each row (P3).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "live": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LiveDecl"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Live updates: how the host should refresh this source."
+        },
+        "rows": {
+          "description": "Where a JSON response keeps its rows: a dotted path to the array of records (`data`,\n`results.items`) — web APIs wrap their rows with paging and metadata.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sample": {
+          "description": "Slots: rows shown until the host provides the data (design previews, tests, a published\nchart's static fallback), as columns or records. They also say which columns the host's\ndata must have."
+        },
+        "types": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Column type overrides: `\"num\" | \"str\" | \"bool\" | \"date\"`.",
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "State": {
+      "properties": {
+        "hold": {
+          "description": "Seconds to hold in autoplay/film.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "narration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Narration"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Narration for the host (cards, captions, video subtitles) and an anchor key."
+        },
+        "set": {
+          "additionalProperties": true,
+          "description": "Signal assignments while in this state (values or `{\"expr\"}`).",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "type": "object"
+    },
+    "TAnchor": {
+      "properties": {
+        "at": {
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "at"
+      ],
+      "type": "object"
+    },
+    "TBackdrop": {
+      "description": "A group's backdrop: a (rounded) box behind whatever the group draws, sized to it once layout is\ndone — so a card grows with its text, and morphs when the text changes. Keyed `backdrop`.",
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/Prop"
+        },
+        "fit": {
+          "description": "`content` (default) hugs the content; `width` spans the group's box across and hugs the\ncontent's height (a card of fixed width).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "padding": {
+          "$ref": "#/$defs/Prop",
+          "description": "Space around the content: a number, or `[top, right, bottom, left]`."
+        },
+        "radius": {
+          "$ref": "#/$defs/Prop",
+          "description": "Corner radius (px or a number token)."
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "TCamera": {
+      "anyOf": [
+        {
+          "description": "Fit keys (node keys under the view) or a bbox in content units, with padding px.",
+          "properties": {
+            "explore": {
+              "description": "Free exploration (drag to pan, wheel/pinch to zoom) relative to the fit, kept in the\nsignals `<explore>.x`, `.y` (content centre) and `.zoom` (× the fit's zoom).",
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "fit": true,
+            "max_zoom": {
+              "description": "How far exploration zooms in, × the fit's zoom (default 64).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "min_zoom": {
+              "description": "How far it zooms out, × the fit's zoom (default 0.5).",
+              "format": "double",
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "padding": {
+              "default": 0.0,
+              "format": "double",
+              "type": "number"
+            }
+          },
+          "required": [
+            "fit"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y": {
+              "$ref": "#/$defs/Prop"
+            },
+            "zoom": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "zoom"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "TGeom": {
+      "oneOf": [
+        {
+          "properties": {
+            "h": {
+              "$ref": "#/$defs/Prop"
+            },
+            "r": {
+              "$ref": "#/$defs/Prop"
+            },
+            "type": {
+              "const": "rect",
+              "type": "string"
+            },
+            "w": {
+              "$ref": "#/$defs/Prop"
+            },
+            "x": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "type",
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "cx": {
+              "$ref": "#/$defs/Prop"
+            },
+            "cy": {
+              "$ref": "#/$defs/Prop"
+            },
+            "rx": {
+              "$ref": "#/$defs/Prop"
+            },
+            "ry": {
+              "$ref": "#/$defs/Prop"
+            },
+            "type": {
+              "const": "ellipse",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "cx",
+            "cy",
+            "rx",
+            "ry"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "cx": {
+              "$ref": "#/$defs/Prop"
+            },
+            "cy": {
+              "$ref": "#/$defs/Prop"
+            },
+            "r": {
+              "$ref": "#/$defs/Prop"
+            },
+            "type": {
+              "const": "circle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "cx",
+            "cy",
+            "r"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "a0": {
+              "$ref": "#/$defs/Prop"
+            },
+            "a1": {
+              "$ref": "#/$defs/Prop"
+            },
+            "cx": {
+              "$ref": "#/$defs/Prop"
+            },
+            "cy": {
+              "$ref": "#/$defs/Prop"
+            },
+            "r0": {
+              "$ref": "#/$defs/Prop"
+            },
+            "r1": {
+              "$ref": "#/$defs/Prop"
+            },
+            "type": {
+              "const": "arc",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "cx",
+            "cy",
+            "r1",
+            "a0",
+            "a1"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "segment",
+              "type": "string"
+            },
+            "x1": {
+              "$ref": "#/$defs/Prop"
+            },
+            "x2": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y1": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y2": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "type",
+            "x1",
+            "y1",
+            "x2",
+            "y2"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "Points from the rows of `from` (a table name, or `\"@group\"` for the current group's rows).",
+          "properties": {
+            "closed": {
+              "default": false,
+              "type": "boolean"
+            },
+            "curve": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "from": {
+              "type": "string"
+            },
+            "type": {
+              "const": "polyline",
+              "type": "string"
+            },
+            "x": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "curve": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "from": {
+              "type": "string"
+            },
+            "type": {
+              "const": "area",
+              "type": "string"
+            },
+            "x": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y0": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y1": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "type",
+            "from",
+            "x",
+            "y0",
+            "y1"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "An SVG path string (literal or expression).",
+          "properties": {
+            "d": {
+              "$ref": "#/$defs/Prop"
+            },
+            "type": {
+              "const": "path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "d"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "size": {
+              "$ref": "#/$defs/Prop"
+            },
+            "symbol": {
+              "$ref": "#/$defs/Prop"
+            },
+            "type": {
+              "const": "symbol",
+              "type": "string"
+            },
+            "x": {
+              "$ref": "#/$defs/Prop"
+            },
+            "y": {
+              "$ref": "#/$defs/Prop"
+            }
+          },
+          "required": [
+            "type",
+            "x",
+            "y",
+            "size"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A feature of a geo source, projected through the enclosing geo coordinate system. Without\n`source` (inside a `tiles` layer template): the current tile feature's geometry.",
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/Prop"
+            },
+            "source": {
+              "type": "string"
+            },
+            "type": {
+              "const": "feature",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "TInstances": {
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/Prop"
+        },
+        "from": {
+          "type": "string"
+        },
+        "h": {
+          "$ref": "#/$defs/Prop"
+        },
+        "hit": {
+          "description": "Where the pointer finds the instances: `marks` (the default), each mark and a few px around\nit; or `line`, anywhere along the line through them in row order, within `reach` px of it,\nfinding the instance nearest to where it meets the line — a line's value wherever it's\nhovered or tapped, however far apart its points are.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "instance_key": {
+          "$ref": "#/$defs/Prop",
+          "description": "Per-instance key (an expression over the row). Separate from the node's own `key`: the\ninstances node keeps one identity, each instance another."
+        },
+        "instance_opacity": {
+          "$ref": "#/$defs/Prop",
+          "description": "Per-instance opacity (an expression over the row); the node's own `opacity` multiplies it."
+        },
+        "label": {
+          "$ref": "#/$defs/Prop"
+        },
+        "lod": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TLod"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Level of detail, for rows beyond what one frame can draw (millions): the rows are indexed\nonce into a pyramid of tiles and each frame draws only the tiles the camera shows — a\nseeded, density-preserving sample of the rows in view, as many as `points` allows, every\nrow once they fit. Rows sit at their `x`/`y` in the node's own coordinates (indexed once, so\nthey read the row only); a transform or a view's camera above maps them to the screen.\n`from` may also name a point archive (a `tiles` source written by the publish compiler)."
+        },
+        "proto": {
+          "default": "circle",
+          "description": "`circle | square | diamond | triangle | cross | star | rect`",
+          "type": "string"
+        },
+        "r": {
+          "$ref": "#/$defs/Prop",
+          "description": "Radius (symbol prototypes), px; default: the theme's `point.radius`. Not `size`, which is\nthe node's layout size."
+        },
+        "reach": {
+          "description": "How far from the line (`hit: line`) the pointer still finds it, px; default 16.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "screen_size": {
+          "type": "boolean"
+        },
+        "stroke": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TStroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "w": {
+          "$ref": "#/$defs/Prop"
+        },
+        "x": {
+          "$ref": "#/$defs/Prop"
+        },
+        "y": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "required": [
+        "from",
+        "x",
+        "y"
+      ],
+      "type": "object"
+    },
+    "TLod": {
+      "description": "How an `instances` node with `lod` samples its rows.",
+      "properties": {
+        "budget": {
+          "description": "Rows per tile of the index at average density (default 2048): how finely the rows are\ncut up (smaller: more, lighter tiles to fetch).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "points": {
+          "description": "The most rows one frame draws (default 150,000): a view holding more draws a uniform\nsample of them this size, a view holding fewer draws every one.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "TNumber": {
+      "properties": {
+        "format": {
+          "$ref": "#/$defs/Prop"
+        },
+        "value": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "type": "object"
+    },
+    "TSemantics": {
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/Prop"
+        },
+        "link": {
+          "$ref": "#/$defs/Prop",
+          "description": "A URL this element links to (a data credit's licence page, a source): hosts make it\nclickable and announce it as a link; vector exports keep it."
+        },
+        "role": {
+          "type": "string"
+        },
+        "value": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "required": [
+        "role"
+      ],
+      "type": "object"
+    },
+    "TStroke": {
+      "properties": {
+        "cap": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dash": {
+          "items": {
+            "format": "double",
+            "type": "number"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "join": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "non_scaling": {
+          "type": "boolean"
+        },
+        "paint": {
+          "$ref": "#/$defs/Prop"
+        },
+        "width": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "required": [
+        "paint"
+      ],
+      "type": "object"
+    },
+    "TText": {
+      "properties": {
+        "at": {
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "halo": {
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "number": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TNumber"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A number that counts when animated: `{ \"value\": expr, \"format\": \",.1f\" }`."
+        },
+        "offset": {
+          "description": "Shift from `at` in screen px (labels beside points under a zooming camera).",
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "rotate": {
+          "$ref": "#/$defs/Prop"
+        },
+        "style": {
+          "$ref": "#/$defs/TTextStyle",
+          "default": {}
+        },
+        "text": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "required": [
+        "text",
+        "at"
+      ],
+      "type": "object"
+    },
+    "TTextStyle": {
+      "properties": {
+        "align": {
+          "$ref": "#/$defs/Prop"
+        },
+        "baseline": {
+          "$ref": "#/$defs/Prop"
+        },
+        "contain": {
+          "$ref": "#/$defs/Prop",
+          "description": "Keep the label inside the canvas: after layout it's nudged back in, only as far as needed\n(the last tick label of an axis, a callout near the edge). A boolean."
+        },
+        "font": {
+          "$ref": "#/$defs/Prop",
+          "description": "A font token (`\"font.body\"`) or a family name."
+        },
+        "ink": {
+          "$ref": "#/$defs/Prop"
+        },
+        "max_width": {
+          "$ref": "#/$defs/Prop"
+        },
+        "size": {
+          "$ref": "#/$defs/Prop"
+        },
+        "weight": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "type": "object"
+    },
+    "TTileLayer": {
+      "description": "One layer of a `tiles` node. The template is resolved once per feature (and cached per tile);\ninside it `d` is the feature — its properties plus `$type` (`point | line | polygon`), `$id`,\nand `$x`/`$y` (its anchor point) — the signal `tile.zoom` is the zoom being drawn, and the\ngeometry `{\"type\": \"feature\"}` is the feature's own.",
+      "properties": {
+        "filter": {
+          "$ref": "#/$defs/Prop",
+          "description": "Features to draw (an expression over `d`); all when absent."
+        },
+        "id": {
+          "description": "Names the layer's nodes (default: `layer`); unique within the `tiles` node.",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "labels": {
+          "description": "Labels: drawn above all tiles, placed in screen space in `priority` order (highest first),\ndropping any that would overlap one already placed.",
+          "type": "boolean"
+        },
+        "layer": {
+          "description": "The tile layer's name in the archive.",
+          "type": "string"
+        },
+        "maxzoom": {
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "merge": {
+          "default": true,
+          "description": "Batch features whose resolved style is identical into one node per tile (default true):\nthousands of roads become a handful of paths. Off: one keyed node per feature.",
+          "type": "boolean"
+        },
+        "minzoom": {
+          "description": "Zoom range `[minzoom, maxzoom)` in which the layer draws.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "priority": {
+          "$ref": "#/$defs/Prop"
+        },
+        "template": {
+          "$ref": "#/$defs/Template"
+        }
+      },
+      "required": [
+        "layer",
+        "template"
+      ],
+      "type": "object"
+    },
+    "TTiles": {
+      "description": "A `tiles` node: which source, and how each tile layer's features become scene nodes.",
+      "properties": {
+        "layers": {
+          "default": [],
+          "description": "Drawn in order (later layers on top); label layers go above every tile.",
+          "items": {
+            "$ref": "#/$defs/TTileLayer"
+          },
+          "type": "array"
+        },
+        "source": {
+          "description": "A data source of kind `tiles`.",
+          "type": "string"
+        },
+        "tile_size": {
+          "description": "The on-screen size (px) a tile should cover; the zoom follows from it. Default 512, the\nsize tile data is simplified for. Smaller: more detail and more tiles.",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "type": "object"
+    },
+    "TTransform": {
+      "properties": {
+        "rotate": {
+          "$ref": "#/$defs/Prop"
+        },
+        "scale": {
+          "$ref": "#/$defs/Prop"
+        },
+        "translate": {
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "Template": {
+      "oneOf": [
+        {
+          "properties": {
+            "children": {
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/Template"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "group",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A viewport with a camera. Clips to its box unless the template says `clip: false`.",
+          "properties": {
+            "camera": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TCamera"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "children": {
+              "default": [],
+              "items": {
+                "$ref": "#/$defs/Template"
+              },
+              "type": "array"
+            },
+            "kind": {
+              "const": "view",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "fill": {
+              "$ref": "#/$defs/Prop"
+            },
+            "geom": {
+              "$ref": "#/$defs/TGeom"
+            },
+            "kind": {
+              "const": "shape",
+              "type": "string"
+            },
+            "markers": true,
+            "stroke": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/TStroke"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "geom"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/TText",
+          "properties": {
+            "kind": {
+              "const": "text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "One child per row (or tick, legend entry, group, number).",
+          "properties": {
+            "from": {
+              "$ref": "#/$defs/RepeatFrom"
+            },
+            "kind": {
+              "const": "repeat",
+              "type": "string"
+            },
+            "template": {
+              "$ref": "#/$defs/Template"
+            }
+          },
+          "required": [
+            "kind",
+            "from",
+            "template"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/TInstances",
+          "description": "Vectorized marks: one prototype × the rows of a table.",
+          "properties": {
+            "kind": {
+              "const": "instances",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "description": "A recipe from a package, expanded by the engine's sandbox.",
+          "properties": {
+            "kind": {
+              "const": "use",
+              "type": "string"
+            },
+            "params": {
+              "default": null
+            },
+            "recipe": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "recipe"
+          ],
+          "type": "object"
+        },
+        {
+          "properties": {
+            "asset": {
+              "type": "string"
+            },
+            "kind": {
+              "const": "image",
+              "type": "string"
+            },
+            "rect": {
+              "items": {
+                "$ref": "#/$defs/Prop"
+              },
+              "maxItems": 4,
+              "minItems": 4,
+              "type": "array"
+            }
+          },
+          "required": [
+            "kind",
+            "asset",
+            "rect"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/TTiles",
+          "description": "Features of a vector-tile source, streamed for what the enclosing view shows: the engine\npicks the tiles covering the view at a zoom matching the camera, and draws each tile layer's\nfeatures through a template in the enclosing `geo` coordinate system. Resolved late — per\nframe, from the (possibly moving) camera — so a flight requests tiles along its path.",
+          "properties": {
+            "kind": {
+              "const": "tiles",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ],
+      "properties": {
+        "anchors": {
+          "items": {
+            "$ref": "#/$defs/TAnchor"
+          },
+          "type": "array"
+        },
+        "backdrop": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TBackdrop"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "A box drawn behind a group's content, sized to it after layout (cards, legends, tooltips)."
+        },
+        "clip": {
+          "$ref": "#/$defs/Prop",
+          "description": "`\"box\"` clips to this node's layout box; or a rect `[x, y, w, h]`."
+        },
+        "coord": {
+          "description": "A coordinate system for descendants (`cartesian`, `polar`, `geo`, `planar`)."
+        },
+        "declutter": {
+          "description": "Keeps the texts inside this group from landing on each other, once the whole scene is laid\nout: in order, a text that would overlap one before it (or any other text) tries the other\nside of its point — below instead of above, left instead of right, when it's offset from it\n— and is left out when there's no room on either side. Place names on a map that crowd\ntogether in a phone's narrow box; the first ones win, so list the important ones first.",
+          "type": "boolean"
+        },
+        "dodge": {
+          "description": "Places the group's content, once the whole scene is laid out, at the first of these anchors\nin its box (`top-left`, `top`, `top-right`, `left`, `center`, `right`, `bottom-left`,\n`bottom`, `bottom-right`; inset by the layout padding) where it covers the least data and\ntext — a card that never hides the bars it talks about. An anchor may be an expression (a\ncard that moves between states). A single anchor is a fixed place: the content goes there\nwhatever it covers, and never takes a band (a card over a map, where land covers everything).",
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "type": "array"
+        },
+        "id": {
+          "description": "Stable id for patching and provenance (optional).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "isolate": {
+          "type": "boolean"
+        },
+        "key": {
+          "$ref": "#/$defs/Prop",
+          "description": "The node's key: literal (`\"plot\"`, `[\"S\", 3]`) or an expression over the current datum."
+        },
+        "layout": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Layout"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "How this node lays out its children in its box."
+        },
+        "motion": {
+          "description": "Motion defaults for this node and everything under it: a list of motion rules (as in the\ndocument's `motion.rules`) scoped to the node's key path. Recipe expansion puts a recipe's\nown defaults here (a line draws on, grouped bars grow). They sit under the document's\nrules whatever their specificity: the document always has the last word."
+        },
+        "on": {
+          "additionalProperties": {
+            "$ref": "#/$defs/Action"
+          },
+          "description": "Intent → action bindings (`inspect`, `activate`, `pan`, `zoom`, `brush`, `drag`).",
+          "type": "object"
+        },
+        "opacity": {
+          "$ref": "#/$defs/Prop"
+        },
+        "pickable": {
+          "type": "boolean"
+        },
+        "pin": {
+          "description": "Pinned: the origin follows cameras and scales above, the content keeps screen size. A\ntext's origin is its `at` (a place name stays at its map point).",
+          "type": "boolean"
+        },
+        "prov": {
+          "description": "Provenance note (set by recipe expansion: `\"@datars/std/bar\"`).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "scales": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ScaleDecl"
+          },
+          "description": "Scales declared here, visible to descendants by name.",
+          "type": "object"
+        },
+        "semantics": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TSemantics"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "size": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SizeSpec"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "This node's size inside its parent's layout."
+        },
+        "transform": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TTransform"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trim": {
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "when": {
+          "$ref": "#/$defs/Prop",
+          "description": "Include only when this evaluates truthy."
+        },
+        "z": {
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "ThemeRef": {
+      "description": "Which theme to use, plus the document's own token overrides and inline themes.",
+      "properties": {
+        "themes": {
+          "description": "Inline theme definitions (JSON as in `datars-theme`), registered before resolving `use`.",
+          "items": true,
+          "type": "array"
+        },
+        "tokens": {
+          "additionalProperties": true,
+          "description": "Document-level token overrides (honouring the theme's locks).",
+          "type": "object"
+        },
+        "use": {
+          "default": "datars/neutral",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "$id": "https://datars.dev/schema/ir-1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "A datars document.",
+  "properties": {
+    "data": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Source"
+      },
+      "description": "Data sources by name.",
+      "type": "object"
+    },
+    "datars": {
+      "default": 1,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    },
+    "id": {
+      "type": "string"
+    },
+    "keys": {
+      "additionalProperties": {
+        "$ref": "#/$defs/KeyMeta"
+      },
+      "description": "Key metadata: display names and colours per key (party colours are data, not theme).",
+      "type": "object"
+    },
+    "locale": {
+      "default": "en",
+      "type": "string"
+    },
+    "motion": {
+      "description": "Motion rules (a `datars_motion::MotionRules` value)."
+    },
+    "packages": {
+      "description": "Code packages (recipes, kernels) by name.",
+      "items": {
+        "$ref": "#/$defs/PackageRef"
+      },
+      "type": "array"
+    },
+    "program": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Program"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scene": {
+      "$ref": "#/$defs/Template"
+    },
+    "signals": {
+      "additionalProperties": {
+        "$ref": "#/$defs/SignalDecl"
+      },
+      "type": "object"
+    },
+    "size": {
+      "$ref": "#/$defs/Size",
+      "default": {
+        "height": 480.0,
+        "width": 800.0
+      },
+      "description": "The authored size; hosts may resize (the `viewport` signal)."
+    },
+    "tables": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Derived"
+      },
+      "description": "Derived tables by name: a source table plus a pipeline of operations.",
+      "type": "object"
+    },
+    "theme": {
+      "$ref": "#/$defs/ThemeRef",
+      "default": {
+        "use": "datars/neutral"
+      }
+    },
+    "title": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "scene"
+  ],
+  "title": "datars document (IR 1)",
+  "type": "object"
+}

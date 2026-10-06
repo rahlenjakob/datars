@@ -1,0 +1,337 @@
+{
+ "datars": 1,
+ "id": "spending",
+ "title": "Your spending",
+ "size": {
+  "width": 390,
+  "height": 520
+ },
+ "locale": "en",
+ "data": {
+  "spending": {
+   "slot": "spending",
+   "key": [
+    "month",
+    "category"
+   ],
+   "types": {
+    "amount": "num"
+   },
+   "sample": [
+    {
+     "month": "Apr",
+     "category": "Housing",
+     "amount": 9800
+    },
+    {
+     "month": "Apr",
+     "category": "Food",
+     "amount": 4624
+    },
+    {
+     "month": "Apr",
+     "category": "Transport",
+     "amount": 1775
+    },
+    {
+     "month": "Apr",
+     "category": "Shopping",
+     "amount": 2339
+    },
+    {
+     "month": "Apr",
+     "category": "Leisure",
+     "amount": 1727
+    },
+    {
+     "month": "May",
+     "category": "Housing",
+     "amount": 10933
+    },
+    {
+     "month": "May",
+     "category": "Food",
+     "amount": 4576
+    },
+    {
+     "month": "May",
+     "category": "Transport",
+     "amount": 1570
+    },
+    {
+     "month": "May",
+     "category": "Shopping",
+     "amount": 2047
+    },
+    {
+     "month": "May",
+     "category": "Leisure",
+     "amount": 1710
+    },
+    {
+     "month": "Jun",
+     "category": "Housing",
+     "amount": 10406
+    },
+    {
+     "month": "Jun",
+     "category": "Food",
+     "amount": 3977
+    },
+    {
+     "month": "Jun",
+     "category": "Transport",
+     "amount": 1409
+    },
+    {
+     "month": "Jun",
+     "category": "Shopping",
+     "amount": 2126
+    },
+    {
+     "month": "Jun",
+     "category": "Leisure",
+     "amount": 1971
+    },
+    {
+     "month": "Jul",
+     "category": "Housing",
+     "amount": 8991
+    },
+    {
+     "month": "Jul",
+     "category": "Food",
+     "amount": 3705
+    },
+    {
+     "month": "Jul",
+     "category": "Transport",
+     "amount": 1528
+    },
+    {
+     "month": "Jul",
+     "category": "Shopping",
+     "amount": 2460
+    },
+    {
+     "month": "Jul",
+     "category": "Leisure",
+     "amount": 2128
+    },
+    {
+     "month": "Aug",
+     "category": "Housing",
+     "amount": 8761
+    },
+    {
+     "month": "Aug",
+     "category": "Food",
+     "amount": 4158
+    },
+    {
+     "month": "Aug",
+     "category": "Transport",
+     "amount": 1752
+    },
+    {
+     "month": "Aug",
+     "category": "Shopping",
+     "amount": 2560
+    },
+    {
+     "month": "Aug",
+     "category": "Leisure",
+     "amount": 1951
+    },
+    {
+     "month": "Sep",
+     "category": "Housing",
+     "amount": 10053
+    },
+    {
+     "month": "Sep",
+     "category": "Food",
+     "amount": 4673
+    },
+    {
+     "month": "Sep",
+     "category": "Transport",
+     "amount": 1753
+    },
+    {
+     "month": "Sep",
+     "category": "Shopping",
+     "amount": 2279
+    },
+    {
+     "month": "Sep",
+     "category": "Leisure",
+     "amount": 1699
+    }
+   ]
+  }
+ },
+ "tables": {
+  "byCategory": {
+   "from": "spending",
+   "ops": [
+    {
+     "op": "aggregate",
+     "groupby": [
+      "category"
+     ],
+     "ops": [
+      {
+       "as": "amount",
+       "op": "sum",
+       "field": "amount"
+      }
+     ]
+    },
+    {
+     "op": "sort",
+     "by": [
+      [
+       "amount",
+       "desc"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "signals": {
+  "view": {
+   "type": "str",
+   "default": "months"
+  }
+ },
+ "keys": {
+  "Housing": {
+   "color": "#4269d0"
+  },
+  "Food": {
+   "color": "#efb118"
+  },
+  "Transport": {
+   "color": "#6cc5b0"
+  },
+  "Shopping": {
+   "color": "#ff725c"
+  },
+  "Leisure": {
+   "color": "#a463f2"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    16,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "spending",
+     "x": "month",
+     "y": "amount",
+     "color": "category",
+     "title": "Spending per month",
+     "legend": true,
+     "format": ",.0f",
+     "suffix": " kr",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/stacked",
+       "params": {
+        "series": "category"
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "view == \"months\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "byCategory",
+     "x": "amount",
+     "y": "category",
+     "xType": "linear",
+     "yType": "band",
+     "color": "category",
+     "title": "Where it went",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ",.0f",
+        "suffix": " kr"
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "view == \"categories\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/card",
+    "params": {
+     "title": {
+      "expr": "`${format(table.sum(\"spending\", \"amount\"), \",.0f\")} kr`"
+     },
+     "text": {
+      "expr": "narration.text"
+     },
+     "width": 200
+    },
+    "key": "caption"
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "months",
+    "set": {
+     "view": "months"
+    },
+    "narration": {
+     "text": "spent over the last six months."
+    }
+   },
+   {
+    "name": "categories",
+    "set": {
+     "view": "categories"
+    },
+    "narration": {
+     "text": "Housing is the biggest share; each month's bars add up here."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

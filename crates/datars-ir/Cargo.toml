@@ -1,0 +1,23 @@
+[package]
+name = "datars-ir"
+description = "The datars document format (IR): versioned, serializable, patchable — the contract between authoring tools and the engine."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["visualization", "charts", "json-schema", "data-visualization"]
+categories = ["visualization", "encoding"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+schemars = { workspace = true, optional = true }
+
+[features]
+# A JSON Schema of the IR (`datars schema`, editors, agents).
+schema = ["dep:schemars"]
+
+[dev-dependencies]
+serde_json.workspace = true

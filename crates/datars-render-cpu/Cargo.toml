@@ -1,0 +1,20 @@
+[package]
+name = "datars-render-cpu"
+description = "The datars CPU reference rasterizer: fixed-point analytic coverage, bit-identical pixels on every target."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true
+png.workspace = true
+
+[dev-dependencies]
+datars-theme.workspace = true
+datars-render-svg.workspace = true

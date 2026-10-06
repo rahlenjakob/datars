@@ -1,0 +1,41 @@
+{
+  "name": "@datars/next",
+  "version": "0.1.0",
+  "description": "Next.js integration for datars: withDatars(nextConfig) — import chart files (sales.chart.ts) in App or Pages Router, Turbopack or webpack; the web runtime served from public/.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/next"
+  },
+  "keywords": ["datars", "nextjs", "next", "charts", "data-visualization"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./loader": "./loader.cjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "loader.cjs"
+  ],
+  "dependencies": {
+    "@datars/compile": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@datars/sdk": "workspace:*",
+    "@datars/std": "workspace:*",
+    "@datars/web": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "node --test test/*.test.mjs"
+  }
+}

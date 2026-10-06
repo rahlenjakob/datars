@@ -1,0 +1,143 @@
+---
+title: Interactive charts — hover, click, brush, drag, zoom · datars
+description: Linked views, brushes, engine-drawn controls (sliders, ranges, dropdowns, switches, checkboxes, buttons), explorable maps and point clouds, drill-downs and tooltips — declared as signals and intents in the document, with no event-handling code, the same with mouse, touch, keyboard and screen readers.
+og: dashboard
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Interactive</p>
+    <h1>Charts that answer back — without event-handling code</h1>
+    <p class="lede-2">In datars, interaction is part of the document. A chart declares <em>signals</em> — a selected set of keys, a brushed range, a number — and binds <em>intents</em> like inspect, activate, brush, drag, pan and zoom to its marks. Tables filter on signals, marks read them in expressions, and the engine does the rest: hit-testing, gestures, tooltips, and a keyed transition every time something changes. Views link because signals are global — no glue.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Click a bar</span>
+        <h3>Linked views from one signal</h3>
+        <p>Click a region's bar: it toggles in the <code>selected</code> key set, the other bars recede, and the trend's table filters to the selection — its lines morph as series come and go. Click again to clear.</p>
+<pre><code data-lang="ts">signals: { selected: signal.keyset() },
+tables: {
+  trend: { from: "sales", ops: [
+    op.filter(e("selected.isEmpty() || selected.has(d.region)")),
+  ] },
+},
+scene: group({ layout: { type: "columns" }, children: [
+  plot({ data: "totals", x: "region", y: "total", color: "region",
+    children: [bar({ selected: "selected" })] }),   // click toggles the key set
+  plot({ data: "trend", x: "month", y: "sales", color: "region",
+    children: [line({ points: true })] }),
+] }),</code></pre>
+        {{alt:dashboard}}
+      </div>
+      <div class="chart" data-chart="dashboard"></div>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="grid">
+      <article class="card">
+        <div class="chart" data-chart="prices" data-caption></div>
+        <div class="card-text">
+          <span class="tag">Drag across the lower chart</span>
+          <h3>Brush and zoom</h3>
+          <p>Brushing the overview writes a range signal; the detail's table keeps the rows inside it and a text mark shows the mean. A click clears the brush.</p>
+<pre><code data-lang="ts">signals: { range: signal.range() },
+tables: { detail: { from: "prices", ops: [op.filter(brushed("range", "d.day"))] } },
+// …
+plot({ data: "prices", x: "day", y: "price", xType: "linear", brush: "range",
+  children: [area({ opacity: 0.3 }), line({ width: 1 })] }),</code></pre>
+          {{alt:prices}}
+        </div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="controls"></div>
+        <div class="card-text">
+          <span class="tag">Try every control</span>
+          <h3>Engine-drawn controls</h3>
+          <p>Sliders and ranges, segmented choices, dropdowns, switches, checkboxes and buttons are part of the chart, drawn by the engine: identical on the web, in apps and in a video export, as quick as a UI, and offered to keyboards and screen readers as native controls. Each sets a signal the bars read.</p>
+<pre><code data-lang="ts">segmented({ signal: "quarter", options: ["q1", "q2"], labels: ["Q1", "Q2"] }),
+select({ signal: "region", options: regions, label: "Highlight" }),
+toggle({ signal: "average", label: "Average line" }),
+checklist({ signal: "shown", options: regions }),
+range({ lo: "lo", hi: "hi", min: 0, max: 50 }),
+button({ label: "Show every region", set: "shown", value: regions }),</code></pre>
+          {{alt:controls}}
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The vocabulary</p>
+      <h2>Signals, intents and actions</h2>
+      <p>Everything interactive on this site is built from these — declared in the document, so it travels with the chart to every platform.</p>
+    </header>
+    <div class="cards3">
+      <article><h3>Signals</h3><p><code>signal.num</code>, <code>str</code>, <code>bool</code>, <code>key</code>, <code>keyset</code>, <code>range</code> — and <code>clock</code>, which counts up while a settled scene reads it (the spinning globe on the home page). Story steps set them; marks, tables and cameras read them.</p></article>
+      <article><h3>Intents</h3><p><code>inspect</code> (hover, tap, focus), <code>activate</code> (click, tap, Enter, a screen reader's double-tap), <code>brush</code>, <code>drag</code>, <code>pan</code> and <code>zoom</code>. Documents bind intents, not mouse events, so the same chart works with every input.</p></article>
+      <article><h3>Actions</h3><p>Set a signal, toggle a key in a set, brush a range, scrub a value along a scale, fire an event for the host, or enter a drill-down chapter with the clicked key — all data, no callbacks.</p></article>
+      <article><h3>Tooltips</h3><p>Every data mark has a label — <em>“Sweden Democrats: 20.5”</em> — shown on inspect, drawn by the engine so it's the same on every platform, and read by screen readers.</p></article>
+      <article><h3>Explorable views</h3><p>A view's camera can name signals that drag and wheel or pinch move, between a minimum and a maximum zoom. The <a href="/features/big-data/">four-million-star galaxy</a> is one; stepping a story flies the camera back into the narrative.</p></article>
+      <article><h3>Drill-down</h3><p>A bar can enter a program chapter with its category when clicked — a sub-story about that one key — and the <code>back</code> event leaves it.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Text</p>
+      <h2>Chart text you can select, copy and find</h2>
+      <p>A chart's titles, labels and annotations are drawn by the engine, and on the web they're also laid out as real text over the canvas, glyph for glyph: drag to select a title and copy it, find a label with Ctrl+F, and search engines read it. Hover, clicks on marks and panning a map work as before — a drag on a label only selects when it's a text drag.</p>
+    </header>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Talk to the page or the app</p>
+      <h2>Host and chart, both ways</h2>
+      <p>The page or app can drive the chart — set a signal from your own filter, jump to a state, hand in data — and listen to it: the <code>state</code> event reports the step, its narration and the chart's semantics.</p>
+      <ul class="bullets">
+        <li><b>Web:</b> <code>setSignal(name, value)</code>, <code>send("goto:ranked")</code>, <code>data = { slot: rows }</code>, the <code>state</code> event.</li>
+        <li><b>iOS:</b> <code>DatarsChart(source:state:)</code> follows SwiftUI state; the engine's <code>setSignal</code> sets numeric signals.</li>
+        <li><b>Android:</b> <code>send("next")</code>, <code>goTo(index)</code>, <code>provideData(…)</code>.</li>
+      </ul>
+      <a class="more" href="/docs/interaction/">Signals and interaction guide <span aria-hidden="true">→</span></a>
+    </div>
+<pre><code data-lang="js">const chart = document.querySelector("datars-view");
+
+// The page drives the chart…
+myRegionFilter.addEventListener("change", (e) =&gt;
+  chart.setSignal("region", e.target.value));
+
+// …and follows it.
+chart.addEventListener("state", (e) =&gt; {
+  const { state, narration } = e.detail;
+  caption.textContent = narration?.text ?? "";
+});</code></pre>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Make it interactive</h2>
+        <p>Signals, intents, brushes, controls, linked views and explorable cameras.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/interaction/">Interaction guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/std/#controls">Every control</a>
+      </div>
+    </div>
+  </div>
+</section>

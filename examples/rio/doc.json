@@ -1,0 +1,535 @@
+{
+ "datars": 1,
+ "id": "rio",
+ "title": "From the world to Copacabana",
+ "description": "A camera flies from the world to Brazil, Rio de Janeiro and down to Copacabana and Sugarloaf Mountain, over a basemap made automatically from OpenStreetMap for exactly these views, with Brazil's largest cities and Rio's sights on top.",
+ "size": {
+  "width": 760,
+  "height": 480
+ },
+ "locale": "en",
+ "data": {
+  "basemap": {
+   "tiles": "auto"
+  },
+  "cities": {
+   "values": {
+    "name": [
+     "São Paulo",
+     "Rio de Janeiro",
+     "Brasília",
+     "Fortaleza",
+     "Salvador",
+     "Belo Horizonte",
+     "Manaus",
+     "Curitiba",
+     "Recife",
+     "Porto Alegre",
+     "Belém"
+    ],
+    "lon": [
+     -46.63,
+     -43.2,
+     -47.88,
+     -38.54,
+     -38.5,
+     -43.94,
+     -60.02,
+     -49.27,
+     -34.88,
+     -51.23,
+     -48.5
+    ],
+    "lat": [
+     -23.55,
+     -22.91,
+     -15.79,
+     -3.73,
+     -12.97,
+     -19.92,
+     -3.12,
+     -25.43,
+     -8.05,
+     -30.03,
+     -1.46
+    ],
+    "pop": [
+     11450000,
+     6210000,
+     2820000,
+     2430000,
+     2420000,
+     2320000,
+     2060000,
+     1770000,
+     1490000,
+     1330000,
+     1300000
+    ]
+   },
+   "key": [
+    "name"
+   ]
+  },
+  "sights": {
+   "values": {
+    "id": [
+     "cristo",
+     "sugarloaf",
+     "copacabana",
+     "ipanema",
+     "maracana",
+     "amanha",
+     "forte",
+     "urca"
+    ],
+    "name": [
+     "Christ the Redeemer",
+     "Sugarloaf Mountain",
+     "Copacabana Beach",
+     "Ipanema Beach",
+     "Maracanã",
+     "Museum of Tomorrow",
+     "Copacabana Fort",
+     "Urca"
+    ],
+    "lon": [
+     -43.2105,
+     -43.1566,
+     -43.1822,
+     -43.2046,
+     -43.2302,
+     -43.1795,
+     -43.1872,
+     -43.1655
+    ],
+    "lat": [
+     -22.9519,
+     -22.9486,
+     -22.9711,
+     -22.9868,
+     -22.9122,
+     -22.8944,
+     -22.9864,
+     -22.9485
+    ],
+    "visitors": [
+     2,
+     1.5,
+     3,
+     2,
+     1,
+     1,
+     0.4,
+     0.3
+    ],
+    "side": [
+     "end",
+     "start",
+     "middle",
+     "middle",
+     "middle",
+     "middle",
+     "middle",
+     "middle"
+    ]
+   },
+   "key": [
+    "id"
+   ]
+  }
+ },
+ "signals": {
+  "bounds": {
+   "type": "keyset",
+   "default": [
+    "-174",
+    "-56",
+    "174",
+    "80"
+   ]
+  },
+  "layer": {
+   "type": "str",
+   "default": "cities"
+  },
+  "minLabel": {
+   "type": "num",
+   "default": 0
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "children": [
+   {
+    "kind": "view",
+    "key": "map",
+    "coord": {
+     "type": "geo",
+     "projection": "web-mercator",
+     "fit": {
+      "bbox": [
+       -180,
+       -85.0511,
+       180,
+       85.0511
+      ]
+     },
+     "padding": 0
+    },
+    "camera": {
+     "fit": {
+      "geo": "=bounds"
+     },
+     "padding": 12
+    },
+    "children": [
+     {
+      "kind": "use",
+      "recipe": "@datars/std/basemap",
+      "params": {
+       "source": "basemap",
+       "part": "base"
+      }
+     },
+     {
+      "kind": "group",
+      "key": "cities",
+      "when": {
+       "expr": "layer == \"cities\""
+      },
+      "scales": {
+       "r": {
+        "type": "sqrt",
+        "domain": [
+         0,
+         12000000
+        ],
+        "range": [
+         0,
+         16
+        ]
+       }
+      },
+      "children": [
+       {
+        "kind": "instances",
+        "key": "circles",
+        "semantics": {
+         "role": "datum",
+         "label": "Brazil's largest cities by population"
+        },
+        "from": "cities",
+        "proto": "circle",
+        "instance_key": {
+         "expr": "d.name"
+        },
+        "x": {
+         "expr": "geo.x(d.lon, d.lat)"
+        },
+        "y": {
+         "expr": "geo.y(d.lon, d.lat)"
+        },
+        "r": {
+         "expr": "scale.r(d.pop)"
+        },
+        "fill": "$accent@0.72",
+        "stroke": {
+         "paint": "$paper",
+         "width": 1
+        },
+        "screen_size": true,
+        "label": {
+         "expr": "`${d.name}: ${format(d.pop, \",.0f\")} people`"
+        }
+       }
+      ]
+     },
+     {
+      "kind": "group",
+      "key": "sights",
+      "declutter": true,
+      "when": {
+       "expr": "layer == \"sights\""
+      },
+      "scales": {
+       "r": {
+        "type": "sqrt",
+        "domain": [
+         0,
+         3
+        ],
+        "range": [
+         0,
+         10
+        ]
+       }
+      },
+      "children": [
+       {
+        "kind": "instances",
+        "key": "dots",
+        "semantics": {
+         "role": "datum",
+         "label": "Rio de Janeiro's sights"
+        },
+        "from": "sights",
+        "proto": "circle",
+        "instance_key": {
+         "expr": "d.id"
+        },
+        "x": {
+         "expr": "geo.x(d.lon, d.lat)"
+        },
+        "y": {
+         "expr": "geo.y(d.lon, d.lat)"
+        },
+        "r": {
+         "expr": "scale.r(d.visitors)"
+        },
+        "fill": "$accent@0.85",
+        "stroke": {
+         "paint": "$paper",
+         "width": 1.25
+        },
+        "screen_size": true,
+        "label": {
+         "expr": "`${d.name}: about ${format(d.visitors, \".1f\")} million visitors a year`"
+        }
+       },
+       {
+        "kind": "repeat",
+        "from": "sights",
+        "template": {
+         "kind": "text",
+         "key": {
+          "expr": "d.id"
+         },
+         "text": {
+          "expr": "d.visitors >= minLabel ? d.name : \"\""
+         },
+         "at": [
+          {
+           "expr": "geo.x(d.lon, d.lat)"
+          },
+          {
+           "expr": "geo.y(d.lon, d.lat)"
+          }
+         ],
+         "style": {
+          "size": 11.5,
+          "weight": 600,
+          "ink": "$ink",
+          "align": {
+           "expr": "minLabel > 0 ? d.side : \"start\""
+          },
+          "baseline": "bottom",
+          "contain": true
+         },
+         "halo": [
+          "$paper",
+          2.5
+         ],
+         "offset": [
+          0,
+          {
+           "expr": "-scale.r(d.visitors) - 3"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "kind": "use",
+      "recipe": "@datars/std/basemap",
+      "params": {
+       "source": "basemap",
+       "part": "labels"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/attribution",
+    "params": {}
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "duration": 3.2,
+    "easing": "cubic-in-out",
+    "select": {
+     "kind": "view"
+    }
+   },
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "datum"
+    }
+   },
+   {
+    "when": {
+     "from": "brazil",
+     "to": "rio"
+    },
+    "duration": 0.5,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "cities"
+      ]
+     ]
+    }
+   },
+   {
+    "when": {
+     "from": "brazil",
+     "to": "rio"
+    },
+    "delay": 2.5,
+    "duration": 0.7,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "sights"
+      ]
+     ]
+    }
+   },
+   {
+    "when": {
+     "from": "rio",
+     "to": "brazil"
+    },
+    "duration": 0.5,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "sights"
+      ]
+     ]
+    }
+   },
+   {
+    "when": {
+     "from": "rio",
+     "to": "brazil"
+    },
+    "delay": 2.5,
+    "duration": 0.7,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "cities"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "world",
+    "set": {
+     "bounds": [
+      -174,
+      -56,
+      174,
+      80
+     ],
+     "layer": "cities"
+    },
+    "narration": {
+     "title": "One camera",
+     "text": "The whole world, from a basemap nobody had to make: Natural Earth at this zoom."
+    }
+   },
+   {
+    "name": "brazil",
+    "set": {
+     "bounds": [
+      -62,
+      -33.5,
+      -33,
+      3
+     ],
+     "layer": "cities"
+    },
+    "narration": {
+     "title": "Brazil",
+     "text": "The camera flies in. Circles: Brazil's largest cities by population."
+    }
+   },
+   {
+    "name": "rio",
+    "set": {
+     "bounds": [
+      -43.55,
+      -23.08,
+      -43.08,
+      -22.82
+     ],
+     "layer": "sights",
+     "minLabel": 1
+    },
+    "narration": {
+     "title": "Rio de Janeiro",
+     "text": "OpenStreetMap from here down: the coastline, Guanabara Bay, the Tijuca forest and the main roads, fetched for these views when the document was built."
+    }
+   },
+   {
+    "name": "copacabana",
+    "set": {
+     "bounds": [
+      -43.198,
+      -22.99,
+      -43.152,
+      -22.944
+     ],
+     "layer": "sights",
+     "minLabel": 0
+    },
+    "narration": {
+     "title": "Copacabana",
+     "text": "Down to the street: the beach, Leme and Sugarloaf Mountain, with every street and building of the neighbourhood."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "example/acme",
+  "extends": "datars/neutral",
+  "tokens": {
+    "brand": "#0a7d6b",
+    "accent": "$brand",
+    "mark": "$brand",
+    "categorical": { "generate": "categorical", "from": "$brand", "n": 8 },
+    "sequential": { "generate": "sequential", "from": "$brand", "n": 7 }
+  },
+  "locked": ["brand", "accent"]
+}

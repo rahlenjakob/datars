@@ -1,0 +1,8 @@
+scene 760.00×460.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      ("marks",) instances rect ×99
+        · ("S", Unit(0)) (149.00, 1.00) fill=#e8112d
+        · ("S", Unit(1)) (192.20, 1.00) fill=#e8112d
+        · ("S", Unit(2)) (235.40, 1.00) fill=#e8112d
+        · … 96 more

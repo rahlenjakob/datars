@@ -1,0 +1,26 @@
+[package]
+name = "datars-geo-build"
+description = "Build-time geo pipeline: OSM / Natural Earth → keyed atlases and vector tiles (PMTiles). No third-party services at runtime."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "datars-geo-build"
+path = "src/main.rs"
+
+[dependencies]
+datars-math.workspace = true
+datars-geo = { workspace = true, features = ["build"] }
+# The engine's camera path (van Wijk–Nuij flights) and camera type: camera-aware extracts sample
+# the flights the engine will fly.
+datars-motion.workspace = true
+datars-scene.workspace = true
+geo.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+# The cache keeps Overpass answers gzipped; downloaded shapefiles are unzipped with it.
+flate2.workspace = true

@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "globe",
+      "scene": "81fc674769922fab",
+      "pixels": "1bd48409a7abdf2b"
+    },
+    {
+      "name": "orbits",
+      "scene": "10d989a63285b271",
+      "pixels": "ed3859748ca67052"
+    },
+    {
+      "name": "spiral",
+      "scene": "0a92503918777c1d",
+      "pixels": "ed7794c6f6de18b1"
+    },
+    {
+      "name": "blocks",
+      "scene": "6387ccf0816fd596",
+      "pixels": "3320f19083398cf8"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "globe",
+      "to": "orbits",
+      "sweep": "bd039b360998915c",
+      "samples": 64
+    },
+    {
+      "from": "orbits",
+      "to": "spiral",
+      "sweep": "03a0066b0c3d0ea9",
+      "samples": 64
+    },
+    {
+      "from": "spiral",
+      "to": "blocks",
+      "sweep": "0f8ee89d6c62db48",
+      "samples": 64
+    }
+  ]
+}

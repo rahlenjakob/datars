@@ -1,0 +1,20 @@
+{
+  "name": "@datars/sdk",
+  "version": "0.1.0",
+  "description": "Author datars documents and recipes in TypeScript. Code builds the graph; the engine runs it.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/sdk"
+  },
+  "keywords": ["datars", "data-visualization", "charts", "animation", "typescript"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p . && esbuild src/index.ts --bundle --format=esm --platform=neutral --target=es2020 --outfile=dist/sdk.bundle.js",
+    "test": "node --test test/*.test.js"
+  }
+}

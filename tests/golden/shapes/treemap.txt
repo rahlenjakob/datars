@@ -1,0 +1,20 @@
+scene 760.00×460.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      ("S",) rect x=0.00 y=0.00 w=375.84 h=257.67 fill=#e8112d stroke=$paper/1.50 role=datum "S: 30.3"
+      ("SD",) rect x=0.00 y=257.67 w=375.84 h=174.33 fill=#dddd00 stroke=$paper/1.50 role=datum "SD: 20.5"
+      ("M",) rect x=375.84 y=0.00 w=259.70 h=235.06 fill=#1b49dd stroke=$paper/1.50 role=datum "M: 19.1"
+      ("V",) rect x=635.54 y=0.00 w=92.46 h=235.06 fill=#a01313 stroke=$paper/1.50 role=datum "V: 6.8"
+      ("C",) rect x=375.84 y=235.06 w=194.74 h=109.96 fill=#009933 stroke=$paper/1.50 role=datum "C: 6.7"
+      ("KD",) rect x=375.84 y=345.02 w=194.74 h=86.98 fill=#005ea8 stroke=$paper/1.50 role=datum "KD: 5.3"
+      ("MP",) rect x=570.58 y=235.06 w=82.77 h=196.94 fill=#83cf39 stroke=$paper/1.50 role=datum "MP: 5.1"
+      ("L",) rect x=653.35 y=235.06 w=74.65 h=196.94 fill=#3a8fd6 stroke=$paper/1.50 role=datum "L: 4.6"
+      group ("labels",)
+        ("S",) text "S" at (6.00, 16.00) size=11.00 ink=on(#e8112d)
+        ("SD",) text "SD" at (6.00, 273.67) size=11.00 ink=on(#dddd00)
+        ("M",) text "M" at (381.84, 16.00) size=11.00 ink=on(#1b49dd)
+        ("V",) text "V" at (641.54, 16.00) size=11.00 ink=on(#a01313)
+        ("C",) text "C" at (381.84, 251.06) size=11.00 ink=on(#009933)
+        ("KD",) text "KD" at (381.84, 361.02) size=11.00 ink=on(#005ea8)
+        ("MP",) text "MP" at (576.58, 251.06) size=11.00 ink=on(#83cf39)
+        ("L",) text "L" at (659.35, 251.06) size=11.00 ink=on(#3a8fd6)

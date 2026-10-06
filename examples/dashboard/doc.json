@@ -1,0 +1,279 @@
+{
+ "datars": 1,
+ "id": "dashboard",
+ "title": "Sales by region",
+ "size": {
+  "width": 860,
+  "height": 420
+ },
+ "locale": "en",
+ "data": {
+  "sales": {
+   "values": {
+    "region": [
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "North",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "South",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "East",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West",
+     "West"
+    ],
+    "month": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12
+    ],
+    "sales": [
+     48,
+     56,
+     49,
+     57,
+     65,
+     58,
+     66,
+     74,
+     67,
+     75,
+     83,
+     76,
+     61,
+     70,
+     64,
+     73,
+     82,
+     76,
+     85,
+     94,
+     88,
+     97,
+     106,
+     100,
+     74,
+     84,
+     79,
+     89,
+     99,
+     94,
+     104,
+     114,
+     109,
+     119,
+     129,
+     124,
+     87,
+     98,
+     94,
+     105,
+     116,
+     112,
+     123,
+     134,
+     130,
+     141,
+     152,
+     148
+    ]
+   },
+   "key": [
+    "region",
+    "month"
+   ]
+  }
+ },
+ "tables": {
+  "totals": {
+   "from": "sales",
+   "ops": [
+    {
+     "op": "aggregate",
+     "groupby": [
+      "region"
+     ],
+     "ops": [
+      {
+       "op": "sum",
+       "field": "sales",
+       "as": "total"
+      }
+     ]
+    }
+   ]
+  },
+  "trend": {
+   "from": "sales",
+   "ops": [
+    {
+     "op": "filter",
+     "expr": {
+      "expr": "selected.isEmpty() || selected.has(d.region)"
+     }
+    }
+   ]
+  }
+ },
+ "signals": {
+  "selected": {
+   "type": "keyset",
+   "default": []
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "columns",
+   "gap": 24,
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ],
+   "wrap": 560
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "totals",
+     "x": "region",
+     "y": "total",
+     "color": "region",
+     "title": "Total (click to filter)",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "selected": "selected"
+       }
+      }
+     ]
+    },
+    "key": "totals",
+    "size": {
+     "w": "40%"
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "trend",
+     "x": "month",
+     "y": "sales",
+     "xType": "linear",
+     "color": "region",
+     "title": "Monthly sales",
+     "zero": false,
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/line",
+       "params": {
+        "points": true
+       }
+      }
+     ]
+    },
+    "key": "trend"
+   }
+  ]
+ },
+ "program": {
+  "preset": "interactive",
+  "states": [
+   {
+    "name": "main"
+   }
+  ]
+ }
+}

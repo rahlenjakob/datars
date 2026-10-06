@@ -1,0 +1,2523 @@
+{
+  "base": "http://127.0.0.1:8962",
+  "dpr": 2,
+  "rows": [
+    {
+      "page": {
+        "p50": 0.3,
+        "p95": 1,
+        "max": 1.6
+      },
+      "chart": "hero",
+      "label": "bars → donut",
+      "renderer": "gpu",
+      "frames": 74,
+      "ms": 1217,
+      "fps": 60,
+      "engine": {
+        "p50": 0.3,
+        "p95": 1.1,
+        "max": 3
+      },
+      "raster": {
+        "p50": 1.3,
+        "p95": 2.6,
+        "max": 3.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 4,
+      "input": 0.4,
+      "first": 1.4,
+      "ops": 63,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.7,
+        "p95": 15.7,
+        "max": 16.1
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 0.9
+      },
+      "chart": "hero",
+      "label": "donut → treemap",
+      "renderer": "gpu",
+      "frames": 74,
+      "ms": 1217,
+      "fps": 60,
+      "engine": {
+        "p50": 0,
+        "p95": 0.7,
+        "max": 0.9
+      },
+      "raster": {
+        "p50": 1,
+        "p95": 1.9,
+        "max": 2.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.1,
+      "first": 0.9,
+      "ops": 23,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.5,
+        "p95": 16.2,
+        "max": 16.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 1.3
+      },
+      "chart": "hero",
+      "label": "treemap → waffle",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.6,
+        "max": 1.1
+      },
+      "raster": {
+        "p50": 2,
+        "p95": 2.7,
+        "max": 3.9
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.7,
+      "first": 0.7,
+      "ops": 206,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 100
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.3,
+        "p95": 14.8,
+        "max": 15.3
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 1,
+        "max": 1.1
+      },
+      "chart": "hero",
+      "label": "waffle → split",
+      "renderer": "gpu",
+      "frames": 74,
+      "ms": 1217,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.8,
+        "max": 1
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 1.1,
+        "max": 1.5
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.7,
+      "first": 1.2,
+      "ops": 138,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.5,
+        "p95": 16.3,
+        "max": 16.4
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.2,
+        "p95": 0.9,
+        "max": 1.1
+      },
+      "chart": "hero",
+      "label": "split → bars",
+      "renderer": "gpu",
+      "frames": 74,
+      "ms": 1217,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.8,
+        "max": 1.1
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 1.1,
+        "max": 1.3
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 5,
+      "input": 2.5,
+      "first": 1,
+      "ops": 77,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.5,
+        "p95": 16.3,
+        "max": 16.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1.2
+      },
+      "chart": "shapes",
+      "label": "bars → treemap",
+      "renderer": "gpu",
+      "frames": 68,
+      "ms": 1117,
+      "fps": 60,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 0.8
+      },
+      "raster": {
+        "p50": 0.4,
+        "p95": 1,
+        "max": 1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 2,
+      "input": 0,
+      "first": 0.5,
+      "ops": 63,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.7,
+        "p95": 16.4,
+        "max": 16.6
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1
+      },
+      "chart": "shapes",
+      "label": "treemap → waffle",
+      "renderer": "gpu",
+      "frames": 55,
+      "ms": 917,
+      "fps": 59,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.5,
+        "max": 0.7
+      },
+      "raster": {
+        "p50": 2,
+        "p95": 2.7,
+        "max": 2.9
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 33.3
+      },
+      "long": 1,
+      "dropped": 1,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 2,
+      "input": 0.1,
+      "first": 0.3,
+      "ops": 205,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 99
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.3,
+        "p95": 14.9,
+        "max": 32.3
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.4,
+        "p95": 1,
+        "max": 1.2
+      },
+      "chart": "shapes",
+      "label": "waffle → dots",
+      "renderer": "gpu",
+      "frames": 68,
+      "ms": 1117,
+      "fps": 60,
+      "engine": {
+        "p50": 0.4,
+        "p95": 1,
+        "max": 1
+      },
+      "raster": {
+        "p50": 1.4,
+        "p95": 1.9,
+        "max": 2.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.5,
+      "first": 1,
+      "ops": 133,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.4,
+        "p95": 15,
+        "max": 15.3
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.2,
+        "p95": 1.1,
+        "max": 1.1
+      },
+      "chart": "shapes",
+      "label": "dots → bars",
+      "renderer": "gpu",
+      "frames": 68,
+      "ms": 1117,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.8,
+        "max": 1.2
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 1.1,
+        "max": 1.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 6,
+      "input": 3.6,
+      "first": 0.8,
+      "ops": 81,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.5,
+        "p95": 16.4,
+        "max": 16.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 1.1,
+        "p95": 1.6,
+        "max": 2.2
+      },
+      "chart": "riksdag",
+      "label": "seats → bars",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 2.6,
+        "p95": 3.8,
+        "max": 3.9
+      },
+      "raster": {
+        "p50": 3.4,
+        "p95": 4,
+        "max": 4.2
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 2,
+      "input": 0,
+      "first": 0.8,
+      "ops": 388,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 9.6,
+        "p95": 10.9,
+        "max": 15
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.4,
+        "p95": 1,
+        "max": 1.1
+      },
+      "chart": "votes",
+      "label": "bars → ranked",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 0.9
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 1.1,
+        "max": 1.2
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.1,
+      "first": 1,
+      "ops": 78,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.5,
+        "p95": 16.2,
+        "max": 16.4
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.5,
+        "p95": 1.2,
+        "max": 1.4
+      },
+      "chart": "votes",
+      "label": "ranked → pie",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 1,
+        "max": 1.1
+      },
+      "raster": {
+        "p50": 0.8,
+        "p95": 1.2,
+        "max": 1.5
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.8,
+      "first": 1,
+      "ops": 75,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.2,
+        "p95": 15.8,
+        "max": 15.9
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.8,
+        "max": 1
+      },
+      "chart": "votes",
+      "label": "pie → donut",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0,
+        "p95": 0.7,
+        "max": 0.8
+      },
+      "raster": {
+        "p50": 0.3,
+        "p95": 1,
+        "max": 1.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 2,
+      "input": 0.5,
+      "first": 0.9,
+      "ops": 38,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 16.1,
+        "p95": 16.5,
+        "max": 16.6
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.2,
+        "p95": 1,
+        "max": 1.5
+      },
+      "chart": "votes",
+      "label": "donut → bars",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.7,
+        "max": 0.8
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 1.2,
+        "max": 1.5
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 4,
+      "input": 2.2,
+      "first": 0.7,
+      "ops": 74,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.3,
+        "p95": 16.4,
+        "max": 16.4
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1
+      },
+      "chart": "warming",
+      "label": "line → stripes",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.7,
+        "p95": 1.4,
+        "max": 1.7
+      },
+      "raster": {
+        "p50": 0.4,
+        "p95": 1.1,
+        "max": 1.2
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.1,
+      "first": 0.9,
+      "ops": 175,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.3,
+        "p95": 15.9,
+        "max": 16
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.7,
+        "p95": 1.3,
+        "max": 1.5
+      },
+      "chart": "worlds",
+      "label": "globe → orbits",
+      "renderer": "gpu",
+      "frames": 128,
+      "ms": 2217,
+      "fps": 57,
+      "engine": {
+        "p50": 1,
+        "p95": 2,
+        "max": 2.4
+      },
+      "raster": {
+        "p50": 8.9,
+        "p95": 14.5,
+        "max": 19.9
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 83.4
+      },
+      "long": 3,
+      "dropped": 6,
+      "worst": 83,
+      "minFps": 12,
+      "stall": 79,
+      "input": 71.2,
+      "first": 3.4,
+      "ops": 345,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 6.2,
+        "p95": 12.6,
+        "max": 79.4
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": {
+        "frame": 63,
+        "engine": 1.4,
+        "raster": 19.9,
+        "ops": 345,
+        "tessellated": 266,
+        "rebuilt": 0,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1
+      },
+      "chart": "worlds",
+      "label": "orbits → spiral",
+      "renderer": "gpu",
+      "frames": 134,
+      "ms": 2217,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.9,
+        "max": 1.2
+      },
+      "raster": {
+        "p50": 1.8,
+        "p95": 3.1,
+        "max": 4.3
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 27,
+      "input": 24.4,
+      "first": 1.3,
+      "ops": 192,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.3,
+        "p95": 15.6,
+        "max": 16.2
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.2,
+        "p95": 1,
+        "max": 1.2
+      },
+      "chart": "worlds",
+      "label": "spiral → blocks",
+      "renderer": "gpu",
+      "frames": 134,
+      "ms": 2217,
+      "fps": 60,
+      "engine": {
+        "p50": 0.6,
+        "p95": 1.2,
+        "max": 1.5
+      },
+      "raster": {
+        "p50": 1.2,
+        "p95": 2,
+        "max": 2.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 22,
+      "input": 19.6,
+      "first": 0.9,
+      "ops": 186,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.5,
+        "p95": 15.9,
+        "max": 16.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": "gallery/",
+      "chart": "worlds",
+      "label": "→ globe (no motion)"
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 1.1
+      },
+      "chart": "rio",
+      "label": "world → brazil",
+      "renderer": "gpu",
+      "frames": 191,
+      "ms": 3217,
+      "fps": 59,
+      "engine": {
+        "p50": 1.1,
+        "p95": 2.3,
+        "max": 9.5
+      },
+      "raster": {
+        "p50": 3.1,
+        "p95": 9.3,
+        "max": 17.2
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 66.7
+      },
+      "long": 1,
+      "dropped": 3,
+      "worst": 67,
+      "minFps": 15,
+      "stall": 3,
+      "input": 0.7,
+      "first": 1,
+      "ops": 85,
+      "rebuilt": {
+        "p50": 11,
+        "p95": 11,
+        "max": 11
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 12.5,
+        "p95": 14,
+        "max": 55.6
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": {
+        "frame": 91,
+        "engine": 1.9,
+        "raster": 17.2,
+        "ops": 68,
+        "tessellated": 41,
+        "rebuilt": 11,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1.2
+      },
+      "chart": "rio",
+      "label": "brazil → rio",
+      "renderer": "gpu",
+      "frames": 194,
+      "ms": 3217,
+      "fps": 60,
+      "engine": {
+        "p50": 1.3,
+        "p95": 2.9,
+        "max": 7.5
+      },
+      "raster": {
+        "p50": 2.4,
+        "p95": 7.6,
+        "max": 13.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 5,
+      "input": 1.1,
+      "first": 2,
+      "ops": 83,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 11,
+        "max": 11
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 2.4
+      },
+      "other": {
+        "p50": 12.3,
+        "p95": 16.3,
+        "max": 16.6
+      },
+      "pendingFrames": 4,
+      "pendingMax": 8,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 69,
+        "engine": 3.4,
+        "raster": 13.4,
+        "ops": 66,
+        "tessellated": 49,
+        "rebuilt": 0,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.9,
+        "max": 1.6
+      },
+      "chart": "rio",
+      "label": "rio → copacabana",
+      "renderer": "gpu",
+      "frames": 192,
+      "ms": 3217,
+      "fps": 59,
+      "engine": {
+        "p50": 0.4,
+        "p95": 1.9,
+        "max": 19
+      },
+      "raster": {
+        "p50": 0.5,
+        "p95": 6.4,
+        "max": 20.3
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 33.4
+      },
+      "long": 2,
+      "dropped": 2,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 14,
+      "input": 0.8,
+      "first": 0.1,
+      "ops": 103,
+      "rebuilt": {
+        "p50": 8,
+        "p95": 8,
+        "max": 8
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 18.9
+      },
+      "other": {
+        "p50": 15.7,
+        "p95": 16.5,
+        "max": 16.7
+      },
+      "pendingFrames": 5,
+      "pendingMax": 6,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 104,
+        "engine": 19,
+        "raster": 6,
+        "ops": 74,
+        "tessellated": 13,
+        "rebuilt": 8,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1
+      },
+      "chart": "rio",
+      "label": "copacabana → world",
+      "renderer": "gpu",
+      "frames": 193,
+      "ms": 3217,
+      "fps": 60,
+      "engine": {
+        "p50": 1,
+        "p95": 1.7,
+        "max": 2
+      },
+      "raster": {
+        "p50": 2.4,
+        "p95": 13.2,
+        "max": 32.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 33.3
+      },
+      "long": 1,
+      "dropped": 1,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 5,
+      "input": 1.4,
+      "first": 0.2,
+      "ops": 102,
+      "rebuilt": {
+        "p50": 11,
+        "p95": 19,
+        "max": 19
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0.1
+      },
+      "other": {
+        "p50": 13.2,
+        "p95": 15.7,
+        "max": 16.3
+      },
+      "pendingFrames": 1,
+      "pendingMax": 2,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 58,
+        "engine": 1.7,
+        "raster": 32.1,
+        "ops": 99,
+        "tessellated": 19,
+        "rebuilt": 11,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.7,
+        "max": 1.5
+      },
+      "chart": "descent",
+      "label": "world → sweden",
+      "renderer": "gpu",
+      "frames": 194,
+      "ms": 3216,
+      "fps": 60,
+      "engine": {
+        "p50": 0.9,
+        "p95": 1.6,
+        "max": 8.7
+      },
+      "raster": {
+        "p50": 3,
+        "p95": 9.4,
+        "max": 15.9
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.1,
+      "first": 0.7,
+      "ops": 95,
+      "rebuilt": {
+        "p50": 16,
+        "p95": 16,
+        "max": 16
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 1.5
+      },
+      "other": {
+        "p50": 12.7,
+        "p95": 14.2,
+        "max": 15.3
+      },
+      "pendingFrames": 3,
+      "pendingMax": 4,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 88,
+        "engine": 1.7,
+        "raster": 15.9,
+        "ops": 54,
+        "tessellated": 37,
+        "rebuilt": 16,
+        "pending": 4
+      }
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1.9
+      },
+      "chart": "descent",
+      "label": "sweden → stockholm",
+      "renderer": "gpu",
+      "frames": 194,
+      "ms": 3217,
+      "fps": 60,
+      "engine": {
+        "p50": 0.8,
+        "p95": 2.9,
+        "max": 6.7
+      },
+      "raster": {
+        "p50": 2.1,
+        "p95": 6.6,
+        "max": 13.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 16,
+      "input": 1.4,
+      "first": 12.8,
+      "ops": 88,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 16,
+        "max": 16
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 5.8
+      },
+      "other": {
+        "p50": 13,
+        "p95": 16.5,
+        "max": 16.7
+      },
+      "pendingFrames": 7,
+      "pendingMax": 8,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 126,
+        "engine": 1.8,
+        "raster": 13.1,
+        "ops": 63,
+        "tessellated": 20,
+        "rebuilt": 0,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.7,
+        "max": 1
+      },
+      "chart": "descent",
+      "label": "stockholm → world",
+      "renderer": "gpu",
+      "frames": 181,
+      "ms": 3217,
+      "fps": 56,
+      "engine": {
+        "p50": 0.6,
+        "p95": 1.4,
+        "max": 2.2
+      },
+      "raster": {
+        "p50": 2,
+        "p95": 8.7,
+        "max": 222
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 233.4
+      },
+      "long": 1,
+      "dropped": 13,
+      "worst": 233,
+      "minFps": 4,
+      "stall": 4,
+      "input": 1,
+      "first": 0.3,
+      "ops": 115,
+      "rebuilt": {
+        "p50": 16,
+        "p95": 24,
+        "max": 24
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 13.8,
+        "p95": 16.4,
+        "max": 16.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": {
+        "frame": 1,
+        "engine": 0.1,
+        "raster": 222,
+        "ops": 45,
+        "tessellated": 5,
+        "rebuilt": 24,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1
+      },
+      "chart": "renewables",
+      "label": "world → europe",
+      "renderer": "gpu",
+      "frames": 69,
+      "ms": 1133,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.8,
+        "max": 1
+      },
+      "raster": {
+        "p50": 1.2,
+        "p95": 3,
+        "max": 3.6
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 5,
+      "input": 0.4,
+      "first": 3.6,
+      "ops": 486,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.8,
+        "p95": 15.6,
+        "max": 16.1
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1.1
+      },
+      "chart": "renewables",
+      "label": "europe → nordics",
+      "renderer": "gpu",
+      "frames": 68,
+      "ms": 1117,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.7,
+        "max": 1.2
+      },
+      "raster": {
+        "p50": 1.2,
+        "p95": 2.6,
+        "max": 4.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.7
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 4,
+      "input": 0.5,
+      "first": 1.8,
+      "ops": 486,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15,
+        "p95": 15.6,
+        "max": 15.9
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.5,
+        "p95": 1.1,
+        "max": 1.4
+      },
+      "chart": "renewables",
+      "label": "nordics → ranked",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.6,
+        "p95": 1.1,
+        "max": 1.4
+      },
+      "raster": {
+        "p50": 2.8,
+        "p95": 3.4,
+        "max": 3.5
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 5,
+      "input": 1.1,
+      "first": 2.1,
+      "ops": 522,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 12.8,
+        "p95": 14,
+        "max": 14.1
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.7,
+        "p95": 1.2,
+        "max": 1.4
+      },
+      "chart": "renewables",
+      "label": "ranked → world",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.8,
+        "p95": 1.7,
+        "max": 1.9
+      },
+      "raster": {
+        "p50": 2.8,
+        "p95": 4.2,
+        "max": 4.3
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 14,
+      "input": 12.3,
+      "first": 0.5,
+      "ops": 522,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 12.4,
+        "p95": 13.6,
+        "max": 15.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.7,
+        "max": 0.9
+      },
+      "chart": "prices",
+      "label": "year → winter",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.7,
+        "p95": 1.2,
+        "max": 1.7
+      },
+      "raster": {
+        "p50": 2.7,
+        "p95": 3.3,
+        "max": 3.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0,
+      "first": 1.7,
+      "ops": 51,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 13.2,
+        "p95": 14,
+        "max": 14.2
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.9,
+        "max": 1
+      },
+      "chart": "prices",
+      "label": "winter → summer",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.2,
+        "p95": 1.2,
+        "max": 1.3
+      },
+      "raster": {
+        "p50": 1.4,
+        "p95": 1.8,
+        "max": 2
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.7
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.3,
+      "first": 1.1,
+      "ops": 54,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14.7,
+        "p95": 15.3,
+        "max": 15.3
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 1.2
+      },
+      "chart": "prices",
+      "label": "summer → year",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.6,
+        "p95": 1.2,
+        "max": 1.6
+      },
+      "raster": {
+        "p50": 2.6,
+        "p95": 3.2,
+        "max": 3.3
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 9,
+      "input": 5.5,
+      "first": 1,
+      "ops": 57,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 13.3,
+        "p95": 14,
+        "max": 14.4
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 1.1
+      },
+      "chart": "spending",
+      "label": "months → categories",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.6,
+        "max": 0.8
+      },
+      "raster": {
+        "p50": 0.4,
+        "p95": 0.9,
+        "max": 1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.1,
+      "first": 0.9,
+      "ops": 96,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 16,
+        "p95": 16.5,
+        "max": 16.6
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.8,
+        "max": 8.3
+      },
+      "chart": "galaxy",
+      "label": "galaxy → arm",
+      "renderer": "gpu",
+      "frames": 191,
+      "ms": 3167,
+      "fps": 60,
+      "engine": {
+        "p50": 2.6,
+        "p95": 9.7,
+        "max": 16.4
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 2.5,
+        "max": 5.6
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 11,
+      "input": 2.9,
+      "first": 6.1,
+      "ops": 223,
+      "rebuilt": {
+        "p50": 486,
+        "p95": 24623,
+        "max": 57670
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 11.1
+      },
+      "other": {
+        "p50": 13,
+        "p95": 16.3,
+        "max": 16.6
+      },
+      "pendingFrames": 5,
+      "pendingMax": 42,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 74,
+        "engine": 16.4,
+        "raster": 5.6,
+        "ops": 105,
+        "tessellated": 0,
+        "rebuilt": 57670,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.8,
+        "max": 1.3
+      },
+      "chart": "galaxy",
+      "label": "arm → bar",
+      "renderer": "gpu",
+      "frames": 156,
+      "ms": 2617,
+      "fps": 59,
+      "engine": {
+        "p50": 1.6,
+        "p95": 7.3,
+        "max": 27.1
+      },
+      "raster": {
+        "p50": 0.6,
+        "p95": 7.9,
+        "max": 12.4
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 33.4
+      },
+      "long": 2,
+      "dropped": 2,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 46,
+      "input": 24.8,
+      "first": 18.8,
+      "ops": 229,
+      "rebuilt": {
+        "p50": 486,
+        "p95": 96824,
+        "max": 125759
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 14,
+        "p95": 16.3,
+        "max": 16.6
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": {
+        "frame": 123,
+        "engine": 27.1,
+        "raster": 12.4,
+        "ops": 125,
+        "tessellated": 0,
+        "rebuilt": 125759,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.8,
+        "max": 8.5
+      },
+      "chart": "galaxy",
+      "label": "bar → cluster",
+      "renderer": "gpu",
+      "frames": 156,
+      "ms": 2617,
+      "fps": 59,
+      "engine": {
+        "p50": 0.7,
+        "p95": 8.4,
+        "max": 21.8
+      },
+      "raster": {
+        "p50": 0.2,
+        "p95": 4.6,
+        "max": 10.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 33.3
+      },
+      "long": 2,
+      "dropped": 2,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 21,
+      "input": 3.3,
+      "first": 15.9,
+      "ops": 125,
+      "rebuilt": {
+        "p50": 138,
+        "p95": 55357,
+        "max": 125759
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 10
+      },
+      "other": {
+        "p50": 15.6,
+        "p95": 16.6,
+        "max": 23.8
+      },
+      "pendingFrames": 3,
+      "pendingMax": 41,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 85,
+        "engine": 21.8,
+        "raster": 1.2,
+        "ops": 90,
+        "tessellated": 0,
+        "rebuilt": 2900,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.8,
+        "max": 3.2
+      },
+      "chart": "galaxy",
+      "label": "cluster → local",
+      "renderer": "gpu",
+      "frames": 158,
+      "ms": 2617,
+      "fps": 60,
+      "engine": {
+        "p50": 0.7,
+        "p95": 7.4,
+        "max": 14.6
+      },
+      "raster": {
+        "p50": 0.4,
+        "p95": 1.4,
+        "max": 5.6
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 7,
+      "input": 4.5,
+      "first": 1.3,
+      "ops": 177,
+      "rebuilt": {
+        "p50": 354,
+        "p95": 10128,
+        "max": 71567
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 3.2
+      },
+      "other": {
+        "p50": 15.5,
+        "p95": 16.5,
+        "max": 16.6
+      },
+      "pendingFrames": 1,
+      "pendingMax": 4,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 66,
+        "engine": 14.6,
+        "raster": 1.3,
+        "ops": 138,
+        "tessellated": 0,
+        "rebuilt": 5840,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.7,
+        "max": 1.4
+      },
+      "chart": "galaxy",
+      "label": "local → galaxy",
+      "renderer": "gpu",
+      "frames": 158,
+      "ms": 2617,
+      "fps": 60,
+      "engine": {
+        "p50": 0.6,
+        "p95": 6.5,
+        "max": 13.4
+      },
+      "raster": {
+        "p50": 0.4,
+        "p95": 4,
+        "max": 13.5
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 6,
+      "input": 3,
+      "first": 1.1,
+      "ops": 177,
+      "rebuilt": {
+        "p50": 402,
+        "p95": 32513,
+        "max": 149934
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 3.4
+      },
+      "other": {
+        "p50": 15.6,
+        "p95": 16.5,
+        "max": 16.6
+      },
+      "pendingFrames": 1,
+      "pendingMax": 3,
+      "pendingAtEnd": 0,
+      "complete": 0,
+      "slowest": {
+        "frame": 97,
+        "engine": 6.5,
+        "raster": 13.5,
+        "ops": 77,
+        "tessellated": 0,
+        "rebuilt": 149934,
+        "pending": 0
+      }
+    },
+    {
+      "page": {
+        "p50": 3,
+        "p95": 3.4,
+        "max": 3.5
+      },
+      "chart": "scatter",
+      "label": "all → focus",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 4.7,
+        "p95": 5.2,
+        "max": 5.4
+      },
+      "raster": {
+        "p50": 1.7,
+        "p95": 2.3,
+        "max": 2.6
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 3,
+      "input": 0.1,
+      "first": 0.2,
+      "ops": 26,
+      "rebuilt": {
+        "p50": 20000,
+        "p95": 20000,
+        "max": 20000
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 7.5,
+        "p95": 8.3,
+        "max": 15.3
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 1.1
+      },
+      "chart": "business",
+      "label": "bridge → funnel",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.8,
+        "max": 1
+      },
+      "raster": {
+        "p50": 0.2,
+        "p95": 0.9,
+        "max": 1.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 2,
+      "input": 0.1,
+      "first": 0.8,
+      "ops": 55,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 16,
+        "p95": 16.5,
+        "max": 16.7
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0,
+        "p95": 0.7,
+        "max": 1
+      },
+      "chart": "business",
+      "label": "funnel → stacked",
+      "renderer": "gpu",
+      "frames": 55,
+      "ms": 917,
+      "fps": 59,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.4,
+        "max": 0.6
+      },
+      "raster": {
+        "p50": 0.1,
+        "p95": 0.5,
+        "max": 0.8
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.7,
+        "max": 33.3
+      },
+      "long": 1,
+      "dropped": 1,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 2,
+      "input": 0.1,
+      "first": 0,
+      "ops": 59,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 16.4,
+        "p95": 16.6,
+        "max": 32.3
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.2,
+        "p95": 0.9,
+        "max": 0.9
+      },
+      "chart": "business",
+      "label": "stacked → bridge",
+      "renderer": "gpu",
+      "frames": 56,
+      "ms": 917,
+      "fps": 60,
+      "engine": {
+        "p50": 0.1,
+        "p95": 0.7,
+        "max": 1.1
+      },
+      "raster": {
+        "p50": 0.2,
+        "p95": 1,
+        "max": 1.1
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 16.8
+      },
+      "long": 0,
+      "dropped": 0,
+      "worst": 17,
+      "minFps": 59,
+      "stall": 4,
+      "input": 1.9,
+      "first": 0.6,
+      "ops": 63,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.8,
+        "p95": 16.4,
+        "max": 16.5
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    },
+    {
+      "page": {
+        "p50": 0.2,
+        "p95": 1,
+        "max": 1
+      },
+      "chart": "serif",
+      "label": "km → miles",
+      "renderer": "gpu",
+      "frames": 55,
+      "ms": 917,
+      "fps": 59,
+      "engine": {
+        "p50": 0.2,
+        "p95": 0.8,
+        "max": 0.8
+      },
+      "raster": {
+        "p50": 0.5,
+        "p95": 1.1,
+        "max": 1.3
+      },
+      "interval": {
+        "p50": 16.7,
+        "p95": 16.8,
+        "max": 33.3
+      },
+      "long": 1,
+      "dropped": 1,
+      "worst": 33,
+      "minFps": 30,
+      "stall": 2,
+      "input": 0,
+      "first": 1.3,
+      "ops": 58,
+      "rebuilt": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "data": {
+        "p50": 0,
+        "p95": 0,
+        "max": 0
+      },
+      "other": {
+        "p50": 15.7,
+        "p95": 16.5,
+        "max": 31.1
+      },
+      "pendingFrames": 0,
+      "pendingMax": 0,
+      "pendingAtEnd": 0,
+      "complete": null,
+      "slowest": null
+    }
+  ]
+}

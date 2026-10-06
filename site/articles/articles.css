@@ -1,0 +1,153 @@
+/* The article pages, in one house style: a newspaper graphics feature. A serif for reading and
+   headlines (Georgia: on the device already, so nothing swaps in and nothing moves), a sans for
+   everything around the text — kickers, bylines, captions, chart labels — and one accent. The
+   look is custom properties (--page, --ink, --muted, --accent, --card, --line, --font-title,
+   --font-body, --radius), set here; everything reads only those. The charts are the point:
+   figures break out of the reading column, scroll stories take the whole screen. No external
+   resources. Inter never swaps in after first paint (`optional`, preloaded by each page): a page
+   drawn before it arrives keeps its fallback. */
+@font-face { font-family: "Inter"; src: url("../fonts/Inter-Regular.ttf") format("truetype"); font-weight: 400; font-display: optional; }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter-SemiBold.ttf") format("truetype"); font-weight: 600; font-display: optional; }
+@font-face { font-family: "Inter"; src: url("../fonts/Inter-Bold.ttf") format("truetype"); font-weight: 700; font-display: optional; }
+
+:root {
+  color-scheme: light;
+  --page: #ffffff;
+  --ink: #121212;
+  --muted: #6f6f6f;
+  --accent: #c4431d;
+  --card: #ffffff;
+  --line: #d9d9d9;
+  --font-title: Georgia, "Times New Roman", Times, serif;
+  --font-body: Georgia, "Times New Roman", Times, serif;
+  --radius: 2px;
+  --gutter: clamp(16px, 4vw, 40px);
+  --column: 680px;
+  --wide: 1180px;
+  --ui: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --soft: color-mix(in srgb, var(--ink) 8%, transparent);
+  --softer: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 19px/1.65 var(--font-body); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+a { color: var(--accent); text-underline-offset: 2px; }
+code { font: .84em/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background: var(--softer); border: 1px solid var(--soft); padding: .05em .35em; border-radius: 5px; }
+
+/* ---- top bar ---- */
+.bar { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 10px; height: 48px; padding: 0 var(--gutter);
+  font: 500 14px/1 var(--ui); color: var(--muted); background: color-mix(in srgb, var(--page) 86%, transparent);
+  backdrop-filter: saturate(1.4) blur(12px); -webkit-backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--soft); }
+.bar a { color: var(--ink); text-decoration: none; font-weight: 600; }
+.bar a:hover { color: var(--accent); }
+.bar .home { display: inline-flex; align-items: center; gap: 8px; letter-spacing: -0.02em; }
+.bar .crumb { opacity: .5; }
+.bar .note { margin-left: auto; font-weight: 400; display: none; }
+@media (min-width: 760px) { .bar .note { display: block; } }
+
+/* ---- masthead ---- */
+.masthead { max-width: calc(var(--column) + 2 * var(--gutter)); margin: 0 auto; padding: clamp(48px, 9vw, 112px) var(--gutter) clamp(24px, 4vw, 40px); }
+.kicker { margin: 0 0 16px; font: 700 12.5px/1.3 var(--ui); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.masthead h1 { margin: 0 0 18px; font: 700 clamp(34px, 5.6vw, 60px)/1.06 var(--font-title); letter-spacing: -0.012em; text-wrap: balance; }
+.dek { margin: 0 0 26px; max-width: 34em; font-size: clamp(19px, 2.2vw, 23px); line-height: 1.45; color: color-mix(in srgb, var(--ink) 78%, var(--page)); text-wrap: pretty; }
+.byline { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding-top: 14px; border-top: 1px solid var(--soft); font: 13.5px/1.4 var(--ui); color: var(--muted); }
+.byline b { font-weight: 600; color: var(--ink); }
+
+/* ---- prose ---- */
+.prose { max-width: calc(var(--column) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+.prose p { margin: 0 0 1.1em; text-wrap: pretty; }
+.prose h2 { margin: 2.2em 0 .5em; font: 700 clamp(24px, 3vw, 30px)/1.2 var(--font-title); letter-spacing: -0.01em; text-wrap: balance; }
+.prose h3 { margin: 1.8em 0 .4em; font: 700 22px/1.25 var(--font-title); }
+.prose ul { padding-left: 1.2em; margin: 0 0 1.2em; }
+.prose li { margin: .3em 0; }
+.prose blockquote { margin: 1.6em 0; padding: 0; font: 700 clamp(22px, 2.8vw, 28px)/1.3 var(--font-title); letter-spacing: -0.01em; text-wrap: balance; }
+
+/* ---- charts ---- */
+.chart { position: relative; width: 100%; aspect-ratio: calc(1 / var(--aspect, 0.6)); max-height: 86vh; }
+.chart.pending { background: linear-gradient(100deg, var(--softer) 30%, var(--soft) 50%, var(--softer) 70%) 0 0 / 300% 100%; animation: shimmer 1.6s linear infinite; border-radius: var(--radius); }
+@keyframes shimmer { to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { .chart.pending { animation: none; } }
+.chart datars-view { display: block; width: 100%; height: 100%; border-radius: min(var(--radius), 12px); overflow: hidden; }
+datars-view::part(controls) { display: none; }
+datars-view { --datars-font: var(--ui); }
+datars-view:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+
+/* A figure breaks out of the reading column. */
+.figure { width: min(var(--wide), 100% - 2 * var(--gutter)); margin: clamp(40px, 6vw, 72px) auto; }
+/* Maps take more of the screen than the column — as wide as it gets short of the edges, where a
+   chart's title and credit would sit on the window's frame. */
+.figure.full { width: min(1560px, 100% - 2 * var(--gutter)); }
+/* Small multiples: figures side by side, one caption for the row. */
+.figure-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); gap: 24px 20px; width: min(var(--wide), 100% - 2 * var(--gutter)); margin: clamp(40px, 6vw, 72px) auto; }
+.figure-row .figure { width: auto; margin: 0; }
+.figure-row figcaption { margin-top: 10px; }
+.row-caption { grid-column: 1 / -1; max-width: var(--column); margin: 0 auto; font: 14.5px/1.5 var(--ui); color: var(--muted); text-align: center; }
+/* A film the engine exported. */
+.figure.video { text-align: center; }
+.figure.video video { display: block; margin: 0 auto; max-width: 100%; max-height: 84vh; border-radius: var(--radius); background: #000; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.figure.video.vertical video { aspect-ratio: 9 / 16; }
+figcaption { max-width: var(--column); margin: 14px auto 0; font: 14.5px/1.5 var(--ui); color: var(--muted); text-wrap: pretty; }
+figcaption strong { color: var(--ink); font-weight: 600; }
+figcaption .credit { display: block; margin-top: 4px; font-size: 13px; color: color-mix(in srgb, var(--muted) 85%, var(--page)); }
+/* A scroll story's source line: under the chart as it leaves the screen. */
+.graphic-credit { max-width: calc(var(--column) + 2 * var(--gutter)); margin: calc(-1 * clamp(32px, 5vw, 80px)) auto clamp(40px, 6vw, 72px); padding: 0 var(--gutter); font: 13px/1.5 var(--ui); color: color-mix(in srgb, var(--muted) 85%, var(--page)); }
+.source { white-space: nowrap; font-weight: 600; color: var(--muted); text-decoration: none; border-bottom: 1px solid var(--soft); }
+.source:hover { color: var(--accent); border-color: currentColor; }
+
+/* Step through a figure's story: numbered steps, and next. */
+/* Its row keeps the buttons' height before they arrive (they come with the chart), so the caption
+   under it never moves. */
+.stepper { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; margin: 14px auto 0; font: 600 13px/1 var(--ui); }
+.stepper button { min-width: 34px; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--soft); background: transparent; color: var(--ink); font: inherit; cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.stepper button:hover { border-color: var(--accent); }
+.stepper button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--page); }
+.stepper .next { margin-left: 8px; padding: 0 16px; }
+.stepper .next::after { content: " →"; }
+
+/* ---- scroll stories: the chart holds the screen while the text passes ---- */
+.scrolly { position: relative; margin: clamp(48px, 7vw, 96px) 0; }
+.scrolly-stage { position: sticky; top: 48px; height: calc(100vh - 48px); height: calc(100svh - 48px); display: grid; place-items: center; padding: 16px var(--gutter); }
+.scrolly-stage .chart { aspect-ratio: auto; height: 100%; max-height: none; }
+.scrolly-steps { position: relative; z-index: 2; margin-top: calc(-100vh + 48px); margin-top: calc(-100svh + 48px); padding: 0 var(--gutter) 30vh; pointer-events: none; }
+.step { min-height: 88vh; display: flex; align-items: center; }
+.step:first-child { padding-top: 20vh; }
+.step > div { pointer-events: auto; width: min(400px, 100%); padding: 16px 20px; border-radius: var(--radius); background: color-mix(in srgb, var(--card) 94%, transparent);
+  border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0,0,0,.08); font-size: 17px; line-height: 1.55;
+  opacity: .45; transition: opacity .35s; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.step.active > div { opacity: 1; }
+.step p { margin: 0 0 .5em; } .step p:last-child { margin: 0; }
+.step .stat { display: block; margin: 0 0 4px; font: 700 34px/1.05 var(--font-title); color: var(--accent); letter-spacing: -0.01em; }
+@media (min-width: 900px) {
+  /* Text in its own column; the chart has the rest of the screen. */
+  .scrolly.text-left .scrolly-stage { padding-left: calc(var(--gutter) + min(400px, 32vw) + 32px); }
+  .scrolly.text-right .scrolly-stage { padding-right: calc(var(--gutter) + min(400px, 32vw) + 32px); }
+  .scrolly.text-right .step { justify-content: flex-end; }
+  .step > div { width: min(400px, 32vw); }
+}
+@media (max-width: 899px) {
+  /* The chart in the upper part of the screen, the text passing over its foot. */
+  .scrolly-stage { place-items: start center; padding: 8px 8px; }
+  .scrolly-stage .chart { height: 64%; }
+  .step { min-height: 100vh; align-items: flex-end; padding-bottom: 6vh; justify-content: center; }
+  .step > div { font-size: 16px; }
+}
+
+/* ---- the end ---- */
+.about { max-width: calc(var(--column) + 2 * var(--gutter)); margin: clamp(56px, 8vw, 96px) auto 0; padding: 32px var(--gutter) 80px; border-top: 1px solid var(--soft); font: 14.5px/1.6 var(--ui); color: var(--muted); }
+.about h2 { margin: 0 0 12px; font: 700 13px/1.3 var(--ui); letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+.about p { margin: 0 0 1em; }
+.about strong { color: var(--ink); }
+
+/* ---- the articles index ---- */
+.index-head { max-width: var(--wide); margin: 0 auto; padding: clamp(48px, 8vw, 96px) var(--gutter) 24px; }
+.index-head h1 { margin: 0 0 16px; font: 700 clamp(40px, 6vw, 72px)/1.02 var(--font-title); letter-spacing: -0.03em; }
+.index-head p { margin: 0; max-width: 40em; font-size: 20px; line-height: 1.5; color: var(--muted); }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr)); gap: 20px; max-width: var(--wide); margin: 24px auto 96px; padding: 0 var(--gutter); }
+.card-link { display: flex; flex-direction: column; overflow: hidden; border-radius: 4px; text-decoration: none; color: var(--c-ink); background: var(--c-page);
+  border: 1px solid color-mix(in srgb, var(--c-ink) 12%, transparent); transition: transform .2s, box-shadow .2s; }
+.card-link:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(10, 14, 30, .16); }
+.card-link img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: center; background: var(--c-paper); border-bottom: 1px solid color-mix(in srgb, var(--c-ink) 10%, transparent); }
+.card-link .text { padding: 18px 20px 22px; }
+.card-link .k { margin: 0 0 8px; font: 700 12px/1.3 var(--c-title); letter-spacing: .14em; text-transform: uppercase; color: var(--c-accent); }
+.card-link h2 { margin: 0 0 10px; font: 700 24px/1.12 var(--c-title); letter-spacing: -0.015em; text-wrap: balance; }
+.card-link p { margin: 0; font: 15px/1.5 var(--ui); opacity: .82; }

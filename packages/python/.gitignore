@@ -1,0 +1,9 @@
+.venv/
+src/datars/_runtime/
+src/datars/_bin/
+build/
+dist/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+examples/out/

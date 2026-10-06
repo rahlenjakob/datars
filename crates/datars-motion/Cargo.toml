@@ -1,0 +1,19 @@
+[package]
+name = "datars-motion"
+description = "Transitions and authored animation for datars: matching, choreography, interpolation, path morphs, routes, easings, clips — pure and seekable."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+datars-theme.workspace = true
+datars-scene.workspace = true
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

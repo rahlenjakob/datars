@@ -1,0 +1,100 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("slider",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=control "Monthly income (SEK): 32,000"
+      ("label",) text "Monthly income (SEK)" at (0.00, 0.00) size=11.00 ink=$ink-2
+      ("value",) text "32,000" at (688.00, 0.00) size=11.00 ink=$ink
+      ("track",) segment (10.00, 30.00)→(678.00, 30.00) stroke=$rule/4.00
+      ("fill",) segment (10.00, 30.00)→(219.94, 30.00) stroke=$accent/4.00
+      ("halo",) ellipse c=(219.94, 30.00) r=(15.00, 15.00) fill=$accent opacity=0.00
+      ("thumb",) ellipse c=(219.94, 30.00) r=(8.00, 8.00) fill=$accent stroke=$paper/2.00
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 68.00] role=group "Per month (SEK)"
+      ("title",) text "Per month (SEK)" at (0.00, 0.00) size=17.00 ink=$ink role=title "Per month (SEK)"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 58.34 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 305.62) stroke=$rule/1.00
+          group ("Housing",) role=tick "Housing"
+            ("#0",) segment (0.00, 25.47)→(-5.00, 25.47) stroke=$rule/1.00
+            ("#2",) text "Housing" at (-8.00, 25.47) size=11.00 ink=$muted
+          group ("Food",) role=tick "Food"
+            ("#0",) segment (0.00, 76.41)→(-5.00, 76.41) stroke=$rule/1.00
+            ("#2",) text "Food" at (-8.00, 76.41) size=11.00 ink=$muted
+          group ("Transport",) role=tick "Transport"
+            ("#0",) segment (0.00, 127.34)→(-5.00, 127.34) stroke=$rule/1.00
+            ("#2",) text "Transport" at (-8.00, 127.34) size=11.00 ink=$muted
+          group ("Savings",) role=tick "Savings"
+            ("#0",) segment (0.00, 178.28)→(-5.00, 178.28) stroke=$rule/1.00
+            ("#2",) text "Savings" at (-8.00, 178.28) size=11.00 ink=$muted
+          group ("Leisure",) role=tick "Leisure"
+            ("#0",) segment (0.00, 229.22)→(-5.00, 229.22) stroke=$rule/1.00
+            ("#2",) text "Leisure" at (-8.00, 229.22) size=11.00 ink=$muted
+          group ("Other",) role=tick "Other"
+            ("#0",) segment (0.00, 280.15)→(-5.00, 280.15) stroke=$rule/1.00
+            ("#2",) text "Other" at (-8.00, 280.15) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 64.84 0.00]
+          group ("area",)
+            group ("grid-x",) role=decoration
+              (0,) segment (0.00, 0.00)→(0.00, 305.62) stroke=$grid/1.00 role=decoration
+              (2000,) segment (47.94, 0.00)→(47.94, 305.62) stroke=$grid/1.00 role=decoration
+              (4000,) segment (95.87, 0.00)→(95.87, 305.62) stroke=$grid/1.00 role=decoration
+              (6000,) segment (143.81, 0.00)→(143.81, 305.62) stroke=$grid/1.00 role=decoration
+              (8000,) segment (191.74, 0.00)→(191.74, 305.62) stroke=$grid/1.00 role=decoration
+              (10000,) segment (239.68, 0.00)→(239.68, 305.62) stroke=$grid/1.00 role=decoration
+              (12000,) segment (287.61, 0.00)→(287.61, 305.62) stroke=$grid/1.00 role=decoration
+              (14000,) segment (335.55, 0.00)→(335.55, 305.62) stroke=$grid/1.00 role=decoration
+              (16000,) segment (383.48, 0.00)→(383.48, 305.62) stroke=$grid/1.00 role=decoration
+              (18000,) segment (431.42, 0.00)→(431.42, 305.62) stroke=$grid/1.00 role=decoration
+              (20000,) segment (479.35, 0.00)→(479.35, 305.62) stroke=$grid/1.00 role=decoration
+              (22000,) segment (527.29, 0.00)→(527.29, 305.62) stroke=$grid/1.00 role=decoration
+              (24000,) segment (575.22, 0.00)→(575.22, 305.62) stroke=$grid/1.00 role=decoration
+              (26000,) segment (623.16, 0.00)→(623.16, 305.62) stroke=$grid/1.00 role=decoration
+            group ("marks",) role=series "amount by category"
+              ("Housing",) rect x=0.00 y=5.60 w=245.43 h=39.73 fill=$accent role=datum "Housing: 10,240"
+              ("Food",) rect x=0.00 y=56.54 w=122.71 h=39.73 fill=$accent role=datum "Food: 5,120"
+              ("Transport",) rect x=0.00 y=107.48 w=92.04 h=39.73 fill=$accent role=datum "Transport: 3,840"
+              ("Savings",) rect x=0.00 y=158.41 w=115.04 h=39.73 fill=$accent role=datum "Savings: 4,800"
+              ("Leisure",) rect x=0.00 y=209.35 w=99.71 h=39.73 fill=$accent role=datum "Leisure: 4,160"
+              ("Other",) rect x=0.00 y=260.29 w=92.04 h=39.73 fill=$accent role=datum "Other: 3,840"
+              group ("labels",)
+                ("Housing",) text "10,240" at (249.43, 25.47) size=11.00 ink=$ink-2
+                ("Food",) text "5,120" at (126.71, 76.41) size=11.00 ink=$ink-2
+                ("Transport",) text "3,840" at (96.04, 127.34) size=11.00 ink=$ink-2
+                ("Savings",) text "4,800" at (119.04, 178.28) size=11.00 ink=$ink-2
+                ("Leisure",) text "4,160" at (103.71, 229.22) size=11.00 ink=$ink-2
+                ("Other",) text "3,840" at (96.04, 280.15) size=11.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 312.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(623.16, 0.00) stroke=$rule/1.00
+            group (0,) role=tick "0"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "0" at (0.00, 8.00) size=11.00 ink=$muted
+            group (2000,) role=tick "2,000"
+              ("#0",) segment (47.94, 0.00)→(47.94, 5.00) stroke=$rule/1.00
+            group (4000,) role=tick "4,000"
+              ("#0",) segment (95.87, 0.00)→(95.87, 5.00) stroke=$rule/1.00
+              ("#1",) text "4,000" at (95.87, 8.00) size=11.00 ink=$muted
+            group (6000,) role=tick "6,000"
+              ("#0",) segment (143.81, 0.00)→(143.81, 5.00) stroke=$rule/1.00
+            group (8000,) role=tick "8,000"
+              ("#0",) segment (191.74, 0.00)→(191.74, 5.00) stroke=$rule/1.00
+              ("#1",) text "8,000" at (191.74, 8.00) size=11.00 ink=$muted
+            group (10000,) role=tick "10,000"
+              ("#0",) segment (239.68, 0.00)→(239.68, 5.00) stroke=$rule/1.00
+            group (12000,) role=tick "12,000"
+              ("#0",) segment (287.61, 0.00)→(287.61, 5.00) stroke=$rule/1.00
+              ("#1",) text "12,000" at (287.61, 8.00) size=11.00 ink=$muted
+            group (14000,) role=tick "14,000"
+              ("#0",) segment (335.55, 0.00)→(335.55, 5.00) stroke=$rule/1.00
+            group (16000,) role=tick "16,000"
+              ("#0",) segment (383.48, 0.00)→(383.48, 5.00) stroke=$rule/1.00
+              ("#1",) text "16,000" at (383.48, 8.00) size=11.00 ink=$muted
+            group (18000,) role=tick "18,000"
+              ("#0",) segment (431.42, 0.00)→(431.42, 5.00) stroke=$rule/1.00
+            group (20000,) role=tick "20,000"
+              ("#0",) segment (479.35, 0.00)→(479.35, 5.00) stroke=$rule/1.00
+              ("#1",) text "20,000" at (479.35, 8.00) size=11.00 ink=$muted
+            group (22000,) role=tick "22,000"
+              ("#0",) segment (527.29, 0.00)→(527.29, 5.00) stroke=$rule/1.00
+            group (24000,) role=tick "24,000"
+              ("#0",) segment (575.22, 0.00)→(575.22, 5.00) stroke=$rule/1.00
+              ("#1",) text "24,000" at (575.22, 8.00) size=11.00 ink=$muted
+            group (26000,) role=tick "26,000"
+              ("#0",) segment (623.16, 0.00)→(623.16, 5.00) stroke=$rule/1.00

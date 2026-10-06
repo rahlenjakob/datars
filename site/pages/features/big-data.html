@@ -1,0 +1,159 @@
+---
+title: Big data at 60 fps — millions of points · datars
+description: Four million points in one live chart, and hundreds of thousands of rows as hexagons, grid cells, density contours and a thousand lines at once — binned once in the engine, indexed into point pyramids, streamed from a static file by byte range. How datars keeps big data smooth, with numbers.
+og: galaxy
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Big data, 60 fps</p>
+    <h1>Millions of points, still sixty frames a second</h1>
+    <p class="lede-2">datars draws big data the way maps draw the planet: index it once into a pyramid of tiles, then draw only what the camera shows, at the density the zoom allows. A reader opens a four-million-point chart with a {{size:galaxy}} bundle, streams the parts they look at from a static file, and every camera tour runs at 59–60 fps in Chrome. And when a million dots would only paint over each other, the standard library draws what they add up to — hexagons, grid cells, the contours of a crowd, a thousand series at once — binned in one pass by the engine.</p>
+  </div>
+</section>
+
+<section class="section space" style="margin-top:0;padding-top:48px">
+  <div class="wrap">
+    <figure class="space-stage">
+      <div class="chart" data-chart="galaxy"></div>
+      <figcaption class="space-bar">
+        <div class="pills" id="galaxy-pills" role="group" aria-label="Tour">
+          <button type="button" data-state="galaxy" aria-pressed="true">Galaxy</button>
+          <button type="button" data-state="arm">Spiral arm</button>
+          <button type="button" data-state="bar">The bar</button>
+          <button type="button" data-state="cluster">A cluster</button>
+          <button type="button" data-state="local">One neighbourhood</button>
+        </div>
+        <dl class="space-stats">
+          <div><dt id="galaxy-drawn">—</dt><dd>stars drawn now</dd></div>
+          <div><dt id="galaxy-bytes">—</dt><dd>fetched of {{archive:galaxy}}</dd></div>
+          <div><dt id="galaxy-fps">—</dt><dd>frames a second</dd></div>
+        </dl>
+      </figcaption>
+      <p class="space-narration" id="galaxy-text" aria-hidden="true">Drag to pan, scroll or pinch to zoom, hover a star.</p>
+      {{alt:galaxy}}
+    </figure>
+    <details class="code">
+      <summary><span>The document</span><span class="size">{{size:galaxy}}</span></summary>
+<pre><code data-lang="ts">// Rows the engine generates: four million stars from a seed, as expressions over the row number.
+data: { stars: data.generate(4_000_000, {
+  part: e(`rand(d.i, 1) &lt; 0.14 ? 0 : …`),           // bar, halo, clusters, disk, arms
+  r: e(`… -9500 * log(1 - rand(d.i, 3) * …)`),       // an exponential disk
+  theta: e(`log(d.r / 5200) / 0.3 + … + randn(d.i, 4) * …`), // logarithmic arms
+  x: e(`round(d.r * cos(d.theta), 2)`), y: e(`round(d.r * sin(d.theta), 2)`),
+  temp: e(`…`), lum: e(`…`),                          // main-sequence stars and red giants
+}, { keep: ["x", "y", "temp", "lum"] }) },
+
+// Dots at their own x/y in an explorable view: level of detail, a glow, a tooltip each.
+scene: cloud({ data: "stars", x: "x", y: "y", maxZoom: 3000,
+  points: 80_000, glow: 6, glowOpacity: e("clamp(0.03 + 0.03 * d.lum, 0.015, 0.2)"),
+  r: e("clamp(0.95 + 0.34 * d.lum, 0.75, 3.6)"), fill: e(`d.temp &lt; 3700 ? "#ffb06e" : …`),
+  label: e("`Star ${format(d.$row + 1, \",\")} · ${format(d.temp, \",\")} K · …`"),
+}),</code></pre>
+    </details>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">What they add up to</p>
+      <h2>A million rows as a density, a shape, a crowd of lines</h2>
+      <p>Past a few thousand dots a scatter is ink: you see where the marks are, not how many rows are there. Four recipes draw the rows as what they add up to. The engine bins them in one pass, in Rust, and keeps the result — every step, layout pass and hover reuses it — so a frame draws a few thousand bins, not hundreds of thousands of rows. The rows behind each chart below are generated from a seed, not downloaded: each chart is a bundle of {{size:std-contours}} to {{size:std-manylines}}, gzipped.</p>
+    </header>
+    <div class="grid">
+      <article class="card">
+        <div class="chart" data-chart="std-hexbin" data-caption></div>
+        <div class="card-text"><span class="tag">hexbin</span><h3>Where 200,000 trips crowd</h3><p>Every trip counted into a hexagon 8 px across: walking, cycling, bus and car each make a ridge of their own speed — hidden in a scatter of 200,000 dots. Coloured by count, or by an aggregate of any column; sized too, if you like.</p><p class="hint"><a href="/docs/std/hexbin/">hexbin reference</a> · {{size:std-hexbin}} gzipped</p>{{alt:std-hexbin}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="std-heatmap2d" data-caption></div>
+        <div class="card-text"><span class="tag">heatmap2d</span><h3>300,000 pickups on a grid</h3><p>A raster of counts over the plot's own scales: the centre, a station, the airport and a main road stand out. The same cells coloured by their mean fare show what a count can't.</p><p class="hint"><a href="/docs/std/heatmap2d/">heatmap2d reference</a> · {{size:std-heatmap2d}} gzipped</p>{{alt:std-heatmap2d}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="std-contours" data-caption></div>
+        <div class="card-text"><span class="tag">contours</span><h3>The shape of a crowd</h3><p>A smoothed density of 150,000 eruptions cut into nested levels, each holding a further fifth of them — "half of all eruptions fall inside this line". As bands, as lines, over a seeded sample of the rows themselves.</p><p class="hint"><a href="/docs/std/contours/">contours reference</a> · {{size:std-contours}} gzipped</p>{{alt:std-contours}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="std-manylines" data-caption></div>
+        <div class="card-text"><span class="tag">manyLines</span><h3>1,000 series at once</h3><p>Every weather station a faint grey line, so their bulk shows where most of them run; the ones the story is about in the accent colour, named at their ends. Hover any line for its station.</p><p class="hint"><a href="/docs/std/manyLines/">manyLines reference</a> · {{size:std-manylines}} gzipped</p>{{alt:std-manylines}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">How it stays fast</p>
+      <h2>Decisions that keep frames cheap</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Point pyramids</h3><p>An <code>instances</code> node with <code>lod</code> — or the <a href="/docs/std/cloud/"><code>cloud</code></a> recipe — indexes a table of any size once into a quadtree whose levels are seeded, density-preserving samples. Each frame draws the levels whose rows in view fit its budget of points; up close, every row.</p></article>
+      <article><h3>Streamed from a static file</h3><p>The publish step writes the pyramid as a point archive (PMTiles of compact point tiles) next to the chart. The page reads it by HTTP range request from any static host — the galaxy's first view needs a few hundred kilobytes of its {{archive:galaxy}}.</p></article>
+      <article><h3>Instanced marks</h3><p>A scatter's points are one instanced draw, not thousands of shapes. The <a href="/docs/std/point/"><code>point</code></a> recipe scales to 10⁵–10⁶ rows; a bar that splits into dots stays one instanced layer through the whole morph.</p></article>
+      <article><h3>Plans, not per-frame work</h3><p>When the state changes, the engine plans the transition once; a frame just evaluates the plan. Nothing user-written runs per frame — expressions are compiled bytecode — so animation frames cost fractions of a millisecond for most charts.</p></article>
+      <article><h3>Prepared ahead, rendered on demand</h3><p>While the reader reads, the engine prepares the next steps and warms their tiles, so handling a step takes a millisecond or less when the reader gets there. Nothing is drawn while nothing moves, and charts off screen sleep — battery matters on phones.</p></article>
+      <article><h3>Binned in the engine</h3><p><a href="/docs/std/hexbin/"><code>hexbin</code></a>, <a href="/docs/std/heatmap2d/"><code>heatmap2d</code></a> and <a href="/docs/std/contours/"><code>contours</code></a> are table operations in Rust that read nothing but the rows: computed in one pass, once per data, and kept across states and hovers. The marks draw the bins, and the bins are sized in screen px, so a phone gets as many as it can show.</p></article>
+      <article><h3>Generated data</h3><p>Synthetic data too big to write down — simulations, load tests, procedural worlds — is a few expressions: <code>data.generate(4_000_000, { … })</code> with seeded <code>rand</code> and <code>randn</code>, identical on every platform.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Instanced</p>
+      <h2>20,000 points, recoloured in one step</h2>
+      <p>Twenty thousand seeded points in three clusters. Step forward: every point resizes and recolours in one planned transition — about a third of a millisecond per animation frame in the engine.</p>
+      <ul class="bullets">
+        <li><b>{{size:scatter}}</b> gzipped for the whole chart, points included.</li>
+        <li><b>One draw</b> for every point; the transition is planned once.</li>
+        <li><b>Hover</b> any point: tooltips come from the same semantics a screen reader gets.</li>
+      </ul>
+    </div>
+    <figure class="fig">
+      <div class="frame"><div class="chart" data-chart="scatter" data-caption></div></div>
+      {{alt:scatter}}
+    </figure>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Measured</p>
+      <h2>Numbers, not adjectives</h2>
+      <p>Engine timings from <code>datars profile</code> on an Apple M-series Mac (release build, CPU reference), and the frame rates the page got in Chrome. The full method and every run are on the <a href="/performance/">performance page</a>.</p>
+    </header>
+    <div class="table-wrap">
+      <table class="perf">
+        <thead><tr><th>Chart</th><th class="num">Rows</th><th class="num">Plan a transition</th><th class="num">One animation frame (engine)</th><th>In Chrome</th></tr></thead>
+        <tbody>
+          <tr><td>Votes: 8 bars → pie</td><td class="num">8</td><td class="num">0.2 ms</td><td class="num">0.025 ms</td><td>—</td></tr>
+          <tr><td>Renewables: 242 regions, camera flight</td><td class="num">242</td><td class="num">1.2 ms</td><td class="num">0.022 ms</td><td>59–60 fps</td></tr>
+          <tr><td>Scatter: recolour</td><td class="num">20,000</td><td class="num">9.8 ms</td><td class="num">0.34 ms</td><td>60 fps</td></tr>
+          <tr><td>Hexbin: 200,000 trips, new hexagon size</td><td class="num">200,000</td><td class="num">2 ms</td><td class="num">0.3–0.4 ms</td><td>—</td></tr>
+          <tr><td>Contours: 150,000 eruptions, bands to lines</td><td class="num">150,000</td><td class="num">1 ms</td><td class="num">0.2 ms</td><td>—</td></tr>
+          <tr><td>Many lines: 1,000 series, a highlight</td><td class="num">52,000</td><td class="num">7–13 ms</td><td class="num">0.2–0.3 ms (4 ms GPU: 1,000 paths)</td><td>—</td></tr>
+          <tr><td>Galaxy: pan and zoom, level of detail</td><td class="num">4,000,000</td><td class="num">0.5 ms</td><td class="num">0.2–1.3 ms per pan frame</td><td>59–60 fps tours; frames 5 ms median, 14 ms p95 while exploring</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">Engine columns: measured with <code>datars profile</code> (the hexbin, contours and many-lines rows on their reference figures, <code>site/figures/std/</code>; the others in <code>docs/19-status.md</code>). Chrome column: <code>scripts/perf-browser.mjs</code> at devicePixelRatio 2 — see <a href="/performance/">performance</a>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Chart your big table</h2>
+        <p><code>hexbin</code>, <code>heatmap2d</code>, <code>contours</code>, <code>manyLines</code>, <code>cloud</code>, <code>instances</code> with <code>lod</code>, generated sources and point archives.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/big-data/">Big data guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/performance/">Performance</a>
+      </div>
+    </div>
+  </div>
+</section>

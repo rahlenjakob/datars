@@ -1,0 +1,122 @@
+---
+title: Batteries included — 40 ready-made charts · datars
+description: The datars standard library — bars, lines, areas, scatters, pies, treemaps, waffles, funnels, waterfalls, sankeys, beeswarms, calendars, parliaments, maps, cards and sliders — themed, animated and ejectable.
+og: business
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Batteries included</p>
+    <h1>{{count:recipes}} recipes for the charts people actually publish</h1>
+    <p class="lede-2">The standard library covers what newsrooms, analysts and product dashboards ship: comparisons, parts of a whole, change over time, distributions, flows, maps — plus the axes, legends, titles, callouts, cards and controls around them. Every recipe draws with your theme, animates by key, is accessible, and is a TypeScript file you can open.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Live · waterfall · funnel · stacked</span>
+        <h3>A bridge, a funnel, a stack</h3>
+        <p>Three recipes in one document. Step through them: each bar keeps its key, so it finds its place in the next chart instead of blinking out.</p>
+<pre><code data-lang="ts">plot({ data: "bridge", x: "item", y: "delta", title: "Revenue bridge, 2023 → 2024",
+  children: [waterfall({ total: "total" })] }, { when: e('view == "bridge"') }),
+funnel({ data: "stages", stage: "stage", value: "n" }, { when: e('view == "funnel"') }),
+plot({ data: "revenue", x: "quarter", y: "value", color: "region", legend: true,
+  children: [stacked({ series: "region" })] }, { when: e('view == "stacked"') }),</code></pre>
+        {{alt:business}}
+      </div>
+      <div class="chart" data-chart="business" data-caption></div>
+    </article>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Live · candlestick · volume · moving averages · Bollinger · indexed · drawdown</span>
+        <h3>Markets, on trading days</h3>
+        <p>Candles and OHLC bars in your theme's up and down colours, volume in a pane of its own, moving averages and Bollinger bands computed from the full history, performance rebased to 100, drawdowns, and sparklines for a watchlist. The date axis runs on trading days — no gaps for weekends and holidays — and ticks on the first session of each week, month or year. Zooming from six months to one widens every candle instead of redrawing it.</p>
+<pre><code data-lang="ts">plot({ data: "shown", x: "date", y: "close", xType: "band", title: "Nordhavn (NORD), daily",
+  children: [
+    bollinger({ source: "nord" }),
+    candlestick(),
+    movingAverage({ window: 20, source: "nord" }),
+    movingAverage({ window: 50, source: "nord", stroke: "$highlight" }),
+    volume(),
+  ] }),</code></pre>
+        {{alt:stocks}}
+      </div>
+      <div class="chart" data-chart="stocks" data-caption></div>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The catalogue</p>
+      <h2>Every recipe, with its parameters and a live example</h2>
+      <p>Each name links to its reference page — generated from the recipe itself, so it's always current: parameters, defaults, the theme tokens it reads, a live example you can step through with its source, and real uses from the examples.</p>
+    </header>
+    {{std:list}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Live</p>
+      <h2>A few of them, playing</h2>
+    </header>
+    <div class="grid">
+      <article class="card">
+        <div class="chart" data-chart="riksdag" data-caption></div>
+        <div class="card-text"><span class="tag">hemicycle · bar</span><h3>349 seats, then the parties</h3><p>One dot per seat on concentric arcs, regrouping into bars. Party colours are data, declared once as key metadata.</p>{{alt:riksdag}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="energy"></div>
+        <div class="card-text"><span class="tag">sankey</span><h3>Where the world's energy goes</h3><p>Nodes in columns by depth, ribbons as wide as their flow — from one table of links.</p>{{alt:energy}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="warming" data-caption></div>
+        <div class="card-text"><span class="tag">line · area · span · stripes</span><h3>A line and its stripes</h3><p>Every year's point becomes its stripe, coloured on a diverging scale supplied by the theme.</p>{{alt:warming}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="inflation"></div>
+        <div class="card-text"><span class="tag">area · annotate</span><h3>Drawn on, with a callout</h3><p>The area draws on from the left as it enters; a callout points at the peak with a connector and a dot.</p>{{alt:inflation}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">What every recipe does for you</p>
+      <h2>Defaults that hold up in print</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Text that fits</h3><p>Labels are measured with the chart's own fonts, by the engine, on every platform. Value labels sit above their bar, move inside when there's no room above, and are left out where they would be wider than the bar; legends flow into rows by their labels' widths. <code>datars lint</code> reports labels that collide or are cut off at the canvas edge.</p></article>
+      <article><h3>Scales from the data</h3><p>A <a href="/docs/std/plot/"><code>plot</code></a> builds its x, y and colour scales from the columns you name — band, linear, time, log — with nice ticks, number formats and axes sized to their labels. Marks inside it inherit the data and encodings.</p></article>
+      <article><h3>Themed, never hard-coded</h3><p>Recipes ask for tokens — <code>$accent</code>, <code>$categorical[2]</code>, <code>size.label</code>, <code>radius.bar</code> — not colours. Your brand, dark mode and high contrast apply to all of them, including charts already published. <a href="/features/theming/">Theming →</a></p></article>
+      <article><h3>Motion built in</h3><p>Bars grow from their baseline, lines draw on, slices and tiles morph by key, units split out of bars and merge back. Override any of it per state with motion rules. <a href="/features/animation/">Animation →</a></p></article>
+      <article><h3>Accessible by default</h3><p>Every data mark carries a role, a label (<em>“Sweden Democrats: 20.5”</em>) and a value, so screen readers and text alternatives describe the data, not a picture. <a href="/features/accessibility/">Accessibility →</a></p></article>
+      <article><h3>Composable and ejectable</h3><p><a href="/docs/std/facet/"><code>facet</code></a> repeats any chart as small multiples; <a href="/docs/std/card/"><code>card</code></a> places narration where it covers the least data. When a recipe doesn't do what you need, <code>datars eject std/bar</code> gives you its source. <a href="/features/extensibility/">Extending →</a></p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Start with a template</h2>
+        <p><code>datars new mychart --template chart|story|explorable|map</code> writes a working document to edit.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/getting-started/">Get started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/std/">Chart reference</a>
+      </div>
+    </div>
+  </div>
+</section>

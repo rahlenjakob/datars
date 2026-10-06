@@ -1,0 +1,15 @@
+[package]
+name = "datars-render-svg"
+description = "The datars SVG writer: a display list as a standalone, deterministic SVG 1.1 document."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true

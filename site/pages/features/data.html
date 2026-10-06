@@ -1,0 +1,183 @@
+---
+title: Data from anywhere — in the bundle, from your API, live, from the app · datars
+description: Where a datars chart's rows can come from — carried in the bundle, fetched when it opens, refreshed live, handed in by the app on the device, answered by your own code, generated from expressions, or read by range from a static file — and how every one of them animates by key.
+og: election
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Data from anywhere</p>
+    <h1>Your rows, wherever they live</h1>
+    <p class="lede-2">A chart can carry its rows, fetch them when it opens, refresh them live, take them from the app that shows it, or make them on the device — and whichever way they arrive, keyed rows animate into place. The engine never fetches anything itself: the page or the app does, so your API, your sign-in and your privacy rules apply unchanged.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Where rows come from</p>
+      <h2>Eight ways in, one kind of table</h2>
+      <p>Every source becomes the same thing: a typed, keyed table the scene reads. Change where the rows come from and nothing else in the chart changes.</p>
+    </header>
+    <div class="source-grid">
+      <article class="source">
+        <h3>In the bundle</h3>
+        <p>Rows written in the document, or files beside it — CSV, JSON, GeoJSON. Publishing copies them into the bundle as content-addressed chunks, shared by hash between charts, and draws the poster and the accessible text from them.</p>
+<pre><code data-lang="ts">data.values({ party: ["S", "M"], share: [30.3, 19.1] }, { key: "party" })
+data.url("sales.csv", { key: "month" })   // a file next to doc.ts</code></pre>
+        <p class="src-when"><b>Arrives</b> with the chart · <a href="/gallery/#votes">votes</a></p>
+      </article>
+      <article class="source">
+        <h3>Built-in atlases</h3>
+        <p>Every country's outline, by ISO code, shipped as a compact topology the charts on a page share. Join your table to it by code.</p>
+<pre><code data-lang="ts">data.atlas("countries")</code></pre>
+        <p class="src-when"><b>Arrives</b> once per page, cached · <a href="/gallery/#renewables">renewables</a></p>
+      </article>
+      <article class="source">
+        <h3>Fetched when it opens</h3>
+        <p>Any URL. The page's <code>fetch</code> or the app's HTTP stack asks for it, so your API, CORS and headers apply. The bundle carries the rows it was published with, so the poster and the first frame have data at once.</p>
+<pre><code data-lang="ts">data.url("https://api.example.com/sales.json", { key: "region" })</code></pre>
+        <p class="src-when"><b>Arrives</b> when the chart opens</p>
+      </article>
+      <article class="source">
+        <h3>Live</h3>
+        <p>The same source, fetched again on a schedule. Each snapshot animates in: bars slide to their new ranks, new rows grow in, missing rows leave. <a href="#live">Try it below.</a></p>
+<pre><code data-lang="ts">data.url("count.json", { key: "party", live: { every: 2 } })</code></pre>
+        <p class="src-when"><b>Arrives</b> every <code>every</code> seconds</p>
+      </article>
+      <article class="source">
+        <h3>From the app</h3>
+        <p>A data slot. The chart is published once — never per user — and the app hands each user's rows in on the device, where they stay. A sample shows until then and says which columns the rows need. <a href="#app">Try it below.</a></p>
+<pre><code data-lang="ts">data.slot("spending", { key: ["month", "category"], sample })</code></pre>
+        <p class="src-when"><b>Arrives</b> when the app provides it · <a href="/gallery/#spending">spending</a></p>
+      </article>
+      <article class="source">
+        <h3>Answered by your code</h3>
+        <p>Every request a chart makes goes past the page first. Answer it yourself — your API client with its tokens, a cache, a mock for tests, a replayed feed — and the chart never knows the difference.</p>
+<pre><code data-lang="js">view.addEventListener("datarequest", (e) =&gt; {
+  e.preventDefault();
+  e.detail.respond(api.get(e.detail.url));   // bytes, text, an object, or a promise
+});</code></pre>
+        <p class="src-when"><b>Arrives</b> when you answer</p>
+      </article>
+      <article class="source">
+        <h3>Generated on the device</h3>
+        <p>Rows too many to send, described as expressions over the row number with seeded randomness: the same rows on every device, every time.</p>
+<pre><code data-lang="ts">data.generate(4_000_000, { x: e("randn(d.i, 1)"), y: e("randn(d.i, 2)") })</code></pre>
+        <p class="src-when"><b>Arrives</b> as the chart opens · <a href="/features/big-data/">four million stars</a>, {{size:galaxy}}</p>
+      </article>
+      <article class="source">
+        <h3>Read by range</h3>
+        <p>Map tiles and point pyramids stay on the server as one static file each. The runtime asks for the byte ranges the view needs at its zoom — never the whole file.</p>
+<pre><code data-lang="ts">data.tiles.auto()                 // a basemap cut for your views
+cloud({ data: "stars", … })       // millions of points, by the tile</code></pre>
+        <p class="src-when"><b>Arrives</b> as the camera moves · <a href="/features/maps/">maps</a></p>
+      </article>
+    </div>
+    <p class="fine">In notebooks, a DataFrame is a source too: <code>dr.bar(df, x="party", y="share")</code> — see <a href="/docs/python/">Python and Jupyter</a>.</p>
+  </div>
+</section>
+
+<section class="section" id="app">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">From the app</p>
+      <h2>One chart for every user, their rows on their device</h2>
+      <p>This spending chart was published once, with a sample. A banking app ships it — or downloads it — and hands in the signed-in user's rows. They never leave the phone, no chart is built per user, and a redesigned chart reaches every user without an app release. Switch account and the same chart morphs to the other rows, keyed by month and category.</p>
+<pre><code data-lang="js">// Web
+view.provideData("spending", rows);
+// SwiftUI
+DatarsChart(source: .url(chartURL),
+            data: ["spending": rowsJSON])
+// Android
+view.provideData("spending", rowsJSON)</code></pre>
+      <p>Rows without the key or the columns the sample has are refused with the reason, and the chart keeps what it showed. <a href="/docs/data/#data-slots">Data slots in the docs</a>.</p>
+    </div>
+    <div class="phone-demo">
+      <div class="pills small" id="account-pills" role="group" aria-label="Account">
+        <button type="button" data-src="/data/spending/sample.json" aria-pressed="true">Sample</button>
+        <button type="button" data-src="/data/spending/this.json" aria-pressed="false">This account</button>
+        <button type="button" data-src="/data/spending/other.json" aria-pressed="false">Another account</button>
+      </div>
+      <figure class="fig"><div class="frame"><div class="chart" data-chart="spending"></div></div>{{alt:spending}}</figure>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="live">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Live</p>
+      <h2>A feed that re-ranks itself</h2>
+      <p>Election night, replayed: the chart asks for <code>count.json</code> every two seconds, as its document says, and each new count animates in — parties slide to their new ranks, the headline counts up. On a server of your own, the feed is just a file you rewrite. Here, so the replay works on a static host, this page answers each request itself with the next snapshot, through <code>datarequest</code>.</p>
+<pre><code data-lang="ts">data: {
+  count: data.url("count.json", { key: "party", live: { every: 2 } }),
+},</code></pre>
+      <p><button type="button" class="btn btn-ghost small" id="election-replay" data-src="/data/election/" data-feed-for="election" data-feed-source="count" data-feed-count="10">Replay election night</button> <span class="fine" id="election-status" aria-live="polite"></span></p>
+      <p class="fine">Simulated snapshots converging on the 2022 result, not official data. Locally, <code>datars serve</code> replays a folder of numbered snapshots as the feed — see <a href="/docs/data/#live-sources">live sources</a>.</p>
+    </div>
+    <div>
+      <figure class="fig"><div class="frame"><div class="chart" data-chart="election"></div></div>{{alt:election}}</figure>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">At a glance</p>
+      <h2>What each source means for a published chart</h2>
+    </header>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Source</th><th>Rows live</th><th>Arrive</th><th>Change</th><th>In the poster and text alternative</th></tr></thead>
+      <tbody>
+        <tr><td>In the bundle</td><td>in the bundle, shared by hash</td><td>with the chart</td><td>republish</td><td>yes</td></tr>
+        <tr><td>Built-in atlas</td><td>next to the runtime, cached</td><td>once per page</td><td>—</td><td>yes</td></tr>
+        <tr><td>Fetched URL</td><td>your server or API</td><td>when the chart opens</td><td>on each open</td><td>the rows it was published with</td></tr>
+        <tr><td>Live URL</td><td>your server or API</td><td>every <code>every</code> seconds</td><td>each refresh animates in</td><td>the rows it was published with</td></tr>
+        <tr><td>Data slot</td><td>the user's device</td><td>when the app hands them in</td><td>whenever the app does</td><td>the sample</td></tr>
+        <tr><td>Your code (<code>datarequest</code>)</td><td>wherever your code gets them</td><td>when you answer</td><td>on each request</td><td>the rows it was published with</td></tr>
+        <tr><td>Generated</td><td>nowhere: made on the device</td><td>as the chart opens</td><td>—</td><td>yes (a sample of them)</td></tr>
+        <tr><td>Tiles, point archives</td><td>one static file on the server</td><td>by range, as the camera moves</td><td>republish</td><td>what the first view needs</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Before you chart</p>
+      <h2>Know your rows first</h2>
+      <p><code>datars data profile</code> reads a CSV or JSON file the way a chart would and says what it found: each column's type, gaps, ranges, which columns (or pairs) can be keys, and hints — percentages, years stored as numbers, spans wide enough for a log scale, codes that join to an atlas. CSV reading copes with real exports: <code>;</code> and tab delimiters, Windows-1252, decimal commas, <code>NA</code> and <code>..</code> for missing values.</p>
+      <p>Then reshape in the document — filter, aggregate, join, pivot, window, stack, bin — with <a href="/docs/data/#derived-tables">derived tables</a> that keep every row's key.</p>
+    </div>
+    <div>
+      {{run:data profile examples/election/count.json|18}}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <p class="more-row"><a class="more" href="/docs/data/">Data and tables in the docs <span aria-hidden="true">→</span></a> <a class="more" href="/docs/embed/web/">Events and methods of <code>&lt;datars-view&gt;</code> <span aria-hidden="true">→</span></a> <a class="more" href="/docs/publishing/">What publishing ships <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<script type="module">
+// Hand the spending chart another account's rows.
+const viewIn = (alias) => document.querySelector(`.chart[data-chart="${alias}"] datars-view`);
+const pills = document.getElementById("account-pills");
+pills?.addEventListener("click", async (e) => {
+  const b = e.target.closest("button[data-src]");
+  const view = viewIn("spending");
+  if (!b || !view) return;
+  pills.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  view.provideData("spending", await (await fetch(b.dataset.src)).text());
+});
+
+// The replay itself is site.js's (data-feed-for on the button): show where it is, restart on click.
+const replay = document.getElementById("election-replay");
+const status = document.getElementById("election-status");
+replay?.addEventListener("feed", (e) => { const { n, count } = e.detail; status.textContent = n < count ? `Snapshot ${n} of ${count}` : `Final count (snapshot ${count})`; });
+replay?.addEventListener("click", () => { replay.dataset.next = "1"; status.textContent = "Replaying…"; });
+</script>

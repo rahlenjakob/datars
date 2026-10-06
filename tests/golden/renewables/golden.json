@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "world",
+      "scene": "0d7e67fa363c20d5",
+      "pixels": "5939c18e40490d32"
+    },
+    {
+      "name": "europe",
+      "scene": "e582f0658c74963d",
+      "pixels": "ae6c8f0f533c9fc2"
+    },
+    {
+      "name": "nordics",
+      "scene": "066f2a5700eb6d98",
+      "pixels": "1e9c0c7963afec6c"
+    },
+    {
+      "name": "ranked",
+      "scene": "c2353fa635c1abce",
+      "pixels": "9c1b45f578e88f59"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "world",
+      "to": "europe",
+      "sweep": "2e630cd493672617",
+      "samples": 64
+    },
+    {
+      "from": "europe",
+      "to": "nordics",
+      "sweep": "2095149cc10a8ff1",
+      "samples": 64
+    },
+    {
+      "from": "nordics",
+      "to": "ranked",
+      "sweep": "cf32d963ba87f073",
+      "samples": 64
+    }
+  ]
+}

@@ -1,0 +1,520 @@
+{
+ "datars": 1,
+ "id": "descent",
+ "title": "From the world to a street",
+ "description": "A camera descends from the world to Sweden to central Stockholm over OpenStreetMap vector tiles, with Sweden's largest cities and Stockholm's most visited sights on top.",
+ "size": {
+  "width": 760,
+  "height": 480
+ },
+ "locale": "en",
+ "data": {
+  "basemap": {
+   "tiles": "../../assets/tiles/descent.pmtiles"
+  },
+  "cities": {
+   "values": {
+    "name": [
+     "Stockholm",
+     "Göteborg",
+     "Malmö",
+     "Uppsala",
+     "Linköping",
+     "Örebro",
+     "Västerås",
+     "Helsingborg",
+     "Norrköping",
+     "Jönköping",
+     "Umeå",
+     "Gävle",
+     "Sundsvall",
+     "Luleå",
+     "Östersund",
+     "Kiruna"
+    ],
+    "lon": [
+     18.07,
+     11.97,
+     13,
+     17.64,
+     15.62,
+     15.21,
+     16.54,
+     12.69,
+     16.19,
+     14.16,
+     20.26,
+     17.14,
+     17.31,
+     22.15,
+     14.64,
+     20.23
+    ],
+    "lat": [
+     59.33,
+     57.71,
+     55.6,
+     59.86,
+     58.41,
+     59.27,
+     59.61,
+     56.05,
+     58.59,
+     57.78,
+     63.83,
+     60.67,
+     62.39,
+     65.58,
+     63.18,
+     67.86
+    ],
+    "pop": [
+     984000,
+     604000,
+     362000,
+     245000,
+     167000,
+     158000,
+     158000,
+     151000,
+     145000,
+     144000,
+     132000,
+     104000,
+     99000,
+     79000,
+     65000,
+     22000
+    ]
+   },
+   "key": [
+    "name"
+   ]
+  },
+  "sights": {
+   "values": {
+    "id": [
+     "slottet",
+     "stadshuset",
+     "vasa",
+     "skansen",
+     "grona-lund",
+     "fotografiska",
+     "nationalmuseum",
+     "central"
+    ],
+    "name": [
+     "Royal Palace",
+     "City Hall",
+     "Vasa Museum",
+     "Skansen",
+     "Gröna Lund",
+     "Fotografiska",
+     "Nationalmuseum",
+     "Central Station"
+    ],
+    "lon": [
+     18.0717,
+     18.0548,
+     18.0915,
+     18.1037,
+     18.0966,
+     18.0858,
+     18.0781,
+     18.0578
+    ],
+    "lat": [
+     59.3268,
+     59.3275,
+     59.328,
+     59.326,
+     59.3233,
+     59.3178,
+     59.3289,
+     59.3303
+    ],
+    "visitors": [
+     0.8,
+     0.4,
+     1.5,
+     1.4,
+     1.2,
+     0.5,
+     0.6,
+     0.9
+    ]
+   },
+   "key": [
+    "id"
+   ]
+  }
+ },
+ "signals": {
+  "bounds": {
+   "type": "keyset",
+   "default": [
+    "-174",
+    "-56",
+    "174",
+    "80"
+   ]
+  },
+  "layer": {
+   "type": "str",
+   "default": "cities"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "children": [
+   {
+    "kind": "view",
+    "key": "map",
+    "coord": {
+     "type": "geo",
+     "projection": "web-mercator",
+     "fit": {
+      "bbox": [
+       -180,
+       -85.0511,
+       180,
+       85.0511
+      ]
+     },
+     "padding": 0
+    },
+    "camera": {
+     "fit": {
+      "geo": "=bounds"
+     },
+     "padding": 12
+    },
+    "children": [
+     {
+      "kind": "use",
+      "recipe": "@datars/std/basemap",
+      "params": {
+       "source": "basemap",
+       "part": "base"
+      }
+     },
+     {
+      "kind": "group",
+      "key": "cities",
+      "when": {
+       "expr": "layer == \"cities\""
+      },
+      "scales": {
+       "r": {
+        "type": "sqrt",
+        "domain": [
+         0,
+         1000000
+        ],
+        "range": [
+         0,
+         15
+        ]
+       }
+      },
+      "children": [
+       {
+        "kind": "instances",
+        "key": "circles",
+        "semantics": {
+         "role": "datum",
+         "label": "Swedish cities by population"
+        },
+        "from": "cities",
+        "proto": "circle",
+        "instance_key": {
+         "expr": "d.name"
+        },
+        "x": {
+         "expr": "geo.x(d.lon, d.lat)"
+        },
+        "y": {
+         "expr": "geo.y(d.lon, d.lat)"
+        },
+        "r": {
+         "expr": "scale.r(d.pop)"
+        },
+        "fill": "$accent@0.72",
+        "stroke": {
+         "paint": "$paper",
+         "width": 1
+        },
+        "screen_size": true,
+        "label": {
+         "expr": "`${d.name}: ${format(d.pop, \",.0f\")} people`"
+        }
+       }
+      ]
+     },
+     {
+      "kind": "group",
+      "key": "sights",
+      "declutter": true,
+      "when": {
+       "expr": "layer == \"sights\""
+      },
+      "scales": {
+       "r": {
+        "type": "sqrt",
+        "domain": [
+         0,
+         1.5
+        ],
+        "range": [
+         0,
+         11
+        ]
+       }
+      },
+      "children": [
+       {
+        "kind": "instances",
+        "key": "dots",
+        "semantics": {
+         "role": "datum",
+         "label": "Stockholm's most visited sights"
+        },
+        "from": "sights",
+        "proto": "circle",
+        "instance_key": {
+         "expr": "d.id"
+        },
+        "x": {
+         "expr": "geo.x(d.lon, d.lat)"
+        },
+        "y": {
+         "expr": "geo.y(d.lon, d.lat)"
+        },
+        "r": {
+         "expr": "scale.r(d.visitors)"
+        },
+        "fill": "$accent@0.8",
+        "stroke": {
+         "paint": "$paper",
+         "width": 1.25
+        },
+        "screen_size": true,
+        "label": {
+         "expr": "`${d.name}: about ${format(d.visitors, \".1f\")} million visitors a year`"
+        }
+       },
+       {
+        "kind": "repeat",
+        "from": "sights",
+        "template": {
+         "kind": "text",
+         "key": {
+          "expr": "d.id"
+         },
+         "text": {
+          "expr": "d.name"
+         },
+         "at": [
+          {
+           "expr": "geo.x(d.lon, d.lat)"
+          },
+          {
+           "expr": "geo.y(d.lon, d.lat)"
+          }
+         ],
+         "style": {
+          "size": 11.5,
+          "weight": 600,
+          "ink": "$ink",
+          "align": "middle",
+          "baseline": "bottom"
+         },
+         "halo": [
+          "$paper",
+          2.5
+         ],
+         "offset": [
+          0,
+          {
+           "expr": "-scale.r(d.visitors) - 3"
+          }
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "kind": "use",
+      "recipe": "@datars/std/basemap",
+      "params": {
+       "source": "basemap",
+       "part": "labels"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/attribution",
+    "params": {}
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "duration": 3.2,
+    "easing": "cubic-in-out",
+    "select": {
+     "kind": "view"
+    }
+   },
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "datum"
+    }
+   },
+   {
+    "when": {
+     "from": "sweden",
+     "to": "stockholm"
+    },
+    "duration": 0.5,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "cities"
+      ]
+     ]
+    }
+   },
+   {
+    "when": {
+     "from": "sweden",
+     "to": "stockholm"
+    },
+    "delay": 2.5,
+    "duration": 0.7,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "sights"
+      ]
+     ]
+    }
+   },
+   {
+    "when": {
+     "from": "stockholm",
+     "to": "sweden"
+    },
+    "duration": 0.5,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "sights"
+      ]
+     ]
+    }
+   },
+   {
+    "when": {
+     "from": "stockholm",
+     "to": "sweden"
+    },
+    "delay": 2.5,
+    "duration": 0.7,
+    "select": {
+     "key_prefix": [
+      [
+       "root"
+      ],
+      [
+       "map"
+      ],
+      [
+       "cities"
+      ]
+     ]
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "world",
+    "set": {
+     "bounds": [
+      -174,
+      -56,
+      174,
+      80
+     ],
+     "layer": "cities"
+    },
+    "narration": {
+     "title": "One camera",
+     "text": "The whole world, drawn from our own vector tiles: Natural Earth at this zoom."
+    }
+   },
+   {
+    "name": "sweden",
+    "set": {
+     "bounds": [
+      10.5,
+      55.2,
+      24.5,
+      69.2
+     ],
+     "layer": "cities"
+    },
+    "narration": {
+     "title": "Sweden",
+     "text": "The camera flies in; tiles of every zoom it passes stream in on the way. Circles: the largest municipalities."
+    }
+   },
+   {
+    "name": "stockholm",
+    "set": {
+     "bounds": [
+      18.02,
+      59.308,
+      18.12,
+      59.343
+     ],
+     "layer": "sights"
+    },
+    "narration": {
+     "title": "Stockholm",
+     "text": "Down to the streets: OpenStreetMap roads, water and buildings, and the city's most visited sights."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

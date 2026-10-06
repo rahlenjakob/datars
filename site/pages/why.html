@@ -1,0 +1,171 @@
+---
+title: Why datars — one chart engine for every screen
+description: No chart library runs everywhere — D3 draws in browsers, Swift Charts on Apple's platforms, Android has none built in, and video and print mean redrawing by hand — so charts get built once per screen. datars is one engine that plays the same chart, pixels and motion on the web, in iOS and Android apps, in video and print, published like an article.
+og: hero
+---
+<section class="why-top">
+  <div class="wrap">
+    <h1>No chart library runs on every screen</h1>
+    <div class="why-lede">
+      <p>D3 draws in a browser. Swift Charts draws on Apple's platforms. Android has no charts built in, and a video or a printed page means redrawing it in After Effects or Illustrator. So a chart that has to be on your site, in your apps, in a video and in print gets built five times, by different people with different tools — and the copies drift apart.</p>
+      <p><b>datars is one that does.</b> You write the chart once, as a small TypeScript document, and one engine plays it on the web, in native iOS and Android apps, on the desktop, in video and in print: the same pixels, line breaks and motion everywhere. You publish it like an article, so changing it takes no deploy and no app release.</p>
+    </div>
+    <figure class="why-fig">
+      <div class="frame"><div class="chart" data-chart="why-builds" data-min="300" data-phone-ratio="1.45" data-autoplay="6000" data-caption></div></div>
+      <figcaption>This figure is a datars document too, playing in the same runtime as every chart on this site. <a href="{{src}}/site/figures/why/builds.ts">Its source</a></figcaption>
+      {{alt:why-builds}}
+    </figure>
+  </div>
+</section>
+
+<section class="section" id="instead">
+  <div class="wrap">
+    <header class="why-h">
+      <h2>What you stop building once per screen</h2>
+      <p>Each row is work a team does again for every platform, or doesn't do at all. With datars it's done once, in the document, and every host gets it.</p>
+    </header>
+    <div class="why-table-wrap">
+      <table class="why-table">
+        <thead><tr><th scope="col">To</th><th scope="col">Usually</th><th scope="col">With datars</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Show the chart in your iOS and Android apps</th><td data-label="Usually">Rebuild it natively for each, or wrap the web version in a web view</td><td data-label="With datars">The same engine, compiled in, drawing with Metal on iOS and Vulkan or OpenGL ES on Android. <a href="/features/platforms/">Platforms</a></td></tr>
+          <tr><th scope="row">Animate between states</th><td data-label="Usually">Hand-written transitions, for each chart, on each platform</td><td data-label="With datars">Nothing to write: every mark keeps its data row's key, so bars become slices and countries become bars. <a href="/features/animation/">Animation</a></td></tr>
+          <tr><th scope="row">Cut a video for social</th><td data-label="Usually">Rebuild it in a motion-graphics tool, keyframe by keyframe</td><td data-label="With datars"><code>datars video</code> renders a frame-exact MP4 with captions from the same document.</td></tr>
+          <tr><th scope="row">Print it, or send a PDF</th><td data-label="Usually">Redraw it in a design tool</td><td data-label="With datars"><code>datars render --out chart.pdf</code>: vector, with searchable text.</td></tr>
+          <tr><th scope="row">Fix a number after publishing</th><td data-label="Usually">Redeploy the site; ship an app update and wait for review</td><td data-label="With datars">Republish. Every embed follows, including apps that shipped months ago. <a href="/features/delivery/">Delivery</a></td></tr>
+          <tr><th scope="row">Fly a map down to a street</th><td data-label="Usually">A tile service with an API key, billed per view</td><td data-label="With datars"><code>data.tiles.auto()</code> cuts a basemap from OpenStreetMap for the views your story visits, into one static file. <a href="/features/maps/">Maps</a></td></tr>
+          <tr><th scope="row">Draw millions of points</th><td data-label="Usually">A separate WebGL library, on the web only</td><td data-label="With datars">The same engine: four million points at 60 fps, fetched by range as the camera needs them. <a href="/features/big-data/">Big data</a></td></tr>
+          <tr><th scope="row">Reach screen-reader users</th><td data-label="Usually">Hand-written, once per platform, if at all</td><td data-label="With datars">Semantics on every mark: an ARIA mirror on the web, VoiceOver and TalkBack in apps. <a href="/features/accessibility/">Accessibility</a></td></tr>
+          <tr><th scope="row">Match your brand and dark mode</th><td data-label="Usually">Restyle every copy by hand</td><td data-label="With datars">Theme tokens, set at runtime, even on charts you didn't publish. <a href="/features/theming/">Theming</a></td></tr>
+          <tr><th scope="row">Catch mistakes before readers do</th><td data-label="Usually">A reviewer's eye</td><td data-label="With datars"><code>datars lint</code> flags colliding labels, low contrast and unstable keys, and serves the same checks to coding agents over MCP. <a href="/features/developers/">Tools</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="decisions">
+  <div class="wrap">
+    <header class="why-h">
+      <h2>Why a web library can't just add this</h2>
+      <p>None of those rows is a feature bolted on. They follow from four decisions at the bottom of the engine about what a chart is and who draws it, which is why they're hard to add to a library afterwards.</p>
+    </header>
+    <div class="why-decisions">
+      <article>
+        <h3>The engine draws every pixel, text included</h3>
+        <p>A deterministic Rust engine shapes text with the chart's own fonts, breaks lines, lays out, animates and rasterizes, compiled to WebAssembly for the web and to native code for iOS, Android and the desktop. Nothing is left to a browser or an OS, so every example hashes to identical pixels on macOS, in wasm, on the iOS simulator and on an Android emulator.</p>
+      </article>
+      <article>
+        <h3>Every mark keeps its data's key</h3>
+        <p>When the step, the filter, the data, the size or the theme changes, the engine matches marks by key and plans the motion. That's why there's no transition code: each bar knows which slice it becomes. Motion rules — routes, staggers, draw-on lines — are data you can override per pair of states.</p>
+      </article>
+      <article>
+        <h3>A frame is a function of time</h3>
+        <p>Transitions are planned once, then sampled. Scroll can scrub one exactly, a video is the same frames written to a file, an interactive session replays from its event log, and the test suite checks 64 frames of every transition against goldens.</p>
+      </article>
+      <article>
+        <h3>A chart is content, not code</h3>
+        <p>Sites and apps install the runtime once; charts arrive as small, content-addressed bundles from any static host, with an SVG poster and accessible text first. The document is data, so tools and coding agents can diff it, validate it against a <a href="/schema/ir-1.json">schema</a>, migrate it and repair it.</p>
+      </article>
+    </div>
+
+    <article class="card wide why-demo">
+      <div class="card-text">
+        <span class="tag">Live · {{size:hero}} gzipped</span>
+        <h3>One dataset, five shapes, no transition code</h3>
+        <p>Each source keeps its key, so bars become slices, slices become tiles, and tiles split into a hundred squares.</p>
+        <div class="pills small" id="hero-pills" role="group" aria-label="Chart shape">
+          <button type="button" data-state="bars" aria-pressed="true">Bars</button>
+          <button type="button" data-state="donut">Donut</button>
+          <button type="button" data-state="treemap">Treemap</button>
+          <button type="button" data-state="waffle">Waffle</button>
+          <button type="button" data-state="split">Split</button>
+        </div>
+        {{alt:hero}}
+      </div>
+      <div class="chart" data-chart="hero"></div>
+<pre><code data-lang="ts">scene: group({ children: [
+  plot({ data: "mix", x: "source", y: "share", children: [bar()] }, { key: "chart", when: when("bars") }),
+  pie({ data: "mix", value: "share", category: "source", inner: 0.56 }, { key: "chart", when: when("donut") }),
+  treemap({ data: "mix", value: "share", category: "source" }, { key: "chart", when: when("treemap") }),
+  waffle({ data: "mix", value: "share", category: "source" }, { key: "chart", when: when("waffle") }),
+]}),
+motion: motion({ select: { role: "datum" }, matcher: "by-key", duration: 1.2 }),</code></pre>
+    </article>
+  </div>
+</section>
+
+<section class="section" id="verdict">
+  <div class="wrap">
+    <header class="why-h">
+      <h2>Should you pick it?</h2>
+    </header>
+    <div class="why-verdict">
+      <div class="yes">
+        <h3>Pick datars when</h3>
+        <ul>
+          <li>the same chart has to be <b>on the web and in your iOS or Android apps</b>, or in a video or a PDF, and look the same in all of them;</li>
+          <li>your charts <b>change</b> — story steps, filters, live data — and readers should watch marks move, not jump;</li>
+          <li>editors should <b>publish and fix charts like articles</b>, without waiting for a deploy or an app release;</li>
+          <li>your story <b>goes somewhere</b>, from the whole world down to a street corner, with no tile server, API key or per-view bill;</li>
+          <li>you have <b>a lot of data</b>, hundreds of thousands to millions of points, and it has to stay smooth;</li>
+          <li>people who aren't visualization engineers, or coding agents, make the charts, and you want the tools to <b>catch the mistakes</b>.</li>
+        </ul>
+      </div>
+      <div class="no">
+        <h3>Pick something else when</h3>
+        <ul>
+          <li>it's one browser-only piece, and your team wants to work in the DOM with a library it already knows;</li>
+          <li>you want to style marks with CSS or attach arbitrary DOM listeners to them;</li>
+          <li>it's a single small chart and page weight is everything;</li>
+          <li>you want a hosted editor and no code at all;</li>
+          <li>you need a large ecosystem of examples and answers today: datars is young.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="costs">
+  <div class="wrap">
+    <header class="why-h">
+      <h2>What it costs you</h2>
+      <p>The decisions that make it work everywhere have a price.</p>
+    </header>
+    <dl class="why-costs">
+      <div>
+        <dt>A bigger runtime, once</dt>
+        <dd>The web engine is {{runtime}} gzipped: a text shaper, a GPU renderer, a CPU reference renderer and the scene engine, compiled to wasm. It's cached across every chart on your site, and each chart after it is tens of kilobytes — but for one small chart on a light page, a small DOM library is lighter.</dd>
+      </div>
+      <div>
+        <dt>Canvas, not the DOM</dt>
+        <dd>The engine draws to a canvas, so marks can't be restyled with CSS or wired to arbitrary DOM listeners. Hovers, clicks, brushes and tooltips go through signals and intents; the page gets an accessibility mirror, and real links over the marks that link somewhere.</dd>
+      </div>
+      <div>
+        <dt>A new model to learn</dt>
+        <dd>You think in keyed marks, states and recipes rather than selections and timers. It's much less code for anything that changes, and when a morph looks wrong the answer is usually a key, which <code>datars lint</code> points at.</dd>
+      </div>
+      <div>
+        <dt>A young project</dt>
+        <dd>Fewer examples and answers online, APIs still settling, and not yet on npm or crates.io: you install from the repository. The document format is versioned with migrations, so documents survive changes. The <a href="{{src}}/docs/19-status.md">status page</a> lists what is verified and what isn't — Android has run on an emulator but not yet on a physical device, and desktop screen readers haven't been driven for real yet.</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section class="section" id="next">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>See for yourself</h2>
+        <p>Every chart on this site is a published bundle, playing live in the same runtime your app would use.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/getting-started/">Get started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/gallery/">Gallery</a>
+        <a class="btn btn-ghost" href="/performance/">Performance</a>
+        <a class="btn btn-ghost" href="/under-the-hood/">Under the hood</a>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,89 @@
+# Checks every push to main and every pull request. Builds and tests only: nothing here deploys or
+# publishes. Browser, GPU, simulator and emulator suites (packages/web/test, `datars gpu`, DatarsKit,
+# scripts/test-android.sh) need hardware or Chrome and run locally (CONTRIBUTING.md).
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+
+jobs:
+  rust:
+    name: Rust (clippy, tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      # The determinism lints (clippy.toml: platform libm, hash-map iteration order) are errors;
+      # other clippy findings are reported as warnings.
+      - name: Clippy
+        run: cargo clippy --workspace --locked -- -D clippy::disallowed_methods -D clippy::disallowed_types
+      - name: Tests
+        run: cargo test --workspace --locked
+
+  goldens:
+    name: Goldens (datars test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build the CLI
+        run: cargo build --release --locked -p datars-cli
+      # Every example state, a 64-sample sweep of every transition and the motion invariants,
+      # compared by hash with tests/golden (written on any machine: the engine is deterministic).
+      - name: Visual + motion goldens
+        run: target/release/datars test
+      - name: Upload the test report and artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: datars-test-out
+          path: out/test/
+          if-no-files-found: ignore
+
+  js:
+    name: JS (SDK, std, packages)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      # pnpm's version comes from `packageManager` in package.json.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build @datars/sdk and @datars/std into the engine
+        run: bash scripts/build-js.sh
+      # The engine embeds these bundles; a change to packages/sdk or packages/std must commit them.
+      - name: Committed engine bundles are current
+        run: git diff --exit-code -- crates/datars-engine/js
+      - name: Build every package
+        run: pnpm -r build
+      # The eject round-trip in packages/std/test skips here (it needs the CLI); the wasm-runtime,
+      # Vite and Next.js tests need the web runtime built (scripts/build-wasm.sh) and run locally.
+      - name: SDK and std tests
+        run: node --test packages/sdk/test/*.test.js packages/std/test/*.test.js
+      - name: React SSR tests
+        run: node --test packages/react/test/*.test.mjs

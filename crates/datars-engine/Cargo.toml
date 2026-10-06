@@ -1,0 +1,41 @@
+[package]
+name = "datars-engine"
+description = "The datars engine: documents → tables → scenes → transitions → frames. Sans-IO, deterministic, the same on every platform."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["visualization", "charts", "animation", "deterministic", "data-visualization"]
+categories = ["visualization", "graphics", "rendering::engine"]
+
+[dependencies]
+indexmap.workspace = true
+rustc-hash.workspace = true
+datars-math.workspace = true
+datars-color.workspace = true
+datars-theme.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true
+datars-text.workspace = true
+datars-expr.workspace = true
+datars-data.workspace = true
+datars-algo.workspace = true
+datars-geo.workspace = true
+datars-layout.workspace = true
+datars-motion.workspace = true
+datars-ir.workspace = true
+datars-graph.workspace = true
+datars-bundle.workspace = true
+datars-sandbox = { workspace = true, optional = true }
+serde.workspace = true
+serde_json.workspace = true
+
+[features]
+default = ["sandbox", "bundled-fonts"]
+# Runtime recipe expansion (T3). Without it, only pre-expanded documents and bundles run.
+sandbox = ["dep:datars-sandbox"]
+# Start every engine with the default family (Inter) compiled in. Without it (the web runtime),
+# faces come from bundle font chunks and `font:` requests the host answers, like any font.
+bundled-fonts = ["datars-text/bundled-fonts"]

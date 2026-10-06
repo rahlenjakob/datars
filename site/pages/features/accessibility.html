@@ -1,0 +1,96 @@
+---
+title: Accessible charts on every platform · datars
+description: Every datars mark has semantics, so screen readers get the data — an ARIA mirror on the web, VoiceOver on iOS, TalkBack on Android — with keyboard access, reduced motion and a text alternative in every bundle.
+og: votes
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Accessible</p>
+    <h1>A chart a screen reader can read, not a picture it can't</h1>
+    <p class="lede-2">Semantics are part of every mark in datars: a role, a label, a value, a reading order. The standard recipes fill them in — <em>“Sweden Democrats: 20.5”</em>, not <em>“rect”</em> — and each platform's runtime turns them into what its assistive technology expects. Accessibility isn't a layer added at the end; it's in the document, the bundle and every host.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap split">
+    <figure class="fig">
+      <div class="frame"><div class="chart" data-chart="votes" data-caption></div></div>
+      <figcaption>Every bar and slice here is announced with its party and value; step changes are announced as narration.</figcaption>
+      {{alt:votes}}
+    </figure>
+    <div>
+      <p class="eyebrow">What a screen reader gets</p>
+      <h2>The accessibility tree, from the document</h2>
+      <p>This is the tree the runtimes build for the chart beside it, printed by <code>datars semantics</code> when this page was built:</p>
+      {{run:semantics examples/votes/doc.json|18}}
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">On every platform</p>
+      <h2>The native way, everywhere</h2>
+    </header>
+    <ul class="platforms">
+      <li><h3>Web</h3><p>A parallel, hidden DOM tree with ARIA roles and labels in reading order; a live region that announces each story step's narration; buttons for interactive marks; engine-drawn sliders offered as native <code>&lt;input type="range"&gt;</code>; real links over the elements that link somewhere.</p></li>
+      <li><h3>iOS and macOS</h3><p>VoiceOver elements with per-item frames, so explore-by-touch finds each bar where it is drawn; activatable marks; engine-drawn sliders as adjustable elements; macOS accessibility children.</p></li>
+      <li><h3>Android</h3><p>TalkBack reads the chart through an accessibility node provider: virtual nodes with screen bounds, clickable marks, adjustable sliders. The node tree has been checked on the emulator; it hasn't yet been driven by TalkBack itself.</p></li>
+      <li><h3>Desktop</h3><p>The same tree through AccessKit, for VoiceOver, Narrator/NVDA and Orca, with interactive marks as buttons and sliders adjustable — unit-tested, not yet exercised with a real screen reader.</p></li>
+      <li><h3>Video</h3><p>WebVTT captions generated from the story's narration, alongside every MP4 <code>datars video</code> renders.</p></li>
+      <li><h3>SVG and PDF</h3><p>SVG exports and posters carry titles, descriptions and roles; PDF keeps text as searchable text.</p></li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">For every reader</p>
+      <h2>Beyond screen readers</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Keyboard</h3><p>Charts are focusable; arrow keys step stories; interactive marks are reachable in reading order and activate with Enter.</p></article>
+      <article><h3>Reduced motion</h3><p>The platform's setting — <code>prefers-reduced-motion</code>, iOS Reduce Motion, Android's “Remove animations” — turns transitions into short crossfades and pauses autoplay.</p></article>
+      <article><h3>Intents, not mouse events</h3><p>Documents bind <em>inspect</em> and <em>activate</em>, not hover and click: inspect is hover with a mouse, a tap on touch, focus with a keyboard; activate is a click, a tap, Enter or a double-tap with VoiceOver or TalkBack.</p></article>
+      <article><h3>A text alternative in every bundle</h3><p>Every published chart carries accessible text — its title, description and each state's narration and data — and an SVG poster, available before any script runs. Every chart on this site shows it under a “Text description” toggle.</p></article>
+      <article><h3>High contrast</h3><p>Themes have a high-contrast mode alongside light and dark; brands keep their type and shapes while the reader's colours take over.</p></article>
+      <article><h3>Colour you can tell apart</h3><p>Themes are checked for WCAG contrast of text on its background and for palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Caught before publishing</p>
+      <h2>The linter knows what makes a chart inaccessible</h2>
+      <p><code>datars lint</code> checks identity, encoding, legibility, accessibility and the theme: interactive marks without an accessible label, labels that collide or are cut off at the edge, more categorical colours than readers can tell apart, text colours that fail the theme's WCAG contrast checks, palettes that collapse under colour-vision deficiencies, rows without keys, and maps without the credit their data's licence requires. Agents get the same findings over MCP.</p>
+      <a class="more" href="/docs/accessibility/">Accessibility guide <span aria-hidden="true">→</span></a>
+    </div>
+    <div>
+      {{run:lint examples/votes/doc.json|8}}
+      <figure class="fig" style="margin-top:18px">
+        <div class="frame"><div class="chart" data-chart="budget"></div></div>
+        <figcaption>The slider is drawn by the engine — identical on the web, in apps and in video — and offered to assistive technology as a native range control.</figcaption>
+        {{alt:budget}}
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Make it accessible</h2>
+        <p>Semantics, labels, narration, keyboard and checks.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/accessibility/">Accessibility guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/tools/">Lint and semantics</a>
+      </div>
+    </div>
+  </div>
+</section>

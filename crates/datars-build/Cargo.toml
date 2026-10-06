@@ -1,0 +1,37 @@
+[package]
+name = "datars-build"
+description = "The datars publish compiler: document → bundle (T0 poster + text, T1 baked scenes, T2 pre-expanded, T3 source)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+datars-bundle.workspace = true
+datars-geo.workspace = true
+datars-ir.workspace = true
+datars-scene.workspace = true
+datars-render-svg.workspace = true
+datars-headless.workspace = true
+datars-math.workspace = true
+# Automatic basemaps (`tiles: "auto"`): archives cut to the document's cameras, from cached open data.
+datars-geo-build.workspace = true
+serde_json.workspace = true
+flate2.workspace = true
+read-fonts.workspace = true
+write-fonts.workspace = true
+datars-text.workspace = true
+datars-theme.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+datars-math.workspace = true
+datars-render.workspace = true
+datars-text = { workspace = true, features = ["bundled-fonts"] }
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+datars-ir.workspace = true
+datars-runtime = { workspace = true, features = ["sandbox"] }
+datars-bundle.workspace = true

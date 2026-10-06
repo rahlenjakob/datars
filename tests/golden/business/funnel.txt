@@ -1,0 +1,30 @@
+scene 760.00×420.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Sign-up funnel, last quarter"
+      ("title",) text "Sign-up funnel, last quarter" at (0.00, 0.00) size=17.00 ink=$ink role=title "Sign-up funnel, last quarter"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 30.57]
+        group ("stages",)
+          ("stage",) text "Visits" at (0.00, 45.18) size=11.00 ink=$ink role=decoration
+          ("stage",) text "Sign-ups" at (0.00, 135.54) size=11.00 ink=$ink role=decoration
+          ("stage",) text "Trials" at (0.00, 225.89) size=11.00 ink=$ink role=decoration
+          ("stage",) text "Paid" at (0.00, 316.25) size=11.00 ink=$ink role=decoration
+        group ("area",) transform=[1.00 0.00 0.00 1.00 62.40 0.00]
+          ("connector",) path els=5 bounds=[0.00 71.38 607.60 37.95] fill=$mark opacity=0.20 role=decoration
+          ("connector",) path els=5 bounds=[225.32 161.74 156.96 37.95] fill=$mark opacity=0.20 role=decoration
+          ("connector",) path els=5 bounds=[268.35 252.10 70.89 37.95] fill=$mark opacity=0.20 role=decoration
+          group ("Visits",)
+            ("bar",) rect x=0.00 y=18.98 w=607.60 h=52.41 r=2.00 fill=$mark role=datum "Visits: 12,000"
+            ("value",) text "12,000" at (303.80, 45.18) size=11.00 ink=on($mark)
+            ("conversion",) text "↓ 26%" at (613.60, 90.36) size=10.00 ink=$muted
+          group ("Sign-ups",)
+            ("bar",) rect x=225.32 y=109.33 w=156.96 h=52.41 r=2.00 fill=$mark role=datum "Sign-ups: 3,100"
+            ("value",) text "3,100" at (303.80, 135.54) size=11.00 ink=on($mark)
+            ("conversion",) text "↓ 45%" at (388.28, 180.72) size=10.00 ink=$muted
+          group ("Trials",)
+            ("bar",) rect x=268.35 y=199.69 w=70.89 h=52.41 r=2.00 fill=$mark role=datum "Trials: 1,400"
+            ("value",) text "1,400" at (303.80, 225.89) size=11.00 ink=on($mark)
+            ("conversion",) text "↓ 37%" at (345.24, 271.07) size=10.00 ink=$muted
+          group ("Paid",)
+            ("bar",) rect x=290.63 y=290.05 w=26.33 h=52.41 r=2.00 fill=$mark role=datum "Paid: 520"
+            ("value",) text "520" at (322.96, 316.25) size=11.00 ink=$ink
+        group ("gutter",) transform=[1.00 0.00 0.00 1.00 684.00 0.00]

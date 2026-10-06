@@ -1,0 +1,124 @@
+---
+title: Animation included — every change morphs by key · datars
+description: In datars every change animates — story steps, filters, live data, edits. Marks keep their identity, so bars become slices, units split out of bars and countries fly into rankings, with motion rules instead of animation code.
+og: shapes
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Animation included</p>
+    <h1>Every change animates — by key, with no animation code</h1>
+    <p class="lede-2">Marks in datars carry the key of their data row. When anything changes — a story step, a filter, new data, an edit to the document — the engine matches old marks to new ones by key and plans the motion: shapes morph, a bar splits into its units, a country lifts off the map into its bar, text counts up. You describe states; the motion comes with them, for built-in charts and your own scenes alike.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Live · one motion rule</span>
+        <h3>One dataset, many shapes</h3>
+        <p>Bars → treemap → waffle → dots. Every party keeps its key, so each change of chart type is one keyed transition: rectangles become tiles, tiles split into a hundred squares, squares become dots, and back. The whole motion spec is one line.</p>
+<pre><code data-lang="ts">motion: motion({ select: { role: "datum" }, matcher: "by-key", duration: 1.1 }),
+program: story({ steps: ["bars", "treemap", "waffle", "dots"]
+  .map((s) =&gt; step(s, { set: { shape: s } })) }),</code></pre>
+        {{alt:shapes}}
+      </div>
+      <div class="chart" data-chart="shapes" data-caption></div>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Motion rules</p>
+      <h2>Defaults that look right, rules when you want more</h2>
+      <p>Recipes bring sensible motion: bars grow from their baseline, lines draw on, slices and tiles morph. Rules override any of it — for a role, a key path, or a pair of states — as data, not callbacks.</p>
+    </header>
+    <div class="cards2">
+      <article>
+<pre><code data-lang="ts">motion: motion(
+  // Everything: 2.2 s, eased.
+  { duration: 2.2, easing: "cubic-in-out", matcher: "by-path" },
+  // Globe → orbits: data marks spiral out, rippling from the centre.
+  { when: { from: "globe", to: "orbits" }, select: { role: "datum" },
+    route: route.spiral(0.35), choreo: choreo.ripple(0.55) },
+  // Orbits → spiral: arcs, the biggest last.
+  { when: { from: "orbits", to: "spiral" }, select: { role: "datum" },
+    route: route.arc(0.3), choreo: choreo.stagger("value", 0.5) },
+  // Entering lines draw on; exiting ones draw off.
+  { select: { kind: "polyline" }, enter: { trim: 0 }, exit: { trim: 0 } },
+),</code></pre>
+      </article>
+      <article>
+        <h3>Matchers — who becomes whom</h3>
+        <p><code>by-key</code> pairs marks by their data key across different charts; <code>by-path</code> by their place in the scene; <code>nearest</code> by position; a hierarchy matcher splits one mark into its children — a bar into its seats — and merges them back.</p>
+        <h3 style="margin-top:16px">Choreography — when each moves</h3>
+        <p><code>together</code>, <code>stagger</code> by data order, position, value or a seeded shuffle, <code>phased</code> exits–updates–enters, a <code>wave</code> across the screen, a <code>ripple</code> from a point.</p>
+        <h3 style="margin-top:16px">Routes — the path they take</h3>
+        <p><code>straight</code>, <code>arc</code>, <code>elbow</code>, <code>spiral</code>, <code>explode</code>, <code>hop</code>, <code>drift</code>, <code>drop</code> with a bounce. Easings from <code>cubic-in-out</code> to <code>cubic-bezier(…)</code>, <code>spring(170, 26)</code> and <code>steps(4)</code>.</p>
+        <h3 style="margin-top:16px">Enter and exit</h3>
+        <p>Fade, grow from an origin, come from the parent, slide in, or draw on along the shape's length.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="grid">
+      <article class="card">
+        <div class="chart" data-chart="riksdag" data-caption></div>
+        <div class="card-text"><span class="tag">Units → bars</span><h3>349 seats regroup into parties</h3><p>Each seat is a keyed dot; step to bars and they fly into place.</p>{{alt:riksdag}}</div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="warming" data-caption></div>
+        <div class="card-text"><span class="tag">Line → stripes</span><h3>Every point becomes its stripe</h3><p>Two shapes of one series, joined by year.</p>{{alt:warming}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Stories steer themselves</p>
+      <h2>A story is a list of states</h2>
+      <p>A step sets signals; marks read them. The same program can be stepped with buttons and arrow keys, scrubbed by the page's scroll, triggered by scroll steps, or played on a timer — and the camera flies, the marks morph and the narration updates without a line of animation code.</p>
+    </header>
+    <div class="cards3">
+      <article><h3>Scroll stories</h3><p><code>&lt;datars-view steps=".step"&gt;</code> advances as your page's step elements scroll into view; <code>scrub</code> ties the position in the story to the scroll position, exactly — any frame of any transition.</p></article>
+      <article><h3>Live data animates too</h3><p>A live source re-requests on schedule; each snapshot animates into place — keyed bars move to their new ranks on election night.</p></article>
+      <article><h3>Edits animate</h3><p>In <code>datars dev</code>, saving the document morphs the chart from what's on screen to the new version, so you see what changed.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Motion you can trust</p>
+      <h2>Seekable, testable, and polite</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Pure functions of time</h3><p>A frame is a function of the plan and the time, so a transition can be scrubbed, rendered frame-exactly to video, and drawn as a filmstrip with motion trails by <code>datars film</code>.</p></article>
+      <article><h3>Tested frame by frame</h3><p><code>datars test</code> samples 64 frames of every transition of every example against goldens, and checks invariants: no flash, no blink, no pop, no NaN, exact endpoints.</p></article>
+      <article><h3>Reduced motion</h3><p>When the reader asks for less motion — on the web, iOS or Android — transitions become short crossfades, and autoplay and ambient clocks pause.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Direct the motion</h2>
+        <p>States, stories, motion rules, matchers, routes and easings.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/motion/">Motion guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/stories/">States and stories</a>
+      </div>
+    </div>
+  </div>
+</section>

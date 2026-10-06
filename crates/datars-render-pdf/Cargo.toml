@@ -1,0 +1,16 @@
+[package]
+name = "datars-render-pdf"
+description = "PDF backend: a display list as one vector page (paths, glyph outlines, clips, transparency groups), for print and reports."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true
+flate2.workspace = true

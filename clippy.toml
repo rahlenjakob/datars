@@ -1,0 +1,31 @@
+# Determinism (docs/11-rendering.md): engine math goes through datars-math, never the platform libm;
+# no hash-map iteration order in engine crates.
+disallowed-methods = [
+  { path = "f64::sin", reason = "use datars_math::m::sin (deterministic libm)" },
+  { path = "f64::cos", reason = "use datars_math::m::cos" },
+  { path = "f64::tan", reason = "use datars_math::m::tan" },
+  { path = "f64::asin", reason = "use datars_math::m::asin" },
+  { path = "f64::acos", reason = "use datars_math::m::acos" },
+  { path = "f64::atan", reason = "use datars_math::m::atan" },
+  { path = "f64::atan2", reason = "use datars_math::m::atan2" },
+  { path = "f64::exp", reason = "use datars_math::m::exp" },
+  { path = "f64::ln", reason = "use datars_math::m::ln" },
+  { path = "f64::log10", reason = "use datars_math::m::log10" },
+  { path = "f64::log2", reason = "use datars_math::m::log2" },
+  { path = "f64::powf", reason = "use datars_math::m::pow" },
+  { path = "f64::cbrt", reason = "use datars_math::m::cbrt" },
+  { path = "f64::hypot", reason = "use datars_math::m::hypot" },
+  { path = "f64::sinh", reason = "use datars_math::m" },
+  { path = "f64::cosh", reason = "use datars_math::m" },
+  { path = "f64::tanh", reason = "use datars_math::m" },
+  { path = "f64::mul_add", reason = "fused multiply-add differs by target" },
+  { path = "f32::sin", reason = "use datars_math::m" },
+  { path = "f32::cos", reason = "use datars_math::m" },
+  { path = "f32::powf", reason = "use datars_math::m" },
+  { path = "f32::exp", reason = "use datars_math::m" },
+  { path = "f32::mul_add", reason = "fused multiply-add differs by target" },
+]
+disallowed-types = [
+  { path = "std::collections::HashMap", reason = "iteration order is not deterministic; use BTreeMap or IndexMap" },
+  { path = "std::collections::HashSet", reason = "iteration order is not deterministic; use BTreeSet" },
+]

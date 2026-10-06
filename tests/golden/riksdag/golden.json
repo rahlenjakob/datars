@@ -1,0 +1,22 @@
+{
+  "states": [
+    {
+      "name": "seats",
+      "scene": "b2c437e65257901f",
+      "pixels": "30f65b3ade2186b8"
+    },
+    {
+      "name": "bars",
+      "scene": "53fb3745717ca7cf",
+      "pixels": "1d1f4737fa42d359"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "seats",
+      "to": "bars",
+      "sweep": "74b6dcf5c8f32b30",
+      "samples": 64
+    }
+  ]
+}

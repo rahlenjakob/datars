@@ -1,0 +1,22 @@
+{
+  "states": [
+    {
+      "name": "km",
+      "scene": "ee4b74eb3ae2deb1",
+      "pixels": "5d71e168284f033c"
+    },
+    {
+      "name": "miles",
+      "scene": "e019602969c056e7",
+      "pixels": "b562e3c88df706f1"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "km",
+      "to": "miles",
+      "sweep": "e3ba08471ae81001",
+      "samples": 64
+    }
+  ]
+}

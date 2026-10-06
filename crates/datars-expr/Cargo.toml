@@ -1,0 +1,14 @@
+[package]
+name = "datars-expr"
+description = "The datars expression language: a pure, total, typed JavaScript-like subset, compiled to vectorized register bytecode (and WGSL for the numeric subset)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+serde.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,937 @@
+scene 760.00×500.00 background=$paper
+  group ("root",)
+    group ("watchlist",) transform=[1.00 0.00 0.00 1.00 12.00 14.00]
+      group ("NORD",)
+        group ("quote",)
+          ("name",) text "Nordhavn" at (0.00, 0.00) size=11.00 ink=$ink
+          ("last",) text "136.50  +17.1%" at (0.00, 18.00) size=11.00 ink=$up
+        group ("sparkline",) transform=[1.00 0.00 0.00 1.00 82.64 0.00]
+          group ("",)
+            ("area",) area n=252 fill=$up opacity=0.12 role=decoration
+            ("line",) polyline n=252 first=(3.00, 29.21) stroke=$up/1.50 role=series "close: 136.50 (+17.1%)"
+            ("dot",) ellipse c=(147.02, 16.83) r=(2.50, 2.50) fill=$up role=decoration
+      group ("VIKA",) transform=[1.00 0.00 0.00 1.00 248.67 0.00]
+        group ("quote",)
+          ("name",) text "Vikafjell" at (0.00, 0.00) size=11.00 ink=$ink
+          ("last",) text "40.73  −8.6%" at (0.00, 18.00) size=11.00 ink=$down
+        group ("sparkline",) transform=[1.00 0.00 0.00 1.00 78.15 0.00]
+          group ("",)
+            ("area",) area n=252 fill=$down opacity=0.12 role=decoration
+            ("line",) polyline n=252 first=(3.00, 16.42) stroke=$down/1.50 role=series "close: 40.73 (−8.6%)"
+            ("dot",) ellipse c=(151.51, 21.41) r=(2.50, 2.50) fill=$down role=decoration
+      group ("ASKR",) transform=[1.00 0.00 0.00 1.00 497.33 0.00]
+        group ("quote",)
+          ("name",) text "Askr" at (0.00, 0.00) size=11.00 ink=$ink
+          ("last",) text "325.13  +7.5%" at (0.00, 18.00) size=11.00 ink=$up
+        group ("sparkline",) transform=[1.00 0.00 0.00 1.00 79.95 0.00]
+          group ("",)
+            ("area",) area n=252 fill=$up opacity=0.12 role=decoration
+            ("line",) polyline n=252 first=(3.00, 37.00) stroke=$up/1.50 role=series "close: 325.13 (+7.5%)"
+            ("dot",) ellipse c=(149.72, 13.22) r=(2.50, 2.50) fill=$up role=decoration
+    group ("charts",) transform=[1.00 0.00 0.00 1.00 12.00 66.00]
+      group ("chart",) role=group "Nordhavn (NORD), daily"
+        ("title",) text "Nordhavn (NORD), daily" at (0.00, 0.00) size=17.00 ink=$ink role=title "Nordhavn (NORD), daily"
+        group ("indicators",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+          group ("key-BB 20, 2",) transform=[1.00 0.00 0.00 1.00 0.50 0.00] role=legend-item "BB 20, 2"
+            ("#0",) rect x=0.00 y=2.00 w=14.00 h=10.00 r=2.00 fill=$accent stroke=$accent/1.00 opacity=0.35
+            ("#1",) text "BB 20, 2" at (19.00, 11.00) size=11.00 ink=$ink-2
+          group ("key-SMA 20",) transform=[1.00 0.00 0.00 1.00 78.33 0.00] role=legend-item "SMA 20"
+            ("#0",) segment (0.00, 7.00)→(14.00, 7.00) stroke=$accent/2.00
+            ("#1",) text "SMA 20" at (19.00, 11.00) size=11.00 ink=$ink-2
+          group ("key-SMA 50",) transform=[1.00 0.00 0.00 1.00 153.65 0.00] role=legend-item "SMA 50"
+            ("#0",) segment (0.00, 7.00)→(14.00, 7.00) stroke=$highlight/2.00
+            ("#1",) text "SMA 50" at (19.00, 11.00) size=11.00 ink=$ink-2
+        group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 46.22]
+          group ("axes-left",) transform=[1.00 0.00 0.00 1.00 29.35 0.00]
+            group ("axis-y",) role=axis "y axis"
+              ("domain",) segment (0.00, 0.00)→(0.00, 226.14) stroke=$rule/1.00
+              group (100,) role=tick "100"
+                ("#0",) segment (0.00, 226.14)→(-5.00, 226.14) stroke=$rule/1.00
+                ("#1",) text "100" at (-8.00, 226.14) size=11.00 ink=$muted
+              group (120,) role=tick "120"
+                ("#0",) segment (0.00, 169.60)→(-5.00, 169.60) stroke=$rule/1.00
+                ("#1",) text "120" at (-8.00, 169.60) size=11.00 ink=$muted
+              group (140,) role=tick "140"
+                ("#0",) segment (0.00, 113.07)→(-5.00, 113.07) stroke=$rule/1.00
+                ("#1",) text "140" at (-8.00, 113.07) size=11.00 ink=$muted
+              group (160,) role=tick "160"
+                ("#0",) segment (0.00, 56.53)→(-5.00, 56.53) stroke=$rule/1.00
+                ("#1",) text "160" at (-8.00, 56.53) size=11.00 ink=$muted
+              group (180,) role=tick "180"
+                ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+                ("#1",) text "180" at (-8.00, 0.00) size=11.00 ink=$muted
+            group ("lower-axis",) transform=[1.00 0.00 0.00 1.00 0.00 248.14]
+              group ("axis-lower",) role=axis "lower axis"
+                ("domain",) segment (0.00, 0.00)→(0.00, 77.83) stroke=$rule/1.00
+                group (0,) role=tick "0"
+                  ("#0",) segment (0.00, 77.83)→(-5.00, 77.83) stroke=$rule/1.00
+                  ("#1",) text "0" at (-8.00, 77.83) size=11.00 ink=$muted
+                group (5000000,) role=tick "5M"
+                  ("#0",) segment (0.00, 38.92)→(-5.00, 38.92) stroke=$rule/1.00
+                  ("#1",) text "5M" at (-8.00, 38.92) size=11.00 ink=$muted
+                group (10000000,) role=tick "10M"
+                  ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+                  ("#1",) text "10M" at (-8.00, 0.00) size=11.00 ink=$muted
+          group ("center",) transform=[1.00 0.00 0.00 1.00 35.85 0.00]
+            group ("area",)
+              group ("grid-y",) role=decoration
+                (100,) segment (0.00, 226.14)→(694.15, 226.14) stroke=$grid/1.00 role=decoration
+                (120,) segment (0.00, 169.60)→(694.15, 169.60) stroke=$grid/1.00 role=decoration
+                (140,) segment (0.00, 113.07)→(694.15, 113.07) stroke=$grid/1.00 role=decoration
+                (160,) segment (0.00, 56.53)→(694.15, 56.53) stroke=$grid/1.00 role=decoration
+                (180,) segment (0.00, 0.00)→(694.15, 0.00) stroke=$grid/1.00 role=decoration
+              group ("bollinger-20-2",) role=series "BB 20, 2"
+                group ("band",)
+                  group ("areas",)
+                    group ("",)
+                      ("area",) area n=252 fill=$accent opacity=0.10 role=series "bb_hi_20_2"
+                group ("upper",) opacity=0.70
+                  group ("lines",)
+                    group ("",)
+                      ("line",) polyline n=252 first=(1.38, 176.32) stroke=$accent/1.00 role=series "bb_hi_20_2"
+                      ("points",) instances circle ×252
+                        · ("20101",) (1.38, 176.32) fill=#00000000
+                        · ("20102",) (4.13, 174.94) fill=#00000000
+                        · ("20103",) (6.89, 174.72) fill=#00000000
+                        · … 249 more
+                group ("lower",) opacity=0.70
+                  group ("lines",)
+                    group ("",)
+                      ("line",) polyline n=252 first=(1.38, 211.00) stroke=$accent/1.00 role=series "bb_lo_20_2"
+                      ("points",) instances circle ×252
+                        · ("20101",) (1.38, 211.00) fill=#00000000
+                        · ("20102",) (4.13, 210.07) fill=#00000000
+                        · ("20103",) (6.89, 207.94) fill=#00000000
+                        · … 249 more
+                group ("middle",) opacity=0.45
+                  group ("lines",)
+                    group ("",)
+                      ("line",) polyline n=252 first=(1.38, 193.66) stroke=$accent/1.00 role=series "bb_mid_20_2"
+                      ("points",) instances circle ×252
+                        · ("20101",) (1.38, 193.66) fill=#00000000
+                        · ("20102",) (4.13, 192.50) fill=#00000000
+                        · ("20103",) (6.89, 191.33) fill=#00000000
+                        · … 249 more
+              group ("candles",) role=series "close candles"
+                group ("wicks",)
+                  ("NORD", 20101) segment (1.38, 176.02)→(1.38, 179.58) stroke=$down/1.00 role=decoration
+                  ("NORD", 20102) segment (4.13, 176.81)→(4.13, 180.77) stroke=$down/1.00 role=decoration
+                  ("NORD", 20103) segment (6.89, 179.95)→(6.89, 186.76) stroke=$up/1.00 role=decoration
+                  ("NORD", 20104) segment (9.64, 174.52)→(9.64, 186.20) stroke=$down/1.00 role=decoration
+                  ("NORD", 20105) segment (12.40, 180.32)→(12.40, 199.17) stroke=$down/1.00 role=decoration
+                  ("NORD", 20108) segment (15.15, 195.24)→(15.15, 201.35) stroke=$up/1.00 role=decoration
+                  ("NORD", 20109) segment (17.90, 192.87)→(17.90, 206.15) stroke=$down/1.00 role=decoration
+                  ("NORD", 20110) segment (20.66, 204.26)→(20.66, 212.99) stroke=$down/1.00 role=decoration
+                  ("NORD", 20111) segment (23.41, 209.01)→(23.41, 218.73) stroke=$down/1.00 role=decoration
+                  ("NORD", 20112) segment (26.17, 210.08)→(26.17, 216.41) stroke=$up/1.00 role=decoration
+                  ("NORD", 20115) segment (28.92, 208.07)→(28.92, 216.53) stroke=$up/1.00 role=decoration
+                  ("NORD", 20116) segment (31.68, 204.48)→(31.68, 214.15) stroke=$down/1.00 role=decoration
+                  ("NORD", 20117) segment (34.43, 206.69)→(34.43, 211.27) stroke=$up/1.00 role=decoration
+                  ("NORD", 20118) segment (37.19, 205.08)→(37.19, 212.96) stroke=$up/1.00 role=decoration
+                  ("NORD", 20119) segment (39.94, 205.78)→(39.94, 208.72) stroke=$down/1.00 role=decoration
+                  ("NORD", 20122) segment (42.70, 197.70)→(42.70, 205.33) stroke=$up/1.00 role=decoration
+                  ("NORD", 20123) segment (45.45, 187.55)→(45.45, 200.41) stroke=$up/1.00 role=decoration
+                  ("NORD", 20124) segment (48.20, 195.61)→(48.20, 200.53) stroke=$down/1.00 role=decoration
+                  ("NORD", 20125) segment (50.96, 193.94)→(50.96, 203.52) stroke=$up/1.00 role=decoration
+                  ("NORD", 20126) segment (53.71, 191.65)→(53.71, 205.67) stroke=$down/1.00 role=decoration
+                  ("NORD", 20129) segment (56.47, 200.70)→(56.47, 202.82) stroke=$down/1.00 role=decoration
+                  ("NORD", 20130) segment (59.22, 197.42)→(59.22, 203.89) stroke=$down/1.00 role=decoration
+                  ("NORD", 20131) segment (61.98, 195.16)→(61.98, 205.59) stroke=$down/1.00 role=decoration
+                  ("NORD", 20132) segment (64.73, 192.92)→(64.73, 203.24) stroke=$up/1.00 role=decoration
+                  ("NORD", 20133) segment (67.49, 183.68)→(67.49, 196.57) stroke=$up/1.00 role=decoration
+                  ("NORD", 20136) segment (70.24, 178.45)→(70.24, 188.32) stroke=$up/1.00 role=decoration
+                  ("NORD", 20137) segment (73.00, 173.19)→(73.00, 183.57) stroke=$up/1.00 role=decoration
+                  ("NORD", 20138) segment (75.75, 169.43)→(75.75, 177.52) stroke=$down/1.00 role=decoration
+                  ("NORD", 20139) segment (78.51, 171.41)→(78.51, 177.94) stroke=$up/1.00 role=decoration
+                  ("NORD", 20140) segment (81.26, 170.68)→(81.26, 178.62) stroke=$down/1.00 role=decoration
+                  ("NORD", 20143) segment (84.01, 176.19)→(84.01, 182.15) stroke=$down/1.00 role=decoration
+                  ("NORD", 20144) segment (86.77, 164.83)→(86.77, 186.73) stroke=$up/1.00 role=decoration
+                  ("NORD", 20145) segment (89.52, 159.06)→(89.52, 175.26) stroke=$up/1.00 role=decoration
+                  ("NORD", 20146) segment (92.28, 144.42)→(92.28, 170.51) stroke=$up/1.00 role=decoration
+                  ("NORD", 20147) segment (95.03, 135.74)→(95.03, 148.29) stroke=$up/1.00 role=decoration
+                  ("NORD", 20150) segment (97.79, 117.65)→(97.79, 135.77) stroke=$up/1.00 role=decoration
+                  ("NORD", 20151) segment (100.54, 121.72)→(100.54, 133.59) stroke=$down/1.00 role=decoration
+                  ("NORD", 20152) segment (103.30, 128.95)→(103.30, 135.37) stroke=$down/1.00 role=decoration
+                  ("NORD", 20153) segment (106.05, 131.24)→(106.05, 136.67) stroke=$down/1.00 role=decoration
+                  ("NORD", 20154) segment (108.81, 126.81)→(108.81, 135.65) stroke=$down/1.00 role=decoration
+                  ("NORD", 20157) segment (111.56, 127.77)→(111.56, 139.70) stroke=$up/1.00 role=decoration
+                  ("NORD", 20158) segment (114.31, 130.11)→(114.31, 133.39) stroke=$down/1.00 role=decoration
+                  ("NORD", 20159) segment (117.07, 124.21)→(117.07, 134.01) stroke=$up/1.00 role=decoration
+                  ("NORD", 20160) segment (119.82, 115.95)→(119.82, 129.32) stroke=$up/1.00 role=decoration
+                  ("NORD", 20161) segment (122.58, 117.00)→(122.58, 127.68) stroke=$down/1.00 role=decoration
+                  ("NORD", 20164) segment (125.33, 124.77)→(125.33, 131.50) stroke=$down/1.00 role=decoration
+                  ("NORD", 20165) segment (128.09, 127.74)→(128.09, 135.60) stroke=$down/1.00 role=decoration
+                  ("NORD", 20166) segment (130.84, 133.42)→(130.84, 136.19) stroke=$up/1.00 role=decoration
+                  ("NORD", 20167) segment (133.60, 134.33)→(133.60, 144.67) stroke=$down/1.00 role=decoration
+                  ("NORD", 20168) segment (136.35, 138.14)→(136.35, 150.89) stroke=$down/1.00 role=decoration
+                  ("NORD", 20171) segment (139.11, 142.69)→(139.11, 162.37) stroke=$down/1.00 role=decoration
+                  ("NORD", 20172) segment (141.86, 152.50)→(141.86, 160.78) stroke=$up/1.00 role=decoration
+                  ("NORD", 20173) segment (144.61, 147.70)→(144.61, 159.34) stroke=$up/1.00 role=decoration
+                  ("NORD", 20174) segment (147.37, 140.80)→(147.37, 153.63) stroke=$up/1.00 role=decoration
+                  ("NORD", 20175) segment (150.12, 141.56)→(150.12, 149.56) stroke=$down/1.00 role=decoration
+                  ("NORD", 20178) segment (152.88, 143.82)→(152.88, 154.71) stroke=$up/1.00 role=decoration
+                  ("NORD", 20179) segment (155.63, 143.94)→(155.63, 153.21) stroke=$down/1.00 role=decoration
+                  ("NORD", 20180) segment (158.39, 147.64)→(158.39, 153.86) stroke=$down/1.00 role=decoration
+                  ("NORD", 20181) segment (161.14, 151.34)→(161.14, 155.84) stroke=$up/1.00 role=decoration
+                  ("NORD", 20182) segment (163.90, 148.23)→(163.90, 155.36) stroke=$up/1.00 role=decoration
+                  ("NORD", 20185) segment (166.65, 142.75)→(166.65, 147.81) stroke=$up/1.00 role=decoration
+                  ("NORD", 20186) segment (169.41, 142.07)→(169.41, 148.03) stroke=$down/1.00 role=decoration
+                  ("NORD", 20187) segment (172.16, 138.73)→(172.16, 152.56) stroke=$up/1.00 role=decoration
+                  ("NORD", 20188) segment (174.91, 133.82)→(174.91, 140.91) stroke=$up/1.00 role=decoration
+                  ("NORD", 20189) segment (177.67, 130.71)→(177.67, 141.28) stroke=$up/1.00 role=decoration
+                  ("NORD", 20192) segment (180.42, 127.29)→(180.42, 134.58) stroke=$up/1.00 role=decoration
+                  ("NORD", 20193) segment (183.18, 126.18)→(183.18, 135.65) stroke=$up/1.00 role=decoration
+                  ("NORD", 20194) segment (185.93, 127.65)→(185.93, 140.69) stroke=$down/1.00 role=decoration
+                  ("NORD", 20195) segment (188.69, 129.49)→(188.69, 146.56) stroke=$up/1.00 role=decoration
+                  ("NORD", 20200) segment (191.44, 125.28)→(191.44, 136.56) stroke=$up/1.00 role=decoration
+                  ("NORD", 20201) segment (194.20, 123.05)→(194.20, 126.78) stroke=$up/1.00 role=decoration
+                  ("NORD", 20202) segment (196.95, 122.91)→(196.95, 128.36) stroke=$down/1.00 role=decoration
+                  ("NORD", 20203) segment (199.71, 113.24)→(199.71, 127.51) stroke=$up/1.00 role=decoration
+                  ("NORD", 20206) segment (202.46, 115.84)→(202.46, 117.17) stroke=$up/1.00 role=decoration
+                  ("NORD", 20207) segment (205.21, 115.24)→(205.21, 127.20) stroke=$down/1.00 role=decoration
+                  ("NORD", 20208) segment (207.97, 109.39)→(207.97, 123.67) stroke=$up/1.00 role=decoration
+                  ("NORD", 20210) segment (210.72, 106.00)→(210.72, 113.92) stroke=$up/1.00 role=decoration
+                  ("NORD", 20213) segment (213.48, 96.50)→(213.48, 109.14) stroke=$up/1.00 role=decoration
+                  ("NORD", 20214) segment (216.23, 98.09)→(216.23, 106.17) stroke=$up/1.00 role=decoration
+                  ("NORD", 20215) segment (218.99, 90.88)→(218.99, 99.08) stroke=$up/1.00 role=decoration
+                  ("NORD", 20216) segment (221.74, 74.48)→(221.74, 87.74) stroke=$up/1.00 role=decoration
+                  ("NORD", 20217) segment (224.50, 74.74)→(224.50, 87.63) stroke=$down/1.00 role=decoration
+                  ("NORD", 20220) segment (227.25, 85.88)→(227.25, 94.98) stroke=$up/1.00 role=decoration
+                  ("NORD", 20221) segment (230.01, 82.99)→(230.01, 93.79) stroke=$down/1.00 role=decoration
+                  ("NORD", 20222) segment (232.76, 91.90)→(232.76, 101.28) stroke=$down/1.00 role=decoration
+                  ("NORD", 20223) segment (235.52, 93.14)→(235.52, 107.75) stroke=$down/1.00 role=decoration
+                  ("NORD", 20224) segment (238.27, 92.24)→(238.27, 101.73) stroke=$up/1.00 role=decoration
+                  ("NORD", 20227) segment (241.02, 89.30)→(241.02, 99.42) stroke=$down/1.00 role=decoration
+                  ("NORD", 20228) segment (243.78, 94.98)→(243.78, 110.21) stroke=$up/1.00 role=decoration
+                  ("NORD", 20229) segment (246.53, 89.63)→(246.53, 102.19) stroke=$up/1.00 role=decoration
+                  ("NORD", 20230) segment (249.29, 90.14)→(249.29, 100.55) stroke=$down/1.00 role=decoration
+                  ("NORD", 20231) segment (252.04, 89.63)→(252.04, 104.36) stroke=$up/1.00 role=decoration
+                  ("NORD", 20234) segment (254.80, 87.94)→(254.80, 98.60) stroke=$down/1.00 role=decoration
+                  ("NORD", 20235) segment (257.55, 95.91)→(257.55, 105.32) stroke=$down/1.00 role=decoration
+                  ("NORD", 20236) segment (260.31, 96.56)→(260.31, 102.47) stroke=$up/1.00 role=decoration
+                  ("NORD", 20238) segment (263.06, 82.65)→(263.06, 100.24) stroke=$up/1.00 role=decoration
+                  ("NORD", 20241) segment (265.82, 74.20)→(265.82, 84.91) stroke=$up/1.00 role=decoration
+                  ("NORD", 20242) segment (268.57, 66.46)→(268.57, 78.38) stroke=$down/1.00 role=decoration
+                  ("NORD", 20243) segment (271.32, 65.89)→(271.32, 77.76) stroke=$up/1.00 role=decoration
+                  ("NORD", 20244) segment (274.08, 55.74)→(274.08, 69.45) stroke=$up/1.00 role=decoration
+                  ("NORD", 20248) segment (276.83, 58.12)→(276.83, 66.85) stroke=$down/1.00 role=decoration
+                  ("NORD", 20249) segment (279.59, 67.64)→(279.59, 71.52) stroke=$down/1.00 role=decoration
+                  ("NORD", 20250) segment (282.34, 64.00)→(282.34, 72.05) stroke=$up/1.00 role=decoration
+                  ("NORD", 20251) segment (285.10, 67.11)→(285.10, 74.65) stroke=$down/1.00 role=decoration
+                  ("NORD", 20252) segment (287.85, 74.26)→(287.85, 91.84) stroke=$down/1.00 role=decoration
+                  ("NORD", 20255) segment (290.61, 77.42)→(290.61, 87.32) stroke=$down/1.00 role=decoration
+                  ("NORD", 20256) segment (293.36, 74.26)→(293.36, 87.94) stroke=$up/1.00 role=decoration
+                  ("NORD", 20257) segment (296.12, 77.00)→(296.12, 84.12) stroke=$down/1.00 role=decoration
+                  ("NORD", 20258) segment (298.87, 73.27)→(298.87, 78.53) stroke=$up/1.00 role=decoration
+                  ("NORD", 20262) segment (301.62, 70.58)→(301.62, 80.70) stroke=$down/1.00 role=decoration
+                  ("NORD", 20263) segment (304.38, 68.60)→(304.38, 91.42) stroke=$down/1.00 role=decoration
+                  ("NORD", 20264) segment (307.13, 80.17)→(307.13, 94.67) stroke=$down/1.00 role=decoration
+                  ("NORD", 20265) segment (309.89, 92.55)→(309.89, 99.42) stroke=$down/1.00 role=decoration
+                  ("NORD", 20266) segment (312.64, 94.53)→(312.64, 106.88) stroke=$down/1.00 role=decoration
+                  ("NORD", 20269) segment (315.40, 104.59)→(315.40, 111.94) stroke=$up/1.00 role=decoration
+                  ("NORD", 20270) segment (318.15, 104.16)→(318.15, 121.86) stroke=$down/1.00 role=decoration
+                  ("NORD", 20271) segment (320.91, 113.69)→(320.91, 117.39) stroke=$down/1.00 role=decoration
+                  ("NORD", 20272) segment (323.66, 115.02)→(323.66, 119.17) stroke=$up/1.00 role=decoration
+                  ("NORD", 20273) segment (326.42, 116.46)→(326.42, 130.74) stroke=$down/1.00 role=decoration
+                  ("NORD", 20276) segment (329.17, 122.99)→(329.17, 134.18) stroke=$down/1.00 role=decoration
+                  ("NORD", 20277) segment (331.92, 132.09)→(331.92, 142.41) stroke=$down/1.00 role=decoration
+                  ("NORD", 20278) segment (334.68, 137.72)→(334.68, 140.49) stroke=$down/1.00 role=decoration
+                  ("NORD", 20279) segment (337.43, 137.97)→(337.43, 147.64) stroke=$down/1.00 role=decoration
+                  ("NORD", 20280) segment (340.19, 140.71)→(340.19, 154.96) stroke=$down/1.00 role=decoration
+                  ("NORD", 20283) segment (342.94, 151.29)→(342.94, 155.30) stroke=$down/1.00 role=decoration
+                  ("NORD", 20284) segment (345.70, 152.27)→(345.70, 154.23) stroke=$down/1.00 role=decoration
+                  ("NORD", 20285) segment (348.45, 145.58)→(348.45, 153.46) stroke=$up/1.00 role=decoration
+                  ("NORD", 20286) segment (351.21, 146.90)→(351.21, 153.09) stroke=$up/1.00 role=decoration
+                  ("NORD", 20287) segment (353.96, 137.92)→(353.96, 153.77) stroke=$up/1.00 role=decoration
+                  ("NORD", 20290) segment (356.72, 128.47)→(356.72, 145.01) stroke=$up/1.00 role=decoration
+                  ("NORD", 20291) segment (359.47, 127.85)→(359.47, 136.76) stroke=$up/1.00 role=decoration
+                  ("NORD", 20292) segment (362.23, 119.88)→(362.23, 127.77) stroke=$up/1.00 role=decoration
+                  ("NORD", 20293) segment (364.98, 117.93)→(364.98, 129.18) stroke=$down/1.00 role=decoration
+                  ("NORD", 20294) segment (367.73, 126.30)→(367.73, 131.87) stroke=$down/1.00 role=decoration
+                  ("NORD", 20297) segment (370.49, 134.69)→(370.49, 137.29) stroke=$down/1.00 role=decoration
+                  ("NORD", 20298) segment (373.24, 131.56)→(373.24, 145.55) stroke=$down/1.00 role=decoration
+                  ("NORD", 20299) segment (376.00, 136.25)→(376.00, 153.07) stroke=$down/1.00 role=decoration
+                  ("NORD", 20300) segment (378.75, 147.50)→(378.75, 148.80) stroke=$down/1.00 role=decoration
+                  ("NORD", 20301) segment (381.51, 147.55)→(381.51, 150.49) stroke=$up/1.00 role=decoration
+                  ("NORD", 20304) segment (384.26, 144.67)→(384.26, 157.62) stroke=$down/1.00 role=decoration
+                  ("NORD", 20305) segment (387.02, 142.75)→(387.02, 155.36) stroke=$up/1.00 role=decoration
+                  ("NORD", 20306) segment (389.77, 140.15)→(389.77, 144.98) stroke=$up/1.00 role=decoration
+                  ("NORD", 20307) segment (392.53, 138.54)→(392.53, 149.25) stroke=$down/1.00 role=decoration
+                  ("NORD", 20308) segment (395.28, 146.00)→(395.28, 154.51) stroke=$down/1.00 role=decoration
+                  ("NORD", 20311) segment (398.03, 140.15)→(398.03, 154.42) stroke=$up/1.00 role=decoration
+                  ("NORD", 20312) segment (400.79, 140.18)→(400.79, 160.36) stroke=$down/1.00 role=decoration
+                  ("NORD", 20313) segment (403.54, 151.17)→(403.54, 154.37) stroke=$down/1.00 role=decoration
+                  ("NORD", 20314) segment (406.30, 149.65)→(406.30, 160.59) stroke=$down/1.00 role=decoration
+                  ("NORD", 20315) segment (409.05, 153.60)→(409.05, 163.75) stroke=$down/1.00 role=decoration
+                  ("NORD", 20318) segment (411.81, 159.99)→(411.81, 165.25) stroke=$down/1.00 role=decoration
+                  ("NORD", 20319) segment (414.56, 160.81)→(414.56, 163.89) stroke=$up/1.00 role=decoration
+                  ("NORD", 20320) segment (417.32, 145.94)→(417.32, 165.50) stroke=$up/1.00 role=decoration
+                  ("NORD", 20321) segment (420.07, 149.56)→(420.07, 157.87) stroke=$down/1.00 role=decoration
+                  ("NORD", 20322) segment (422.83, 155.27)→(422.83, 161.04) stroke=$up/1.00 role=decoration
+                  ("NORD", 20325) segment (425.58, 147.92)→(425.58, 157.62) stroke=$down/1.00 role=decoration
+                  ("NORD", 20326) segment (428.33, 147.24)→(428.33, 160.70) stroke=$down/1.00 role=decoration
+                  ("NORD", 20327) segment (431.09, 156.68)→(431.09, 161.94) stroke=$down/1.00 role=decoration
+                  ("NORD", 20328) segment (433.84, 157.48)→(433.84, 165.19) stroke=$down/1.00 role=decoration
+                  ("NORD", 20329) segment (436.60, 162.71)→(436.60, 168.56) stroke=$down/1.00 role=decoration
+                  ("NORD", 20332) segment (439.35, 158.61)→(439.35, 171.58) stroke=$up/1.00 role=decoration
+                  ("NORD", 20333) segment (442.11, 160.84)→(442.11, 169.04) stroke=$down/1.00 role=decoration
+                  ("NORD", 20334) segment (444.86, 163.30)→(444.86, 168.50) stroke=$down/1.00 role=decoration
+                  ("NORD", 20335) segment (447.62, 156.26)→(447.62, 170.00) stroke=$up/1.00 role=decoration
+                  ("NORD", 20336) segment (450.37, 158.89)→(450.37, 169.55) stroke=$down/1.00 role=decoration
+                  ("NORD", 20339) segment (453.13, 157.62)→(453.13, 167.40) stroke=$down/1.00 role=decoration
+                  ("NORD", 20340) segment (455.88, 158.27)→(455.88, 168.47) stroke=$up/1.00 role=decoration
+                  ("NORD", 20341) segment (458.63, 149.62)→(458.63, 156.12) stroke=$up/1.00 role=decoration
+                  ("NORD", 20342) segment (461.39, 145.52)→(461.39, 151.88) stroke=$down/1.00 role=decoration
+                  ("NORD", 20343) segment (464.14, 147.13)→(464.14, 152.25) stroke=$up/1.00 role=decoration
+                  ("NORD", 20346) segment (466.90, 137.46)→(466.90, 150.69) stroke=$up/1.00 role=decoration
+                  ("NORD", 20347) segment (469.65, 134.58)→(469.65, 139.61) stroke=$up/1.00 role=decoration
+                  ("NORD", 20348) segment (472.41, 135.85)→(472.41, 145.24) stroke=$down/1.00 role=decoration
+                  ("NORD", 20349) segment (475.16, 138.65)→(475.16, 150.41) stroke=$down/1.00 role=decoration
+                  ("NORD", 20350) segment (477.92, 146.14)→(477.92, 152.16) stroke=$down/1.00 role=decoration
+                  ("NORD", 20353) segment (480.67, 143.74)→(480.67, 161.57) stroke=$up/1.00 role=decoration
+                  ("NORD", 20354) segment (483.43, 142.24)→(483.43, 151.46) stroke=$down/1.00 role=decoration
+                  ("NORD", 20355) segment (486.18, 143.17)→(486.18, 158.95) stroke=$down/1.00 role=decoration
+                  ("NORD", 20356) segment (488.93, 148.74)→(488.93, 160.50) stroke=$up/1.00 role=decoration
+                  ("NORD", 20357) segment (491.69, 147.58)→(491.69, 152.64) stroke=$up/1.00 role=decoration
+                  ("NORD", 20360) segment (494.44, 143.20)→(494.44, 150.49) stroke=$up/1.00 role=decoration
+                  ("NORD", 20361) segment (497.20, 144.33)→(497.20, 151.94) stroke=$down/1.00 role=decoration
+                  ("NORD", 20362) segment (499.95, 149.34)→(499.95, 158.49) stroke=$down/1.00 role=decoration
+                  ("NORD", 20363) segment (502.71, 156.03)→(502.71, 159.79) stroke=$down/1.00 role=decoration
+                  ("NORD", 20364) segment (505.46, 150.86)→(505.46, 160.42) stroke=$down/1.00 role=decoration
+                  ("NORD", 20367) segment (508.22, 142.04)→(508.22, 165.05) stroke=$up/1.00 role=decoration
+                  ("NORD", 20368) segment (510.97, 135.34)→(510.97, 151.03) stroke=$down/1.00 role=decoration
+                  ("NORD", 20369) segment (513.73, 139.05)→(513.73, 145.91) stroke=$up/1.00 role=decoration
+                  ("NORD", 20370) segment (516.48, 136.98)→(516.48, 150.44) stroke=$up/1.00 role=decoration
+                  ("NORD", 20371) segment (519.24, 139.72)→(519.24, 148.60) stroke=$up/1.00 role=decoration
+                  ("NORD", 20374) segment (521.99, 136.73)→(521.99, 144.78) stroke=$down/1.00 role=decoration
+                  ("NORD", 20375) segment (524.74, 135.63)→(524.74, 147.19) stroke=$up/1.00 role=decoration
+                  ("NORD", 20376) segment (527.50, 138.62)→(527.50, 150.58) stroke=$down/1.00 role=decoration
+                  ("NORD", 20377) segment (530.25, 148.46)→(530.25, 151.51) stroke=$up/1.00 role=decoration
+                  ("NORD", 20378) segment (533.01, 137.97)→(533.01, 147.89) stroke=$up/1.00 role=decoration
+                  ("NORD", 20381) segment (535.76, 133.93)→(535.76, 140.15) stroke=$up/1.00 role=decoration
+                  ("NORD", 20382) segment (538.52, 133.62)→(538.52, 137.01) stroke=$up/1.00 role=decoration
+                  ("NORD", 20383) segment (541.27, 119.91)→(541.27, 146.17) stroke=$up/1.00 role=decoration
+                  ("NORD", 20384) segment (544.03, 123.02)→(544.03, 132.23) stroke=$up/1.00 role=decoration
+                  ("NORD", 20385) segment (546.78, 117.53)→(546.78, 125.99) stroke=$up/1.00 role=decoration
+                  ("NORD", 20388) segment (549.54, 117.90)→(549.54, 135.85) stroke=$down/1.00 role=decoration
+                  ("NORD", 20389) segment (552.29, 128.62)→(552.29, 136.53) stroke=$down/1.00 role=decoration
+                  ("NORD", 20390) segment (555.04, 133.99)→(555.04, 136.50) stroke=$up/1.00 role=decoration
+                  ("NORD", 20391) segment (557.80, 128.93)→(557.80, 139.53) stroke=$up/1.00 role=decoration
+                  ("NORD", 20392) segment (560.55, 132.74)→(560.55, 145.35) stroke=$down/1.00 role=decoration
+                  ("NORD", 20395) segment (563.31, 125.45)→(563.31, 146.93) stroke=$up/1.00 role=decoration
+                  ("NORD", 20396) segment (566.06, 123.89)→(566.06, 128.70) stroke=$up/1.00 role=decoration
+                  ("NORD", 20397) segment (568.82, 122.26)→(568.82, 133.08) stroke=$up/1.00 role=decoration
+                  ("NORD", 20398) segment (571.57, 117.00)→(571.57, 133.87) stroke=$up/1.00 role=decoration
+                  ("NORD", 20399) segment (574.33, 118.64)→(574.33, 127.26) stroke=$up/1.00 role=decoration
+                  ("NORD", 20402) segment (577.08, 120.14)→(577.08, 125.76) stroke=$up/1.00 role=decoration
+                  ("NORD", 20403) segment (579.84, 103.51)→(579.84, 124.18) stroke=$up/1.00 role=decoration
+                  ("NORD", 20404) segment (582.59, 102.44)→(582.59, 112.56) stroke=$down/1.00 role=decoration
+                  ("NORD", 20405) segment (585.34, 103.17)→(585.34, 113.44) stroke=$down/1.00 role=decoration
+                  ("NORD", 20406) segment (588.10, 96.48)→(588.10, 106.37) stroke=$up/1.00 role=decoration
+                  ("NORD", 20409) segment (590.85, 94.10)→(590.85, 100.32) stroke=$up/1.00 role=decoration
+                  ("NORD", 20410) segment (593.61, 83.25)→(593.61, 99.44) stroke=$up/1.00 role=decoration
+                  ("NORD", 20411) segment (596.36, 81.89)→(596.36, 101.08) stroke=$down/1.00 role=decoration
+                  ("NORD", 20412) segment (599.12, 99.02)→(599.12, 105.78) stroke=$down/1.00 role=decoration
+                  ("NORD", 20413) segment (601.87, 96.08)→(601.87, 111.06) stroke=$up/1.00 role=decoration
+                  ("NORD", 20416) segment (604.63, 92.46)→(604.63, 103.54) stroke=$up/1.00 role=decoration
+                  ("NORD", 20417) segment (607.38, 91.81)→(607.38, 98.20) stroke=$down/1.00 role=decoration
+                  ("NORD", 20418) segment (610.14, 96.70)→(610.14, 104.22) stroke=$down/1.00 role=decoration
+                  ("NORD", 20419) segment (612.89, 101.00)→(612.89, 120.33) stroke=$down/1.00 role=decoration
+                  ("NORD", 20420) segment (615.64, 106.20)→(615.64, 117.59) stroke=$up/1.00 role=decoration
+                  ("NORD", 20423) segment (618.40, 102.10)→(618.40, 109.70) stroke=$up/1.00 role=decoration
+                  ("NORD", 20424) segment (621.15, 100.04)→(621.15, 113.24) stroke=$down/1.00 role=decoration
+                  ("NORD", 20425) segment (623.91, 110.58)→(623.91, 118.86) stroke=$down/1.00 role=decoration
+                  ("NORD", 20426) segment (626.66, 112.53)→(626.66, 119.09) stroke=$down/1.00 role=decoration
+                  ("NORD", 20427) segment (629.42, 108.23)→(629.42, 123.36) stroke=$up/1.00 role=decoration
+                  ("NORD", 20430) segment (632.17, 108.29)→(632.17, 116.74) stroke=$down/1.00 role=decoration
+                  ("NORD", 20431) segment (634.93, 100.12)→(634.93, 115.58) stroke=$up/1.00 role=decoration
+                  ("NORD", 20432) segment (637.68, 102.75)→(637.68, 118.72) stroke=$up/1.00 role=decoration
+                  ("NORD", 20433) segment (640.44, 97.69)→(640.44, 111.60) stroke=$down/1.00 role=decoration
+                  ("NORD", 20434) segment (643.19, 104.56)→(643.19, 116.06) stroke=$down/1.00 role=decoration
+                  ("NORD", 20437) segment (645.95, 102.67)→(645.95, 107.47) stroke=$up/1.00 role=decoration
+                  ("NORD", 20438) segment (648.70, 99.84)→(648.70, 109.14) stroke=$down/1.00 role=decoration
+                  ("NORD", 20439) segment (651.45, 105.80)→(651.45, 108.57) stroke=$up/1.00 role=decoration
+                  ("NORD", 20440) segment (654.21, 107.36)→(654.21, 119.68) stroke=$down/1.00 role=decoration
+                  ("NORD", 20441) segment (656.96, 110.61)→(656.96, 122.34) stroke=$up/1.00 role=decoration
+                  ("NORD", 20444) segment (659.72, 101.85)→(659.72, 112.22) stroke=$up/1.00 role=decoration
+                  ("NORD", 20445) segment (662.47, 87.71)→(662.47, 110.38) stroke=$up/1.00 role=decoration
+                  ("NORD", 20451) segment (665.23, 81.52)→(665.23, 88.00) stroke=$up/1.00 role=decoration
+                  ("NORD", 20452) segment (667.98, 81.95)→(667.98, 88.53) stroke=$down/1.00 role=decoration
+                  ("NORD", 20454) segment (670.74, 82.14)→(670.74, 98.65) stroke=$down/1.00 role=decoration
+                  ("NORD", 20455) segment (673.49, 89.30)→(673.49, 91.36) stroke=$down/1.00 role=decoration
+                  ("NORD", 20458) segment (676.25, 87.29)→(676.25, 96.70) stroke=$up/1.00 role=decoration
+                  ("NORD", 20459) segment (679.00, 87.97)→(679.00, 94.27) stroke=$down/1.00 role=decoration
+                  ("NORD", 20460) segment (681.75, 87.77)→(681.75, 99.81) stroke=$down/1.00 role=decoration
+                  ("NORD", 20461) segment (684.51, 92.91)→(684.51, 99.16) stroke=$down/1.00 role=decoration
+                  ("NORD", 20462) segment (687.26, 98.57)→(687.26, 104.79) stroke=$down/1.00 role=decoration
+                  ("NORD", 20465) segment (690.02, 98.74)→(690.02, 105.66) stroke=$down/1.00 role=decoration
+                  ("NORD", 20466) segment (692.77, 99.58)→(692.77, 125.14) stroke=$down/1.00 role=decoration
+                group ("bodies",)
+                  ("NORD", 20101) rect x=0.41 y=178.76 w=1.93 h=1.00 fill=$down role=datum "13 Jan 2025 · O 116.76 H 117.73 L 116.47 C 116.57"
+                  ("NORD", 20102) rect x=3.17 y=177.80 w=1.93 h=2.85 fill=$down role=datum "14 Jan 2025 · O 117.10 H 117.45 L 116.05 C 116.09 (−0.41%)"
+                  ("NORD", 20103) rect x=5.92 y=183.68 w=1.93 h=1.53 fill=$up role=datum "15 Jan 2025 · O 114.48 H 116.34 L 113.93 C 115.02 (−0.92%)"
+                  ("NORD", 20104) rect x=8.68 y=177.97 w=1.93 h=3.14 fill=$down role=datum "16 Jan 2025 · O 117.04 H 118.26 L 114.13 C 115.93 (+0.79%)"
+                  ("NORD", 20105) rect x=11.43 y=181.42 w=1.93 h=15.97 fill=$down role=datum "17 Jan 2025 · O 115.82 H 116.21 L 109.54 C 110.17 (−4.97%)"
+                  ("NORD", 20108) rect x=14.19 y=195.83 w=1.93 h=3.96 fill=$up role=datum "20 Jan 2025 · O 109.32 H 110.93 L 108.77 C 110.72 (+0.50%)"
+                  ("NORD", 20109) rect x=16.94 y=197.56 w=1.93 h=6.53 fill=$down role=datum "21 Jan 2025 · O 110.11 H 111.77 L 107.07 C 107.80 (−2.64%)"
+                  ("NORD", 20110) rect x=19.70 y=204.29 w=1.93 h=6.47 fill=$down role=datum "22 Jan 2025 · O 107.73 H 107.74 L 104.65 C 105.44 (−2.19%)"
+                  ("NORD", 20111) rect x=22.45 y=211.24 w=1.93 h=3.48 fill=$down role=datum "23 Jan 2025 · O 105.27 H 106.06 L 102.62 C 104.04 (−1.33%)"
+                  ("NORD", 20112) rect x=25.20 y=212.63 w=1.93 h=2.91 fill=$up role=datum "24 Jan 2025 · O 103.75 H 105.68 L 103.44 C 104.78 (+0.71%)"
+                  ("NORD", 20115) rect x=27.96 y=208.10 w=1.93 h=2.35 fill=$up role=datum "27 Jan 2025 · O 105.55 H 106.39 L 103.40 C 106.38 (+1.53%)"
+                  ("NORD", 20116) rect x=30.71 y=207.17 w=1.93 h=1.61 fill=$down role=datum "28 Jan 2025 · O 106.71 H 107.66 L 104.24 C 106.14 (−0.23%)"
+                  ("NORD", 20117) rect x=33.47 y=209.18 w=1.93 h=1.87 fill=$up role=datum "29 Jan 2025 · O 105.34 H 106.88 L 105.26 C 106.00 (−0.13%)"
+                  ("NORD", 20118) rect x=36.22 y=207.34 w=1.93 h=1.16 fill=$up role=datum "30 Jan 2025 · O 106.24 H 107.45 L 104.66 C 106.65 (+0.61%)"
+                  ("NORD", 20119) rect x=38.98 y=206.83 w=1.93 h=1.05 fill=$down role=datum "31 Jan 2025 · O 106.83 H 107.20 L 106.16 C 106.46 (−0.18%)"
+                  ("NORD", 20122) rect x=41.73 y=199.00 w=1.93 h=6.30 fill=$up role=datum "3 Feb 2025 · O 107.37 H 110.06 L 107.36 C 109.60 (+2.95%)"
+                  ("NORD", 20123) rect x=44.49 y=192.27 w=1.93 h=5.51 fill=$up role=datum "4 Feb 2025 · O 110.03 H 113.65 L 109.10 C 111.98 (+2.17%)"
+                  ("NORD", 20124) rect x=47.24 y=197.08 w=1.93 h=2.06 fill=$down role=datum "5 Feb 2025 · O 110.28 H 110.80 L 109.06 C 109.55 (−2.17%)"
+                  ("NORD", 20125) rect x=50.00 y=195.07 w=1.93 h=5.17 fill=$up role=datum "6 Feb 2025 · O 109.16 H 111.39 L 108.00 C 110.99 (+1.31%)"
+                  ("NORD", 20126) rect x=52.75 y=193.88 w=1.93 h=10.29 fill=$down role=datum "7 Feb 2025 · O 111.41 H 112.20 L 107.24 C 107.77 (−2.90%)"
+                  ("NORD", 20129) rect x=55.50 y=201.66 w=1.93 h=1.00 fill=$down role=datum "10 Feb 2025 · O 108.66 H 109.00 L 108.25 C 108.52 (+0.70%)"
+                  ("NORD", 20130) rect x=58.26 y=198.63 w=1.93 h=1.89 fill=$down role=datum "11 Feb 2025 · O 109.73 H 110.16 L 107.87 C 109.06 (+0.50%)"
+                  ("NORD", 20131) rect x=61.01 y=198.60 w=1.93 h=6.64 fill=$down role=datum "12 Feb 2025 · O 109.74 H 110.96 L 107.27 C 107.39 (−1.53%)"
+                  ("NORD", 20132) rect x=63.77 y=193.97 w=1.93 h=9.19 fill=$up role=datum "13 Feb 2025 · O 108.13 H 111.75 L 108.10 C 111.38 (+3.72%)"
+                  ("NORD", 20133) rect x=66.52 y=186.85 w=1.93 h=6.08 fill=$up role=datum "14 Feb 2025 · O 111.75 H 115.02 L 110.46 C 113.90 (+2.26%)"
+                  ("NORD", 20136) rect x=69.28 y=180.06 w=1.93 h=6.78 fill=$up role=datum "17 Feb 2025 · O 113.90 H 116.87 L 113.38 C 116.30 (+2.11%)"
+                  ("NORD", 20137) rect x=72.03 y=174.69 w=1.93 h=4.69 fill=$up role=datum "18 Feb 2025 · O 116.54 H 118.73 L 115.06 C 118.20 (+1.63%)"
+                  ("NORD", 20138) rect x=74.79 y=169.80 w=1.93 h=4.58 fill=$down role=datum "19 Feb 2025 · O 119.93 H 120.06 L 117.20 C 118.31 (+0.09%)"
+                  ("NORD", 20139) rect x=77.54 y=171.47 w=1.93 h=3.02 fill=$up role=datum "20 Feb 2025 · O 118.27 H 119.36 L 117.05 C 119.34 (+0.87%)"
+                  ("NORD", 20140) rect x=80.30 y=173.08 w=1.93 h=4.21 fill=$down role=datum "21 Feb 2025 · O 118.77 H 119.62 L 116.81 C 117.28 (−1.73%)"
+                  ("NORD", 20143) rect x=83.05 y=178.31 w=1.93 h=2.91 fill=$down role=datum "24 Feb 2025 · O 116.92 H 117.67 L 115.56 C 115.89 (−1.19%)"
+                  ("NORD", 20144) rect x=85.80 y=169.21 w=1.93 h=16.31 fill=$up role=datum "25 Feb 2025 · O 114.37 H 121.69 L 113.94 C 120.14 (+3.67%)"
+                  ("NORD", 20145) rect x=88.56 y=162.54 w=1.93 h=9.89 fill=$up role=datum "26 Feb 2025 · O 119.00 H 123.73 L 118.00 C 122.50 (+1.96%)"
+                  ("NORD", 20146) rect x=91.31 y=148.01 w=1.93 h=16.51 fill=$up role=datum "27 Feb 2025 · O 121.80 H 128.91 L 119.68 C 127.64 (+4.20%)"
+                  ("NORD", 20147) rect x=94.07 y=137.24 w=1.93 h=10.15 fill=$up role=datum "28 Feb 2025 · O 127.86 H 131.98 L 127.54 C 131.45 (+2.98%)"
+                  ("NORD", 20150) rect x=96.82 y=123.02 w=1.93 h=12.72 fill=$up role=datum "3 Mar 2025 · O 131.98 H 138.38 L 131.97 C 136.48 (+3.83%)"
+                  ("NORD", 20151) rect x=99.58 y=122.23 w=1.93 h=6.98 fill=$down role=datum "4 Mar 2025 · O 136.76 H 136.94 L 132.74 C 134.29 (−1.60%)"
+                  ("NORD", 20152) rect x=102.33 y=132.88 w=1.93 h=1.00 fill=$down role=datum "5 Mar 2025 · O 132.99 H 134.38 L 132.11 C 132.73 (−1.16%)"
+                  ("NORD", 20153) rect x=105.09 y=131.75 w=1.93 h=2.32 fill=$down role=datum "6 Mar 2025 · O 133.39 H 133.57 L 131.65 C 132.57 (−0.12%)"
+                  ("NORD", 20154) rect x=107.84 y=131.72 w=1.93 h=3.42 fill=$down role=datum "7 Mar 2025 · O 133.40 H 135.14 L 132.01 C 132.19 (−0.29%)"
+                  ("NORD", 20157) rect x=110.60 y=130.76 w=1.93 h=8.65 fill=$up role=datum "10 Mar 2025 · O 130.68 H 134.80 L 130.58 C 133.74 (+1.17%)"
+                  ("NORD", 20158) rect x=113.35 y=131.24 w=1.93 h=1.00 fill=$down role=datum "11 Mar 2025 · O 133.57 H 133.97 L 132.81 C 133.52 (−0.16%)"
+                  ("NORD", 20159) rect x=116.10 y=125.79 w=1.93 h=6.16 fill=$up role=datum "12 Mar 2025 · O 133.32 H 136.06 L 132.59 C 135.50 (+1.48%)"
+                  ("NORD", 20160) rect x=118.86 y=119.54 w=1.93 h=7.12 fill=$up role=datum "13 Mar 2025 · O 135.19 H 138.98 L 134.25 C 137.71 (+1.63%)"
+                  ("NORD", 20161) rect x=121.61 y=117.79 w=1.93 h=9.33 fill=$down role=datum "14 Mar 2025 · O 138.33 H 138.61 L 134.83 C 135.03 (−1.95%)"
+                  ("NORD", 20164) rect x=124.37 y=125.65 w=1.93 h=2.94 fill=$down role=datum "17 Mar 2025 · O 135.55 H 135.86 L 133.48 C 134.51 (−0.39%)"
+                  ("NORD", 20165) rect x=127.12 y=128.98 w=1.93 h=4.58 fill=$down role=datum "18 Mar 2025 · O 134.37 H 134.81 L 132.03 C 132.75 (−1.31%)"
+                  ("NORD", 20166) rect x=129.88 y=133.51 w=1.93 h=2.18 fill=$up role=datum "19 Mar 2025 · O 132.00 H 132.80 L 131.82 C 132.77 (+0.02%)"
+                  ("NORD", 20167) rect x=132.63 y=137.01 w=1.93 h=2.37 fill=$down role=datum "20 Mar 2025 · O 131.53 H 132.48 L 128.82 C 130.69 (−1.57%)"
+                  ("NORD", 20168) rect x=135.39 y=138.68 w=1.93 h=5.88 fill=$down role=datum "21 Mar 2025 · O 130.94 H 131.13 L 126.62 C 128.86 (−1.40%)"
+                  ("NORD", 20171) rect x=138.14 y=145.75 w=1.93 h=13.85 fill=$down role=datum "24 Mar 2025 · O 128.44 H 129.52 L 122.56 C 123.54 (−4.13%)"
+                  ("NORD", 20172) rect x=140.90 y=155.64 w=1.93 h=4.44 fill=$up role=datum "25 Mar 2025 · O 123.37 H 126.05 L 123.12 C 124.94 (+1.13%)"
+                  ("NORD", 20173) rect x=143.65 y=148.97 w=1.93 h=8.85 fill=$up role=datum "26 Mar 2025 · O 124.17 H 127.75 L 123.63 C 127.30 (+1.89%)"
+                  ("NORD", 20174) rect x=146.41 y=145.21 w=1.93 h=6.84 fill=$up role=datum "27 Mar 2025 · O 126.21 H 130.19 L 125.65 C 128.63 (+1.04%)"
+                  ("NORD", 20175) rect x=149.16 y=142.78 w=1.93 h=6.59 fill=$down role=datum "28 Mar 2025 · O 129.49 H 129.92 L 127.09 C 127.16 (−1.14%)"
+                  ("NORD", 20178) rect x=151.91 y=145.24 w=1.93 h=7.38 fill=$up role=datum "31 Mar 2025 · O 126.01 H 129.12 L 125.27 C 128.62 (+1.15%)"
+                  ("NORD", 20179) rect x=154.67 y=144.42 w=1.93 h=6.53 fill=$down role=datum "1 Apr 2025 · O 128.91 H 129.08 L 125.80 C 126.60 (−1.57%)"
+                  ("NORD", 20180) rect x=157.42 y=152.39 w=1.93 h=1.39 fill=$down role=datum "2 Apr 2025 · O 126.09 H 127.77 L 125.57 C 125.60 (−0.79%)"
+                  ("NORD", 20181) rect x=160.18 y=153.69 w=1.93 h=1.41 fill=$up role=datum "3 Apr 2025 · O 125.13 H 126.46 L 124.87 C 125.63 (+0.02%)"
+                  ("NORD", 20182) rect x=162.93 y=149.28 w=1.93 h=3.65 fill=$up role=datum "4 Apr 2025 · O 125.90 H 127.56 L 125.04 C 127.19 (+1.24%)"
+                  ("NORD", 20185) rect x=165.69 y=143.60 w=1.93 h=2.49 fill=$up role=datum "7 Apr 2025 · O 128.32 H 129.50 L 127.71 C 129.20 (+1.58%)"
+                  ("NORD", 20186) rect x=168.44 y=144.93 w=1.93 h=2.74 fill=$down role=datum "8 Apr 2025 · O 128.73 H 129.74 L 127.63 C 127.76 (−1.11%)"
+                  ("NORD", 20187) rect x=171.20 y=139.27 w=1.93 h=10.43 fill=$up role=datum "9 Apr 2025 · O 127.04 H 130.92 L 126.03 C 130.73 (+2.32%)"
+                  ("NORD", 20188) rect x=173.95 y=136.25 w=1.93 h=4.47 fill=$up role=datum "10 Apr 2025 · O 130.22 H 132.66 L 130.15 C 131.80 (+0.82%)"
+                  ("NORD", 20189) rect x=176.71 y=132.91 w=1.93 h=6.33 fill=$up role=datum "11 Apr 2025 · O 130.74 H 133.76 L 130.02 C 132.98 (+0.90%)"
+                  ("NORD", 20192) rect x=179.46 y=128.36 w=1.93 h=5.99 fill=$up role=datum "14 Apr 2025 · O 132.47 H 134.97 L 132.39 C 134.59 (+1.21%)"
+                  ("NORD", 20193) rect x=182.21 y=128.39 w=1.93 h=2.52 fill=$up role=datum "15 Apr 2025 · O 133.69 H 135.36 L 132.01 C 134.58 (−0.01%)"
+                  ("NORD", 20194) rect x=184.97 y=128.39 w=1.93 h=10.52 fill=$down role=datum "16 Apr 2025 · O 134.58 H 134.84 L 130.23 C 130.86 (−2.76%)"
+                  ("NORD", 20195) rect x=187.72 y=132.60 w=1.93 h=9.55 fill=$up role=datum "17 Apr 2025 · O 129.71 H 134.19 L 128.15 C 133.09 (+1.70%)"
+                  ("NORD", 20200) rect x=190.48 y=125.59 w=1.93 h=8.93 fill=$up role=datum "22 Apr 2025 · O 132.41 H 135.68 L 131.69 C 135.57 (+1.86%)"
+                  ("NORD", 20201) rect x=193.23 y=123.41 w=1.93 h=2.49 fill=$up role=datum "23 Apr 2025 · O 135.46 H 136.47 L 135.15 C 136.34 (+0.57%)"
+                  ("NORD", 20202) rect x=195.99 y=123.89 w=1.93 h=3.70 fill=$down role=datum "24 Apr 2025 · O 136.17 H 136.52 L 134.59 C 134.86 (−1.09%)"
+                  ("NORD", 20203) rect x=198.74 y=115.33 w=1.93 h=12.13 fill=$up role=datum "25 Apr 2025 · O 134.91 H 139.94 L 134.89 C 139.20 (+3.22%)"
+                  ("NORD", 20206) rect x=201.50 y=115.87 w=1.93 h=1.00 fill=$up role=datum "28 Apr 2025 · O 138.92 H 139.02 L 138.55 C 139.01 (−0.14%)"
+                  ("NORD", 20207) rect x=204.25 y=118.30 w=1.93 h=7.58 fill=$down role=datum "29 Apr 2025 · O 138.15 H 139.23 L 135.00 C 135.47 (−2.55%)"
+                  ("NORD", 20208) rect x=207.01 y=111.29 w=1.93 h=10.23 fill=$up role=datum "30 Apr 2025 · O 137.01 H 141.30 L 136.25 C 140.63 (+3.81%)"
+                  ("NORD", 20210) rect x=209.76 y=109.20 w=1.93 h=2.46 fill=$up role=datum "2 May 2025 · O 140.50 H 142.50 L 139.70 C 141.37 (+0.53%)"
+                  ("NORD", 20213) rect x=212.51 y=98.54 w=1.93 h=10.37 fill=$up role=datum "5 May 2025 · O 141.47 H 145.86 L 141.39 C 145.14 (+2.67%)"
+                  ("NORD", 20214) rect x=215.27 y=99.44 w=1.93 h=4.75 fill=$up role=datum "6 May 2025 · O 143.14 H 145.30 L 142.44 C 144.82 (−0.22%)"
+                  ("NORD", 20215) rect x=218.02 y=91.13 w=1.93 h=5.82 fill=$up role=datum "7 May 2025 · O 145.70 H 147.85 L 144.95 C 147.76 (+2.03%)"
+                  ("NORD", 20216) rect x=220.78 y=80.05 w=1.93 h=6.36 fill=$up role=datum "8 May 2025 · O 149.43 H 153.65 L 148.96 C 151.68 (+2.65%)"
+                  ("NORD", 20217) rect x=223.53 y=75.93 w=1.93 h=10.88 fill=$down role=datum "9 May 2025 · O 153.14 H 153.56 L 149.00 C 149.29 (−1.58%)"
+                  ("NORD", 20220) rect x=226.29 y=86.24 w=1.93 h=4.04 fill=$up role=datum "12 May 2025 · O 148.06 H 149.62 L 146.40 C 149.49 (+0.13%)"
+                  ("NORD", 20221) rect x=229.04 y=87.88 w=1.93 h=4.81 fill=$down role=datum "13 May 2025 · O 148.91 H 150.64 L 146.82 C 147.21 (−1.53%)"
+                  ("NORD", 20222) rect x=231.80 y=92.38 w=1.93 h=5.51 fill=$down role=datum "14 May 2025 · O 147.32 H 147.49 L 144.17 C 145.37 (−1.25%)"
+                  ("NORD", 20223) rect x=234.55 y=96.73 w=1.93 h=3.11 fill=$down role=datum "15 May 2025 · O 145.78 H 147.05 L 141.88 C 144.68 (−0.47%)"
+                  ("NORD", 20224) rect x=237.31 y=93.51 w=1.93 h=6.39 fill=$up role=datum "16 May 2025 · O 144.66 H 147.37 L 144.01 C 146.92 (+1.55%)"
+                  ("NORD", 20227) rect x=240.06 y=93.39 w=1.93 h=4.10 fill=$down role=datum "19 May 2025 · O 146.96 H 148.41 L 144.83 C 145.51 (−0.96%)"
+                  ("NORD", 20228) rect x=242.81 y=100.69 w=1.93 h=1.36 fill=$up role=datum "20 May 2025 · O 143.90 H 146.40 L 141.01 C 144.38 (−0.78%)"
+                  ("NORD", 20229) rect x=245.57 y=89.66 w=1.93 h=12.30 fill=$up role=datum "21 May 2025 · O 143.93 H 148.29 L 143.85 C 148.28 (+2.70%)"
+                  ("NORD", 20230) rect x=248.32 y=90.65 w=1.93 h=5.12 fill=$down role=datum "22 May 2025 · O 147.93 H 148.11 L 144.43 C 146.12 (−1.46%)"
+                  ("NORD", 20231) rect x=251.08 y=93.28 w=1.93 h=6.39 fill=$up role=datum "23 May 2025 · O 144.74 H 148.29 L 143.08 C 147.00 (+0.60%)"
+                  ("NORD", 20234) rect x=253.83 y=92.18 w=1.93 h=4.49 fill=$down role=datum "26 May 2025 · O 147.39 H 148.89 L 145.12 C 145.80 (−0.82%)"
+                  ("NORD", 20235) rect x=256.59 y=96.59 w=1.93 h=6.53 fill=$down role=datum "27 May 2025 · O 145.83 H 146.07 L 142.74 C 143.52 (−1.56%)"
+                  ("NORD", 20236) rect x=259.34 y=98.54 w=1.93 h=3.31 fill=$up role=datum "28 May 2025 · O 143.97 H 145.84 L 143.75 C 145.14 (+1.13%)"
+                  ("NORD", 20238) rect x=262.10 y=86.75 w=1.93 h=13.20 fill=$up role=datum "30 May 2025 · O 144.64 H 150.76 L 144.54 C 149.31 (+2.87%)"
+                  ("NORD", 20241) rect x=264.85 y=75.25 w=1.93 h=7.86 fill=$up role=datum "2 Jun 2025 · O 150.60 H 153.75 L 149.96 C 153.38 (+2.73%)"
+                  ("NORD", 20242) rect x=267.61 y=72.51 w=1.93 h=1.27 fill=$down role=datum "3 Jun 2025 · O 154.35 H 156.49 L 152.27 C 153.90 (+0.34%)"
+                  ("NORD", 20243) rect x=270.36 y=65.89 w=1.93 h=9.41 fill=$up role=datum "4 Jun 2025 · O 153.36 H 156.69 L 152.49 C 156.69 (+1.81%)"
+                  ("NORD", 20244) rect x=273.11 y=60.04 w=1.93 h=7.49 fill=$up role=datum "5 Jun 2025 · O 156.11 H 160.28 L 155.43 C 158.76 (+1.32%)"
+                  ("NORD", 20248) rect x=275.87 y=63.06 w=1.93 h=3.22 fill=$down role=datum "9 Jun 2025 · O 157.69 H 159.44 L 156.35 C 156.55 (−1.39%)"
+                  ("NORD", 20249) rect x=278.62 y=67.90 w=1.93 h=1.47 fill=$down role=datum "10 Jun 2025 · O 155.98 H 156.07 L 154.70 C 155.46 (−0.70%)"
+                  ("NORD", 20250) rect x=281.38 y=68.86 w=1.93 h=1.64 fill=$up role=datum "11 Jun 2025 · O 155.06 H 157.36 L 154.51 C 155.64 (+0.12%)"
+                  ("NORD", 20251) rect x=284.13 y=71.32 w=1.93 h=1.00 fill=$down role=datum "12 Jun 2025 · O 154.77 H 156.26 L 153.59 C 154.76 (−0.57%)"
+                  ("NORD", 20252) rect x=286.89 y=75.08 w=1.93 h=8.96 fill=$down role=datum "13 Jun 2025 · O 153.44 H 153.73 L 147.51 C 150.27 (−2.90%)"
+                  ("NORD", 20255) rect x=289.64 y=84.91 w=1.93 h=1.02 fill=$down role=datum "16 Jun 2025 · O 149.96 H 152.61 L 149.11 C 149.60 (−0.45%)"
+                  ("NORD", 20256) rect x=292.40 y=77.73 w=1.93 h=9.67 fill=$up role=datum "17 Jun 2025 · O 149.08 H 153.73 L 148.89 C 152.50 (+1.94%)"
+                  ("NORD", 20257) rect x=295.15 y=79.43 w=1.93 h=2.40 fill=$down role=datum "18 Jun 2025 · O 151.90 H 152.76 L 150.24 C 151.05 (−0.95%)"
+                  ("NORD", 20258) rect x=297.91 y=73.95 w=1.93 h=3.90 fill=$up role=datum "19 Jun 2025 · O 152.46 H 154.08 L 152.22 C 153.84 (+1.85%)"
+                  ("NORD", 20262) rect x=300.66 y=71.63 w=1.93 h=2.57 fill=$down role=datum "23 Jun 2025 · O 154.66 H 155.03 L 151.45 C 153.75 (−0.06%)"
+                  ("NORD", 20263) rect x=303.42 y=71.77 w=1.93 h=11.62 fill=$down role=datum "24 Jun 2025 · O 154.61 H 155.73 L 147.66 C 150.50 (−2.11%)"
+                  ("NORD", 20264) rect x=306.17 y=83.93 w=1.93 h=8.68 fill=$down role=datum "25 Jun 2025 · O 150.31 H 151.64 L 146.51 C 147.24 (−2.17%)"
+                  ("NORD", 20265) rect x=308.92 y=94.47 w=1.93 h=3.84 fill=$down role=datum "26 Jun 2025 · O 146.58 H 147.26 L 144.83 C 145.22 (−1.37%)"
+                  ("NORD", 20266) rect x=311.68 y=96.48 w=1.93 h=7.43 fill=$down role=datum "27 Jun 2025 · O 145.87 H 146.56 L 142.19 C 143.24 (−1.36%)"
+                  ("NORD", 20269) rect x=314.43 y=106.34 w=1.93 h=1.00 fill=$up role=datum "30 Jun 2025 · O 142.24 H 143.00 L 140.40 C 142.38 (−0.60%)"
+                  ("NORD", 20270) rect x=317.19 y=107.36 w=1.93 h=9.84 fill=$down role=datum "1 Jul 2025 · O 142.02 H 143.15 L 136.89 C 138.54 (−2.70%)"
+                  ("NORD", 20271) rect x=319.94 y=116.23 w=1.93 h=1.00 fill=$down role=datum "2 Jul 2025 · O 138.88 H 139.78 L 138.47 C 138.77 (+0.17%)"
+                  ("NORD", 20272) rect x=322.70 y=116.91 w=1.93 h=2.09 fill=$up role=datum "3 Jul 2025 · O 137.90 H 139.31 L 137.84 C 138.64 (−0.09%)"
+                  ("NORD", 20273) rect x=325.45 y=118.83 w=1.93 h=6.30 fill=$down role=datum "4 Jul 2025 · O 137.96 H 138.80 L 133.75 C 135.73 (−2.10%)"
+                  ("NORD", 20276) rect x=328.21 y=123.78 w=1.93 h=9.84 fill=$down role=datum "7 Jul 2025 · O 136.21 H 136.49 L 132.53 C 132.73 (−2.21%)"
+                  ("NORD", 20277) rect x=330.96 y=133.70 w=1.93 h=6.56 fill=$down role=datum "8 Jul 2025 · O 132.70 H 133.27 L 129.62 C 130.38 (−1.77%)"
+                  ("NORD", 20278) rect x=333.72 y=138.57 w=1.93 h=1.70 fill=$down role=datum "9 Jul 2025 · O 130.98 H 131.28 L 130.30 C 130.38 (+0.00%)"
+                  ("NORD", 20279) rect x=336.47 y=138.14 w=1.93 h=7.04 fill=$down role=datum "10 Jul 2025 · O 131.13 H 131.19 L 127.77 C 128.64 (−1.33%)"
+                  ("NORD", 20280) rect x=339.22 y=142.35 w=1.93 h=10.80 fill=$down role=datum "11 Jul 2025 · O 129.64 H 130.22 L 125.18 C 125.82 (−2.19%)"
+                  ("NORD", 20283) rect x=341.98 y=152.76 w=1.93 h=1.58 fill=$down role=datum "14 Jul 2025 · O 125.96 H 126.48 L 125.06 C 125.40 (−0.33%)"
+                  ("NORD", 20284) rect x=344.73 y=152.64 w=1.93 h=1.00 fill=$down role=datum "15 Jul 2025 · O 126.00 H 126.13 L 125.44 C 125.77 (+0.30%)"
+                  ("NORD", 20285) rect x=347.49 y=149.17 w=1.93 h=3.39 fill=$up role=datum "16 Jul 2025 · O 126.03 H 128.50 L 125.71 C 127.23 (+1.16%)"
+                  ("NORD", 20286) rect x=350.24 y=149.19 w=1.93 h=3.45 fill=$up role=datum "17 Jul 2025 · O 126.00 H 128.03 L 125.84 C 127.22 (−0.01%)"
+                  ("NORD", 20287) rect x=353.00 y=141.00 w=1.93 h=10.23 fill=$up role=datum "18 Jul 2025 · O 126.50 H 131.21 L 125.60 C 130.12 (+2.28%)"
+                  ("NORD", 20290) rect x=355.75 y=133.76 w=1.93 h=7.66 fill=$up role=datum "21 Jul 2025 · O 129.97 H 134.55 L 128.70 C 132.68 (+1.97%)"
+                  ("NORD", 20291) rect x=358.51 y=128.13 w=1.93 h=8.56 fill=$up role=datum "22 Jul 2025 · O 131.64 H 134.77 L 131.62 C 134.67 (+1.50%)"
+                  ("NORD", 20292) rect x=361.26 y=124.15 w=1.93 h=3.39 fill=$up role=datum "23 Jul 2025 · O 134.88 H 137.59 L 134.80 C 136.08 (+1.05%)"
+                  ("NORD", 20293) rect x=364.02 y=121.92 w=1.93 h=2.57 fill=$down role=datum "24 Jul 2025 · O 136.87 H 138.28 L 134.30 C 135.96 (−0.09%)"
+                  ("NORD", 20294) rect x=366.77 y=126.64 w=1.93 h=1.00 fill=$down role=datum "25 Jul 2025 · O 135.20 H 135.32 L 133.35 C 134.98 (−0.72%)"
+                  ("NORD", 20297) rect x=369.52 y=134.89 w=1.93 h=1.00 fill=$down role=datum "28 Jul 2025 · O 132.28 H 132.35 L 131.43 C 132.15 (−2.10%)"
+                  ("NORD", 20298) rect x=372.28 y=137.49 w=1.93 h=5.37 fill=$down role=datum "29 Jul 2025 · O 131.36 H 133.46 L 128.51 C 129.46 (−2.04%)"
+                  ("NORD", 20299) rect x=375.03 y=138.73 w=1.93 h=12.41 fill=$down role=datum "30 Jul 2025 · O 130.92 H 131.80 L 125.85 C 126.53 (−2.26%)"
+                  ("NORD", 20300) rect x=377.79 y=147.50 w=1.93 h=1.00 fill=$down role=datum "31 Jul 2025 · O 127.82 H 127.82 L 127.36 C 127.57 (+0.82%)"
+                  ("NORD", 20301) rect x=380.54 y=147.78 w=1.93 h=1.00 fill=$up role=datum "1 Aug 2025 · O 127.55 H 127.80 L 126.76 C 127.72 (+0.12%)"
+                  ("NORD", 20304) rect x=383.30 y=147.02 w=1.93 h=6.02 fill=$down role=datum "4 Aug 2025 · O 127.99 H 128.82 L 124.24 C 125.86 (−1.46%)"
+                  ("NORD", 20305) rect x=386.05 y=145.83 w=1.93 h=9.10 fill=$up role=datum "5 Aug 2025 · O 125.19 H 129.50 L 125.04 C 128.41 (+2.03%)"
+                  ("NORD", 20306) rect x=388.81 y=141.65 w=1.93 h=1.00 fill=$up role=datum "6 Aug 2025 · O 129.72 H 130.42 L 128.71 C 129.89 (+1.15%)"
+                  ("NORD", 20307) rect x=391.56 y=141.76 w=1.93 h=6.95 fill=$down role=datum "7 Aug 2025 · O 129.85 H 130.99 L 127.20 C 127.39 (−1.92%)"
+                  ("NORD", 20308) rect x=394.32 y=146.76 w=1.93 h=2.15 fill=$down role=datum "8 Aug 2025 · O 128.08 H 128.35 L 125.34 C 127.32 (−0.05%)"
+                  ("NORD", 20311) rect x=397.07 y=142.52 w=1.93 h=7.60 fill=$up role=datum "11 Aug 2025 · O 126.89 H 130.42 L 125.37 C 129.58 (+1.78%)"
+                  ("NORD", 20312) rect x=399.82 y=144.05 w=1.93 h=10.54 fill=$down role=datum "12 Aug 2025 · O 129.04 H 130.41 L 123.27 C 125.31 (−3.30%)"
+                  ("NORD", 20313) rect x=402.58 y=153.72 w=1.93 h=1.00 fill=$down role=datum "13 Aug 2025 · O 125.62 H 126.52 L 125.39 C 125.43 (+0.10%)"
+                  ("NORD", 20314) rect x=405.33 y=150.64 w=1.93 h=6.25 fill=$down role=datum "14 Aug 2025 · O 126.71 H 127.06 L 123.19 C 124.50 (−0.74%)"
+                  ("NORD", 20315) rect x=408.09 y=155.67 w=1.93 h=5.82 fill=$down role=datum "15 Aug 2025 · O 124.93 H 125.66 L 122.07 C 122.87 (−1.31%)"
+                  ("NORD", 20318) rect x=410.84 y=160.67 w=1.93 h=1.72 fill=$down role=datum "18 Aug 2025 · O 123.16 H 123.40 L 121.54 C 122.55 (−0.26%)"
+                  ("NORD", 20319) rect x=413.60 y=161.69 w=1.93 h=1.02 fill=$up role=datum "19 Aug 2025 · O 122.44 H 123.11 L 122.02 C 122.80 (+0.20%)"
+                  ("NORD", 20320) rect x=416.35 y=151.60 w=1.93 h=9.64 fill=$up role=datum "20 Aug 2025 · O 122.96 H 128.37 L 121.45 C 126.37 (+2.91%)"
+                  ("NORD", 20321) rect x=419.11 y=151.48 w=1.93 h=5.34 fill=$down role=datum "21 Aug 2025 · O 126.41 H 127.09 L 124.15 C 124.52 (−1.46%)"
+                  ("NORD", 20322) rect x=421.86 y=157.02 w=1.93 h=2.46 fill=$up role=datum "22 Aug 2025 · O 123.58 H 125.07 L 123.03 C 124.45 (−0.06%)"
+                  ("NORD", 20325) rect x=424.62 y=155.44 w=1.93 h=1.00 fill=$down role=datum "25 Aug 2025 · O 125.01 H 127.67 L 124.24 C 124.78 (+0.27%)"
+                  ("NORD", 20326) rect x=427.37 y=154.56 w=1.93 h=2.32 fill=$down role=datum "26 Aug 2025 · O 125.32 H 127.91 L 123.15 C 124.50 (−0.22%)"
+                  ("NORD", 20327) rect x=430.13 y=158.78 w=1.93 h=1.89 fill=$down role=datum "27 Aug 2025 · O 123.83 H 124.57 L 122.71 C 123.16 (−1.08%)"
+                  ("NORD", 20328) rect x=432.88 y=160.95 w=1.93 h=1.00 fill=$down role=datum "28 Aug 2025 · O 123.06 H 124.29 L 121.56 C 122.82 (−0.28%)"
+                  ("NORD", 20329) rect x=435.63 y=165.22 w=1.93 h=1.89 fill=$down role=datum "29 Aug 2025 · O 121.55 H 122.44 L 120.37 C 120.88 (−1.58%)"
+                  ("NORD", 20332) rect x=438.39 y=162.28 w=1.93 h=8.42 fill=$up role=datum "1 Sep 2025 · O 119.61 H 123.89 L 119.30 C 122.59 (+1.41%)"
+                  ("NORD", 20333) rect x=441.14 y=164.03 w=1.93 h=3.93 fill=$down role=datum "2 Sep 2025 · O 121.97 H 123.10 L 120.20 C 120.58 (−1.64%)"
+                  ("NORD", 20334) rect x=443.90 y=165.48 w=1.93 h=1.22 fill=$down role=datum "3 Sep 2025 · O 121.46 H 122.23 L 120.39 C 121.03 (+0.37%)"
+                  ("NORD", 20335) rect x=446.65 y=159.68 w=1.93 h=7.01 fill=$up role=datum "4 Sep 2025 · O 121.03 H 124.72 L 119.86 C 123.51 (+2.05%)"
+                  ("NORD", 20336) rect x=449.41 y=160.22 w=1.93 h=4.18 fill=$down role=datum "5 Sep 2025 · O 123.32 H 123.79 L 120.02 C 121.84 (−1.35%)"
+                  ("NORD", 20339) rect x=452.16 y=162.68 w=1.93 h=1.78 fill=$down role=datum "8 Sep 2025 · O 122.45 H 124.24 L 120.78 C 121.82 (−0.02%)"
+                  ("NORD", 20340) rect x=454.92 y=159.43 w=1.93 h=6.19 fill=$up role=datum "9 Sep 2025 · O 121.41 H 124.01 L 120.40 C 123.60 (+1.46%)"
+                  ("NORD", 20341) rect x=457.67 y=154.42 w=1.93 h=1.00 fill=$up role=datum "10 Sep 2025 · O 125.05 H 127.07 L 124.77 C 125.37 (+1.43%)"
+                  ("NORD", 20342) rect x=460.43 y=150.97 w=1.93 h=1.00 fill=$down role=datum "11 Sep 2025 · O 126.59 H 128.52 L 126.27 C 126.58 (+0.97%)"
+                  ("NORD", 20343) rect x=463.18 y=147.67 w=1.93 h=2.15 fill=$up role=datum "12 Sep 2025 · O 127.00 H 127.95 L 126.14 C 127.76 (+0.93%)"
+                  ("NORD", 20346) rect x=465.93 y=138.93 w=1.93 h=10.63 fill=$up role=datum "15 Sep 2025 · O 127.09 H 131.37 L 126.69 C 130.85 (+2.42%)"
+                  ("NORD", 20347) rect x=468.69 y=137.24 w=1.93 h=1.84 fill=$up role=datum "16 Sep 2025 · O 130.80 H 132.39 L 130.61 C 131.45 (+0.46%)"
+                  ("NORD", 20348) rect x=471.44 y=138.00 w=1.93 h=4.52 fill=$down role=datum "17 Sep 2025 · O 131.18 H 131.94 L 128.62 C 129.58 (−1.42%)"
+                  ("NORD", 20349) rect x=474.20 y=141.42 w=1.93 h=5.31 fill=$down role=datum "18 Sep 2025 · O 129.97 H 130.95 L 126.79 C 128.09 (−1.15%)"
+                  ("NORD", 20350) rect x=476.95 y=146.25 w=1.93 h=2.40 fill=$down role=datum "19 Sep 2025 · O 128.26 H 128.30 L 126.17 C 127.41 (−0.53%)"
+                  ("NORD", 20353) rect x=479.71 y=146.73 w=1.93 h=8.42 fill=$up role=datum "22 Sep 2025 · O 125.11 H 129.15 L 122.84 C 128.09 (+0.53%)"
+                  ("NORD", 20354) rect x=482.46 y=145.38 w=1.93 h=1.81 fill=$down role=datum "23 Sep 2025 · O 128.57 H 129.68 L 126.42 C 127.93 (−0.12%)"
+                  ("NORD", 20355) rect x=485.22 y=144.39 w=1.93 h=12.69 fill=$down role=datum "24 Sep 2025 · O 128.92 H 129.35 L 123.77 C 124.43 (−2.74%)"
+                  ("NORD", 20356) rect x=487.97 y=148.91 w=1.93 h=8.23 fill=$up role=datum "25 Sep 2025 · O 124.41 H 127.38 L 123.22 C 127.32 (+2.32%)"
+                  ("NORD", 20357) rect x=490.73 y=147.87 w=1.93 h=3.45 fill=$up role=datum "26 Sep 2025 · O 126.47 H 127.79 L 126.00 C 127.69 (+0.29%)"
+                  ("NORD", 20360) rect x=493.48 y=145.55 w=1.93 h=4.55 fill=$up role=datum "29 Sep 2025 · O 126.90 H 129.34 L 126.76 C 128.51 (+0.64%)"
+                  ("NORD", 20361) rect x=496.23 y=147.05 w=1.93 h=3.82 fill=$down role=datum "30 Sep 2025 · O 127.98 H 128.94 L 126.25 C 126.63 (−1.46%)"
+                  ("NORD", 20362) rect x=498.99 y=150.89 w=1.93 h=5.88 fill=$down role=datum "1 Oct 2025 · O 126.62 H 127.17 L 123.93 C 124.54 (−1.65%)"
+                  ("NORD", 20363) rect x=501.74 y=156.46 w=1.93 h=2.66 fill=$down role=datum "2 Oct 2025 · O 124.65 H 124.80 L 123.47 C 123.71 (−0.67%)"
+                  ("NORD", 20364) rect x=504.50 y=152.59 w=1.93 h=7.01 fill=$down role=datum "3 Oct 2025 · O 126.02 H 126.63 L 123.25 C 123.54 (−0.14%)"
+                  ("NORD", 20367) rect x=507.25 y=143.14 w=1.93 h=17.86 fill=$up role=datum "6 Oct 2025 · O 123.04 H 129.75 L 121.61 C 129.36 (+4.71%)"
+                  ("NORD", 20368) rect x=510.01 y=140.35 w=1.93 h=8.79 fill=$down role=datum "7 Oct 2025 · O 130.35 H 132.12 L 126.57 C 127.24 (−1.64%)"
+                  ("NORD", 20369) rect x=512.76 y=143.06 w=1.93 h=2.06 fill=$up role=datum "8 Oct 2025 · O 128.66 H 130.81 L 128.38 C 129.39 (+1.69%)"
+                  ("NORD", 20370) rect x=515.52 y=141.39 w=1.93 h=4.07 fill=$up role=datum "9 Oct 2025 · O 128.54 H 131.54 L 126.78 C 129.98 (+0.46%)"
+                  ("NORD", 20371) rect x=518.27 y=143.51 w=1.93 h=1.00 fill=$up role=datum "10 Oct 2025 · O 129.10 H 130.57 L 127.43 C 129.23 (−0.58%)"
+                  ("NORD", 20374) rect x=521.03 y=140.54 w=1.93 h=2.40 fill=$down role=datum "13 Oct 2025 · O 130.28 H 131.63 L 128.78 C 129.43 (+0.15%)"
+                  ("NORD", 20375) rect x=523.78 y=139.89 w=1.93 h=3.67 fill=$up role=datum "14 Oct 2025 · O 129.21 H 132.02 L 127.93 C 130.51 (+0.83%)"
+                  ("NORD", 20376) rect x=526.53 y=140.66 w=1.93 h=7.58 fill=$down role=datum "15 Oct 2025 · O 130.24 H 130.96 L 126.73 C 127.56 (−2.26%)"
+                  ("NORD", 20377) rect x=529.29 y=148.71 w=1.93 h=1.87 fill=$up role=datum "16 Oct 2025 · O 126.73 H 127.48 L 126.40 C 127.39 (−0.13%)"
+                  ("NORD", 20378) rect x=532.04 y=140.69 w=1.93 h=5.54 fill=$up role=datum "17 Oct 2025 · O 128.27 H 131.19 L 127.68 C 130.23 (+2.23%)"
+                  ("NORD", 20381) rect x=534.80 y=134.21 w=1.93 h=4.30 fill=$up role=datum "20 Oct 2025 · O 131.00 H 132.62 L 130.42 C 132.52 (+1.76%)"
+                  ("NORD", 20382) rect x=537.55 y=133.90 w=1.93 h=1.00 fill=$up role=datum "21 Oct 2025 · O 132.31 H 132.73 L 131.53 C 132.63 (+0.08%)"
+                  ("NORD", 20383) rect x=540.31 y=127.34 w=1.93 h=10.32 fill=$up role=datum "22 Oct 2025 · O 131.30 H 137.58 L 128.29 C 134.95 (+1.75%)"
+                  ("NORD", 20384) rect x=543.06 y=123.53 w=1.93 h=7.29 fill=$up role=datum "23 Oct 2025 · O 133.72 H 136.48 L 133.22 C 136.30 (+1.00%)"
+                  ("NORD", 20385) rect x=545.82 y=120.53 w=1.93 h=3.70 fill=$up role=datum "24 Oct 2025 · O 136.05 H 138.42 L 135.43 C 137.36 (+0.78%)"
+                  ("NORD", 20388) rect x=548.57 y=121.04 w=1.93 h=9.30 fill=$down role=datum "27 Oct 2025 · O 137.18 H 138.29 L 131.94 C 133.89 (−2.53%)"
+                  ("NORD", 20389) rect x=551.33 y=129.58 w=1.93 h=3.00 fill=$down role=datum "28 Oct 2025 · O 134.16 H 134.50 L 131.70 C 133.10 (−0.59%)"
+                  ("NORD", 20390) rect x=554.08 y=134.41 w=1.93 h=1.39 fill=$up role=datum "29 Oct 2025 · O 131.96 H 132.60 L 131.71 C 132.45 (−0.49%)"
+                  ("NORD", 20391) rect x=556.83 y=131.64 w=1.93 h=6.13 fill=$up role=datum "30 Oct 2025 · O 131.26 H 134.39 L 130.64 C 133.43 (+0.74%)"
+                  ("NORD", 20392) rect x=559.59 y=133.36 w=1.93 h=8.28 fill=$down role=datum "31 Oct 2025 · O 132.82 H 133.04 L 128.58 C 129.89 (−2.65%)"
+                  ("NORD", 20395) rect x=562.34 y=128.62 w=1.93 h=18.29 fill=$up role=datum "3 Nov 2025 · O 128.03 H 135.62 L 128.02 C 134.50 (+3.55%)"
+                  ("NORD", 20396) rect x=565.10 y=126.41 w=1.93 h=1.81 fill=$up role=datum "4 Nov 2025 · O 134.64 H 136.17 L 134.47 C 135.28 (+0.58%)"
+                  ("NORD", 20397) rect x=567.85 y=130.06 w=1.93 h=1.00 fill=$up role=datum "5 Nov 2025 · O 133.92 H 136.75 L 132.92 C 133.99 (−0.95%)"
+                  ("NORD", 20398) rect x=570.61 y=124.91 w=1.93 h=6.13 fill=$up role=datum "6 Nov 2025 · O 133.64 H 138.61 L 132.64 C 135.81 (+1.36%)"
+                  ("NORD", 20399) rect x=573.36 y=119.60 w=1.93 h=5.00 fill=$up role=datum "7 Nov 2025 · O 135.92 H 138.03 L 134.98 C 137.69 (+1.38%)"
+                  ("NORD", 20402) rect x=576.12 y=120.90 w=1.93 h=1.00 fill=$up role=datum "10 Nov 2025 · O 136.93 H 137.50 L 135.51 C 137.23 (−0.33%)"
+                  ("NORD", 20403) rect x=578.87 y=104.59 w=1.93 h=17.47 fill=$up role=datum "11 Nov 2025 · O 136.82 H 143.38 L 136.07 C 143.00 (+4.20%)"
+                  ("NORD", 20404) rect x=581.63 y=103.06 w=1.93 h=2.74 fill=$down role=datum "12 Nov 2025 · O 143.54 H 143.76 L 140.18 C 142.57 (−0.30%)"
+                  ("NORD", 20405) rect x=584.38 y=103.85 w=1.93 h=3.79 fill=$down role=datum "13 Nov 2025 · O 143.26 H 143.50 L 139.87 C 141.92 (−0.46%)"
+                  ("NORD", 20406) rect x=587.14 y=100.21 w=1.93 h=5.06 fill=$up role=datum "14 Nov 2025 · O 142.76 H 145.87 L 142.37 C 144.55 (+1.85%)"
+                  ("NORD", 20409) rect x=589.89 y=94.13 w=1.93 h=1.16 fill=$up role=datum "17 Nov 2025 · O 146.29 H 146.71 L 144.51 C 146.70 (+1.49%)"
+                  ("NORD", 20410) rect x=592.64 y=85.85 w=1.93 h=12.78 fill=$up role=datum "18 Nov 2025 · O 145.11 H 150.55 L 144.82 C 149.63 (+2.00%)"
+                  ("NORD", 20411) rect x=595.40 y=85.76 w=1.93 h=14.59 fill=$down role=datum "19 Nov 2025 · O 149.66 H 151.03 L 144.24 C 144.50 (−3.43%)"
+                  ("NORD", 20412) rect x=598.15 y=101.28 w=1.93 h=3.31 fill=$down role=datum "20 Nov 2025 · O 144.17 H 144.97 L 142.58 C 143.00 (−1.04%)"
+                  ("NORD", 20413) rect x=600.91 y=102.98 w=1.93 h=2.01 fill=$up role=datum "21 Nov 2025 · O 142.86 H 146.01 L 140.71 C 143.57 (+0.40%)"
+                  ("NORD", 20416) rect x=603.66 y=98.31 w=1.93 h=3.39 fill=$up role=datum "24 Nov 2025 · O 144.02 H 147.29 L 143.37 C 145.22 (+1.15%)"
+                  ("NORD", 20417) rect x=606.42 y=95.01 w=1.93 h=2.09 fill=$down role=datum "25 Nov 2025 · O 146.39 H 147.52 L 145.26 C 145.65 (+0.30%)"
+                  ("NORD", 20418) rect x=609.17 y=97.07 w=1.93 h=6.64 fill=$down role=datum "26 Nov 2025 · O 145.66 H 145.79 L 143.13 C 143.31 (−1.61%)"
+                  ("NORD", 20419) rect x=611.93 y=108.66 w=1.93 h=5.91 fill=$down role=datum "27 Nov 2025 · O 141.56 H 144.27 L 137.43 C 139.47 (−2.68%)"
+                  ("NORD", 20420) rect x=614.68 y=106.48 w=1.93 h=9.05 fill=$up role=datum "28 Nov 2025 · O 139.13 H 142.43 L 138.40 C 142.33 (+2.05%)"
+                  ("NORD", 20423) rect x=617.44 y=102.95 w=1.93 h=6.36 fill=$up role=datum "1 Dec 2025 · O 141.33 H 143.88 L 141.19 C 143.58 (+0.88%)"
+                  ("NORD", 20424) rect x=620.19 y=101.28 w=1.93 h=10.97 fill=$down role=datum "2 Dec 2025 · O 144.17 H 144.61 L 139.94 C 140.29 (−2.29%)"
+                  ("NORD", 20425) rect x=622.94 y=111.77 w=1.93 h=5.31 fill=$down role=datum "3 Dec 2025 · O 140.46 H 140.88 L 137.95 C 138.58 (−1.22%)"
+                  ("NORD", 20426) rect x=625.70 y=114.34 w=1.93 h=3.99 fill=$down role=datum "4 Dec 2025 · O 139.55 H 140.19 L 137.87 C 138.14 (−0.32%)"
+                  ("NORD", 20427) rect x=628.45 y=110.04 w=1.93 h=6.05 fill=$up role=datum "5 Dec 2025 · O 138.93 H 141.71 L 136.36 C 141.07 (+2.12%)"
+                  ("NORD", 20430) rect x=631.21 y=108.88 w=1.93 h=4.95 fill=$down role=datum "8 Dec 2025 · O 141.48 H 141.69 L 138.70 C 139.73 (−0.95%)"
+                  ("NORD", 20431) rect x=633.96 y=107.22 w=1.93 h=7.35 fill=$up role=datum "9 Dec 2025 · O 139.47 H 144.58 L 139.11 C 142.07 (+1.67%)"
+                  ("NORD", 20432) rect x=636.72 y=106.23 w=1.93 h=5.34 fill=$up role=datum "10 Dec 2025 · O 140.53 H 143.65 L 138.00 C 142.42 (+0.25%)"
+                  ("NORD", 20433) rect x=639.47 y=104.02 w=1.93 h=1.05 fill=$down role=datum "11 Dec 2025 · O 143.20 H 145.44 L 140.52 C 142.83 (+0.29%)"
+                  ("NORD", 20434) rect x=642.23 y=107.13 w=1.93 h=4.75 fill=$down role=datum "12 Dec 2025 · O 142.10 H 143.01 L 138.94 C 140.42 (−1.69%)"
+                  ("NORD", 20437) rect x=644.98 y=104.59 w=1.93 h=1.92 fill=$up role=datum "15 Dec 2025 · O 142.32 H 143.68 L 141.98 C 143.00 (+1.84%)"
+                  ("NORD", 20438) rect x=647.74 y=102.64 w=1.93 h=3.76 fill=$down role=datum "16 Dec 2025 · O 143.69 H 144.68 L 141.39 C 142.36 (−0.45%)"
+                  ("NORD", 20439) rect x=650.49 y=106.85 w=1.93 h=1.00 fill=$up role=datum "17 Dec 2025 · O 141.88 H 142.57 L 141.59 C 142.20 (−0.11%)"
+                  ("NORD", 20440) rect x=653.24 y=109.39 w=1.93 h=9.47 fill=$down role=datum "18 Dec 2025 · O 141.30 H 142.02 L 137.66 C 137.95 (−2.99%)"
+                  ("NORD", 20441) rect x=656.00 y=110.72 w=1.93 h=11.02 fill=$up role=datum "19 Dec 2025 · O 136.93 H 140.87 L 136.72 C 140.83 (+2.09%)"
+                  ("NORD", 20444) rect x=658.75 y=107.90 w=1.93 h=2.63 fill=$up role=datum "22 Dec 2025 · O 140.90 H 143.97 L 140.30 C 141.83 (+0.71%)"
+                  ("NORD", 20445) rect x=661.51 y=88.90 w=1.93 h=19.67 fill=$up role=datum "23 Dec 2025 · O 141.59 H 148.97 L 140.95 C 148.55 (+4.74%)"
+                  ("NORD", 20451) rect x=664.26 y=84.15 w=1.93 h=2.20 fill=$up role=datum "29 Dec 2025 · O 149.45 H 151.16 L 148.87 C 150.23 (+1.13%)"
+                  ("NORD", 20452) rect x=667.02 y=82.00 w=1.93 h=5.77 fill=$down role=datum "30 Dec 2025 · O 150.99 H 151.01 L 148.68 C 148.95 (−0.85%)"
+                  ("NORD", 20454) rect x=669.77 y=87.15 w=1.93 h=4.47 fill=$down role=datum "1 Jan 2026 · O 149.17 H 150.94 L 145.10 C 147.59 (−0.91%)"
+                  ("NORD", 20455) rect x=672.53 y=90.09 w=1.93 h=1.00 fill=$down role=datum "2 Jan 2026 · O 148.13 H 148.41 L 147.68 C 147.89 (+0.20%)"
+                  ("NORD", 20458) rect x=675.28 y=88.42 w=1.93 h=4.41 fill=$up role=datum "5 Jan 2026 · O 147.16 H 149.12 L 145.79 C 148.72 (+0.56%)"
+                  ("NORD", 20459) rect x=678.04 y=91.30 w=1.93 h=1.72 fill=$down role=datum "6 Jan 2026 · O 147.70 H 148.88 L 146.65 C 147.09 (−1.10%)"
+                  ("NORD", 20460) rect x=680.79 y=90.65 w=1.93 h=8.00 fill=$down role=datum "7 Jan 2026 · O 147.93 H 148.95 L 144.69 C 145.10 (−1.35%)"
+                  ("NORD", 20461) rect x=683.54 y=95.34 w=1.93 h=3.42 fill=$down role=datum "8 Jan 2026 · O 146.27 H 147.13 L 144.92 C 145.06 (−0.03%)"
+                  ("NORD", 20462) rect x=686.30 y=98.85 w=1.93 h=4.16 fill=$down role=datum "9 Jan 2026 · O 145.03 H 145.13 L 142.93 C 143.56 (−1.03%)"
+                  ("NORD", 20465) rect x=689.05 y=99.90 w=1.93 h=5.71 fill=$down role=datum "12 Jan 2026 · O 144.66 H 145.07 L 142.62 C 142.64 (−0.64%)"
+                  ("NORD", 20466) rect x=691.81 y=99.95 w=1.93 h=23.01 fill=$down role=datum "13 Jan 2026 · O 144.64 H 144.77 L 135.73 C 136.50 (−4.30%)"
+              group ("ma-sma_20",) role=series "SMA 20"
+                group ("lines",)
+                  group ("",)
+                    ("line",) polyline n=252 first=(1.38, 193.66) stroke=$accent/1.50 role=series "sma_20"
+                    ("points",) instances circle ×252
+                      · ("20101",) (1.38, 193.66) fill=#00000000
+                      · ("20102",) (4.13, 192.50) fill=#00000000
+                      · ("20103",) (6.89, 191.33) fill=#00000000
+                      · … 249 more
+              group ("ma-sma_50",) role=series "SMA 50"
+                group ("lines",)
+                  group ("",)
+                    ("line",) polyline n=252 first=(1.38, 193.80) stroke=$highlight/1.50 role=series "sma_50"
+                    ("points",) instances circle ×252
+                      · ("20101",) (1.38, 193.80) fill=#00000000
+                      · ("20102",) (4.13, 194.03) fill=#00000000
+                      · ("20103",) (6.89, 194.31) fill=#00000000
+                      · … 249 more
+            group ("pane-gap",) transform=[1.00 0.00 0.00 1.00 0.00 232.14]
+            group ("lower",) transform=[1.00 0.00 0.00 1.00 0.00 248.14]
+              group ("grid-lower",) role=decoration
+                (0,) segment (0.00, 77.83)→(694.15, 77.83) stroke=$grid/1.00 role=decoration
+                (5000000,) segment (0.00, 38.92)→(694.15, 38.92) stroke=$grid/1.00 role=decoration
+                (10000000,) segment (0.00, 0.00)→(694.15, 0.00) stroke=$grid/1.00 role=decoration
+              group ("volume",) role=series "volume"
+                ("NORD", 20101) rect x=0.41 y=58.47 w=1.93 h=19.36 fill=$down opacity=0.55 role=datum "13 Jan 2025 · volume 2,487,213"
+                ("NORD", 20102) rect x=3.17 y=50.71 w=1.93 h=27.12 fill=$down opacity=0.55 role=datum "14 Jan 2025 · volume 3,484,752"
+                ("NORD", 20103) rect x=5.92 y=56.60 w=1.93 h=21.23 fill=$up opacity=0.55 role=datum "15 Jan 2025 · volume 2,727,575"
+                ("NORD", 20104) rect x=8.68 y=46.54 w=1.93 h=31.29 fill=$down opacity=0.55 role=datum "16 Jan 2025 · volume 4,020,410"
+                ("NORD", 20105) rect x=11.43 y=36.97 w=1.93 h=40.86 fill=$down opacity=0.55 role=datum "17 Jan 2025 · volume 5,249,674"
+                ("NORD", 20108) rect x=14.19 y=47.84 w=1.93 h=29.99 fill=$up opacity=0.55 role=datum "20 Jan 2025 · volume 3,853,443"
+                ("NORD", 20109) rect x=16.94 y=31.14 w=1.93 h=46.69 fill=$down opacity=0.55 role=datum "21 Jan 2025 · volume 5,998,964"
+                ("NORD", 20110) rect x=19.70 y=39.09 w=1.93 h=38.74 fill=$down opacity=0.55 role=datum "22 Jan 2025 · volume 4,977,151"
+                ("NORD", 20111) rect x=22.45 y=35.94 w=1.93 h=41.89 fill=$down opacity=0.55 role=datum "23 Jan 2025 · volume 5,382,257"
+                ("NORD", 20112) rect x=25.20 y=50.65 w=1.93 h=27.18 fill=$up opacity=0.55 role=datum "24 Jan 2025 · volume 3,492,635"
+                ("NORD", 20115) rect x=27.96 y=43.12 w=1.93 h=34.71 fill=$up opacity=0.55 role=datum "27 Jan 2025 · volume 4,460,103"
+                ("NORD", 20116) rect x=30.71 y=54.71 w=1.93 h=23.12 fill=$down opacity=0.55 role=datum "28 Jan 2025 · volume 2,970,071"
+                ("NORD", 20117) rect x=33.47 y=52.75 w=1.93 h=25.08 fill=$up opacity=0.55 role=datum "29 Jan 2025 · volume 3,221,901"
+                ("NORD", 20118) rect x=36.22 y=51.76 w=1.93 h=26.07 fill=$up opacity=0.55 role=datum "30 Jan 2025 · volume 3,349,123"
+                ("NORD", 20119) rect x=38.98 y=37.35 w=1.93 h=40.48 fill=$down opacity=0.55 role=datum "31 Jan 2025 · volume 5,201,496"
+                ("NORD", 20122) rect x=41.73 y=29.56 w=1.93 h=48.27 fill=$up opacity=0.55 role=datum "3 Feb 2025 · volume 6,202,264"
+                ("NORD", 20123) rect x=44.49 y=31.20 w=1.93 h=46.64 fill=$up opacity=0.55 role=datum "4 Feb 2025 · volume 5,991,926"
+                ("NORD", 20124) rect x=47.24 y=34.19 w=1.93 h=43.64 fill=$down opacity=0.55 role=datum "5 Feb 2025 · volume 5,607,504"
+                ("NORD", 20125) rect x=50.00 y=45.80 w=1.93 h=32.03 fill=$up opacity=0.55 role=datum "6 Feb 2025 · volume 4,115,822"
+                ("NORD", 20126) rect x=52.75 y=44.97 w=1.93 h=32.86 fill=$down opacity=0.55 role=datum "7 Feb 2025 · volume 4,221,456"
+                ("NORD", 20129) rect x=55.50 y=44.81 w=1.93 h=33.03 fill=$down opacity=0.55 role=datum "10 Feb 2025 · volume 4,243,169"
+                ("NORD", 20130) rect x=58.26 y=52.66 w=1.93 h=25.17 fill=$down opacity=0.55 role=datum "11 Feb 2025 · volume 3,234,400"
+                ("NORD", 20131) rect x=61.01 y=42.11 w=1.93 h=35.72 fill=$down opacity=0.55 role=datum "12 Feb 2025 · volume 4,589,532"
+                ("NORD", 20132) rect x=63.77 y=21.70 w=1.93 h=56.13 fill=$up opacity=0.55 role=datum "13 Feb 2025 · volume 7,211,533"
+                ("NORD", 20133) rect x=66.52 y=39.74 w=1.93 h=38.09 fill=$up opacity=0.55 role=datum "14 Feb 2025 · volume 4,893,446"
+                ("NORD", 20136) rect x=69.28 y=42.84 w=1.93 h=34.99 fill=$up opacity=0.55 role=datum "17 Feb 2025 · volume 4,495,502"
+                ("NORD", 20137) rect x=72.03 y=53.69 w=1.93 h=24.14 fill=$up opacity=0.55 role=datum "18 Feb 2025 · volume 3,101,381"
+                ("NORD", 20138) rect x=74.79 y=65.27 w=1.93 h=12.56 fill=$down opacity=0.55 role=datum "19 Feb 2025 · volume 1,613,902"
+                ("NORD", 20139) rect x=77.54 y=40.91 w=1.93 h=36.92 fill=$up opacity=0.55 role=datum "20 Feb 2025 · volume 4,743,658"
+                ("NORD", 20140) rect x=80.30 y=36.82 w=1.93 h=41.02 fill=$down opacity=0.55 role=datum "21 Feb 2025 · volume 5,269,789"
+                ("NORD", 20143) rect x=83.05 y=47.50 w=1.93 h=30.33 fill=$down opacity=0.55 role=datum "24 Feb 2025 · volume 3,896,869"
+                ("NORD", 20144) rect x=85.80 y=18.25 w=1.93 h=59.59 fill=$up opacity=0.55 role=datum "25 Feb 2025 · volume 7,655,784"
+                ("NORD", 20145) rect x=88.56 y=32.69 w=1.93 h=45.14 fill=$up opacity=0.55 role=datum "26 Feb 2025 · volume 5,799,302"
+                ("NORD", 20146) rect x=91.31 y=28.83 w=1.93 h=49.00 fill=$up opacity=0.55 role=datum "27 Feb 2025 · volume 6,296,142"
+                ("NORD", 20147) rect x=94.07 y=29.34 w=1.93 h=48.49 fill=$up opacity=0.55 role=datum "28 Feb 2025 · volume 6,229,751"
+                ("NORD", 20150) rect x=96.82 y=24.97 w=1.93 h=52.86 fill=$up opacity=0.55 role=datum "3 Mar 2025 · volume 6,791,139"
+                ("NORD", 20151) rect x=99.58 y=43.66 w=1.93 h=34.17 fill=$down opacity=0.55 role=datum "4 Mar 2025 · volume 4,389,950"
+                ("NORD", 20152) rect x=102.33 y=41.69 w=1.93 h=36.15 fill=$down opacity=0.55 role=datum "5 Mar 2025 · volume 4,644,072"
+                ("NORD", 20153) rect x=105.09 y=51.44 w=1.93 h=26.39 fill=$down opacity=0.55 role=datum "6 Mar 2025 · volume 3,390,807"
+                ("NORD", 20154) rect x=107.84 y=46.07 w=1.93 h=31.76 fill=$down opacity=0.55 role=datum "7 Mar 2025 · volume 4,080,651"
+                ("NORD", 20157) rect x=110.60 y=38.34 w=1.93 h=39.49 fill=$up opacity=0.55 role=datum "10 Mar 2025 · volume 5,073,637"
+                ("NORD", 20158) rect x=113.35 y=54.65 w=1.93 h=23.18 fill=$down opacity=0.55 role=datum "11 Mar 2025 · volume 2,978,336"
+                ("NORD", 20159) rect x=116.10 y=46.18 w=1.93 h=31.65 fill=$up opacity=0.55 role=datum "12 Mar 2025 · volume 4,066,905"
+                ("NORD", 20160) rect x=118.86 y=40.07 w=1.93 h=37.76 fill=$up opacity=0.55 role=datum "13 Mar 2025 · volume 4,851,081"
+                ("NORD", 20161) rect x=121.61 y=31.69 w=1.93 h=46.15 fill=$down opacity=0.55 role=datum "14 Mar 2025 · volume 5,928,936"
+                ("NORD", 20164) rect x=124.37 y=44.76 w=1.93 h=33.07 fill=$down opacity=0.55 role=datum "17 Mar 2025 · volume 4,249,568"
+                ("NORD", 20165) rect x=127.12 y=49.46 w=1.93 h=28.37 fill=$down opacity=0.55 role=datum "18 Mar 2025 · volume 3,644,654"
+                ("NORD", 20166) rect x=129.88 y=56.65 w=1.93 h=21.18 fill=$up opacity=0.55 role=datum "19 Mar 2025 · volume 2,721,507"
+                ("NORD", 20167) rect x=132.63 y=40.17 w=1.93 h=37.66 fill=$down opacity=0.55 role=datum "20 Mar 2025 · volume 4,839,036"
+                ("NORD", 20168) rect x=135.39 y=40.78 w=1.93 h=37.05 fill=$down opacity=0.55 role=datum "21 Mar 2025 · volume 4,760,311"
+                ("NORD", 20171) rect x=138.14 y=13.17 w=1.93 h=64.66 fill=$down opacity=0.55 role=datum "24 Mar 2025 · volume 8,307,980"
+                ("NORD", 20172) rect x=140.90 y=39.44 w=1.93 h=38.39 fill=$up opacity=0.55 role=datum "25 Mar 2025 · volume 4,932,024"
+                ("NORD", 20173) rect x=143.65 y=41.44 w=1.93 h=36.39 fill=$up opacity=0.55 role=datum "26 Mar 2025 · volume 4,675,954"
+                ("NORD", 20174) rect x=146.41 y=45.20 w=1.93 h=32.64 fill=$up opacity=0.55 role=datum "27 Mar 2025 · volume 4,193,116"
+                ("NORD", 20175) rect x=149.16 y=42.47 w=1.93 h=35.36 fill=$down opacity=0.55 role=datum "28 Mar 2025 · volume 4,543,006"
+                ("NORD", 20178) rect x=151.91 y=46.10 w=1.93 h=31.74 fill=$up opacity=0.55 role=datum "31 Mar 2025 · volume 4,077,512"
+                ("NORD", 20179) rect x=154.67 y=36.92 w=1.93 h=40.91 fill=$down opacity=0.55 role=datum "1 Apr 2025 · volume 5,255,840"
+                ("NORD", 20180) rect x=157.42 y=52.35 w=1.93 h=25.48 fill=$down opacity=0.55 role=datum "2 Apr 2025 · volume 3,273,415"
+                ("NORD", 20181) rect x=160.18 y=49.43 w=1.93 h=28.40 fill=$up opacity=0.55 role=datum "3 Apr 2025 · volume 3,648,819"
+                ("NORD", 20182) rect x=162.93 y=48.77 w=1.93 h=29.06 fill=$up opacity=0.55 role=datum "4 Apr 2025 · volume 3,733,543"
+                ("NORD", 20185) rect x=165.69 y=40.41 w=1.93 h=37.43 fill=$up opacity=0.55 role=datum "7 Apr 2025 · volume 4,808,620"
+                ("NORD", 20186) rect x=168.44 y=42.23 w=1.93 h=35.60 fill=$down opacity=0.55 role=datum "8 Apr 2025 · volume 4,573,946"
+                ("NORD", 20187) rect x=171.20 y=33.70 w=1.93 h=44.13 fill=$up opacity=0.55 role=datum "9 Apr 2025 · volume 5,669,819"
+                ("NORD", 20188) rect x=173.95 y=49.98 w=1.93 h=27.85 fill=$up opacity=0.55 role=datum "10 Apr 2025 · volume 3,577,828"
+                ("NORD", 20189) rect x=176.71 y=48.62 w=1.93 h=29.21 fill=$up opacity=0.55 role=datum "11 Apr 2025 · volume 3,753,551"
+                ("NORD", 20192) rect x=179.46 y=45.46 w=1.93 h=32.37 fill=$up opacity=0.55 role=datum "14 Apr 2025 · volume 4,159,557"
+                ("NORD", 20193) rect x=182.21 y=62.91 w=1.93 h=14.92 fill=$up opacity=0.55 role=datum "15 Apr 2025 · volume 1,916,530"
+                ("NORD", 20194) rect x=184.97 y=30.69 w=1.93 h=47.14 fill=$down opacity=0.55 role=datum "16 Apr 2025 · volume 6,056,923"
+                ("NORD", 20195) rect x=187.72 y=53.76 w=1.93 h=24.08 fill=$up opacity=0.55 role=datum "17 Apr 2025 · volume 3,093,333"
+                ("NORD", 20200) rect x=190.48 y=35.13 w=1.93 h=42.70 fill=$up opacity=0.55 role=datum "22 Apr 2025 · volume 5,486,786"
+                ("NORD", 20201) rect x=193.23 y=49.91 w=1.93 h=27.92 fill=$up opacity=0.55 role=datum "23 Apr 2025 · volume 3,587,212"
+                ("NORD", 20202) rect x=195.99 y=37.29 w=1.93 h=40.54 fill=$down opacity=0.55 role=datum "24 Apr 2025 · volume 5,208,682"
+                ("NORD", 20203) rect x=198.74 y=41.31 w=1.93 h=36.52 fill=$up opacity=0.55 role=datum "25 Apr 2025 · volume 4,692,590"
+                ("NORD", 20206) rect x=201.50 y=55.00 w=1.93 h=22.83 fill=$up opacity=0.55 role=datum "28 Apr 2025 · volume 2,933,061"
+                ("NORD", 20207) rect x=204.25 y=32.43 w=1.93 h=45.40 fill=$down opacity=0.55 role=datum "29 Apr 2025 · volume 5,833,024"
+                ("NORD", 20208) rect x=207.01 y=24.62 w=1.93 h=53.21 fill=$up opacity=0.55 role=datum "30 Apr 2025 · volume 6,836,824"
+                ("NORD", 20210) rect x=209.76 y=44.04 w=1.93 h=33.79 fill=$up opacity=0.55 role=datum "2 May 2025 · volume 4,341,173"
+                ("NORD", 20213) rect x=212.51 y=36.10 w=1.93 h=41.73 fill=$up opacity=0.55 role=datum "5 May 2025 · volume 5,361,700"
+                ("NORD", 20214) rect x=215.27 y=50.39 w=1.93 h=27.44 fill=$up opacity=0.55 role=datum "6 May 2025 · volume 3,525,134"
+                ("NORD", 20215) rect x=218.02 y=38.94 w=1.93 h=38.89 fill=$up opacity=0.55 role=datum "7 May 2025 · volume 4,997,337"
+                ("NORD", 20216) rect x=220.78 y=34.46 w=1.93 h=43.37 fill=$up opacity=0.55 role=datum "8 May 2025 · volume 5,572,165"
+                ("NORD", 20217) rect x=223.53 y=42.56 w=1.93 h=35.28 fill=$down opacity=0.55 role=datum "9 May 2025 · volume 4,532,319"
+                ("NORD", 20220) rect x=226.29 y=54.24 w=1.93 h=23.59 fill=$up opacity=0.55 role=datum "12 May 2025 · volume 3,030,748"
+                ("NORD", 20221) rect x=229.04 y=39.75 w=1.93 h=38.08 fill=$down opacity=0.55 role=datum "13 May 2025 · volume 4,892,877"
+                ("NORD", 20222) rect x=231.80 y=52.57 w=1.93 h=25.26 fill=$down opacity=0.55 role=datum "14 May 2025 · volume 3,246,050"
+                ("NORD", 20223) rect x=234.55 y=50.29 w=1.93 h=27.54 fill=$down opacity=0.55 role=datum "15 May 2025 · volume 3,538,391"
+                ("NORD", 20224) rect x=237.31 y=45.46 w=1.93 h=32.37 fill=$up opacity=0.55 role=datum "16 May 2025 · volume 4,158,901"
+                ("NORD", 20227) rect x=240.06 y=48.45 w=1.93 h=29.38 fill=$down opacity=0.55 role=datum "19 May 2025 · volume 3,774,438"
+                ("NORD", 20228) rect x=242.81 y=39.43 w=1.93 h=38.40 fill=$up opacity=0.55 role=datum "20 May 2025 · volume 4,933,838"
+                ("NORD", 20229) rect x=245.57 y=41.99 w=1.93 h=35.84 fill=$up opacity=0.55 role=datum "21 May 2025 · volume 4,605,278"
+                ("NORD", 20230) rect x=248.32 y=53.90 w=1.93 h=23.93 fill=$down opacity=0.55 role=datum "22 May 2025 · volume 3,074,639"
+                ("NORD", 20231) rect x=251.08 y=43.22 w=1.93 h=34.62 fill=$up opacity=0.55 role=datum "23 May 2025 · volume 4,447,506"
+                ("NORD", 20234) rect x=253.83 y=57.81 w=1.93 h=20.02 fill=$down opacity=0.55 role=datum "26 May 2025 · volume 2,572,576"
+                ("NORD", 20235) rect x=256.59 y=42.14 w=1.93 h=35.69 fill=$down opacity=0.55 role=datum "27 May 2025 · volume 4,586,151"
+                ("NORD", 20236) rect x=259.34 y=46.83 w=1.93 h=31.00 fill=$up opacity=0.55 role=datum "28 May 2025 · volume 3,982,554"
+                ("NORD", 20238) rect x=262.10 y=39.16 w=1.93 h=38.67 fill=$up opacity=0.55 role=datum "30 May 2025 · volume 4,968,518"
+                ("NORD", 20241) rect x=264.85 y=28.42 w=1.93 h=49.41 fill=$up opacity=0.55 role=datum "2 Jun 2025 · volume 6,348,897"
+                ("NORD", 20242) rect x=267.61 y=54.13 w=1.93 h=23.70 fill=$down opacity=0.55 role=datum "3 Jun 2025 · volume 3,044,625"
+                ("NORD", 20243) rect x=270.36 y=39.28 w=1.93 h=38.55 fill=$up opacity=0.55 role=datum "4 Jun 2025 · volume 4,952,609"
+                ("NORD", 20244) rect x=273.11 y=55.67 w=1.93 h=22.16 fill=$up opacity=0.55 role=datum "5 Jun 2025 · volume 2,847,696"
+                ("NORD", 20248) rect x=275.87 y=37.59 w=1.93 h=40.24 fill=$down opacity=0.55 role=datum "9 Jun 2025 · volume 5,170,555"
+                ("NORD", 20249) rect x=278.62 y=57.84 w=1.93 h=19.99 fill=$down opacity=0.55 role=datum "10 Jun 2025 · volume 2,568,195"
+                ("NORD", 20250) rect x=281.38 y=47.18 w=1.93 h=30.65 fill=$up opacity=0.55 role=datum "11 Jun 2025 · volume 3,938,368"
+                ("NORD", 20251) rect x=284.13 y=46.10 w=1.93 h=31.73 fill=$down opacity=0.55 role=datum "12 Jun 2025 · volume 4,077,213"
+                ("NORD", 20252) rect x=286.89 y=36.58 w=1.93 h=41.25 fill=$down opacity=0.55 role=datum "13 Jun 2025 · volume 5,299,787"
+                ("NORD", 20255) rect x=289.64 y=49.53 w=1.93 h=28.30 fill=$down opacity=0.55 role=datum "16 Jun 2025 · volume 3,636,367"
+                ("NORD", 20256) rect x=292.40 y=41.05 w=1.93 h=36.78 fill=$up opacity=0.55 role=datum "17 Jun 2025 · volume 4,726,199"
+                ("NORD", 20257) rect x=295.15 y=38.26 w=1.93 h=39.57 fill=$down opacity=0.55 role=datum "18 Jun 2025 · volume 5,084,342"
+                ("NORD", 20258) rect x=297.91 y=37.34 w=1.93 h=40.50 fill=$up opacity=0.55 role=datum "19 Jun 2025 · volume 5,203,012"
+                ("NORD", 20262) rect x=300.66 y=54.83 w=1.93 h=23.00 fill=$down opacity=0.55 role=datum "23 Jun 2025 · volume 2,955,678"
+                ("NORD", 20263) rect x=303.42 y=44.47 w=1.93 h=33.36 fill=$down opacity=0.55 role=datum "24 Jun 2025 · volume 4,286,519"
+                ("NORD", 20264) rect x=306.17 y=35.56 w=1.93 h=42.28 fill=$down opacity=0.55 role=datum "25 Jun 2025 · volume 5,431,658"
+                ("NORD", 20265) rect x=308.92 y=52.01 w=1.93 h=25.82 fill=$down opacity=0.55 role=datum "26 Jun 2025 · volume 3,317,531"
+                ("NORD", 20266) rect x=311.68 y=40.59 w=1.93 h=37.24 fill=$down opacity=0.55 role=datum "27 Jun 2025 · volume 4,785,158"
+                ("NORD", 20269) rect x=314.43 y=46.20 w=1.93 h=31.63 fill=$up opacity=0.55 role=datum "30 Jun 2025 · volume 4,064,192"
+                ("NORD", 20270) rect x=317.19 y=28.63 w=1.93 h=49.20 fill=$down opacity=0.55 role=datum "1 Jul 2025 · volume 6,321,337"
+                ("NORD", 20271) rect x=319.94 y=47.44 w=1.93 h=30.39 fill=$down opacity=0.55 role=datum "2 Jul 2025 · volume 3,905,185"
+                ("NORD", 20272) rect x=322.70 y=51.37 w=1.93 h=26.46 fill=$up opacity=0.55 role=datum "3 Jul 2025 · volume 3,399,521"
+                ("NORD", 20273) rect x=325.45 y=38.65 w=1.93 h=39.18 fill=$down opacity=0.55 role=datum "4 Jul 2025 · volume 5,033,934"
+                ("NORD", 20276) rect x=328.21 y=47.81 w=1.93 h=30.02 fill=$down opacity=0.55 role=datum "7 Jul 2025 · volume 3,857,550"
+                ("NORD", 20277) rect x=330.96 y=32.15 w=1.93 h=45.68 fill=$down opacity=0.55 role=datum "8 Jul 2025 · volume 5,868,841"
+                ("NORD", 20278) rect x=333.72 y=52.94 w=1.93 h=24.89 fill=$down opacity=0.55 role=datum "9 Jul 2025 · volume 3,197,586"
+                ("NORD", 20279) rect x=336.47 y=38.04 w=1.93 h=39.80 fill=$down opacity=0.55 role=datum "10 Jul 2025 · volume 5,113,073"
+                ("NORD", 20280) rect x=339.22 y=38.35 w=1.93 h=39.48 fill=$down opacity=0.55 role=datum "11 Jul 2025 · volume 5,072,035"
+                ("NORD", 20283) rect x=341.98 y=52.63 w=1.93 h=25.20 fill=$down opacity=0.55 role=datum "14 Jul 2025 · volume 3,237,621"
+                ("NORD", 20284) rect x=344.73 y=62.04 w=1.93 h=15.79 fill=$down opacity=0.55 role=datum "15 Jul 2025 · volume 2,029,355"
+                ("NORD", 20285) rect x=347.49 y=27.39 w=1.93 h=50.44 fill=$up opacity=0.55 role=datum "16 Jul 2025 · volume 6,480,243"
+                ("NORD", 20286) rect x=350.24 y=54.88 w=1.93 h=22.95 fill=$up opacity=0.55 role=datum "17 Jul 2025 · volume 2,948,687"
+                ("NORD", 20287) rect x=353.00 y=37.65 w=1.93 h=40.18 fill=$up opacity=0.55 role=datum "18 Jul 2025 · volume 5,163,092"
+                ("NORD", 20290) rect x=355.75 y=40.55 w=1.93 h=37.28 fill=$up opacity=0.55 role=datum "21 Jul 2025 · volume 4,789,639"
+                ("NORD", 20291) rect x=358.51 y=38.80 w=1.93 h=39.03 fill=$up opacity=0.55 role=datum "22 Jul 2025 · volume 5,015,174"
+                ("NORD", 20292) rect x=361.26 y=43.28 w=1.93 h=34.55 fill=$up opacity=0.55 role=datum "23 Jul 2025 · volume 4,439,704"
+                ("NORD", 20293) rect x=364.02 y=58.05 w=1.93 h=19.78 fill=$down opacity=0.55 role=datum "24 Jul 2025 · volume 2,541,541"
+                ("NORD", 20294) rect x=366.77 y=58.86 w=1.93 h=18.97 fill=$down opacity=0.55 role=datum "25 Jul 2025 · volume 2,436,898"
+                ("NORD", 20297) rect x=369.52 y=30.87 w=1.93 h=46.96 fill=$down opacity=0.55 role=datum "28 Jul 2025 · volume 6,033,880"
+                ("NORD", 20298) rect x=372.28 y=42.96 w=1.93 h=34.87 fill=$down opacity=0.55 role=datum "29 Jul 2025 · volume 4,479,983"
+                ("NORD", 20299) rect x=375.03 y=39.46 w=1.93 h=38.37 fill=$down opacity=0.55 role=datum "30 Jul 2025 · volume 4,930,104"
+                ("NORD", 20300) rect x=377.79 y=55.26 w=1.93 h=22.57 fill=$down opacity=0.55 role=datum "31 Jul 2025 · volume 2,899,915"
+                ("NORD", 20301) rect x=380.54 y=63.23 w=1.93 h=14.60 fill=$up opacity=0.55 role=datum "1 Aug 2025 · volume 1,876,429"
+                ("NORD", 20304) rect x=383.30 y=32.34 w=1.93 h=45.49 fill=$down opacity=0.55 role=datum "4 Aug 2025 · volume 5,844,990"
+                ("NORD", 20305) rect x=386.05 y=41.88 w=1.93 h=35.95 fill=$up opacity=0.55 role=datum "5 Aug 2025 · volume 4,618,840"
+                ("NORD", 20306) rect x=388.81 y=45.68 w=1.93 h=32.15 fill=$up opacity=0.55 role=datum "6 Aug 2025 · volume 4,130,486"
+                ("NORD", 20307) rect x=391.56 y=35.35 w=1.93 h=42.49 fill=$down opacity=0.55 role=datum "7 Aug 2025 · volume 5,458,705"
+                ("NORD", 20308) rect x=394.32 y=47.86 w=1.93 h=29.97 fill=$down opacity=0.55 role=datum "8 Aug 2025 · volume 3,851,060"
+                ("NORD", 20311) rect x=397.07 y=39.25 w=1.93 h=38.58 fill=$up opacity=0.55 role=datum "11 Aug 2025 · volume 4,956,782"
+                ("NORD", 20312) rect x=399.82 y=23.73 w=1.93 h=54.10 fill=$down opacity=0.55 role=datum "12 Aug 2025 · volume 6,951,531"
+                ("NORD", 20313) rect x=402.58 y=53.53 w=1.93 h=24.30 fill=$down opacity=0.55 role=datum "13 Aug 2025 · volume 3,122,637"
+                ("NORD", 20314) rect x=405.33 y=48.67 w=1.93 h=29.16 fill=$down opacity=0.55 role=datum "14 Aug 2025 · volume 3,746,594"
+                ("NORD", 20315) rect x=408.09 y=38.48 w=1.93 h=39.35 fill=$down opacity=0.55 role=datum "15 Aug 2025 · volume 5,055,707"
+                ("NORD", 20318) rect x=410.84 y=48.56 w=1.93 h=29.27 fill=$down opacity=0.55 role=datum "18 Aug 2025 · volume 3,761,131"
+                ("NORD", 20319) rect x=413.60 y=51.48 w=1.93 h=26.35 fill=$up opacity=0.55 role=datum "19 Aug 2025 · volume 3,385,037"
+                ("NORD", 20320) rect x=416.35 y=26.45 w=1.93 h=51.38 fill=$up opacity=0.55 role=datum "20 Aug 2025 · volume 6,601,657"
+                ("NORD", 20321) rect x=419.11 y=38.61 w=1.93 h=39.22 fill=$down opacity=0.55 role=datum "21 Aug 2025 · volume 5,039,102"
+                ("NORD", 20322) rect x=421.86 y=58.49 w=1.93 h=19.34 fill=$up opacity=0.55 role=datum "22 Aug 2025 · volume 2,484,869"
+                ("NORD", 20325) rect x=424.62 y=53.96 w=1.93 h=23.87 fill=$down opacity=0.55 role=datum "25 Aug 2025 · volume 3,066,556"
+                ("NORD", 20326) rect x=427.37 y=53.83 w=1.93 h=24.00 fill=$down opacity=0.55 role=datum "26 Aug 2025 · volume 3,084,204"
+                ("NORD", 20327) rect x=430.13 y=48.24 w=1.93 h=29.59 fill=$down opacity=0.55 role=datum "27 Aug 2025 · volume 3,801,791"
+                ("NORD", 20328) rect x=432.88 y=41.84 w=1.93 h=35.99 fill=$down opacity=0.55 role=datum "28 Aug 2025 · volume 4,624,688"
+                ("NORD", 20329) rect x=435.63 y=43.21 w=1.93 h=34.62 fill=$down opacity=0.55 role=datum "29 Aug 2025 · volume 4,447,747"
+                ("NORD", 20332) rect x=438.39 y=37.21 w=1.93 h=40.62 fill=$up opacity=0.55 role=datum "1 Sep 2025 · volume 5,219,194"
+                ("NORD", 20333) rect x=441.14 y=50.71 w=1.93 h=27.12 fill=$down opacity=0.55 role=datum "2 Sep 2025 · volume 3,485,078"
+                ("NORD", 20334) rect x=443.90 y=49.47 w=1.93 h=28.36 fill=$down opacity=0.55 role=datum "3 Sep 2025 · volume 3,643,679"
+                ("NORD", 20335) rect x=446.65 y=42.33 w=1.93 h=35.50 fill=$up opacity=0.55 role=datum "4 Sep 2025 · volume 4,561,736"
+                ("NORD", 20336) rect x=449.41 y=46.11 w=1.93 h=31.72 fill=$down opacity=0.55 role=datum "5 Sep 2025 · volume 4,075,046"
+                ("NORD", 20339) rect x=452.16 y=50.30 w=1.93 h=27.53 fill=$down opacity=0.55 role=datum "8 Sep 2025 · volume 3,537,699"
+                ("NORD", 20340) rect x=454.92 y=47.77 w=1.93 h=30.06 fill=$up opacity=0.55 role=datum "9 Sep 2025 · volume 3,861,771"
+                ("NORD", 20341) rect x=457.67 y=36.97 w=1.93 h=40.86 fill=$up opacity=0.55 role=datum "10 Sep 2025 · volume 5,249,684"
+                ("NORD", 20342) rect x=460.43 y=40.12 w=1.93 h=37.71 fill=$down opacity=0.55 role=datum "11 Sep 2025 · volume 4,844,656"
+                ("NORD", 20343) rect x=463.18 y=44.48 w=1.93 h=33.35 fill=$up opacity=0.55 role=datum "12 Sep 2025 · volume 4,284,469"
+                ("NORD", 20346) rect x=465.93 y=30.02 w=1.93 h=47.81 fill=$up opacity=0.55 role=datum "15 Sep 2025 · volume 6,142,991"
+                ("NORD", 20347) rect x=468.69 y=52.71 w=1.93 h=25.12 fill=$up opacity=0.55 role=datum "16 Sep 2025 · volume 3,227,606"
+                ("NORD", 20348) rect x=471.44 y=40.17 w=1.93 h=37.66 fill=$down opacity=0.55 role=datum "17 Sep 2025 · volume 4,838,857"
+                ("NORD", 20349) rect x=474.20 y=45.45 w=1.93 h=32.39 fill=$down opacity=0.55 role=datum "18 Sep 2025 · volume 4,160,972"
+                ("NORD", 20350) rect x=476.95 y=48.76 w=1.93 h=29.07 fill=$down opacity=0.55 role=datum "19 Sep 2025 · volume 3,735,402"
+                ("NORD", 20353) rect x=479.71 y=46.69 w=1.93 h=31.14 fill=$up opacity=0.55 role=datum "22 Sep 2025 · volume 4,000,554"
+                ("NORD", 20354) rect x=482.46 y=53.89 w=1.93 h=23.95 fill=$down opacity=0.55 role=datum "23 Sep 2025 · volume 3,076,627"
+                ("NORD", 20355) rect x=485.22 y=36.48 w=1.93 h=41.35 fill=$down opacity=0.55 role=datum "24 Sep 2025 · volume 5,312,300"
+                ("NORD", 20356) rect x=487.97 y=43.09 w=1.93 h=34.74 fill=$up opacity=0.55 role=datum "25 Sep 2025 · volume 4,463,985"
+                ("NORD", 20357) rect x=490.73 y=48.37 w=1.93 h=29.46 fill=$up opacity=0.55 role=datum "26 Sep 2025 · volume 3,785,201"
+                ("NORD", 20360) rect x=493.48 y=47.64 w=1.93 h=30.19 fill=$up opacity=0.55 role=datum "29 Sep 2025 · volume 3,878,632"
+                ("NORD", 20361) rect x=496.23 y=47.86 w=1.93 h=29.97 fill=$down opacity=0.55 role=datum "30 Sep 2025 · volume 3,850,420"
+                ("NORD", 20362) rect x=498.99 y=45.07 w=1.93 h=32.76 fill=$down opacity=0.55 role=datum "1 Oct 2025 · volume 4,209,649"
+                ("NORD", 20363) rect x=501.74 y=50.18 w=1.93 h=27.65 fill=$down opacity=0.55 role=datum "2 Oct 2025 · volume 3,552,086"
+                ("NORD", 20364) rect x=504.50 y=52.16 w=1.93 h=25.67 fill=$down opacity=0.55 role=datum "3 Oct 2025 · volume 3,297,997"
+                ("NORD", 20367) rect x=507.25 y=34.20 w=1.93 h=43.64 fill=$up opacity=0.55 role=datum "6 Oct 2025 · volume 5,606,417"
+                ("NORD", 20368) rect x=510.01 y=49.28 w=1.93 h=28.55 fill=$down opacity=0.55 role=datum "7 Oct 2025 · volume 3,668,181"
+                ("NORD", 20369) rect x=512.76 y=33.88 w=1.93 h=43.95 fill=$up opacity=0.55 role=datum "8 Oct 2025 · volume 5,646,497"
+                ("NORD", 20370) rect x=515.52 y=42.48 w=1.93 h=35.35 fill=$up opacity=0.55 role=datum "9 Oct 2025 · volume 4,542,212"
+                ("NORD", 20371) rect x=518.27 y=44.29 w=1.93 h=33.54 fill=$up opacity=0.55 role=datum "10 Oct 2025 · volume 4,309,689"
+                ("NORD", 20374) rect x=521.03 y=56.13 w=1.93 h=21.70 fill=$down opacity=0.55 role=datum "13 Oct 2025 · volume 2,787,881"
+                ("NORD", 20375) rect x=523.78 y=37.24 w=1.93 h=40.59 fill=$up opacity=0.55 role=datum "14 Oct 2025 · volume 5,214,828"
+                ("NORD", 20376) rect x=526.53 y=28.73 w=1.93 h=49.10 fill=$down opacity=0.55 role=datum "15 Oct 2025 · volume 6,308,967"
+                ("NORD", 20377) rect x=529.29 y=50.39 w=1.93 h=27.44 fill=$up opacity=0.55 role=datum "16 Oct 2025 · volume 3,525,454"
+                ("NORD", 20378) rect x=532.04 y=37.52 w=1.93 h=40.31 fill=$up opacity=0.55 role=datum "17 Oct 2025 · volume 5,178,778"
+                ("NORD", 20381) rect x=534.80 y=55.73 w=1.93 h=22.10 fill=$up opacity=0.55 role=datum "20 Oct 2025 · volume 2,839,791"
+                ("NORD", 20382) rect x=537.55 y=60.36 w=1.93 h=17.47 fill=$up opacity=0.55 role=datum "21 Oct 2025 · volume 2,245,075"
+                ("NORD", 20383) rect x=540.31 y=44.75 w=1.93 h=33.08 fill=$up opacity=0.55 role=datum "22 Oct 2025 · volume 4,250,793"
+                ("NORD", 20384) rect x=543.06 y=46.27 w=1.93 h=31.56 fill=$up opacity=0.55 role=datum "23 Oct 2025 · volume 4,055,360"
+                ("NORD", 20385) rect x=545.82 y=50.33 w=1.93 h=27.50 fill=$up opacity=0.55 role=datum "24 Oct 2025 · volume 3,533,003"
+                ("NORD", 20388) rect x=548.57 y=40.90 w=1.93 h=36.93 fill=$down opacity=0.55 role=datum "27 Oct 2025 · volume 4,745,243"
+                ("NORD", 20389) rect x=551.33 y=37.04 w=1.93 h=40.80 fill=$down opacity=0.55 role=datum "28 Oct 2025 · volume 5,241,528"
+                ("NORD", 20390) rect x=554.08 y=44.45 w=1.93 h=33.38 fill=$up opacity=0.55 role=datum "29 Oct 2025 · volume 4,288,553"
+                ("NORD", 20391) rect x=556.83 y=47.63 w=1.93 h=30.20 fill=$up opacity=0.55 role=datum "30 Oct 2025 · volume 3,879,865"
+                ("NORD", 20392) rect x=559.59 y=23.05 w=1.93 h=54.78 fill=$down opacity=0.55 role=datum "31 Oct 2025 · volume 7,038,695"
+                ("NORD", 20395) rect x=562.34 y=36.18 w=1.93 h=41.66 fill=$up opacity=0.55 role=datum "3 Nov 2025 · volume 5,352,004"
+                ("NORD", 20396) rect x=565.10 y=48.82 w=1.93 h=29.01 fill=$up opacity=0.55 role=datum "4 Nov 2025 · volume 3,727,493"
+                ("NORD", 20397) rect x=567.85 y=39.99 w=1.93 h=37.84 fill=$up opacity=0.55 role=datum "5 Nov 2025 · volume 4,861,407"
+                ("NORD", 20398) rect x=570.61 y=42.21 w=1.93 h=35.62 fill=$up opacity=0.55 role=datum "6 Nov 2025 · volume 4,576,296"
+                ("NORD", 20399) rect x=573.36 y=45.29 w=1.93 h=32.54 fill=$up opacity=0.55 role=datum "7 Nov 2025 · volume 4,180,570"
+                ("NORD", 20402) rect x=576.12 y=56.97 w=1.93 h=20.86 fill=$up opacity=0.55 role=datum "10 Nov 2025 · volume 2,680,313"
+                ("NORD", 20403) rect x=578.87 y=20.76 w=1.93 h=57.07 fill=$up opacity=0.55 role=datum "11 Nov 2025 · volume 7,332,973"
+                ("NORD", 20404) rect x=581.63 y=54.05 w=1.93 h=23.78 fill=$down opacity=0.55 role=datum "12 Nov 2025 · volume 3,055,424"
+                ("NORD", 20405) rect x=584.38 y=49.32 w=1.93 h=28.51 fill=$down opacity=0.55 role=datum "13 Nov 2025 · volume 3,663,572"
+                ("NORD", 20406) rect x=587.14 y=34.98 w=1.93 h=42.85 fill=$up opacity=0.55 role=datum "14 Nov 2025 · volume 5,505,592"
+                ("NORD", 20409) rect x=589.89 y=45.51 w=1.93 h=32.32 fill=$up opacity=0.55 role=datum "17 Nov 2025 · volume 4,152,614"
+                ("NORD", 20410) rect x=592.64 y=46.58 w=1.93 h=31.26 fill=$up opacity=0.55 role=datum "18 Nov 2025 · volume 4,015,796"
+                ("NORD", 20411) rect x=595.40 y=30.82 w=1.93 h=47.01 fill=$down opacity=0.55 role=datum "19 Nov 2025 · volume 6,039,580"
+                ("NORD", 20412) rect x=598.15 y=45.96 w=1.93 h=31.87 fill=$down opacity=0.55 role=datum "20 Nov 2025 · volume 4,094,257"
+                ("NORD", 20413) rect x=600.91 y=51.70 w=1.93 h=26.13 fill=$up opacity=0.55 role=datum "21 Nov 2025 · volume 3,357,023"
+                ("NORD", 20416) rect x=603.66 y=52.72 w=1.93 h=25.11 fill=$up opacity=0.55 role=datum "24 Nov 2025 · volume 3,226,752"
+                ("NORD", 20417) rect x=606.42 y=53.00 w=1.93 h=24.83 fill=$down opacity=0.55 role=datum "25 Nov 2025 · volume 3,189,987"
+                ("NORD", 20418) rect x=609.17 y=37.76 w=1.93 h=40.07 fill=$down opacity=0.55 role=datum "26 Nov 2025 · volume 5,148,165"
+                ("NORD", 20419) rect x=611.93 y=48.22 w=1.93 h=29.62 fill=$down opacity=0.55 role=datum "27 Nov 2025 · volume 3,805,157"
+                ("NORD", 20420) rect x=614.68 y=46.44 w=1.93 h=31.39 fill=$up opacity=0.55 role=datum "28 Nov 2025 · volume 4,033,511"
+                ("NORD", 20423) rect x=617.44 y=45.42 w=1.93 h=32.41 fill=$up opacity=0.55 role=datum "1 Dec 2025 · volume 4,163,936"
+                ("NORD", 20424) rect x=620.19 y=33.02 w=1.93 h=44.81 fill=$down opacity=0.55 role=datum "2 Dec 2025 · volume 5,757,735"
+                ("NORD", 20425) rect x=622.94 y=48.04 w=1.93 h=29.79 fill=$down opacity=0.55 role=datum "3 Dec 2025 · volume 3,827,161"
+                ("NORD", 20426) rect x=625.70 y=47.90 w=1.93 h=29.94 fill=$down opacity=0.55 role=datum "4 Dec 2025 · volume 3,846,165"
+                ("NORD", 20427) rect x=628.45 y=46.38 w=1.93 h=31.45 fill=$up opacity=0.55 role=datum "5 Dec 2025 · volume 4,041,371"
+                ("NORD", 20430) rect x=631.21 y=39.38 w=1.93 h=38.45 fill=$down opacity=0.55 role=datum "8 Dec 2025 · volume 4,940,017"
+                ("NORD", 20431) rect x=633.96 y=41.46 w=1.93 h=36.37 fill=$up opacity=0.55 role=datum "9 Dec 2025 · volume 4,672,460"
+                ("NORD", 20432) rect x=636.72 y=54.35 w=1.93 h=23.48 fill=$up opacity=0.55 role=datum "10 Dec 2025 · volume 3,016,313"
+                ("NORD", 20433) rect x=639.47 y=44.28 w=1.93 h=33.55 fill=$down opacity=0.55 role=datum "11 Dec 2025 · volume 4,310,334"
+                ("NORD", 20434) rect x=642.23 y=40.04 w=1.93 h=37.79 fill=$down opacity=0.55 role=datum "12 Dec 2025 · volume 4,855,983"
+                ("NORD", 20437) rect x=644.98 y=34.38 w=1.93 h=43.45 fill=$up opacity=0.55 role=datum "15 Dec 2025 · volume 5,582,824"
+                ("NORD", 20438) rect x=647.74 y=53.35 w=1.93 h=24.48 fill=$down opacity=0.55 role=datum "16 Dec 2025 · volume 3,145,161"
+                ("NORD", 20439) rect x=650.49 y=43.76 w=1.93 h=34.07 fill=$up opacity=0.55 role=datum "17 Dec 2025 · volume 4,377,736"
+                ("NORD", 20440) rect x=653.24 y=23.08 w=1.93 h=54.75 fill=$down opacity=0.55 role=datum "18 Dec 2025 · volume 7,034,933"
+                ("NORD", 20441) rect x=656.00 y=42.12 w=1.93 h=35.71 fill=$up opacity=0.55 role=datum "19 Dec 2025 · volume 4,588,409"
+                ("NORD", 20444) rect x=658.75 y=45.60 w=1.93 h=32.23 fill=$up opacity=0.55 role=datum "22 Dec 2025 · volume 4,140,983"
+                ("NORD", 20445) rect x=661.51 y=16.41 w=1.93 h=61.42 fill=$up opacity=0.55 role=datum "23 Dec 2025 · volume 7,891,000"
+                ("NORD", 20451) rect x=664.26 y=37.38 w=1.93 h=40.46 fill=$up opacity=0.55 role=datum "29 Dec 2025 · volume 5,197,836"
+                ("NORD", 20452) rect x=667.02 y=50.91 w=1.93 h=26.93 fill=$down opacity=0.55 role=datum "30 Dec 2025 · volume 3,459,546"
+                ("NORD", 20454) rect x=669.77 y=48.46 w=1.93 h=29.37 fill=$down opacity=0.55 role=datum "1 Jan 2026 · volume 3,774,175"
+                ("NORD", 20455) rect x=672.53 y=47.52 w=1.93 h=30.32 fill=$down opacity=0.55 role=datum "2 Jan 2026 · volume 3,895,106"
+                ("NORD", 20458) rect x=675.28 y=42.30 w=1.93 h=35.53 fill=$up opacity=0.55 role=datum "5 Jan 2026 · volume 4,564,989"
+                ("NORD", 20459) rect x=678.04 y=41.77 w=1.93 h=36.06 fill=$down opacity=0.55 role=datum "6 Jan 2026 · volume 4,633,052"
+                ("NORD", 20460) rect x=680.79 y=41.87 w=1.93 h=35.96 fill=$down opacity=0.55 role=datum "7 Jan 2026 · volume 4,620,649"
+                ("NORD", 20461) rect x=683.54 y=43.20 w=1.93 h=34.63 fill=$down opacity=0.55 role=datum "8 Jan 2026 · volume 4,449,619"
+                ("NORD", 20462) rect x=686.30 y=45.27 w=1.93 h=32.56 fill=$down opacity=0.55 role=datum "9 Jan 2026 · volume 4,182,949"
+                ("NORD", 20465) rect x=689.05 y=47.50 w=1.93 h=30.34 fill=$down opacity=0.55 role=datum "12 Jan 2026 · volume 3,897,657"
+                ("NORD", 20466) rect x=691.81 y=21.39 w=1.93 h=56.44 fill=$down opacity=0.55 role=datum "13 Jan 2026 · volume 7,251,267"
+            group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 332.47] role=axis "x axis"
+              ("domain",) segment (0.00, 0.00)→(694.15, 0.00) stroke=$rule/1.00
+              group (20122,) role=tick "Feb"
+                ("#0",) segment (42.70, 0.00)→(42.70, 5.00) stroke=$rule/1.00
+                ("#1",) text "Feb" at (42.70, 8.00) size=11.00 ink=$muted
+              group (20150,) role=tick "Mar"
+                ("#0",) segment (97.79, 0.00)→(97.79, 5.00) stroke=$rule/1.00
+                ("#1",) text "Mar" at (97.79, 8.00) size=11.00 ink=$muted
+              group (20179,) role=tick "Apr"
+                ("#0",) segment (155.63, 0.00)→(155.63, 5.00) stroke=$rule/1.00
+                ("#1",) text "Apr" at (155.63, 8.00) size=11.00 ink=$muted
+              group (20210,) role=tick "May"
+                ("#0",) segment (210.72, 0.00)→(210.72, 5.00) stroke=$rule/1.00
+                ("#1",) text "May" at (210.72, 8.00) size=11.00 ink=$muted
+              group (20241,) role=tick "Jun"
+                ("#0",) segment (265.82, 0.00)→(265.82, 5.00) stroke=$rule/1.00
+                ("#1",) text "Jun" at (265.82, 8.00) size=11.00 ink=$muted
+              group (20270,) role=tick "Jul"
+                ("#0",) segment (318.15, 0.00)→(318.15, 5.00) stroke=$rule/1.00
+                ("#1",) text "Jul" at (318.15, 8.00) size=11.00 ink=$muted
+              group (20301,) role=tick "Aug"
+                ("#0",) segment (381.51, 0.00)→(381.51, 5.00) stroke=$rule/1.00
+                ("#1",) text "Aug" at (381.51, 8.00) size=11.00 ink=$muted
+              group (20332,) role=tick "Sep"
+                ("#0",) segment (439.35, 0.00)→(439.35, 5.00) stroke=$rule/1.00
+                ("#1",) text "Sep" at (439.35, 8.00) size=11.00 ink=$muted
+              group (20362,) role=tick "Oct"
+                ("#0",) segment (499.95, 0.00)→(499.95, 5.00) stroke=$rule/1.00
+                ("#1",) text "Oct" at (499.95, 8.00) size=11.00 ink=$muted
+              group (20395,) role=tick "Nov"
+                ("#0",) segment (563.31, 0.00)→(563.31, 5.00) stroke=$rule/1.00
+                ("#1",) text "Nov" at (563.31, 8.00) size=11.00 ink=$muted
+              group (20423,) role=tick "Dec"
+                ("#0",) segment (618.40, 0.00)→(618.40, 5.00) stroke=$rule/1.00
+                ("#1",) text "Dec" at (618.40, 8.00) size=11.00 ink=$muted
+              group (20454,) role=tick "2026"
+                ("#0",) segment (670.74, 0.00)→(670.74, 5.00) stroke=$rule/1.00
+                ("#1",) text "2026" at (670.74, 8.00) size=11.00 ink=$muted
+    ("note",) text "Synthetic prices for fictional companies — not market data." at (0.00, 0.00) size=10.00 ink=$muted transform=[1.00 0.00 0.00 1.00 12.00 478.00]

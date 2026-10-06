@@ -1,0 +1,112 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "…and in miles, for the flow of transatlantic readers"
+      ("title",) text "…and in miles, for the flow of transatlantic readers" at (0.00, 0.00) size=20.00 ink=$ink role=title "…and in miles, for the flow of transatlantic readers"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.00]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 51.81 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 359.50) stroke=$rule/1.00
+          group ("Volga",) role=tick "Volga"
+            ("#0",) segment (0.00, 17.97)→(-5.00, 17.97) stroke=$rule/1.00
+            ("#2",) text "Volga" at (-8.00, 17.97) size=12.00 ink=$muted
+          group ("Danube",) role=tick "Danube"
+            ("#0",) segment (0.00, 53.93)→(-5.00, 53.93) stroke=$rule/1.00
+            ("#2",) text "Danube" at (-8.00, 53.93) size=12.00 ink=$muted
+          group ("Ural",) role=tick "Ural"
+            ("#0",) segment (0.00, 89.88)→(-5.00, 89.88) stroke=$rule/1.00
+            ("#2",) text "Ural" at (-8.00, 89.88) size=12.00 ink=$muted
+          group ("Dnieper",) role=tick "Dnieper"
+            ("#0",) segment (0.00, 125.83)→(-5.00, 125.83) stroke=$rule/1.00
+            ("#2",) text "Dnieper" at (-8.00, 125.83) size=12.00 ink=$muted
+          group ("Don",) role=tick "Don"
+            ("#0",) segment (0.00, 161.78)→(-5.00, 161.78) stroke=$rule/1.00
+            ("#2",) text "Don" at (-8.00, 161.78) size=12.00 ink=$muted
+          group ("Pechora",) role=tick "Pechora"
+            ("#0",) segment (0.00, 197.73)→(-5.00, 197.73) stroke=$rule/1.00
+            ("#2",) text "Pechora" at (-8.00, 197.73) size=12.00 ink=$muted
+          group ("Kama",) role=tick "Kama"
+            ("#0",) segment (0.00, 233.68)→(-5.00, 233.68) stroke=$rule/1.00
+            ("#2",) text "Kama" at (-8.00, 233.68) size=12.00 ink=$muted
+          group ("Oka",) role=tick "Oka"
+            ("#0",) segment (0.00, 269.63)→(-5.00, 269.63) stroke=$rule/1.00
+            ("#2",) text "Oka" at (-8.00, 269.63) size=12.00 ink=$muted
+          group ("Dniester",) role=tick "Dniester"
+            ("#0",) segment (0.00, 305.58)→(-5.00, 305.58) stroke=$rule/1.00
+            ("#2",) text "Dniester" at (-8.00, 305.58) size=12.00 ink=$muted
+          group ("Rhine",) role=tick "Rhine"
+            ("#0",) segment (0.00, 341.53)→(-5.00, 341.53) stroke=$rule/1.00
+            ("#2",) text "Rhine" at (-8.00, 341.53) size=12.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 58.31 0.00]
+          group ("area",)
+            group ("grid-x",) role=decoration
+              (0,) segment (0.00, 0.00)→(0.00, 359.50) stroke=$grid/1.00 role=decoration
+              (200,) segment (57.24, 0.00)→(57.24, 359.50) stroke=$grid/1.00 role=decoration
+              (400,) segment (114.49, 0.00)→(114.49, 359.50) stroke=$grid/1.00 role=decoration
+              (600,) segment (171.73, 0.00)→(171.73, 359.50) stroke=$grid/1.00 role=decoration
+              (800,) segment (228.98, 0.00)→(228.98, 359.50) stroke=$grid/1.00 role=decoration
+              (1000,) segment (286.22, 0.00)→(286.22, 359.50) stroke=$grid/1.00 role=decoration
+              (1200,) segment (343.47, 0.00)→(343.47, 359.50) stroke=$grid/1.00 role=decoration
+              (1400,) segment (400.71, 0.00)→(400.71, 359.50) stroke=$grid/1.00 role=decoration
+              (1600,) segment (457.95, 0.00)→(457.95, 359.50) stroke=$grid/1.00 role=decoration
+              (1800,) segment (515.20, 0.00)→(515.20, 359.50) stroke=$grid/1.00 role=decoration
+              (2000,) segment (572.44, 0.00)→(572.44, 359.50) stroke=$grid/1.00 role=decoration
+              (2200,) segment (629.69, 0.00)→(629.69, 359.50) stroke=$grid/1.00 role=decoration
+            group ("marks",) role=series "mi by river"
+              ("Volga",) rect x=0.00 y=3.95 w=627.68 h=28.04 fill=$accent role=datum "Volga: 2,193"
+              ("Danube",) rect x=0.00 y=39.90 w=506.90 h=28.04 fill=$accent role=datum "Danube: 1,771"
+              ("Ural",) rect x=0.00 y=75.85 w=431.91 h=28.04 fill=$accent role=datum "Ural: 1,509"
+              ("Dnieper",) rect x=0.00 y=111.80 w=407.29 h=28.04 fill=$accent role=datum "Dnieper: 1,423"
+              ("Don",) rect x=0.00 y=147.75 w=332.59 h=28.04 fill=$accent role=datum "Don: 1,162"
+              ("Pechora",) rect x=0.00 y=183.70 w=321.71 h=28.04 fill=$accent role=datum "Pechora: 1,124"
+              ("Kama",) rect x=0.00 y=219.65 w=321.14 h=28.04 fill=$accent role=datum "Kama: 1,122"
+              ("Oka",) rect x=0.00 y=255.60 w=266.76 h=28.04 fill=$accent role=datum "Oka: 932"
+              ("Dniester",) rect x=0.00 y=291.55 w=240.43 h=28.04 fill=$accent role=datum "Dniester: 840"
+              ("Rhine",) rect x=0.00 y=327.50 w=219.25 h=28.04 fill=$accent role=datum "Rhine: 766"
+              group ("labels",)
+                ("Volga",) text "2,193" at (623.68, 17.97) size=12.00 ink=on($accent)
+                ("Danube",) text "1,771" at (510.90, 53.93) size=12.00 ink=$ink-2
+                ("Ural",) text "1,509" at (435.91, 89.88) size=12.00 ink=$ink-2
+                ("Dnieper",) text "1,423" at (411.29, 125.83) size=12.00 ink=$ink-2
+                ("Don",) text "1,162" at (336.59, 161.78) size=12.00 ink=$ink-2
+                ("Pechora",) text "1,124" at (325.71, 197.73) size=12.00 ink=$ink-2
+                ("Kama",) text "1,122" at (325.14, 233.68) size=12.00 ink=$ink-2
+                ("Oka",) text "932" at (270.76, 269.63) size=12.00 ink=$ink-2
+                ("Dniester",) text "840" at (244.43, 305.58) size=12.00 ink=$ink-2
+                ("Rhine",) text "766" at (223.25, 341.53) size=12.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 366.00] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(629.69, 0.00) stroke=$rule/1.00
+            group (0,) role=tick "0"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "0" at (0.00, 8.00) size=12.00 ink=$muted
+            group (200,) role=tick "200"
+              ("#0",) segment (57.24, 0.00)→(57.24, 5.00) stroke=$rule/1.00
+              ("#1",) text "200" at (57.24, 8.00) size=12.00 ink=$muted
+            group (400,) role=tick "400"
+              ("#0",) segment (114.49, 0.00)→(114.49, 5.00) stroke=$rule/1.00
+              ("#1",) text "400" at (114.49, 8.00) size=12.00 ink=$muted
+            group (600,) role=tick "600"
+              ("#0",) segment (171.73, 0.00)→(171.73, 5.00) stroke=$rule/1.00
+              ("#1",) text "600" at (171.73, 8.00) size=12.00 ink=$muted
+            group (800,) role=tick "800"
+              ("#0",) segment (228.98, 0.00)→(228.98, 5.00) stroke=$rule/1.00
+              ("#1",) text "800" at (228.98, 8.00) size=12.00 ink=$muted
+            group (1000,) role=tick "1,000"
+              ("#0",) segment (286.22, 0.00)→(286.22, 5.00) stroke=$rule/1.00
+              ("#1",) text "1,000" at (286.22, 8.00) size=12.00 ink=$muted
+            group (1200,) role=tick "1,200"
+              ("#0",) segment (343.47, 0.00)→(343.47, 5.00) stroke=$rule/1.00
+              ("#1",) text "1,200" at (343.47, 8.00) size=12.00 ink=$muted
+            group (1400,) role=tick "1,400"
+              ("#0",) segment (400.71, 0.00)→(400.71, 5.00) stroke=$rule/1.00
+              ("#1",) text "1,400" at (400.71, 8.00) size=12.00 ink=$muted
+            group (1600,) role=tick "1,600"
+              ("#0",) segment (457.95, 0.00)→(457.95, 5.00) stroke=$rule/1.00
+              ("#1",) text "1,600" at (457.95, 8.00) size=12.00 ink=$muted
+            group (1800,) role=tick "1,800"
+              ("#0",) segment (515.20, 0.00)→(515.20, 5.00) stroke=$rule/1.00
+              ("#1",) text "1,800" at (515.20, 8.00) size=12.00 ink=$muted
+            group (2000,) role=tick "2,000"
+              ("#0",) segment (572.44, 0.00)→(572.44, 5.00) stroke=$rule/1.00
+              ("#1",) text "2,000" at (572.44, 8.00) size=12.00 ink=$muted
+            group (2200,) role=tick "2,200"
+              ("#0",) segment (629.69, 0.00)→(629.69, 5.00) stroke=$rule/1.00
+              ("#1",) text "2,200" at (629.69, 8.00) size=12.00 ink=$muted

@@ -1,0 +1,15 @@
+[package]
+name = "datars-bundle"
+description = "The datars bundle format: signed manifests, content-addressed chunks, variants per tier and runtime; a sans-IO loader."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+blake3 = { version = "1", default-features = false }
+ed25519-dalek = { version = "2", default-features = false, features = ["std"] }

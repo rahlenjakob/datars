@@ -1,0 +1,75 @@
+name: Bug report
+description: Something renders, moves, builds or behaves wrongly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this. **Security problems:** please don't file them here. See SECURITY.md for private reporting.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: |
+        The smallest document (doc.ts or doc.json), data file, bundle or command that shows the problem. If it's visual, the state or transition. `datars render --state N`, `datars film --from A --to B` or `datars inspect` output helps a lot.
+      placeholder: |
+        target/release/datars render examples/votes/doc.json --state 2 --out out/votes.png
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where
+      description: Where you see it. Pick all that apply.
+      multiple: true
+      options:
+        - Engine / rendering (any target)
+        - Web runtime (<datars-view>, @datars/web)
+        - React / Vite / Next.js integration
+        - iOS / macOS (DatarsKit)
+        - Android
+        - Desktop viewer (datars-view)
+        - CLI (datars …)
+        - Standard library recipe (@datars/std)
+        - SDK (@datars/sdk)
+        - Python package
+        - Maps / tiles / geo pipeline
+        - Docs
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The commit hash you built from, or the package versions you use.
+      placeholder: "main @ abc1234, @datars/web 0.1.0"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS and architecture; for the web, the browser and whether WebGPU is available; for mobile, the device or simulator/emulator and OS version.
+      placeholder: "macOS 15 arm64, Chrome 140 (WebGPU)"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output, logs or screenshots
+      description: CLI output, console errors, `datars test` failures, screenshots or filmstrips.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues and didn't find this one.
+          required: true
+        - label: I can reproduce it on the latest `main`.

@@ -1,0 +1,108 @@
+---
+title: Charts are content — publish without a deploy · datars
+description: Publish datars charts as a manifest and immutable chunks to any static host or CDN. Sites and apps install the runtime once; republishing updates every embed, with a poster and accessible text first.
+og: spending
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Charts are content</p>
+    <h1>Publish, update and roll back charts like articles</h1>
+    <p class="lede-2">A site or an app installs the datars runtime once. After that, charts arrive over the network as small bundles — a manifest and content-addressed chunks on any static host — and change on their own schedule: republish tonight's election map into an app that shipped in the spring, fix a typo in a chart embedded on a hundred pages, without a site deploy or an app-store review.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <div class="cards3">
+      <article><span class="kicker-num">1</span><h3>Publish</h3>
+<pre><code data-lang="sh">datars publish election.ts \
+  --alias election --to site/</code></pre>
+        <p>Writes <code>site/c/election</code> — the manifest — and <code>site/chunks/…</code>, named by content hash, plus any archives the chart reads by range.</p></article>
+      <article><span class="kicker-num">2</span><h3>Host anywhere static</h3><p>Upload the folder to a bucket, a CDN, GitHub Pages or your own server. Chunks never change, so they cache forever; the manifest is the one small file that does. <code>datars serve site/</code> tries it locally.</p></article>
+      <article><span class="kicker-num">3</span><h3>Embed once</h3>
+<pre><code data-lang="html">&lt;datars-view src="https://charts.example.com/c/election"&gt;&lt;/datars-view&gt;</code></pre>
+        <p>Or <code>DatarsChart(source: .url(…))</code> in SwiftUI, <code>DatarsView.load(…)</code> on Android. Republish, and every embed follows the alias; roll back by moving it back.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Tiers</p>
+      <h2>Every bundle degrades gracefully</h2>
+      <p>The publish step partially evaluates the document and writes several variants, from a poster to the full source. Each runtime plays the best one it can — and every reader gets at least a picture and the text.</p>
+    </header>
+    <ol class="tiers">
+      <li><b>T0</b><span><b>Poster + accessible text.</b> An SVG poster and the chart's text alternative. Needs nothing: email, RSS, strict CMSs, runtimes too old to play the rest.</span></li>
+      <li><b>T1</b><span><b>Playback.</b> Baked scenes per state and the plans between them: stories, flights, scrubbing, tooltips.</span></li>
+      <li><b>T2</b><span><b>Reactive.</b> Recipes pre-expanded; filters, brushes, sliders, linked views, live data and app data slots stay live. What the web runtime plays by default.</span></li>
+      <li><b>T3</b><span><b>Programmable.</b> The source document, for charts whose structure depends on runtime data; needs the recipe sandbox, pinned to the author's standard library.</span></li>
+    </ol>
+    <p class="fine">Nothing executable but data: T0–T2 are scenes, plans, tables, geometry and bytecode for the engine's own expression interpreter; T3 adds sandboxed script, which a page (<code>no-script</code>) or an app can refuse.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Measured by this build</p>
+      <h2>What each chart on this site weighs</h2>
+      <p>Gzipped bytes per tier for every chart on this site, as <code>datars publish</code> reported them when the site was built. The web runtime ({{runtime}}) is cached once; fonts travel inside each bundle as subsets of the characters it can show; archives are read by range, never downloaded whole.</p>
+    </header>
+    {{sizes:table}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Data slots</p>
+      <h2>One chart design, each user's data, nothing uploaded</h2>
+      <p>A document can leave its data to the host: <code>data.slot("spending", { key, types, sample })</code>. The bundle is built once — shipped inside the app as a <code>.datars</code> file or fetched and cached — and the app hands in the signed-in user's rows on the device. Until they arrive, the sample shows; new rows transition the chart like any other change; rows missing the columns the chart relies on are refused with the reason.</p>
+<pre><code data-lang="js">// Web
+view.data = { spending: rows };</code></pre>
+<pre><code data-lang="swift">// SwiftUI
+DatarsChart(source: .url(bundled), data: ["spending": rowsJSON])</code></pre>
+<pre><code data-lang="kotlin">// Android
+chart.loadAsset("spending.datars"); chart.provideData("spending", rowsJson)</code></pre>
+    </div>
+    <figure class="fig">
+      <div class="frame"><div class="chart" data-chart="spending"></div></div>
+      <figcaption><b>Your spending</b> — a banking-style chart showing its sample rows, as it would before an app provides the user's own.</figcaption>
+      {{alt:spending}}
+    </figure>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Also in the bundle</p>
+      <h2>Everything a chart needs to look the same in five years</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Fonts, subset and licensed</h3><p>Each face the chart draws with ships as a subset of the characters it can show, glyph ids kept so every tier shapes identically; the licence is recorded in the manifest. Text that arrives at runtime pulls per-script subsets lazily.</p></article>
+      <article><h3>Shared chunks</h3><p>The countries atlas, fonts and data are chunks addressed by hash: two charts on one site that use the atlas download it once, and a republish downloads only the chunks that changed.</p></article>
+      <article><h3>Live data</h3><p>A source can re-request on a schedule — snapshot, upsert or append — and every update animates in, without republishing the chart.</p></article>
+      <article><h3>Version skew handled</h3><p>A runtime whose built-in standard library differs from the author's plays the pre-expanded variant instead, so readers see what the author saw.</p></article>
+      <article><h3>A single file, too</h3><p><code>datars bundle</code> writes the same content as one <code>.datars</code> file — for shipping a default chart inside an app, attaching to a message, or hosting anywhere; <code>datars bundle inspect</code> shows its variants and sizes.</p></article>
+      <article><h3>Images on request</h3><p><code>datars serve</code> renders published charts to PNG, SVG or PDF by URL — social cards and previews from the same bundle.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Publish a chart</h2>
+        <p>Aliases, chunks, tiers, hosting headers and data slots.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/publishing/">Publishing and hosting <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/embed/web/">Embed on the web</a>
+      </div>
+    </div>
+  </div>
+</section>

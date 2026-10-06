@@ -1,0 +1,800 @@
+{
+ "datars": 1,
+ "id": "worlds",
+ "title": "Eight billion, four ways",
+ "size": {
+  "width": 760,
+  "height": 620
+ },
+ "theme": {
+  "use": "datars/neutral",
+  "tokens": {
+   "paper": "#0b1020",
+   "ink": "#eef2ff",
+   "ink-2": "#c7d2fe",
+   "muted": "#8b93b8"
+  }
+ },
+ "locale": "en",
+ "data": {
+  "countries": {
+   "values": {
+    "id": [
+     "AUS",
+     "PNG",
+     "NZL",
+     "FJI",
+     "SLB",
+     "VUT",
+     "BRA",
+     "COL",
+     "ARG",
+     "PER",
+     "VEN",
+     "CHL",
+     "ECU",
+     "BOL",
+     "PRY",
+     "URY",
+     "GUY",
+     "SUR",
+     "USA",
+     "MEX",
+     "CAN",
+     "GTM",
+     "HTI",
+     "CUB",
+     "DOM",
+     "HND",
+     "NIC",
+     "SLV",
+     "CRI",
+     "PAN",
+     "PRI",
+     "JAM",
+     "TTO",
+     "BHS",
+     "BLZ",
+     "RUS",
+     "DEU",
+     "GBR",
+     "FRA",
+     "ITA",
+     "ESP",
+     "POL",
+     "UKR",
+     "ROU",
+     "NLD",
+     "BEL",
+     "CZE",
+     "SWE",
+     "GRC",
+     "PRT",
+     "HUN",
+     "BLR",
+     "AUT",
+     "CHE",
+     "SRB",
+     "BGR",
+     "DNK",
+     "FIN",
+     "NOR",
+     "SVK",
+     "IRL",
+     "HRV",
+     "BIH",
+     "LTU",
+     "ALB",
+     "MDA",
+     "SVN",
+     "LVA",
+     "MKD",
+     "KOS",
+     "EST",
+     "CYP",
+     "LUX",
+     "MNE",
+     "ISL",
+     "IND",
+     "CHN",
+     "IDN",
+     "PAK",
+     "BGD",
+     "JPN",
+     "PHL",
+     "VNM",
+     "IRN",
+     "TUR",
+     "THA",
+     "MMR",
+     "KOR",
+     "IRQ",
+     "AFG",
+     "SAU",
+     "UZB",
+     "MYS",
+     "YEM",
+     "NPL",
+     "PRK",
+     "TWN",
+     "SYR",
+     "LKA",
+     "KAZ",
+     "KHM",
+     "JOR",
+     "AZE",
+     "ARE",
+     "TJK",
+     "ISR",
+     "LAO",
+     "KGZ",
+     "TKM",
+     "SGP",
+     "LBN",
+     "PSE",
+     "OMN",
+     "KWT",
+     "GEO",
+     "MNG",
+     "ARM",
+     "QAT",
+     "BHR",
+     "TLS",
+     "BTN",
+     "NGA",
+     "ETH",
+     "EGY",
+     "COD",
+     "TZA",
+     "ZAF",
+     "KEN",
+     "UGA",
+     "SDN",
+     "DZA",
+     "MAR",
+     "AGO",
+     "GHA",
+     "MOZ",
+     "MDG",
+     "CIV",
+     "CMR",
+     "NER",
+     "BFA",
+     "MLI",
+     "MWI",
+     "ZMB",
+     "TCD",
+     "SOM",
+     "SEN",
+     "ZWE",
+     "GIN",
+     "RWA",
+     "BEN",
+     "BDI",
+     "TUN",
+     "SSD",
+     "TGO",
+     "SLE",
+     "LBY",
+     "CAF",
+     "COG",
+     "LBR",
+     "MRT",
+     "ERI",
+     "GMB",
+     "NAM",
+     "BWA",
+     "GAB",
+     "LSO",
+     "GNB",
+     "GNQ",
+     "SWZ",
+     "DJI"
+    ],
+    "continent": [
+     "Oceania",
+     "Oceania",
+     "Oceania",
+     "Oceania",
+     "Oceania",
+     "Oceania",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "South America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "North America",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Europe",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Asia",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa",
+     "Africa"
+    ],
+    "pop": [
+     27,
+     10,
+     5.2,
+     0.9,
+     0.7,
+     0.3,
+     216,
+     52,
+     46,
+     34,
+     28,
+     20,
+     18,
+     12,
+     6.9,
+     3.4,
+     0.8,
+     0.6,
+     335,
+     129,
+     40,
+     18,
+     12,
+     11,
+     11,
+     10,
+     7,
+     6.3,
+     5.2,
+     4.4,
+     3.2,
+     2.8,
+     1.5,
+     0.4,
+     0.4,
+     144,
+     84,
+     68,
+     68,
+     59,
+     48,
+     37,
+     37,
+     19,
+     18,
+     12,
+     10.9,
+     10.5,
+     10.4,
+     10.4,
+     9.6,
+     9.2,
+     9.1,
+     8.9,
+     6.6,
+     6.4,
+     5.9,
+     5.6,
+     5.5,
+     5.4,
+     5.2,
+     3.9,
+     3.2,
+     2.9,
+     2.8,
+     2.5,
+     2.1,
+     1.9,
+     1.8,
+     1.8,
+     1.4,
+     1.3,
+     0.7,
+     0.6,
+     0.4,
+     1440,
+     1410,
+     280,
+     245,
+     173,
+     124,
+     117,
+     100,
+     90,
+     86,
+     72,
+     55,
+     52,
+     46,
+     42,
+     37,
+     36,
+     35,
+     35,
+     31,
+     26,
+     23,
+     23,
+     22,
+     20,
+     17,
+     11,
+     10,
+     10,
+     10,
+     10,
+     8,
+     7,
+     7,
+     6,
+     5.5,
+     5.4,
+     5,
+     4,
+     4,
+     3.5,
+     3,
+     3,
+     1.5,
+     1.4,
+     0.8,
+     225,
+     127,
+     113,
+     105,
+     68,
+     63,
+     56,
+     49,
+     49,
+     46,
+     38,
+     37,
+     34,
+     34,
+     31,
+     29,
+     29,
+     27,
+     23,
+     23,
+     21,
+     21,
+     18,
+     18,
+     18,
+     17,
+     14,
+     14,
+     14,
+     13,
+     12,
+     11,
+     9,
+     9,
+     7,
+     5.7,
+     6,
+     5.4,
+     4.9,
+     3.7,
+     2.8,
+     2.6,
+     2.6,
+     2.4,
+     2.3,
+     2.1,
+     1.7,
+     1.2,
+     1.1
+    ]
+   },
+   "key": [
+    "id"
+   ]
+  },
+  "world": {
+   "atlas": "countries"
+  }
+ },
+ "signals": {
+  "layout": {
+   "type": "str",
+   "default": "globe"
+  },
+  "spin": {
+   "type": "num",
+   "default": 0,
+   "clock": 8
+  }
+ },
+ "keys": {
+  "Asia": {
+   "color": "#f472b6"
+  },
+  "Africa": {
+   "color": "#fbbf24"
+  },
+  "Europe": {
+   "color": "#60a5fa"
+  },
+  "North America": {
+   "color": "#34d399"
+  },
+  "South America": {
+   "color": "#a78bfa"
+  },
+  "Oceania": {
+   "color": "#22d3ee"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    16,
+    12,
+    16
+   ]
+  },
+  "children": [
+   {
+    "kind": "text",
+    "key": "title",
+    "text": "Eight billion, four ways",
+    "at": [
+     0,
+     0
+    ],
+    "style": {
+     "font": "font.title",
+     "size": 20,
+     "ink": "$ink",
+     "baseline": "top"
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@local/worlds/worlds",
+    "params": {
+     "data": "countries",
+     "source": "world",
+     "layout": "globe",
+     "turn": {
+      "expr": "15 - spin"
+     }
+    },
+    "key": "chart",
+    "when": {
+     "expr": "layout == \"globe\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@local/worlds/worlds",
+    "params": {
+     "data": "countries",
+     "source": "world",
+     "layout": "orbits",
+     "turn": {
+      "expr": "15 - spin"
+     }
+    },
+    "key": "chart",
+    "when": {
+     "expr": "layout == \"orbits\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@local/worlds/worlds",
+    "params": {
+     "data": "countries",
+     "source": "world",
+     "layout": "spiral",
+     "turn": {
+      "expr": "15 - spin"
+     }
+    },
+    "key": "chart",
+    "when": {
+     "expr": "layout == \"spiral\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@local/worlds/worlds",
+    "params": {
+     "data": "countries",
+     "source": "world",
+     "layout": "blocks",
+     "turn": {
+      "expr": "15 - spin"
+     }
+    },
+    "key": "chart",
+    "when": {
+     "expr": "layout == \"blocks\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/card",
+    "params": {
+     "title": {
+      "expr": "narration.title"
+     },
+     "text": {
+      "expr": "narration.text"
+     },
+     "at": "bottom-left",
+     "width": 230
+    },
+    "key": "caption"
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "duration": 2.2,
+    "easing": "cubic-in-out",
+    "matcher": "by-path"
+   },
+   {
+    "when": {
+     "from": "globe",
+     "to": "orbits"
+    },
+    "route": {
+     "type": "spiral",
+     "turns": 0.35
+    },
+    "choreo": {
+     "type": "ripple",
+     "spread": 0.55
+    },
+    "select": {
+     "role": "datum"
+    }
+   },
+   {
+    "when": {
+     "from": "orbits",
+     "to": "spiral"
+    },
+    "route": {
+     "type": "arc",
+     "height": 0.3
+    },
+    "choreo": {
+     "type": "stagger",
+     "order": "value",
+     "spread": 0.5
+    },
+    "select": {
+     "role": "datum"
+    }
+   },
+   {
+    "when": {
+     "from": "spiral",
+     "to": "blocks"
+    },
+    "choreo": {
+     "type": "wave",
+     "spread": 0.5,
+     "angle": 0
+    },
+    "select": {
+     "role": "datum"
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "globe",
+    "set": {
+     "layout": "globe"
+    },
+    "narration": {
+     "title": "188 countries",
+     "text": "Coloured by continent, on a globe."
+    }
+   },
+   {
+    "name": "orbits",
+    "set": {
+     "layout": "orbits"
+    },
+    "narration": {
+     "title": "Planets",
+     "text": "Each country lifts off as a planet, as large as its population, orbiting in its continent's ring."
+    }
+   },
+   {
+    "name": "spiral",
+    "set": {
+     "layout": "spiral"
+    },
+    "narration": {
+     "title": "A golden spiral",
+     "text": "Smallest at the centre, the giants on the rim — each country turned by the golden angle from the last."
+    }
+   },
+   {
+    "name": "blocks",
+    "set": {
+     "layout": "blocks"
+    },
+    "narration": {
+     "title": "Area is people",
+     "text": "Asia alone is more than half of everyone."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ },
+ "packages": [
+  {
+   "name": "@local/worlds",
+   "source": "// examples/worlds/recipes/worlds.ts\nimport { e, group, op, recipe, shape, geom, repeat, text, t } from \"@datars/sdk\";\nvar CONTINENTS = [\"Oceania\", \"South America\", \"North America\", \"Europe\", \"Asia\", \"Africa\"];\nvar TILT = 0.8;\nvar worlds = recipe({\n  id: \"@local/worlds/worlds\",\n  doc: \"Every country four ways: on a globe, in orbits by continent, in a golden-angle spiral by population, and packed as blocks.\",\n  params: {\n    data: t.table(),\n    source: t.table(),\n    layout: t.oneOf([\"globe\", \"orbits\", \"spiral\", \"blocks\"], \"globe\"),\n    turn: t.prop(\"The globe's central longitude in degrees (default 15); a clock signal turns it.\")\n  },\n  expand(p, cx) {\n    const sized = cx.table(\"sized\", p.data, op.derive(\"sz\", e(\"sqrt(d.pop)\")));\n    const counts = cx.table(\"counts\", sized, op.aggregate([\"continent\"], { n: [\"count\"], ring_sz: [\"sum\", \"sz\"] }));\n    const rows = cx.table(\n      \"rows\",\n      sized,\n      op.window(\"cumsum\", \"sz\", \"cum_sz\", { partition: [\"continent\"], order: \"id\" }),\n      op.window(\"rank\", \"pop\", \"rank_all\", { order: \"-pop\" }),\n      op.join(counts, \"continent\"),\n      op.join(p.source, \"id\")\n    );\n    const R = \"min(box.w, box.h - 40)\";\n    const cxy = [\"box.w / 2\", \"(box.h + 30) / 2\"];\n    const size = `max(1.6, sqrt(d.pop) * ${R} / 820)`;\n    const ring = `(${CONTINENTS.map((c, i) => `d.continent == \"${c}\" ? ${i} : `).join(\"\")}5)`;\n    const fill = e(\"key.color(d.continent)\");\n    const label = e(\"`${d.name}: ${format(d.pop, ',.1~f')} million`\");\n    const datum = { role: \"datum\", label };\n    let mark;\n    if (p.layout === \"globe\") {\n      mark = shape(geom.feature(p.source, e(\"d.id\")), { fill, stroke: { paint: \"$paper\", width: 0.4, nonScaling: true }, semantics: datum, pickable: true });\n    } else if (p.layout === \"blocks\") {\n      const tm = cx.table(\"blocks\", rows, op.treemap({ value: \"pop\", width: e(\"box.w\"), height: e(\"box.h - 40\"), as: [\"x0\", \"y0\", \"x1\", \"y1\"] }));\n      return group({ key: \"worlds\", children: [\n        repeat(tm, shape(geom.rect({ x: e(\"d.x0 + 0.5\"), y: e(\"d.y0 + 40.5\"), w: e(\"max(0, d.x1 - d.x0 - 1)\"), h: e(\"max(0, d.y1 - d.y0 - 1)\") }), { key: e(\"d.id\"), fill, semantics: datum, pickable: true })),\n        repeat(tm, text(e(\"d.name\"), [e(\"d.x0 + 5\"), e(\"d.y0 + 54\")], { key: e(\"'name-' + d.id\"), when: e(\"d.x1 - d.x0 > 60 && d.y1 - d.y0 > 22\"), style: { size: 11, weight: 600, ink: e(\"'on(' + key.color(d.continent) + ')'\"), maxWidth: e(\"d.x1 - d.x0 - 8\") } }))\n      ] });\n    } else {\n      const at = p.layout === \"orbits\" ? [`${cxy[0]} + ${R} * (0.12 + ${ring} * 0.062) * cos(6.28319 * (d.cum_sz - d.sz / 2) / d.ring_sz + ${ring} * 0.9)`, `${cxy[1]} + ${R} * ${TILT} * (0.12 + ${ring} * 0.062) * sin(6.28319 * (d.cum_sz - d.sz / 2) / d.ring_sz + ${ring} * 0.9)`] : [`${cxy[0]} + ${R} * 0.44 * sqrt((table.count(\"${rows}\") - d.rank_all + 0.5) / table.count(\"${rows}\")) * cos((table.count(\"${rows}\") - d.rank_all) * 2.39996)`, `${cxy[1]} + ${R} * 0.44 * sqrt((table.count(\"${rows}\") - d.rank_all + 0.5) / table.count(\"${rows}\")) * sin((table.count(\"${rows}\") - d.rank_all) * 2.39996)`];\n      mark = shape(geom.circle({ cx: e(at[0]), cy: e(at[1]), r: e(size) }), { fill, semantics: datum, pickable: true });\n      const names = repeat(rows, text(e(\"d.name\"), [e(at[0]), e(`${at[1]} - ${size} - 4`)], { key: e(\"'name-' + d.id\"), when: e(\"d.pop >= 150\"), style: { size: 11, weight: 600, ink: \"$ink\", align: \"middle\" }, halo: [\"$paper\", 3] }));\n      const system = p.layout === \"orbits\" ? [\n        ...CONTINENTS.map((_, i) => shape(geom.ellipse({ cx: e(cxy[0]), cy: e(cxy[1]), rx: e(`${R} * ${(0.12 + i * 0.062).toFixed(3)}`), ry: e(`${R} * ${TILT} * ${(0.12 + i * 0.062).toFixed(3)}`) }), { key: `orbit-${i}`, stroke: { paint: \"$muted@0.28\", width: 0.75 }, semantics: { role: \"decoration\" } })),\n        shape(geom.circle({ cx: e(cxy[0]), cy: e(cxy[1]), r: e(`${R} * 0.05`) }), { key: \"sun\", fill: \"#fff4c2\", semantics: { role: \"decoration\" } })\n      ] : [];\n      return group({ key: \"worlds\", children: [...system, repeat(rows, { ...mark, key: e(\"d.id\") }), names] });\n    }\n    return group({\n      key: \"worlds\",\n      coord: { type: \"geo\", projection: \"orthographic\", center: [p.turn ?? 15, 15], fit: { sphere: true }, padding: 70 },\n      children: [\n        shape(geom.circle({ cx: e(\"box.w / 2\"), cy: e(\"box.h / 2\"), r: e(\"min(box.w, box.h) / 2 - 70\") }), { key: \"ocean\", fill: \"$ink@0.05\", stroke: { paint: \"$ink@0.12\", width: 1 }, semantics: { role: \"decoration\" } }),\n        repeat(rows, { ...mark, key: e(\"d.id\") })\n      ]\n    });\n  }\n});\nexport {\n  CONTINENTS,\n  worlds\n};\n"
+  }
+ ]
+}

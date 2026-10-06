@@ -1,0 +1,25 @@
+[package]
+name = "datars-host-native"
+description = "The datars desktop host: a winit window with the wgpu renderer (Metal, Vulkan, DX12)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[[bin]]
+name = "datars-view"
+path = "src/main.rs"
+
+[dependencies]
+datars-runtime = { workspace = true, features = ["sandbox"] }
+datars-render-wgpu.workspace = true
+datars-theme.workspace = true
+winit.workspace = true
+accesskit.workspace = true
+accesskit_winit.workspace = true
+datars-headless.workspace = true
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+datars-math.workspace = true
+png.workspace = true

@@ -1,0 +1,73 @@
+scene 760.00×480.00 background=$paper
+  group ("root",)
+    view ("map",) [0.00 0.00 760.00 480.00] camera=(380.00, 192.21) zoom=1.59
+      group ("basemap",) role=decoration
+        ("sea",) rect x=140.00 y=0.00 w=480.00 h=480.00 fill=$map.water
+        group ("tiles",)
+          group (1, 0, 0) transform=[0.06 0.00 0.00 0.06 140.00 0.00]
+            group ("land",)
+              (0,) path els=1199 bounds=[0.00 343.00 4160.00 3817.00] fill=$map.land
+            group ("boundaries",)
+              (0,) path els=219 bounds=[887.00 1856.00 3273.00 2304.00] stroke=$map.border/0.60
+          group (1, 1, 0) transform=[0.06 0.00 0.00 0.06 380.00 0.00]
+            group ("land",)
+              (0,) path els=1073 bounds=[-64.00 656.00 4160.00 3504.00] fill=$map.land
+            group ("boundaries",)
+              (0,) path els=919 bounds=[-64.00 1829.00 3385.00 2331.00] stroke=$map.border/0.60
+          group (1, 0, 1) transform=[0.06 0.00 0.00 0.06 140.00 240.00]
+            group ("land",)
+              (0,) path els=484 bounds=[0.00 -64.00 4160.00 4160.00] fill=$map.land
+            group ("boundaries",)
+              (0,) path els=110 bounds=[2265.00 -48.00 621.00 1557.00] stroke=$map.border/0.60
+          group (1, 1, 1) transform=[0.06 0.00 0.00 0.06 380.00 240.00]
+            group ("land",)
+              (0,) path els=466 bounds=[-64.00 -64.00 4160.00 4160.00] fill=$map.land
+            group ("boundaries",)
+              (0,) path els=160 bounds=[253.00 -64.00 2955.00 796.00] stroke=$map.border/0.60
+      group ("cities",)
+        ("circles",) instances circle ×16 role=datum "Swedish cities by population"
+          · ("Stockholm",) (404.09, 141.16) fill=$accent@0.72
+          · ("Göteborg",) (395.96, 145.30) fill=$accent@0.72
+          · ("Malmö",) (397.33, 150.42) fill=$accent@0.72
+          · … 13 more
+      group ("basemap-labels",) role=decoration
+        group ("tiles",)
+          group (1, 0, 0) transform=[0.06 0.00 0.00 0.06 140.00 0.00]
+          group (1, 1, 0) transform=[0.06 0.00 0.00 0.06 380.00 0.00]
+          group (1, 0, 1) transform=[0.06 0.00 0.00 0.06 140.00 240.00]
+          group (1, 1, 1) transform=[0.06 0.00 0.00 0.06 380.00 240.00]
+          group ("labels",)
+            group (1, 0, 0) transform=[0.06 0.00 0.00 0.06 140.00 0.00]
+              ("New York",) text "New York" at (2412.00, 3080.00) size=13.00 ink=$map.label role=label "New York"
+              ("Mexico City",) text "Mexico City" at (1840.00, 3645.00) size=13.00 ink=$map.label role=label "Mexico City"
+              ("Los Angeles",) text "Los Angeles" at (1406.00, 3271.00) size=13.00 ink=$map.label role=label "Los Angeles"
+              ("Bogota",) text "Bogota" at (2410.00, 3991.00) size=13.00 ink=$map.label role=label "Bogota"
+              ("Madrid",) text "Madrid" at (4012.00, 3089.00) size=13.00 ink=$map.label role=label "Madrid"
+              ("Dakar",) text "Dakar" at (3698.00, 3757.00) size=13.00 ink=$map.label role=label "Dakar"
+              ("Vancouver",) text "Vancouver" at (1294.00, 2804.00) size=13.00 ink=$map.label role=label "Vancouver"
+            group (1, 0, 1) transform=[0.06 0.00 0.00 0.06 140.00 240.00]
+              ("São Paulo",) text "São Paulo" at (3035.00, 552.00) size=13.00 ink=$map.label role=label "São Paulo"
+              ("Buenos Aires",) text "Buenos Aires" at (2766.00, 840.00) size=13.00 ink=$map.label role=label "Buenos Aires"
+              ("Lima",) text "Lima" at (2343.00, 276.00) size=13.00 ink=$map.label role=label "Lima"
+            group (1, 1, 0) transform=[0.06 0.00 0.00 0.06 380.00 0.00]
+              ("Tokyo",) text "Tokyo" at (3180.00, 3226.00) size=13.00 ink=$map.label role=label "Tokyo"
+              ("Mumbai",) text "Mumbai" at (1658.00, 3654.00) size=13.00 ink=$map.label role=label "Mumbai"
+              ("Cairo",) text "Cairo" at (711.00, 3378.00) size=13.00 ink=$map.label role=label "Cairo"
+              ("Beijing",) text "Beijing" at (2649.00, 3104.00) size=13.00 ink=$map.label role=label "Beijing"
+              ("Manila",) text "Manila" at (2753.00, 3760.00) size=13.00 ink=$map.label role=label "Manila"
+              ("Moscow",) text "Moscow" at (856.00, 2561.00) size=13.00 ink=$map.label role=label "Moscow"
+              ("Istanbul",) text "Istanbul" at (659.00, 3071.00) size=13.00 ink=$map.label role=label "Istanbul"
+              ("Paris",) text "Paris" at (54.00, 2818.00) size=13.00 ink=$map.label role=label "Paris"
+              ("Lagos",) text "Lagos" at (77.00, 3949.00) size=13.00 ink=$map.label role=label "Lagos"
+              ("Taipei",) text "Taipei" at (2766.00, 3507.00) size=13.00 ink=$map.label role=label "Taipei"
+              ("Ürümqi",) text "Ürümqi" at (1993.00, 2985.00) size=13.00 ink=$map.label role=label "Ürümqi"
+              ("Kabul",) text "Kabul" at (1574.00, 3258.00) size=13.00 ink=$map.label role=label "Kabul"
+              ("Addis Ababa",) text "Addis Ababa" at (881.00, 3890.00) size=13.00 ink=$map.label role=label "Addis Ababa"
+              ("Kyiv",) text "Kyiv" at (694.00, 2763.00) size=13.00 ink=$map.label role=label "Kyiv"
+            group (1, 1, 1) transform=[0.06 0.00 0.00 0.06 380.00 240.00]
+              ("Jakarta",) text "Jakarta" at (2431.00, 141.00) size=13.00 ink=$map.label role=label "Jakarta"
+              ("Kinshasa",) text "Kinshasa" at (348.00, 99.00) size=13.00 ink=$map.label role=label "Kinshasa"
+              ("Sydney",) text "Sydney" at (3441.00, 820.00) size=13.00 ink=$map.label role=label "Sydney"
+              ("Johannesburg",) text "Johannesburg" at (638.00, 617.00) size=13.00 ink=$map.label role=label "Johannesburg"
+              ("Cape Town",) text "Cape Town" at (419.00, 821.00) size=13.00 ink=$map.label role=label "Cape Town"
+    ("attribution",) text "© OpenStreetMap contributors, Natural Earth" at (754.00, 475.00) size=10.50 ink=$map.label role=annotation "© OpenStreetMap contributors, Natural Earth"

@@ -1,0 +1,113 @@
+---
+title: Built for developers and coding agents · datars
+description: TypeScript documents, a live page that morphs each edit in, check, lint, explain, film and profile, an MCP server for coding agents, llms.txt, a JSON Schema and deterministic goldens.
+og: votes
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">For developers and agents</p>
+    <h1>Tools that answer “why does it look like that?”</h1>
+    <p class="lede-2">A datars chart is a TypeScript document, so your editor type-checks it and your agent can write it. Everything that makes it look the way it does is inspectable from the command line — which recipe drew an element, which data row, which expression values — and the same tools are an MCP server. Nothing needs a GPU or a browser: renders are deterministic, so they can be tested like code.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">The loop</p>
+      <h2>Write, look, check, publish</h2>
+<pre><code data-lang="sh">datars new mychart --template story   # chart | story | explorable | map
+datars dev mychart/doc.ts             # live page: every save morphs in
+datars check mychart/doc.ts           # diagnostics
+datars lint mychart/doc.ts            # chart checks, with fixes
+datars render mychart/doc.ts --state 1          # a PNG from the CPU reference
+datars film mychart/doc.ts --from 0 --to 1      # a transition as a filmstrip
+datars profile mychart/doc.ts         # every transition, frame by frame
+datars publish mychart/doc.ts --alias sales --to site/</code></pre>
+      <p><code>datars dev</code> opens a page with the chart, its states, its diagnostics and its lint findings, rebuilds when the document or a local recipe changes, and morphs from what's on screen to the new version — so you see what your edit changed. Click a mark and it explains it; switch to a phone width or dark mode from the toolbar; open Profile to see what each frame and transition costs.</p>
+    </div>
+    <div>
+      <p class="eyebrow">Explain</p>
+      <h2>From a pixel back to its data row</h2>
+      <p>Point <code>explain</code> at a key and it prints the element as drawn, the recipes it came from, its data row, and every expression with its value — real output, captured when this page was built:</p>
+      {{run:explain examples/votes/doc.json --key '("SD",)'|14}}
+    </div>
+  </div>
+</section>
+
+<section class="section" style="padding-top:0">
+  <div class="wrap">
+    <figure class="shot"><img class="thumb thumb-light" src="/img/dev-explain.png" alt="The datars dev page: a bar chart with its states under it, and the Explain panel listing the recipes, data row and expression values behind the clicked bar" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-explain-dark.png" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"><figcaption>The live page: the chart, its states, and — for the bar you clicked — the recipes that made it, its data row and every expression's value.</figcaption></figure>
+    <div class="shot-pair"><figure class="shot"><img class="thumb" src="/img/dev-problems.png" alt="The Problems panel with a lint warning about a data source without keys, and its fix" width="1280" height="760" loading="lazy"><figcaption>Problems: diagnostics and lint findings, each with a fix.</figcaption></figure><figure class="shot"><img class="thumb thumb-light" src="/img/dev-profile.webp" alt="The Profile panel: live frame times, and the transitions played with their drops and stalls" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-profile-dark.webp" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"><figcaption>Profile: frames live, each transition scored, and the engine's own profile — re-run on every save.</figcaption></figure></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Every command</p>
+      <h2>A CLI for the whole life of a chart</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Look</h3><p><code>render</code> (PNG, SVG, PDF) · <code>film</code> (filmstrip + motion trails) · <code>video</code> (MP4 + captions) · <code>inspect</code> (the scene as text) · <code>semantics</code> (the accessibility tree) · <code>states</code></p></article>
+      <article><h3>Check</h3><p><code>check</code> (diagnostics, fonts with no source) · <code>lint</code> (identity, encoding, legibility, accessibility, theme) · <code>explain</code> · <code>diff</code> (what changes between states or versions) · <code>test</code> (goldens and motion sweeps)</p></article>
+      <article><h3>Data and design</h3><p><code>data profile</code> (types, gaps, ranges, candidate keys, hints) · <code>describe</code> (a recipe's parameters) · <code>eject</code> · <code>theme --specimen</code> · <code>fonts</code> · <code>new</code></p></article>
+      <article><h3>Ship</h3><p><code>publish</code> · <code>serve</code> (static delivery, Range requests, an image server) · <code>bundle</code> and <code>bundle inspect</code> · <code>basemap</code> (automatic basemaps) · <code>migrate</code></p></article>
+      <article><h3>Measure</h3><p><code>profile</code> (cold and warm resolves, every transition stepped at 60 fps: stall, engine and raster per frame) · <code>budgets</code> · <code>replay</code> (a recorded session, exactly)</p></article>
+      <article><h3>Machine-readable</h3><p>Every command takes <code>--json</code>; images go to files named in the output. <code>--data name=file</code> renders a chart with someone's own rows.</p></article>
+    </div>
+    <p><a class="more" href="/docs/cli/">The CLI reference <span aria-hidden="true">→</span></a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">For coding agents</p>
+      <h2>An MCP server with the same tools</h2>
+      <p><code>datars-mcp</code> speaks the Model Context Protocol over stdio. An agent can profile a data file, write a document, check it, render its states and look at the images, film its transitions, lint it and publish it — the loop a person uses, with structured results. <a href="/llms.txt">llms.txt</a> gives it the whole API on one page; the document format has a <a href="/schema/ir-1.json">JSON Schema</a>.</p>
+      <a class="more" href="/docs/agents/">Agents and MCP <span aria-hidden="true">→</span></a>
+    </div>
+    <div>{{mcp:tools}}</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Fits your stack</p>
+      <h2>TypeScript in, static files out</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Typed documents</h3><p><code>@datars/sdk</code> builds documents; <code>@datars/std</code> is the chart library. Parameters are typed, misspelt ones get a “did you mean”, and lambdas compile to engine expressions — <code>d =&gt; d.share * 2</code>.</p></article>
+      <article><h3>React, Vite and Next.js</h3><p>React apps get a script-free path: a component, a Vite plugin and a Next.js config helper, with project templates. <a href="/docs/react/">The guide →</a></p></article>
+      <article><h3>Tested like code</h3><p><code>datars test</code> snapshots every example state and 64 frames of every transition, and checks motion invariants. Renders are deterministic, so a golden is a hash, and the same goldens check wasm, iOS and Android.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">The reference, in the terminal</p>
+      <h2><code>datars describe</code></h2>
+      <p>Every recipe's parameters, defaults and theme tokens, from the recipe itself — the same source as the <a href="/docs/std/">chart reference</a> and the MCP <code>describe_recipes</code> tool.</p>
+    </div>
+    <div>{{run:describe std/bar|22}}</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Set up the toolchain</h2>
+        <p>Install the CLI, make a chart, preview it, publish it.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/getting-started/">Get started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/tools/">Preview, check and debug</a>
+      </div>
+    </div>
+  </div>
+</section>

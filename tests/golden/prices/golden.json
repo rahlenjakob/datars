@@ -1,0 +1,33 @@
+{
+  "states": [
+    {
+      "name": "year",
+      "scene": "10f6eed52b9b95ba",
+      "pixels": "f990e2df0f46dbff"
+    },
+    {
+      "name": "winter",
+      "scene": "2f168b94e0a9f2d4",
+      "pixels": "82b0a91232bbe5bc"
+    },
+    {
+      "name": "summer",
+      "scene": "a71f96c5402bc8ea",
+      "pixels": "7a4361cf19d842ec"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "year",
+      "to": "winter",
+      "sweep": "565b109506db28a6",
+      "samples": 64
+    },
+    {
+      "from": "winter",
+      "to": "summer",
+      "sweep": "ba68441ed7bf1a8e",
+      "samples": 64
+    }
+  ]
+}

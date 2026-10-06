@@ -1,0 +1,152 @@
+---
+title: One chart on the web, iOS, Android, desktop, video and print · datars
+description: The same datars document renders identically in the browser, in native iOS and macOS apps (DatarsKit, SwiftUI, VoiceOver), in Android apps (Kotlin view, TalkBack), on the desktop, as MP4 with captions, and as PNG, SVG and vector PDF.
+og: descent
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Every platform</p>
+    <h1>One document. The web, your iOS and Android apps, the desktop, video and print.</h1>
+    <p class="lede-2">Most chart libraries live in a browser; in an app they arrive as a web view or a screenshot. datars is a Rust engine that runs natively in each host — the same code shaping the same fonts, laying out, animating and drawing — so a chart is the same chart everywhere, down to the pixel. Apps install the runtime once; charts then arrive as bundles, like images, and update without an app release.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <ul class="platforms">
+      <li>
+        <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg>iOS and macOS</h3>
+        <p><b>DatarsKit</b>, a Swift package: a SwiftUI view, a UIKit/AppKit view, and the engine underneath. The story can follow your SwiftUI state; the user's own rows fill the chart's data slots on the device.</p>
+<pre><code data-lang="swift">import DatarsKit
+
+DatarsChart(source: .url(chartURL),   // a published chart, or a .datars file in the app
+            state: step,              // program state from SwiftUI
+            data: ["spending": rows]) // the user's rows, never uploaded</code></pre>
+        <p class="facts">iOS 15+, macOS 12+ · frames drawn with Metal (the CPU reference where there's no GPU) · VoiceOver: per-item frames, adjustable sliders, activatable marks · Reduce Motion honoured · verified in the iOS simulator and on macOS</p>
+      </li>
+      <li>
+        <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M6.5 6h11M6.5 18h11"/></svg>Android</h3>
+        <p><b>An AAR</b> with a Kotlin <code>DatarsView</code>: load a published chart by URL or a <code>.datars</code> file from your assets, hand in the user's rows, drive the story from your UI. Use it from Compose through <code>AndroidView</code>.</p>
+<pre><code data-lang="kotlin">val chart = DatarsView(context)
+chart.load("https://charts.example.com/c/spending")
+chart.provideData("spending", rowsJson)  // stays on the phone
+chart.setOnClickListener { chart.send("next") }</code></pre>
+        <p class="facts">minSdk 24 · arm64-v8a, x86_64 · frames drawn with Vulkan or GLES (the CPU reference where there's no GPU) · TalkBack through an accessibility node provider · “Remove animations” honoured · runs on the emulator; not yet tested on a physical device</p>
+      </li>
+      <li>
+        <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18"/></svg>Web</h3>
+        <p><b>One custom element</b>, <code>&lt;datars-view&gt;</code>, in any page, CMS or framework. WebGPU where the browser has it, WebGL2 where it doesn't (Safari before iOS 26), the CPU renderer as the last resort; an ARIA mirror for screen readers; sleeps off screen.</p>
+<pre><code data-lang="html">&lt;script type="module" src="/runtime/datars.js"&gt;&lt;/script&gt;
+&lt;datars-view src="https://charts.example.com/c/spending"&gt;&lt;/datars-view&gt;</code></pre>
+        <p class="facts">{{runtime}} runtime, cached once per site · every chart on this site · React, Vite and Next.js: <a href="/docs/react/">script-free setup</a></p>
+      </li>
+      <li>
+        <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="1.8"/><path d="M8 20h8M12 17v3"/></svg>Desktop</h3>
+        <p><b>A native window</b> for a document, a bundle, or a published chart by URL — the same bundle web pages and apps play. Arrow keys step the story; drag and wheel explore maps.</p>
+<pre><code data-lang="sh">datars-view https://charts.example.com/c/descent
+datars-view doc.json --screenshot out.png --state 2</code></pre>
+        <p class="facts">wgpu: Metal, Vulkan, DX12 · accessibility tree through AccessKit (not yet exercised with a real screen reader)</p>
+      </li>
+      <li>
+        <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/></svg>Video</h3>
+        <p><b>Frame-exact MP4</b> of the whole story, rendered by the engine rather than recorded from a screen, with WebVTT captions from the narration. Change <code>--size</code> for 9:16, 1:1 or 16:9 — the chart re-lays itself out, so a vertical video is the phone layout, not a crop.</p>
+<pre><code data-lang="sh">datars video story.ts --size 360x640 --dpr 3   # 1080×1920
+datars video story.ts --size 640x360 --dpr 3   # 1920×1080</code></pre>
+        <p class="facts">H.264 through ffmpeg · any frame rate · deterministic: the same file every time</p>
+      </li>
+      <li>
+        <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Print and images</h3>
+        <p><b>PNG, SVG and vector PDF</b> of any state. SVG and PDF keep text as text — searchable and accessible — and the PDF is one vector page with layers as transparency groups. <code>datars serve</code> renders them on request for social cards.</p>
+<pre><code data-lang="sh">datars render chart.ts --state 2 --out chart.pdf
+curl "localhost:8787/render/chart.png?state=1&amp;width=1200&amp;height=630"</code></pre>
+        <p class="facts">PNG from the bit-exact CPU reference · no browser, no GPU needed · runs on a server or in CI</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Made when this site was built</p>
+      <h2>Same document, as a film</h2>
+      <p>Both films were rendered by <code>datars video</code> from the documents that play live elsewhere on this site — the descent in 16:9, the custom globe scene in 9:16 with its phone layout — captions included. Turn captions on in the player.</p>
+    </header>
+    <div class="video-row">
+      <figure class="v169">
+        {{film:descent-16x9}}
+        <figcaption>World → Sweden → Stockholm streets, 16:9 ({{filmsize:descent-16x9}}). The same flight plays live in the <a href="/features/maps/">maps page</a>.</figcaption>
+      </figure>
+      <figure class="v916">
+        {{film:worlds-9x16}}
+        <figcaption>Eight billion, four ways, 9:16 ({{filmsize:worlds-9x16}}).</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Made when this site was built</p>
+      <h2>Same document, as PNG, SVG and PDF</h2>
+      <p>The Riksdag hemicycle — live in the <a href="/gallery/#riksdag">gallery</a> — exported by <code>datars render</code> during the build. Open the PDF and select the text: it's text.</p>
+      <div class="exports" style="margin-top:18px">
+        <a href="/exports/riksdag.png"><b>PNG</b><span>CPU reference, 2× pixel density</span></a>
+        <a href="/exports/riksdag.svg"><b>SVG</b><span>text as text, roles and titles</span></a>
+        <a href="/exports/riksdag.pdf"><b>PDF</b><span>one vector page, searchable</span></a>
+      </div>
+    </div>
+    <figure class="fig">
+      <img class="export-img" src="/exports/riksdag.svg" alt="The Riksdag after the 2022 election as an SVG export: 349 seats as dots on concentric arcs, grouped by party from left to right." width="760" height="440" loading="lazy">
+      <figcaption>The SVG export, shown as an image.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Proved, not promised</p>
+      <h2>The same pixels on five targets</h2>
+      <p>Because text shaping, layout, motion and rasterization all happen in one deterministic engine, cross-platform consistency is a test, not a hope.</p>
+    </header>
+    <div class="cards3">
+      <article><h3>Identical hashes</h3><p>Every example's sampled frames produce the same pixel hash on macOS arm64 and x86-64, in wasm, in the iOS simulator and on an Android emulator. The engine uses its own maths library and no hash maps with random order, so floating point can't drift between platforms.</p></article>
+      <article><h3>GPU checked against a reference</h3><p>The GPU renderer is compared with a bit-exact CPU reference for every example state, down to street-level maps: mean ΔE under 0.5 everywhere and under 0.15 for most.</p></article>
+      <article><h3>Charts published after the app shipped</h3><p>Tests publish a chart <em>after</em> the web page, the SwiftUI sample app and the Android sample app were built, and open it in each; the web and Android tests then republish and check that the new version shows.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Install once</p>
+      <h2>Charts arrive like images, not like code</h2>
+      <p>App stores don't let apps download native code — and a datars chart isn't code. Published variants are data: scenes, plans, tables, geometry and bytecode for the engine's own expression interpreter. An app can refuse the one variant that carries sandboxed script and still get pre-expanded charts.</p>
+    </header>
+    <div class="cards3">
+      <article><h3>Update without a release</h3><p>Republish and the app shows the new chart on its next load. Roll back by moving the alias back.</p></article>
+      <article><h3>Offline first</h3><p>Ship a <code>.datars</code> file in the app bundle for the first run; downloaded chunks are cached by content hash.</p></article>
+      <article><h3>Private data stays private</h3><p>A chart can declare a data slot; the app fills it with the signed-in user's rows on the device. One chart design for every user, no per-user builds, nothing uploaded.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Put a chart in your app</h2>
+        <p>Step-by-step guides for each host.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/embed/ios/">iOS and macOS <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/embed/android/">Android</a>
+        <a class="btn btn-ghost" href="/docs/embed/web/">Web</a>
+        <a class="btn btn-ghost" href="/docs/export/">Video, images, PDF</a>
+      </div>
+    </div>
+  </div>
+</section>

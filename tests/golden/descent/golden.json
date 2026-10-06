@@ -1,0 +1,33 @@
+{
+  "states": [
+    {
+      "name": "world",
+      "scene": "e8d4e8116638b235",
+      "pixels": "b489e82972183110"
+    },
+    {
+      "name": "sweden",
+      "scene": "de54f36ba8d1fd7e",
+      "pixels": "82578417311933f2"
+    },
+    {
+      "name": "stockholm",
+      "scene": "d49a56c9aabbabaf",
+      "pixels": "99b730ab443f9ede"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "world",
+      "to": "sweden",
+      "sweep": "788c179b2945c47c",
+      "samples": 64
+    },
+    {
+      "from": "sweden",
+      "to": "stockholm",
+      "sweep": "f90f26edd7289a0d",
+      "samples": 64
+    }
+  ]
+}

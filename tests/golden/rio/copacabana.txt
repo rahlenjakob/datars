@@ -1,0 +1,136 @@
+scene 760.00×480.00 background=$paper
+  group ("root",)
+    view ("map",) [0.00 0.00 760.00 480.00] camera=(322.43, 271.48) zoom=6845.41
+      group ("basemap",) role=decoration
+        ("sea",) rect x=140.00 y=0.00 w=480.00 h=480.00 fill=$map.water
+        group ("tiles",)
+          group (13, 3112, 4632) transform=[0.00 0.00 0.00 0.00 322.34 271.41]
+            group ("land",)
+              (0,) path els=5 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.land
+            group ("parks",)
+              (0,) path els=2396 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.park
+            group ("water",)
+              (0,) path els=10 bounds=[869.00 672.00 2484.00 425.00] fill=$map.water
+            group ("rivers",)
+              (0,) path els=140 bounds=[-64.00 -64.00 4224.00 2357.00] stroke=$map.water/1.60
+            group ("buildings",)
+              (0,) path els=21306 bounds=[-29.00 -30.00 4183.00 4181.00] fill=$map.building
+            group ("roads-minor-casing",)
+              (0,) path els=2825 bounds=[-64.00 -64.00 4224.00 4191.00] stroke=$map.building/2.90
+            group ("roads-minor",)
+              (0,) path els=2825 bounds=[-64.00 -64.00 4224.00 4191.00] stroke=$map.road/1.30
+            group ("roads-major",)
+              (0,) path els=365 bounds=[-64.00 -64.00 4224.00 4218.00] stroke=$map.road-major/3.00
+            group ("roads-highway",)
+              (0,) path els=97 bounds=[2991.00 -64.00 753.00 4178.00] stroke=$map.road-major/3.20
+          group (13, 3113, 4632) transform=[0.00 0.00 0.00 0.00 322.40 271.41]
+            group ("land",)
+              (0,) path els=206 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.land
+            group ("parks",)
+              (0,) path els=3772 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.park
+            group ("water",)
+              (0,) path els=54 bounds=[1422.00 812.00 2440.00 2933.00] fill=$map.water
+            group ("rivers",)
+              (0,) path els=42 bounds=[-64.00 -64.00 2710.00 2359.00] stroke=$map.water/1.60
+            group ("buildings",)
+              (0,) path els=38083 bounds=[-40.00 -36.00 4029.00 4156.00] fill=$map.building
+            group ("roads-minor-casing",)
+              (0,) path els=3066 bounds=[-64.00 -64.00 3686.00 4224.00] stroke=$map.building/2.90
+            group ("roads-minor",)
+              (0,) path els=3066 bounds=[-64.00 -64.00 3686.00 4224.00] stroke=$map.road/1.30
+            group ("roads-major",)
+              (0,) path els=671 bounds=[-38.00 -64.00 2584.00 4224.00] stroke=$map.road-major/3.00
+            group ("roads-highway",)
+              (0,) path els=257 bounds=[1500.00 -64.00 1123.00 4210.00] stroke=$map.road-major/3.20
+          group (13, 3114, 4632) transform=[0.00 0.00 0.00 0.00 322.46 271.41]
+            group ("land",)
+              (0,) path els=333 bounds=[-64.00 447.00 4224.00 3170.00] fill=$map.land
+            group ("parks",)
+              (0,) path els=895 bounds=[-64.00 478.00 4224.00 3113.00] fill=$map.park
+            group ("rivers",)
+              (0,) path els=2 bounds=[4016.00 3067.00 144.00 7.00] stroke=$map.water/1.60
+            group ("buildings",)
+              (0,) path els=916 bounds=[242.00 697.00 3873.00 2521.00] fill=$map.building
+            group ("roads-minor-casing",)
+              (0,) path els=194 bounds=[2914.00 838.00 1246.00 2494.00] stroke=$map.building/2.90
+            group ("roads-minor",)
+              (0,) path els=194 bounds=[2914.00 838.00 1246.00 2494.00] stroke=$map.road/1.30
+          group (13, 3112, 4633) transform=[0.00 0.00 0.00 0.00 322.34 271.46]
+            group ("land",)
+              (0,) path els=107 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.land
+            group ("parks",)
+              (0,) path els=1869 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.park
+            group ("water",)
+              (0,) path els=218 bounds=[1190.00 29.00 2724.00 3131.00] fill=$map.water
+            group ("rivers",)
+              (0,) path els=66 bounds=[494.00 741.00 2127.00 2417.00] stroke=$map.water/1.60
+            group ("buildings",)
+              (0,) path els=26969 bounds=[-16.00 -64.00 4156.00 4069.00] fill=$map.building
+            group ("roads-minor-casing",)
+              (0,) path els=2191 bounds=[-64.00 -64.00 4224.00 4039.00] stroke=$map.building/2.90
+            group ("roads-minor",)
+              (0,) path els=2191 bounds=[-64.00 -64.00 4224.00 4039.00] stroke=$map.road/1.30
+            group ("roads-major",)
+              (0,) path els=436 bounds=[135.00 -64.00 4025.00 4224.00] stroke=$map.road-major/3.00
+            group ("roads-highway",)
+              (0,) path els=531 bounds=[-64.00 -64.00 4224.00 3366.00] stroke=$map.road-major/3.20
+          group (13, 3113, 4633) transform=[0.00 0.00 0.00 0.00 322.40 271.46]
+            group ("land",)
+              (0,) path els=136 bounds=[-64.00 -64.00 3752.00 3366.00] fill=$map.land
+            group ("parks",)
+              (0,) path els=1441 bounds=[-64.00 -64.00 3730.00 3188.00] fill=$map.park
+            group ("buildings",)
+              (0,) path els=14558 bounds=[-39.00 -64.00 3449.00 3106.00] fill=$map.building
+            group ("roads-minor-casing",)
+              (0,) path els=998 bounds=[-64.00 -64.00 3132.00 3267.00] stroke=$map.building/2.90
+            group ("roads-minor",)
+              (0,) path els=998 bounds=[-64.00 -64.00 3132.00 3267.00] stroke=$map.road/1.30
+            group ("roads-major",)
+              (0,) path els=247 bounds=[-41.00 -31.00 2309.00 2955.00] stroke=$map.road-major/3.00
+            group ("roads-highway",)
+              (0,) path els=143 bounds=[-64.00 -64.00 2459.00 3047.00] stroke=$map.road-major/3.20
+          group (13, 3114, 4633) transform=[0.00 0.00 0.00 0.00 322.46 271.46]
+            group ("land",)
+              (0,) path els=45 bounds=[268.00 336.00 397.00 523.00] fill=$map.land
+            group ("parks",)
+              (0,) path els=24 bounds=[320.00 354.00 310.00 307.00] fill=$map.park
+      group ("sights",)
+        ("dots",) instances circle ×8 role=datum "Rio de Janeiro's sights"
+          · ("cristo",) (322.39, 271.46) fill=$accent@0.85
+          · ("sugarloaf",) (322.46, 271.45) fill=$accent@0.85
+          · ("copacabana",) (322.42, 271.48) fill=$accent@0.85
+          · … 5 more
+        ("cristo",) text "Christ the Redeemer" at (322.39, 271.46) size=11.50 ink=$ink offset=(0.00, -11.16)
+        ("sugarloaf",) text "Sugarloaf Mountain" at (322.46, 271.45) size=11.50 ink=$ink offset=(0.00, -10.07)
+        ("copacabana",) text "Copacabana Beach" at (322.42, 271.48) size=11.50 ink=$ink offset=(0.00, -13.00)
+        ("ipanema",) text "Ipanema Beach" at (322.39, 271.51) size=11.50 ink=$ink offset=(0.00, -11.16)
+        ("maracana",) text "Maracanã" at (322.36, 271.40) size=11.50 ink=$ink offset=(0.00, -8.77)
+        ("amanha",) text "Museum of Tomorrow" at (322.43, 271.37) size=11.50 ink=$ink offset=(0.00, -8.77)
+        ("forte",) text "Copacabana Fort" at (322.42, 271.51) size=11.50 ink=$ink offset=(0.00, -6.65)
+        ("urca",) text "Urca" at (322.45, 271.45) size=11.50 ink=$ink offset=(0.00, -6.16)
+      group ("basemap-labels",) role=decoration
+        group ("tiles",)
+          group (13, 3112, 4632) transform=[0.00 0.00 0.00 0.00 322.34 271.41]
+          group (13, 3113, 4632) transform=[0.00 0.00 0.00 0.00 322.40 271.41]
+          group (13, 3114, 4632) transform=[0.00 0.00 0.00 0.00 322.46 271.41]
+          group (13, 3112, 4633) transform=[0.00 0.00 0.00 0.00 322.34 271.46]
+          group (13, 3113, 4633) transform=[0.00 0.00 0.00 0.00 322.40 271.46]
+          group (13, 3114, 4633) transform=[0.00 0.00 0.00 0.00 322.46 271.46]
+          group ("labels",)
+            group (13, 3112, 4632) transform=[0.00 0.00 0.00 0.00 322.34 271.41]
+              ("Humaitá",) text "Humaitá" at (3887.00, 3716.00) size=11.50 ink=$map.label role=label "Humaitá"
+              ("Silvestre",) text "Silvestre" at (3080.00, 2588.00) size=11.50 ink=$map.label role=label "Silvestre"
+            group (13, 3112, 4633) transform=[0.00 0.00 0.00 0.00 322.34 271.46]
+              ("Lagoa",) text "Lagoa" at (3700.00, 412.00) size=11.50 ink=$map.label role=label "Lagoa"
+            group (13, 3113, 4632) transform=[0.00 0.00 0.00 0.00 322.40 271.41]
+              ("Botafogo",) text "Botafogo" at (1113.00, 3399.00) size=11.50 ink=$map.label role=label "Botafogo"
+              ("Urca",) text "Urca" at (2821.00, 3659.00) size=11.50 ink=$map.label role=label "Urca"
+              ("Santa Marta",) text "Santa Marta" at (397.00, 3021.00) size=11.50 ink=$map.label role=label "Santa Marta"
+            group (13, 3113, 4633) transform=[0.00 0.00 0.00 0.00 322.40 271.46]
+              ("Copacabana",) text "Copacabana" at (1300.00, 1375.00) size=11.50 ink=$map.label role=label "Copacabana"
+              ("Leme",) text "Leme" at (2921.00, 335.00) size=11.50 ink=$map.label role=label "Leme"
+              ("Bairro Peixoto",) text "Bairro Peixoto" at (734.00, 829.00) size=11.50 ink=$map.label role=label "Bairro Peixoto"
+              ("Arpoador",) text "Arpoador" at (612.00, 3056.00) size=11.50 ink=$map.label role=label "Arpoador"
+              ("Cocheira",) text "Cocheira" at (580.00, 108.00) size=11.50 ink=$map.label role=label "Cocheira"
+              ("Estradinha",) text "Estradinha" at (891.00, 374.00) size=11.50 ink=$map.label role=label "Estradinha"
+    ("attribution",) text "© OpenStreetMap contributors, Natural Earth" at (754.00, 475.00) size=10.50 ink=$map.label role=annotation "© OpenStreetMap contributors, Natural Earth"

@@ -1,0 +1,83 @@
+scene 720.00×420.00 background=$paper
+  group ("root",)
+    group ("plot",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Population, thousands — הערים הגדולות"
+      ("title",) text "Population, thousands — הערים הגדולות" at (0.00, 0.00) size=17.00 ink=$ink role=title "Population, thousands — הערים הגדולות"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 64.82 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 337.62) stroke=$rule/1.00
+          group ("ירושלים",) role=tick "ירושלים"
+            ("#0",) segment (0.00, 33.76)→(-5.00, 33.76) stroke=$rule/1.00
+            ("#2",) text "ירושלים" at (-8.00, 33.76) size=11.00 ink=$muted
+          group ("תל אביב–יפו",) role=tick "תל אביב–יפו"
+            ("#0",) segment (0.00, 101.29)→(-5.00, 101.29) stroke=$rule/1.00
+            ("#2",) text "תל אביב–יפו" at (-8.00, 101.29) size=11.00 ink=$muted
+          group ("חיפה",) role=tick "חיפה"
+            ("#0",) segment (0.00, 168.81)→(-5.00, 168.81) stroke=$rule/1.00
+            ("#2",) text "חיפה" at (-8.00, 168.81) size=11.00 ink=$muted
+          group ("ראשון לציון",) role=tick "ראשון לציון"
+            ("#0",) segment (0.00, 236.33)→(-5.00, 236.33) stroke=$rule/1.00
+            ("#2",) text "ראשון לציון" at (-8.00, 236.33) size=11.00 ink=$muted
+          group ("פתח תקווה",) role=tick "פתח תקווה"
+            ("#0",) segment (0.00, 303.86)→(-5.00, 303.86) stroke=$rule/1.00
+            ("#2",) text "פתח תקווה" at (-8.00, 303.86) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 71.32 0.00]
+          group ("area",)
+            group ("grid-x",) role=decoration
+              (0,) segment (0.00, 0.00)→(0.00, 337.62) stroke=$grid/1.00 role=decoration
+              (100,) segment (61.67, 0.00)→(61.67, 337.62) stroke=$grid/1.00 role=decoration
+              (200,) segment (123.34, 0.00)→(123.34, 337.62) stroke=$grid/1.00 role=decoration
+              (300,) segment (185.00, 0.00)→(185.00, 337.62) stroke=$grid/1.00 role=decoration
+              (400,) segment (246.67, 0.00)→(246.67, 337.62) stroke=$grid/1.00 role=decoration
+              (500,) segment (308.34, 0.00)→(308.34, 337.62) stroke=$grid/1.00 role=decoration
+              (600,) segment (370.01, 0.00)→(370.01, 337.62) stroke=$grid/1.00 role=decoration
+              (700,) segment (431.68, 0.00)→(431.68, 337.62) stroke=$grid/1.00 role=decoration
+              (800,) segment (493.35, 0.00)→(493.35, 337.62) stroke=$grid/1.00 role=decoration
+              (900,) segment (555.01, 0.00)→(555.01, 337.62) stroke=$grid/1.00 role=decoration
+              (1000,) segment (616.68, 0.00)→(616.68, 337.62) stroke=$grid/1.00 role=decoration
+            group ("marks",) role=series "pop by city"
+              ("ירושלים",) rect x=0.00 y=7.43 w=604.97 h=52.67 fill=$accent role=datum "ירושלים: 981"
+              ("תל אביב–יפו",) rect x=0.00 y=74.95 w=292.92 h=52.67 fill=$accent role=datum "תל אביב–יפו: 475"
+              ("חיפה",) rect x=0.00 y=142.48 w=178.84 h=52.67 fill=$accent role=datum "חיפה: 290"
+              ("ראשון לציון",) rect x=0.00 y=210.00 w=160.34 h=52.67 fill=$accent role=datum "ראשון לציון: 260"
+              ("פתח תקווה",) rect x=0.00 y=277.52 w=157.87 h=52.67 fill=$accent role=datum "פתח תקווה: 256"
+              group ("labels",)
+                ("ירושלים",) text "981" at (600.97, 33.76) size=11.00 ink=on($accent)
+                ("תל אביב–יפו",) text "475" at (296.92, 101.29) size=11.00 ink=$ink-2
+                ("חיפה",) text "290" at (182.84, 168.81) size=11.00 ink=$ink-2
+                ("ראשון לציון",) text "260" at (164.34, 236.33) size=11.00 ink=$ink-2
+                ("פתח תקווה",) text "256" at (161.87, 303.86) size=11.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 344.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(616.68, 0.00) stroke=$rule/1.00
+            group (0,) role=tick "0"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "0" at (0.00, 8.00) size=11.00 ink=$muted
+            group (100,) role=tick "100"
+              ("#0",) segment (61.67, 0.00)→(61.67, 5.00) stroke=$rule/1.00
+              ("#1",) text "100" at (61.67, 8.00) size=11.00 ink=$muted
+            group (200,) role=tick "200"
+              ("#0",) segment (123.34, 0.00)→(123.34, 5.00) stroke=$rule/1.00
+              ("#1",) text "200" at (123.34, 8.00) size=11.00 ink=$muted
+            group (300,) role=tick "300"
+              ("#0",) segment (185.00, 0.00)→(185.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "300" at (185.00, 8.00) size=11.00 ink=$muted
+            group (400,) role=tick "400"
+              ("#0",) segment (246.67, 0.00)→(246.67, 5.00) stroke=$rule/1.00
+              ("#1",) text "400" at (246.67, 8.00) size=11.00 ink=$muted
+            group (500,) role=tick "500"
+              ("#0",) segment (308.34, 0.00)→(308.34, 5.00) stroke=$rule/1.00
+              ("#1",) text "500" at (308.34, 8.00) size=11.00 ink=$muted
+            group (600,) role=tick "600"
+              ("#0",) segment (370.01, 0.00)→(370.01, 5.00) stroke=$rule/1.00
+              ("#1",) text "600" at (370.01, 8.00) size=11.00 ink=$muted
+            group (700,) role=tick "700"
+              ("#0",) segment (431.68, 0.00)→(431.68, 5.00) stroke=$rule/1.00
+              ("#1",) text "700" at (431.68, 8.00) size=11.00 ink=$muted
+            group (800,) role=tick "800"
+              ("#0",) segment (493.35, 0.00)→(493.35, 5.00) stroke=$rule/1.00
+              ("#1",) text "800" at (493.35, 8.00) size=11.00 ink=$muted
+            group (900,) role=tick "900"
+              ("#0",) segment (555.01, 0.00)→(555.01, 5.00) stroke=$rule/1.00
+              ("#1",) text "900" at (555.01, 8.00) size=11.00 ink=$muted
+            group (1000,) role=tick "1,000"
+              ("#0",) segment (616.68, 0.00)→(616.68, 5.00) stroke=$rule/1.00
+              ("#1",) text "1,000" at (616.68, 8.00) size=11.00 ink=$muted

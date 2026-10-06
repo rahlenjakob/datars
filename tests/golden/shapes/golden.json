@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "bars",
+      "scene": "dacb52c0f1580609",
+      "pixels": "673b3057e18905e9"
+    },
+    {
+      "name": "treemap",
+      "scene": "99025b8c6e5ff1d8",
+      "pixels": "c92944999759505f"
+    },
+    {
+      "name": "waffle",
+      "scene": "ce07a2ad231b9750",
+      "pixels": "bc44d5ae862d0509"
+    },
+    {
+      "name": "dots",
+      "scene": "f86aa637a3a8dade",
+      "pixels": "411041f9be0cad6d"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "bars",
+      "to": "treemap",
+      "sweep": "d2aad986ad9e6ab1",
+      "samples": 64
+    },
+    {
+      "from": "treemap",
+      "to": "waffle",
+      "sweep": "0d49e7c03f5415dc",
+      "samples": 64
+    },
+    {
+      "from": "waffle",
+      "to": "dots",
+      "sweep": "065f47be16a9bccb",
+      "samples": 64
+    }
+  ]
+}

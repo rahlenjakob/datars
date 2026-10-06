@@ -1,0 +1,94 @@
+# The datars workspace. Every crate under crates/ is a member (a glob, so adding a crate never
+# needs an edit here). Engine crates stay deterministic and sans-IO — see docs/02-principles.md.
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-Proprietary"
+license-file = "LICENSE"
+publish = false
+rust-version = "1.90"
+repository = "https://github.com/rahlenjakob/datars"
+homepage = "https://datars.dev"
+
+[workspace.dependencies]
+# internal
+datars-math = { path = "crates/datars-math" }
+datars-color = { path = "crates/datars-color" }
+datars-theme = { path = "crates/datars-theme" }
+datars-text = { path = "crates/datars-text", default-features = false }
+datars-scene = { path = "crates/datars-scene" }
+datars-render = { path = "crates/datars-render" }
+datars-render-cpu = { path = "crates/datars-render-cpu" }
+datars-render-svg = { path = "crates/datars-render-svg" }
+datars-render-pdf = { path = "crates/datars-render-pdf" }
+datars-render-wgpu = { path = "crates/datars-render-wgpu", default-features = false }
+datars-motion = { path = "crates/datars-motion" }
+datars-data = { path = "crates/datars-data" }
+datars-expr = { path = "crates/datars-expr" }
+datars-graph = { path = "crates/datars-graph" }
+datars-layout = { path = "crates/datars-layout" }
+datars-geo = { path = "crates/datars-geo" }
+datars-geo-build = { path = "crates/datars-geo-build" }
+datars-algo = { path = "crates/datars-algo" }
+datars-ir = { path = "crates/datars-ir" }
+datars-sandbox = { path = "crates/datars-sandbox" }
+datars-bundle = { path = "crates/datars-bundle" }
+datars-engine = { path = "crates/datars-engine", default-features = false }
+datars-headless = { path = "crates/datars-headless" }
+datars-build = { path = "crates/datars-build" }
+datars-test = { path = "crates/datars-test" }
+datars-devtools = { path = "crates/datars-devtools" }
+datars-runtime = { path = "crates/datars-runtime", default-features = false }
+
+# external — curated (P15): pure Rust or vetted C, deterministic, wasm-friendly, permissive
+libm = "0.2.16"
+serde = { version = "1", features = ["derive", "rc"] }
+schemars = "1"
+serde_json = { version = "1", features = ["float_roundtrip"] }
+png = "0.17"
+harfrust = "0.5"
+skrifa = "0.40"
+# build-time only (datars-build font subsetting): the same fontations family as skrifa/harfrust —
+# read-fonts 0.37 parses, write-fonts 0.45 serializes the rewritten tables (offsets, overflow).
+read-fonts = "0.37"
+write-fonts = "0.45"
+unicode-linebreak = "0.1.5"
+unicode-bidi = "0.3"
+unicode-segmentation = "1"
+lyon_tessellation = "1"
+wgpu = "30"
+pollster = "0.4"
+bytemuck = { version = "1", features = ["derive"] }
+# Hashed, insertion-ordered maps with a seedless hasher: O(1) lookups whose iteration is still
+# deterministic (already in the tree through wgpu).
+indexmap = "2"
+rustc-hash = "1.1"
+flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+# build-time only (datars-geo `build` feature): robust boolean polygon ops; no threads (no default features)
+geo = { version = "0.33", default-features = false }
+rquickjs = { version = "0.9", features = ["loader"] }
+wasm-bindgen = "=0.2.128"
+js-sys = "0.3"
+web-sys = "0.3"
+winit = "0.30"
+accesskit = "0.25"
+accesskit_winit = "0.34"
+
+[profile.release]
+opt-level = 3
+
+[profile.dev.package."*"]
+opt-level = 2
+
+# The browser bundle: size over speed.
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

@@ -1,0 +1,40 @@
+[package]
+name = "datars-host-web"
+description = "The datars web host: the engine + renderers compiled to WebAssembly, driven by @datars/web."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+datars-engine = { workspace = true }
+datars-runtime.workspace = true
+datars-bundle.workspace = true
+datars-ir.workspace = true
+datars-math.workspace = true
+datars-render.workspace = true
+datars-render-cpu.workspace = true
+datars-scene.workspace = true
+datars-theme.workspace = true
+serde_json.workspace = true
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+datars-render-wgpu = { workspace = true, optional = true, default-features = false }
+wasm-bindgen.workspace = true
+wasm-bindgen-futures = "0.4"
+js-sys.workspace = true
+web-sys = { workspace = true, features = ["HtmlCanvasElement", "CanvasRenderingContext2d", "ImageData", "console", "Window", "Performance"] }
+
+[features]
+default = ["sandbox", "gpu"]
+# T3 bundles (recipes expanded on the device): QuickJS + the standard library.
+sandbox = ["datars-engine/sandbox", "datars-runtime/sandbox"]
+# WebGPU / WebGL2 through wgpu. Without it the CPU reference renders into a 2D canvas.
+gpu = ["dep:datars-render-wgpu"]
+# WebGL2 for browsers without WebGPU (else they use the CPU renderer).
+webgl = ["gpu", "datars-render-wgpu/webgl"]

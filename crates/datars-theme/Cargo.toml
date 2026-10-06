@@ -1,0 +1,15 @@
+[package]
+name = "datars-theme"
+description = "Themes for datars: typed tokens, derived colours, modes, inheritance, locks, overrides, validation, late-bound colour references."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+serde.workspace = true
+serde_json.workspace = true

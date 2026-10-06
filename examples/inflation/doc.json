@@ -1,0 +1,112 @@
+{
+ "datars": 1,
+ "id": "inflation",
+ "title": "Inflation (CPIF), annual %",
+ "size": {
+  "width": 720,
+  "height": 380
+ },
+ "locale": "en",
+ "data": {
+  "cpif": {
+   "values": {
+    "year": [
+     2015,
+     2016,
+     2017,
+     2018,
+     2019,
+     2020,
+     2021,
+     2022,
+     2023
+    ],
+    "value": [
+     0.9,
+     1.4,
+     2,
+     2.1,
+     1.7,
+     0.5,
+     2.4,
+     7.7,
+     6
+    ]
+   },
+   "key": [
+    "year"
+   ]
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    24,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "cpif",
+     "x": "year",
+     "y": "value",
+     "xType": "linear",
+     "title": "Inflation (CPIF), annual % — Sweden",
+     "format": ".0f",
+     "xDomain": [
+      2015,
+      2023
+     ],
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/area",
+       "params": {
+        "opacity": 0.25
+       }
+      },
+      {
+       "kind": "use",
+       "recipe": "@datars/std/line",
+       "params": {
+        "width": 2.5
+       }
+      },
+      {
+       "kind": "use",
+       "recipe": "@datars/std/rule",
+       "params": {
+        "axis": "y",
+        "value": 2,
+        "label": "Target 2%"
+       }
+      },
+      {
+       "kind": "use",
+       "recipe": "@datars/std/annotate",
+       "params": {
+        "x": {
+         "expr": "scale.x(2022)"
+        },
+        "y": {
+         "expr": "scale.y(7.7)"
+        },
+        "text": "2022 spike",
+        "dx": -40,
+        "dy": -24
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@datars/web",
+  "version": "0.1.0",
+  "description": "The datars runtime for the web: <datars-view src=\"…\"> — install once, charts arrive as bundles.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/web"
+  },
+  "keywords": ["datars", "data-visualization", "charts", "web-component", "webgpu", "webassembly"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./datars.js": "./dist/datars.js",
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p . && esbuild src/index.ts --bundle --format=esm --platform=browser --target=es2020 --external:./wasm/* --outfile=dist/datars.js && mkdir -p dist/atlas && cp ../../assets/atlas/*.geojson dist/atlas/"
+  }
+}

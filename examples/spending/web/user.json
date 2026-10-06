@@ -1,0 +1,152 @@
+[
+{
+"month": "Apr",
+"category": "Housing",
+"amount": 13437
+},
+{
+"month": "Apr",
+"category": "Food",
+"amount": 4914
+},
+{
+"month": "Apr",
+"category": "Transport",
+"amount": 1040
+},
+{
+"month": "Apr",
+"category": "Shopping",
+"amount": 3904
+},
+{
+"month": "Apr",
+"category": "Leisure",
+"amount": 3655
+},
+{
+"month": "May",
+"category": "Housing",
+"amount": 13862
+},
+{
+"month": "May",
+"category": "Food",
+"amount": 4518
+},
+{
+"month": "May",
+"category": "Transport",
+"amount": 950
+},
+{
+"month": "May",
+"category": "Shopping",
+"amount": 3776
+},
+{
+"month": "May",
+"category": "Leisure",
+"amount": 3412
+},
+{
+"month": "Jun",
+"category": "Housing",
+"amount": 10859
+},
+{
+"month": "Jun",
+"category": "Food",
+"amount": 4657
+},
+{
+"month": "Jun",
+"category": "Transport",
+"amount": 897
+},
+{
+"month": "Jun",
+"category": "Shopping",
+"amount": 6650
+},
+{
+"month": "Jun",
+"category": "Leisure",
+"amount": 2675
+},
+{
+"month": "Jul",
+"category": "Housing",
+"amount": 12416
+},
+{
+"month": "Jul",
+"category": "Food",
+"amount": 6949
+},
+{
+"month": "Jul",
+"category": "Transport",
+"amount": 1227
+},
+{
+"month": "Jul",
+"category": "Shopping",
+"amount": 5741
+},
+{
+"month": "Jul",
+"category": "Leisure",
+"amount": 3324
+},
+{
+"month": "Aug",
+"category": "Housing",
+"amount": 20059
+},
+{
+"month": "Aug",
+"category": "Food",
+"amount": 4469
+},
+{
+"month": "Aug",
+"category": "Transport",
+"amount": 1171
+},
+{
+"month": "Aug",
+"category": "Shopping",
+"amount": 4694
+},
+{
+"month": "Aug",
+"category": "Leisure",
+"amount": 2723
+},
+{
+"month": "Sep",
+"category": "Housing",
+"amount": 11346
+},
+{
+"month": "Sep",
+"category": "Food",
+"amount": 5587
+},
+{
+"month": "Sep",
+"category": "Transport",
+"amount": 1144
+},
+{
+"month": "Sep",
+"category": "Shopping",
+"amount": 4298
+},
+{
+"month": "Sep",
+"category": "Leisure",
+"amount": 3764
+}
+]

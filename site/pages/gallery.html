@@ -1,0 +1,195 @@
+---
+title: Gallery — every chart live · datars
+description: Every live datars chart on this site — morphing stories, maps from the globe to a street, explorables, linked views, drill-downs, live data, four million points, business and finance charts, brands and scripts — each with its TypeScript document and text description, plus an example of every recipe.
+og: shapes
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Gallery</p>
+    <h1>Every chart here is live</h1>
+    <p class="lede-2">Each is a published bundle played by the same {{runtime}} runtime your pages and apps would use, fetched as static files. Step through, drag, brush, zoom — and open the document behind it. Each one's text description, from its own semantics, is under the chart.</p>
+    <p class="chips" style="margin-top:-12px">
+      <a class="chip" href="#stories">Stories and morphs</a>
+      <a class="chip" href="#maps">Maps</a>
+      <a class="chip" href="#interaction">Interaction</a>
+      <a class="chip" href="#big-data">Big data</a>
+      <a class="chip" href="#business">Business and flows</a>
+      <a class="chip" href="#brands">Brands and type</a>
+      <a class="chip" href="#recipes">Every recipe</a>
+    </p>
+  </div>
+</section>
+
+<section class="section" id="stories" style="padding-top:24px">
+  <div class="wrap">
+    <header class="section-head"><h2>Stories and morphs</h2><p>One dataset, many shapes: every mark keeps its key, so each step is a transition, not a cut.</p></header>
+    <div class="grid">
+      <article class="card" id="hero">
+        <div class="chart" data-chart="hero" data-caption></div>
+        <div class="card-text"><span class="tag">Keyed morphs</span><h3>World electricity, five shapes</h3><p>Bars, a donut, a treemap, a waffle and a fossil versus low-carbon split — each source keeps its key, so every shape morphs into the next.</p><p class="hint"><a href="{{src}}/site/charts/hero.ts">Document</a> · {{size:hero}}</p>{{alt:hero}}</div>
+      </article>
+      <article class="card" id="shapes">
+        <div class="chart" data-chart="shapes" data-caption></div>
+        <div class="card-text"><span class="tag">Units split and merge</span><h3>One dataset, many shapes</h3><p>Bars → treemap → waffle → dots. Units split out of bars and merge back; the whole motion spec is one rule.</p><p class="hint"><a href="{{src}}/examples/shapes/doc.ts">Document</a> · {{size:shapes}}</p>{{alt:shapes}}</div>
+      </article>
+      <article class="card" id="riksdag">
+        <div class="chart" data-chart="riksdag" data-caption></div>
+        <div class="card-text"><span class="tag">Units</span><h3>349 seats, then the parties</h3><p>A hemicycle of one dot per seat that regroups into bars. Party colours are data, declared once as key metadata; the theme supplies everything else.</p><p class="hint"><a href="{{src}}/examples/riksdag/doc.ts">Document</a> · {{size:riksdag}}</p>{{alt:riksdag}}</div>
+      </article>
+      <article class="card" id="votes">
+        <div class="chart" data-chart="votes" data-caption></div>
+        <div class="card-text"><span class="tag">A simple story</span><h3>Vote share, four ways</h3><p>The Swedish election of 2022: each party's bar becomes its slice and back. A good first document to read.</p><p class="hint"><a href="{{src}}/examples/votes/doc.ts">Document</a> · {{size:votes}}</p>{{alt:votes}}</div>
+      </article>
+      <article class="card" id="warming">
+        <div class="chart" data-chart="warming" data-caption></div>
+        <div class="card-text"><span class="tag">Line → stripes</span><h3>A warming world, as a line and as stripes</h3><p>Two shapes of one series: every year's point becomes its stripe, coloured on a diverging scale by the theme.</p><p class="hint"><a href="{{src}}/examples/warming/doc.ts">Document</a> · {{size:warming}}</p>{{alt:warming}}</div>
+      </article>
+      <article class="card" id="worlds">
+        <div class="chart" data-chart="worlds" data-caption></div>
+        <div class="card-text"><span class="tag">Custom recipe</span><h3>Eight billion, four ways</h3><p>A spinning globe whose countries become planets, a golden spiral and blocks — one custom recipe, motion rules for the flights.</p><p class="hint"><a href="{{src}}/examples/worlds/doc.ts">Document</a> · <a href="{{src}}/examples/worlds/recipes/worlds.ts">Recipe</a> · {{size:worlds}}</p>{{alt:worlds}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="maps">
+  <div class="wrap">
+    <header class="section-head"><h2>Maps</h2><p>Projections, atlases and vector tiles in the same engine; basemaps read by range from one static file.</p></header>
+    <article class="card wide" id="rio">
+      <div class="card-text"><span class="tag">Automatic basemap</span><h3>From the world to Copacabana</h3><p>A flight to street level over a basemap made automatically from OpenStreetMap for exactly these views — {{archive:rio}} for the whole story.</p><p class="hint"><a href="{{src}}/examples/rio/doc.ts">Document</a> · {{size:rio}} + tiles on demand</p>{{alt:rio}}</div>
+      <div class="chart" data-chart="rio" data-caption></div>
+    </article>
+    <div class="grid">
+      <article class="card" id="descent">
+        <div class="chart" data-chart="descent" data-caption></div>
+        <div class="card-text"><span class="tag">Vector tiles · one camera</span><h3>From the globe to Stockholm's streets</h3><p>Our own OpenStreetMap and Natural Earth tiles; the camera flies the van Wijk path and labels fade in flight.</p><p class="hint"><a href="{{src}}/examples/descent/doc.ts">Document</a> · {{size:descent}} + {{archive:descent}} archive by range</p>{{alt:descent}}</div>
+      </article>
+      <article class="card" id="renewables">
+        <div class="chart" data-chart="renewables" data-caption></div>
+        <div class="card-text"><span class="tag">Map ↔ chart</span><h3>Renewables: the map becomes a ranking</h3><p>A choropleth over the countries atlas; the camera flies to Europe and the Nordics, then each country morphs into its bar.</p><p class="hint"><a href="{{src}}/examples/renewables/doc.ts">Document</a> · {{size:renewables}} incl. the atlas</p>{{alt:renewables}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="interaction">
+  <div class="wrap">
+    <header class="section-head"><h2>Interaction</h2><p>Signals are global, so controls, brushes and selections link views without glue code — and work the same on touch, keyboard and screen readers.</p></header>
+    <div class="grid">
+      <article class="card" id="budget">
+        <div class="chart" data-chart="budget"></div>
+        <div class="card-text"><span class="tag">Explorable</span><h3>Drag the slider. That's the whole app.</h3><p>The slider is drawn by the engine — on the web, in apps and in video alike — and the bars read its signal in an expression. No host code.</p><p class="hint"><a href="{{src}}/examples/budget/doc.ts">Document</a> · {{size:budget}}</p>{{alt:budget}}</div>
+      </article>
+      <article class="card" id="dashboard">
+        <div class="chart" data-chart="dashboard"></div>
+        <div class="card-text"><span class="tag">Linked views</span><h3>Click a region, filter the trend</h3><p>The bars write a key set; the line chart's table filters on it; lines morph as series come and go.</p><p class="hint"><a href="{{src}}/examples/dashboard/doc.ts">Document</a> · {{size:dashboard}}</p>{{alt:dashboard}}</div>
+      </article>
+      <article class="card" id="prices">
+        <div class="chart" data-chart="prices" data-caption></div>
+        <div class="card-text"><span class="tag">Brushing</span><h3>Overview and detail, joined by a brush</h3><p>Drag across the year below; the detail above zooms to your selection and its mean updates. The brush is a signal like any other.</p><p class="hint"><a href="{{src}}/examples/prices/doc.ts">Document</a> · {{size:prices}}</p>{{alt:prices}}</div>
+      </article>
+      <article class="card" id="spending">
+        <div class="chart" data-chart="spending"></div>
+        <div class="card-text"><span class="tag">Data slot</span><h3>Your spending</h3><p>A banking-style chart that ships without data: an app hands in the user's rows on the device. Here it shows its sample.</p><p class="hint"><a href="{{src}}/examples/spending/doc.ts">Document</a> · {{size:spending}} · <a href="/features/data/#app">switch accounts on the data page</a></p>{{alt:spending}}</div>
+      </article>
+      <article class="card" id="controls">
+        <div class="chart" data-chart="controls"></div>
+        <div class="card-text"><span class="tag">Controls</span><h3>Every control, drawn by the engine</h3><p>A segmented choice, a dropdown whose list floats over the chart, a switch, checkboxes for a key set, a two-thumb range and a button — each a std recipe setting a signal the bars read.</p><p class="hint"><a href="{{src}}/site/charts/controls.ts">Document</a> · {{size:controls}}</p>{{alt:controls}}</div>
+      </article>
+      <article class="card" id="drill">
+        <div class="chart" data-chart="drill"></div>
+        <div class="card-text"><span class="tag">Chapters</span><h3>Click a country to drill in</h3><p>The countries are chapters: click one and the map gives way to where it ranks and how it got there; back returns to Europe. The bars and the map enter the chapter the same way.</p><p class="hint"><a href="{{src}}/site/charts/europe-drill.ts">Document</a> · {{size:drill}}</p>{{alt:drill}}</div>
+      </article>
+      <article class="card" id="election">
+        <div class="chart" data-chart="election"></div>
+        <div class="card-text"><span class="tag">Live data</span><h3>Election night, re-ranked as it counts</h3><p>A live source fetched every two seconds; each count animates in by key. Here the page answers the chart's requests with the night's snapshots, over and over — <a href="/features/data/#live">how, on the data page</a>.</p><p class="hint"><a href="{{src}}/examples/election/doc.ts">Document</a> · {{size:election}} · simulated counts<span hidden data-feed-for="election" data-feed-source="count" data-src="/data/election/" data-feed-count="10" data-feed-loop></span></p>{{alt:election}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="big-data">
+  <div class="wrap">
+    <header class="section-head"><h2>Big data</h2><p>Instanced marks and point pyramids: the frame draws what the camera shows.</p></header>
+    <div class="grid">
+      <article class="card" id="galaxy">
+        <div class="chart" data-chart="galaxy" data-caption></div>
+        <div class="card-text"><span class="tag">4,000,000 points</span><h3>A galaxy, star by star</h3><p>Four million generated stars indexed into a pyramid and streamed by byte range; zoom from the whole galaxy to a single star.</p><p class="hint"><a href="{{src}}/examples/galaxy/doc.ts">Document</a> · {{size:galaxy}} + {{archive:galaxy}} archive by range</p>{{alt:galaxy}}</div>
+      </article>
+      <article class="card" id="scatter">
+        <div class="chart" data-chart="scatter" data-caption></div>
+        <div class="card-text"><span class="tag">20,000 points</span><h3>Recoloured in one step</h3><p>Instanced points: one draw for every point, the transition planned once, each frame in about a third of a millisecond.</p><p class="hint"><a href="{{src}}/examples/scatter/doc.ts">Document</a> · {{size:scatter}}</p>{{alt:scatter}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="business">
+  <div class="wrap">
+    <header class="section-head"><h2>Business and flows</h2><p>The boardroom staples, each a recipe you can eject and edit.</p></header>
+    <div class="grid">
+      <article class="card" id="business-card">
+        <div class="chart" data-chart="business" data-caption></div>
+        <div class="card-text"><span class="tag">Waterfall · funnel · stacked</span><h3>A bridge, a funnel, a stack</h3><p>Three recipes in one story; bars find their next shape.</p><p class="hint"><a href="{{src}}/examples/business/doc.ts">Document</a> · {{size:business}}</p>{{alt:business}}</div>
+      </article>
+      <article class="card" id="energy">
+        <div class="chart" data-chart="energy"></div>
+        <div class="card-text"><span class="tag">Sankey</span><h3>Where the world's energy goes</h3><p>A sankey from one table of links; every ribbon is a keyed row.</p><p class="hint"><a href="{{src}}/site/charts/energy.ts">Document</a> · {{size:energy}}</p>{{alt:energy}}</div>
+      </article>
+      <article class="card" id="inflation">
+        <div class="chart" data-chart="inflation"></div>
+        <div class="card-text"><span class="tag">Area · callout</span><h3>Inflation, drawn on</h3><p>An area that draws on as it enters, with a callout at the peak.</p><p class="hint"><a href="{{src}}/examples/inflation/doc.ts">Document</a> · {{size:inflation}}</p>{{alt:inflation}}</div>
+      </article>
+      <article class="card" id="stocks">
+        <div class="chart" data-chart="stocks" data-caption></div>
+        <div class="card-text"><span class="tag">Finance</span><h3>Prices, volumes and peers</h3><p>Candlesticks on a trading-day axis with volume below, moving averages and Bollinger bands, then indexed peers and drawdowns — six states of one keyed dataset. Fictional tickers.</p><p class="hint"><a href="{{src}}/examples/stocks/doc.ts">Document</a> · {{size:stocks}}</p>{{alt:stocks}}</div>
+      </article>
+      <article class="card" id="flows">
+        <div class="chart" data-chart="flows"></div>
+        <div class="card-text"><span class="tag">Sankey</span><h3>Energy flows, from a table of links</h3><p>The sankey recipe on a small table: sources on the left, uses on the right, every ribbon a keyed row. Illustrative figures.</p><p class="hint"><a href="{{src}}/examples/flows/doc.ts">Document</a> · {{size:flows}}</p>{{alt:flows}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="brands">
+  <div class="wrap">
+    <header class="section-head"><h2>Brands and type</h2><p>Themes, fonts and modes — applied at runtime.</p></header>
+    <div class="grid">
+      <article class="card" id="brand">
+        <div class="chart" data-chart="brand"></div>
+        <div class="card-text"><span class="tag">Themes at runtime</span><h3>One chart, five brands</h3><p>Follows this page's light or dark mode; try the brands on the <a href="/features/theming/">theming page</a>.</p><p class="hint"><a href="{{src}}/site/charts/brand.ts">Document</a> · {{size:brand}} with five brands' fonts</p>{{alt:brand}}</div>
+      </article>
+      <article class="card" id="serif">
+        <div class="chart" data-chart="serif"></div>
+        <div class="card-text"><span class="tag">Brand fonts</span><h3>A newsroom look in a serif</h3><p>Newsreader from font files in the project, subset into the bundle so every platform draws the same line breaks.</p><p class="hint"><a href="{{src}}/examples/serif/doc.ts">Document</a> · {{size:serif}}</p>{{alt:serif}}</div>
+      </article>
+      <article class="card" id="hebrew">
+        <div class="chart" data-chart="hebrew"></div>
+        <div class="card-text"><span class="tag">Other scripts</span><h3>Labels right to left</h3><p>Hebrew city names from a font the document brings (Noto Sans Hebrew, subset into the bundle), ordered and aligned right to left — the same on every platform.</p><p class="hint"><a href="{{src}}/examples/hebrew/doc.ts">Document</a> · {{size:hebrew}}</p>{{alt:hebrew}}</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="recipes">
+  <div class="wrap">
+    <header class="section-head"><h2>Every recipe, one example each</h2><p>The standard library's {{count:recipes}} recipes, each with a live example of its own in the <a href="/docs/std/">chart reference</a> — its parameters switched step by step, and its source to copy.</p></header>
+    {{std:list}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>More, in context</h2>
+        <p>Ten articles in one house style, with every chart live and its sources under it.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/articles/">Example articles <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/performance/">Performance</a>
+      </div>
+    </div>
+  </div>
+</section>

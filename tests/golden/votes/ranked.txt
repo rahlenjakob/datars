@@ -1,0 +1,90 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Ranked"
+      ("title",) text "Ranked" at (0.00, 0.00) size=17.00 ink=$ink role=title "Ranked"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 113.84 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 357.62) stroke=$rule/1.00
+          group ("S",) role=tick "Social Democrats"
+            ("#0",) segment (0.00, 22.35)→(-5.00, 22.35) stroke=$rule/1.00
+            ("#2",) text "Social Democrats" at (-8.00, 22.35) size=11.00 ink=$muted
+          group ("SD",) role=tick "Sweden Democrats"
+            ("#0",) segment (0.00, 67.05)→(-5.00, 67.05) stroke=$rule/1.00
+            ("#2",) text "Sweden Democrats" at (-8.00, 67.05) size=11.00 ink=$muted
+          group ("M",) role=tick "Moderates"
+            ("#0",) segment (0.00, 111.76)→(-5.00, 111.76) stroke=$rule/1.00
+            ("#2",) text "Moderates" at (-8.00, 111.76) size=11.00 ink=$muted
+          group ("V",) role=tick "Left"
+            ("#0",) segment (0.00, 156.46)→(-5.00, 156.46) stroke=$rule/1.00
+            ("#2",) text "Left" at (-8.00, 156.46) size=11.00 ink=$muted
+          group ("C",) role=tick "Centre"
+            ("#0",) segment (0.00, 201.16)→(-5.00, 201.16) stroke=$rule/1.00
+            ("#2",) text "Centre" at (-8.00, 201.16) size=11.00 ink=$muted
+          group ("KD",) role=tick "Christian Democrats"
+            ("#0",) segment (0.00, 245.86)→(-5.00, 245.86) stroke=$rule/1.00
+            ("#2",) text "Christian Democrats" at (-8.00, 245.86) size=11.00 ink=$muted
+          group ("MP",) role=tick "Greens"
+            ("#0",) segment (0.00, 290.57)→(-5.00, 290.57) stroke=$rule/1.00
+            ("#2",) text "Greens" at (-8.00, 290.57) size=11.00 ink=$muted
+          group ("L",) role=tick "Liberals"
+            ("#0",) segment (0.00, 335.27)→(-5.00, 335.27) stroke=$rule/1.00
+            ("#2",) text "Liberals" at (-8.00, 335.27) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 120.34 0.00]
+          group ("area",)
+            group ("grid-x",) role=decoration
+              (0,) segment (0.00, 0.00)→(0.00, 357.62) stroke=$grid/1.00 role=decoration
+              (5,) segment (81.09, 0.00)→(81.09, 357.62) stroke=$grid/1.00 role=decoration
+              (10,) segment (162.19, 0.00)→(162.19, 357.62) stroke=$grid/1.00 role=decoration
+              (15,) segment (243.28, 0.00)→(243.28, 357.62) stroke=$grid/1.00 role=decoration
+              (20,) segment (324.38, 0.00)→(324.38, 357.62) stroke=$grid/1.00 role=decoration
+              (25,) segment (405.47, 0.00)→(405.47, 357.62) stroke=$grid/1.00 role=decoration
+              (30,) segment (486.57, 0.00)→(486.57, 357.62) stroke=$grid/1.00 role=decoration
+              (35,) segment (567.66, 0.00)→(567.66, 357.62) stroke=$grid/1.00 role=decoration
+            group ("marks",) role=series "share by party"
+              ("S",) rect x=0.00 y=4.92 w=491.43 h=34.87 fill=#e8112d role=datum "Social Democrats: 30.3"
+              ("SD",) rect x=0.00 y=49.62 w=332.49 h=34.87 fill=#dddd00 role=datum "Sweden Democrats: 20.5"
+              ("M",) rect x=0.00 y=94.32 w=309.78 h=34.87 fill=#1b49dd role=datum "Moderates: 19.1"
+              ("V",) rect x=0.00 y=139.03 w=110.29 h=34.87 fill=#a01313 role=datum "Left: 6.8"
+              ("C",) rect x=0.00 y=183.73 w=108.67 h=34.87 fill=#009933 role=datum "Centre: 6.7"
+              ("KD",) rect x=0.00 y=228.43 w=85.96 h=34.87 fill=#005ea8 role=datum "Christian Democrats: 5.3"
+              ("MP",) rect x=0.00 y=273.13 w=82.72 h=34.87 fill=#83cf39 role=datum "Greens: 5.1"
+              ("L",) rect x=0.00 y=317.84 w=74.61 h=34.87 fill=#3a8fd6 role=datum "Liberals: 4.6"
+              group ("labels",)
+                ("S",) text "30.3" at (495.43, 22.35) size=11.00 ink=$ink-2
+                ("SD",) text "20.5" at (336.49, 67.05) size=11.00 ink=$ink-2
+                ("M",) text "19.1" at (313.78, 111.76) size=11.00 ink=$ink-2
+                ("V",) text "6.8" at (114.29, 156.46) size=11.00 ink=$ink-2
+                ("C",) text "6.7" at (112.67, 201.16) size=11.00 ink=$ink-2
+                ("KD",) text "5.3" at (89.96, 245.86) size=11.00 ink=$ink-2
+                ("MP",) text "5.1" at (86.72, 290.57) size=11.00 ink=$ink-2
+                ("L",) text "4.6" at (78.61, 335.27) size=11.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 364.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(567.66, 0.00) stroke=$rule/1.00
+            group (0,) role=tick "0"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "0" at (0.00, 8.00) size=11.00 ink=$muted
+            group (5,) role=tick "5"
+              ("#0",) segment (81.09, 0.00)→(81.09, 5.00) stroke=$rule/1.00
+              ("#1",) text "5" at (81.09, 8.00) size=11.00 ink=$muted
+            group (10,) role=tick "10"
+              ("#0",) segment (162.19, 0.00)→(162.19, 5.00) stroke=$rule/1.00
+              ("#1",) text "10" at (162.19, 8.00) size=11.00 ink=$muted
+            group (15,) role=tick "15"
+              ("#0",) segment (243.28, 0.00)→(243.28, 5.00) stroke=$rule/1.00
+              ("#1",) text "15" at (243.28, 8.00) size=11.00 ink=$muted
+            group (20,) role=tick "20"
+              ("#0",) segment (324.38, 0.00)→(324.38, 5.00) stroke=$rule/1.00
+              ("#1",) text "20" at (324.38, 8.00) size=11.00 ink=$muted
+            group (25,) role=tick "25"
+              ("#0",) segment (405.47, 0.00)→(405.47, 5.00) stroke=$rule/1.00
+              ("#1",) text "25" at (405.47, 8.00) size=11.00 ink=$muted
+            group (30,) role=tick "30"
+              ("#0",) segment (486.57, 0.00)→(486.57, 5.00) stroke=$rule/1.00
+              ("#1",) text "30" at (486.57, 8.00) size=11.00 ink=$muted
+            group (35,) role=tick "35"
+              ("#0",) segment (567.66, 0.00)→(567.66, 5.00) stroke=$rule/1.00
+              ("#1",) text "35" at (567.66, 8.00) size=11.00 ink=$muted
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("box:Ranked: eight parties cleared the 4% threshold.",) transform=[1.00 0.00 0.00 1.00 445.50 176.01] role=annotation "Ranked: eight parties cleared the 4% threshold."
+        ("backdrop",) rect x=0.00 y=0.00 w=230.00 h=59.98 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("text",) text "Ranked: eight parties cleared the 4% threshold." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 14.00]

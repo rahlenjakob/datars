@@ -1,0 +1,22 @@
+{
+  "states": [
+    {
+      "name": "all",
+      "scene": "40368d09dd2a5811",
+      "pixels": "80b2e2fb8ce37f3c"
+    },
+    {
+      "name": "focus",
+      "scene": "c07f744ca48ea1ab",
+      "pixels": "6eb8ee455c72c1a2"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "all",
+      "to": "focus",
+      "sweep": "11b64ffc7f9afe21",
+      "samples": 64
+    }
+  ]
+}

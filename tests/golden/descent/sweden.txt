@@ -1,0 +1,87 @@
+scene 760.00×480.00 background=$paper
+  group ("root",)
+    view ("map",) [0.00 0.00 760.00 480.00] camera=(403.33, 130.92) zoom=11.16
+      group ("basemap",) role=decoration
+        ("sea",) rect x=140.00 y=0.00 w=480.00 h=480.00 fill=$map.water
+        group ("tiles",)
+          group (3, 3, 1) transform=[0.01 0.00 0.00 0.01 320.00 60.00]
+            group ("land",)
+              (0,) path els=377 bounds=[-64.00 -64.00 2834.00 4224.00] fill=$map.land
+          group (3, 4, 1) transform=[0.01 0.00 0.00 0.01 380.00 60.00]
+            group ("land",)
+              (0,) path els=416 bounds=[999.00 -64.00 3161.00 4224.00] fill=$map.land
+            group ("water",)
+              (0,) path els=202 bounds=[1483.00 3320.00 1994.00 840.00] fill=$map.water
+            group ("boundaries",)
+              (0,) path els=147 bounds=[1384.00 3217.00 1431.00 943.00] stroke=$map.border/0.60
+          group (3, 3, 2) transform=[0.01 0.00 0.00 0.01 320.00 120.00]
+            group ("land",)
+              (0,) path els=793 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.land
+          group (3, 4, 2) transform=[0.01 0.00 0.00 0.01 380.00 120.00]
+            group ("land",)
+              (0,) path els=1096 bounds=[-64.00 -64.00 4224.00 4224.00] fill=$map.land
+            group ("water",)
+              (0,) path els=1100 bounds=[452.00 -64.00 3105.00 3018.00] fill=$map.water
+            group ("boundaries",)
+              (0,) path els=1333 bounds=[230.00 -64.00 3425.00 3384.00] stroke=$map.border/0.60
+      group ("cities",)
+        ("circles",) instances circle ×16 role=datum "Swedish cities by population"
+          · ("Stockholm",) (404.09, 141.16) fill=$accent@0.72
+          · ("Göteborg",) (395.96, 145.30) fill=$accent@0.72
+          · ("Malmö",) (397.33, 150.42) fill=$accent@0.72
+          · … 13 more
+      group ("basemap-labels",) role=decoration
+        group ("tiles",)
+          group (3, 3, 1) transform=[0.01 0.00 0.00 0.01 320.00 60.00]
+          group (3, 4, 1) transform=[0.01 0.00 0.00 0.01 380.00 60.00]
+          group (3, 3, 2) transform=[0.01 0.00 0.00 0.01 320.00 120.00]
+          group (3, 4, 2) transform=[0.01 0.00 0.00 0.01 380.00 120.00]
+          group ("labels",)
+            group (3, 3, 2) transform=[0.01 0.00 0.00 0.01 320.00 120.00]
+              ("Lerwick",) text "Lerwick" at (3991.00, 1296.00) size=11.50 ink=$map.label role=label "Lerwick"
+            group (3, 4, 1) transform=[0.01 0.00 0.00 0.01 380.00 60.00]
+              ("Murmansk",) text "Murmansk" at (3013.00, 3505.00) size=11.50 ink=$map.label role=label "Murmansk"
+              ("Kandalaksha",) text "Kandalaksha" at (2950.00, 3945.00) size=11.50 ink=$map.label role=label "Kandalaksha"
+              ("Bodø",) text "Bodø" at (1313.00, 3919.00) size=11.50 ink=$map.label role=label "Bodø"
+              ("Narvik",) text "Narvik" at (1574.00, 3652.00) size=11.50 ink=$map.label role=label "Narvik"
+              ("Kiruna",) text "Kiruna" at (1840.00, 3782.00) size=11.50 ink=$map.label role=label "Kiruna"
+              ("Umba",) text "Umba" at (3126.00, 4057.00) size=11.50 ink=$map.label role=label "Umba"
+            group (3, 4, 2) transform=[0.01 0.00 0.00 0.01 380.00 120.00]
+              ("St.  Petersburg",) text "St.  Petersburg" at (2759.00, 1335.00) size=13.00 ink=$map.label role=label "St.  Petersburg"
+              ("Stockholm",) text "Stockholm" at (1644.00, 1446.00) size=13.00 ink=$map.label role=label "Stockholm"
+              ("Helsinki",) text "Helsinki" at (2269.00, 1294.00) size=13.00 ink=$map.label role=label "Helsinki"
+              ("København",) text "København" at (1143.00, 2064.00) size=13.00 ink=$map.label role=label "København"
+              ("Oslo",) text "Oslo" at (978.00, 1339.00) size=13.00 ink=$map.label role=label "Oslo"
+              ("Riga",) text "Riga" at (2194.00, 1855.00) size=11.50 ink=$map.label role=label "Riga"
+              ("Göteborg",) text "Göteborg" at (1090.00, 1727.00) size=11.50 ink=$map.label role=label "Göteborg"
+              ("Tver",) text "Tver" at (3267.00, 1870.00) size=11.50 ink=$map.label role=label "Tver"
+              ("Tallinn",) text "Tallinn" at (2251.00, 1426.00) size=11.50 ink=$map.label role=label "Tallinn"
+              ("Petrozavodsk",) text "Petrozavodsk" at (3128.00, 990.00) size=11.50 ink=$map.label role=label "Petrozavodsk"
+              ("Tampere",) text "Tampere" at (2162.00, 1044.00) size=11.50 ink=$map.label role=label "Tampere"
+              ("Velikiy Novgorod",) text "Velikiy Novgorod" at (2852.00, 1591.00) size=11.50 ink=$map.label role=label "Velikiy Novgorod"
+              ("Bergen",) text "Bergen" at (485.00, 1252.00) size=11.50 ink=$map.label role=label "Bergen"
+              ("Pskov",) text "Pskov" at (2579.00, 1707.00) size=11.50 ink=$map.label role=label "Pskov"
+              ("Stavanger",) text "Stavanger" at (517.00, 1508.00) size=11.50 ink=$map.label role=label "Stavanger"
+              ("Trondheim",) text "Trondheim" at (948.00, 667.00) size=11.50 ink=$map.label role=label "Trondheim"
+              ("Oulu",) text "Oulu" at (2318.00, 336.00) size=11.50 ink=$map.label role=label "Oulu"
+              ("Vyborg",) text "Vyborg" at (2617.00, 1194.00) size=11.50 ink=$map.label role=label "Vyborg"
+              ("Daugavpils",) text "Daugavpils" at (2413.00, 2031.00) size=11.50 ink=$map.label role=label "Daugavpils"
+              ("Linköping",) text "Linköping" at (1423.00, 1607.00) size=11.50 ink=$map.label role=label "Linköping"
+              ("Liepaga",) text "Liepaga" at (1912.00, 1928.00) size=11.50 ink=$map.label role=label "Liepaga"
+              ("Umeå",) text "Umeå" at (1842.00, 582.00) size=11.50 ink=$map.label role=label "Umeå"
+              ("Sundsvall",) text "Sundsvall" at (1576.00, 870.00) size=11.50 ink=$map.label role=label "Sundsvall"
+              ("Skien",) text "Skien" at (874.00, 1468.00) size=11.50 ink=$map.label role=label "Skien"
+              ("Vaasa",) text "Vaasa" at (1966.00, 731.00) size=11.50 ink=$map.label role=label "Vaasa"
+              ("Joensuu",) text "Joensuu" at (2709.00, 831.00) size=11.50 ink=$map.label role=label "Joensuu"
+              ("Luleå",) text "Luleå" at (2017.00, 206.00) size=11.50 ink=$map.label role=label "Luleå"
+              ("Kokkola",) text "Kokkola" at (2104.00, 582.00) size=11.50 ink=$map.label role=label "Kokkola"
+              ("Östersund",) text "Östersund" at (1333.00, 714.00) size=11.50 ink=$map.label role=label "Östersund"
+              ("Pärnu",) text "Pärnu" at (2231.00, 1613.00) size=11.50 ink=$map.label role=label "Pärnu"
+              ("Rovaniemi",) text "Rovaniemi" at (2341.00, 3.00) size=11.50 ink=$map.label role=label "Rovaniemi"
+              ("Kemi",) text "Kemi" at (2237.00, 175.00) size=11.50 ink=$map.label role=label "Kemi"
+              ("Mo i Rana",) text "Mo i Rana" at (1289.00, 45.00) size=11.50 ink=$map.label role=label "Mo i Rana"
+              ("Lillehammer",) text "Lillehammer" at (956.00, 1114.00) size=11.50 ink=$map.label role=label "Lillehammer"
+              ("Molde",) text "Molde" at (654.00, 801.00) size=11.50 ink=$map.label role=label "Molde"
+              ("Kem",) text "Kem" at (3146.00, 346.00) size=11.50 ink=$map.label role=label "Kem"
+              ("Namsos",) text "Namsos" at (1047.00, 446.00) size=11.50 ink=$map.label role=label "Namsos"
+    ("attribution",) text "© OpenStreetMap contributors, Natural Earth" at (754.00, 475.00) size=10.50 ink=$map.label role=annotation "© OpenStreetMap contributors, Natural Earth"

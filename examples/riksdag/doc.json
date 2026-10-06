@@ -1,0 +1,148 @@
+{
+ "datars": 1,
+ "id": "riksdag",
+ "title": "The Riksdag after 2022",
+ "size": {
+  "width": 760,
+  "height": 440
+ },
+ "locale": "en",
+ "data": {
+  "seats": {
+   "values": {
+    "party": [
+     "V",
+     "S",
+     "MP",
+     "C",
+     "L",
+     "M",
+     "KD",
+     "SD"
+    ],
+    "seats": [
+     24,
+     107,
+     18,
+     24,
+     16,
+     68,
+     19,
+     73
+    ]
+   },
+   "key": [
+    "party"
+   ]
+  }
+ },
+ "signals": {
+  "view": {
+   "type": "str",
+   "default": "seats"
+  }
+ },
+ "keys": {
+  "S": {
+   "color": "#e8112d"
+  },
+  "SD": {
+   "color": "#dddd00"
+  },
+  "M": {
+   "color": "#1b49dd"
+  },
+  "V": {
+   "color": "#a01313"
+  },
+  "C": {
+   "color": "#009933"
+  },
+  "KD": {
+   "color": "#005ea8"
+  },
+  "MP": {
+   "color": "#83cf39"
+  },
+  "L": {
+   "color": "#3a8fd6"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    16,
+    16,
+    16
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/hemicycle",
+    "params": {
+     "data": "seats",
+     "value": "seats",
+     "category": "party"
+    },
+    "key": "chart",
+    "when": {
+     "expr": "view == \"seats\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "seats",
+     "x": "party",
+     "y": "seats",
+     "color": "party",
+     "title": "Seats by party",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ",.0f"
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "view == \"bars\""
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "seats",
+    "set": {
+     "view": "seats"
+    },
+    "narration": {
+     "text": "349 seats; 175 for a majority."
+    }
+   },
+   {
+    "name": "bars",
+    "set": {
+     "view": "bars"
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

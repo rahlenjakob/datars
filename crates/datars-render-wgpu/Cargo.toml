@@ -1,0 +1,49 @@
+[package]
+name = "datars-render-wgpu"
+description = "The datars GPU backend: draws display lists with wgpu over retained, content-addressed meshes (WebGPU + WebGL2 in the browser, Metal/Vulkan/DX12 natively, headless readback)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true
+lyon_tessellation.workspace = true
+bytemuck.workspace = true
+indexmap.workspace = true
+rustc-hash.workspace = true
+
+# Native: every desktop/mobile backend (Metal, Vulkan, DX12, GLES) + blocking device setup.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+wgpu.workspace = true
+pollster.workspace = true
+
+# Browser: WebGPU with a WebGL2 fallback chosen at runtime (`for_canvas`). Spelled out rather than
+# inherited: a workspace dependency with default features can't have them turned off per target,
+# and the native backends would be dead weight in the wasm bundle.
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wgpu = { version = "30", default-features = false, features = ["webgpu", "wgsl", "std"] }
+web-sys = { workspace = true, features = ["HtmlCanvasElement"] }
+# Not used directly: keeps wgpu's web-sys/js-sys on the workspace's pinned wasm-bindgen (which
+# must match the wasm-bindgen CLI that builds the web bundle).
+wasm-bindgen.workspace = true
+
+[dev-dependencies]
+datars-theme.workspace = true
+png.workspace = true
+# The example's glyph source (real outlines from the bundled font, before datars-text exists).
+skrifa.workspace = true
+# Shader portability test: translate the WGSL to GLSL ES 3.00 as wgpu's WebGL2 backend does.
+# Already compiled as part of wgpu; spelled out because only tests use it directly.
+naga = { version = "30", features = ["wgsl-in", "glsl-out"] }
+
+[features]
+default = ["webgl"]
+# The WebGL2 fallback in the browser (for browsers without WebGPU). Without it, those browsers get
+# the CPU reference renderer instead.
+webgl = ["wgpu/webgl"]

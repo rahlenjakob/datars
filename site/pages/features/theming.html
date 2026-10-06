@@ -1,0 +1,156 @@
+---
+title: Themed to your brand — at runtime · datars
+description: Brand tokens, fonts that travel with the chart, light, dark and high contrast, locks and contrast checks — applied at runtime, even to charts you already published, on the web and in apps.
+og: brand
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Themed to your brand</p>
+    <h1>Your brand, the reader's mode — applied at runtime</h1>
+    <p class="lede-2">In datars a colour in a chart is not a colour: it's an <em>ink</em> — <code>$accent</code>, <code>$categorical[3]</code>, <code>$ink@0.4</code> — resolved against the active theme every frame. So a brand, dark mode or high contrast restyles every chart, including ones published months ago, without republishing. Type, sizes, corners and strokes are tokens too, and the fonts travel inside the chart.</p>
+  </div>
+</section>
+
+<section class="section themes" style="padding-top:12px">
+  <div class="wrap">
+    <div class="theme-grid">
+      <div class="frame">
+        <div class="chart" data-chart="brand"></div>
+      </div>
+      <aside class="theme-panel" aria-label="Theme controls">
+        <h3>Mode</h3>
+        <div class="seg" role="group" aria-label="Mode">
+          <button type="button" data-slot-mode="light" data-for="brand" aria-pressed="true">Light</button>
+          <button type="button" data-slot-mode="dark" data-for="brand" aria-pressed="false">Dark</button>
+          <button type="button" data-slot-mode="high-contrast" data-for="brand" aria-pressed="false">High contrast</button>
+        </div>
+        <h3>Brand</h3>
+        <div class="swatches" role="group" aria-label="Brand">{{look:presets}}</div>
+        <h3>Accent</h3>
+        <div class="dots" role="group" aria-label="Accent">{{look:accents}}</div>
+        <h3>What the page ran</h3>
+<pre class="live-code"><code data-lang="js" id="look-code">view.setTokens({});</code></pre>
+        <p class="fine">One published chart, five brands, three modes: the page only calls <code>setTokens()</code> and sets <code>mode</code>. Colours re-ink the next frame; new type and shapes morph in. The chart ships the brands' faces ({{size:brand}} with all five brands' fonts). High contrast keeps each brand's type and shapes but uses the reader's colours. The brand and accent you pick are this site's look: every chart you open here wears them — palette, type and corners too, on the <a href="/#make-it-yours">home page</a>.</p>
+      </aside>
+    </div>
+    {{alt:brand}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2>A theme is a small file of typed tokens</h2>
+      <p>Set a few, derive the rest. The built-in theme derives gridlines, muted text, rules, surfaces and the ink on your accent from <code>ink</code>, <code>paper</code> and <code>accent</code>, so a brand that sets three colours gets a coherent theme — and dark mode only has to change the surfaces.</p>
+    </header>
+    <div class="cards2">
+      <article>
+<pre><code data-lang="ts">import { theme, font } from "@datars/sdk";
+
+export const acme = theme({
+  name: "acme",
+  extends: "datars/neutral",
+  tokens: {
+    brand: "#b3261e",
+    accent: "$brand",
+    paper: "#fbf8f1",
+    grid: "mix($ink, $paper, 0.9)",
+    "font.title": font.google("Source Serif 4", { weight: 700 }),
+    "font.body": font.file("Brand Sans", "fonts/BrandSans-Regular.ttf"),
+    "radius.bar": 2,
+  },
+  modes: { dark: { paper: "#15130f", ink: "#f2efe6" } },
+  locked: ["brand", "accent", "font.title"],
+});</code></pre>
+      </article>
+      <article>
+        <h3>Colour expressions</h3>
+        <p><code>mix(a, b, t)</code> in OKLab, <code>alpha</code>, <code>lighten</code>/<code>darken</code> in OKLCH, <code>saturate</code>, <code>oklch()</code>, <code>on(bg)</code> — black or white, whichever reads better — and references to other tokens and palette entries.</p>
+        <h3 style="margin-top:18px">Palettes</h3>
+        <p>Categorical, sequential and diverging palettes are tokens: a list, or generated from your brand colour. Data colours stay data — a party's colour is declared on its key, and the theme fills in the rest.</p>
+        <h3 style="margin-top:18px">Modes and dark-first brands</h3>
+        <p>Light, dark and high contrast live in one theme. A brand that is dark everywhere — a magazine with a black page — declares <code>scheme: "dark"</code> and keeps its night palette in light mode.</p>
+        <h3 style="margin-top:18px">Locks</h3>
+        <p>A layer can lock tokens so no later layer — a document, a host app — can change them. Overrides of locked tokens are ignored and reported.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Checked</p>
+      <h2>Every theme gets a specimen board and a contrast check</h2>
+      <p><code>datars theme brand.json --specimen out.png</code> draws the standard charts, palettes, ramps and inks in all three modes side by side. Themes declare checks — WCAG contrast of text on its background, palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia, monotone sequential ramps — evaluated by <code>datars lint</code>. This is the built-in theme's board, rendered when this site was built:</p>
+    </header>
+    <div class="table-wrap" style="border-radius:14px"><img class="export-img" src="/exports/specimen.png" alt="The datars/neutral theme's specimen board: bars, lines, stacked bars, a donut, a scatter, and the categorical, sequential and diverging palettes and inks, in light, dark and high-contrast mode side by side." width="3024" height="640" loading="lazy" style="min-width:900px;border:0;border-radius:0"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Fonts travel with the chart</p>
+      <h2>Your typeface, identical on every platform</h2>
+      <p>Font tokens say where each face comes from — a file in your project, a URL, or a Google Fonts family — and the publish step downloads it once, subsets it to the characters the chart can show and ships it in the bundle, with its licence recorded. No runtime ever calls a font CDN, and no system font is used, so line breaks and label placement are the same in the browser, the iOS app, the Android app and the video.</p>
+      <ul class="bullets">
+        <li><b>Other scripts</b> — Hebrew, Arabic, CJK — come from document fonts that join every label's fallback chain, with right-to-left ordering.</li>
+        <li><b><code>datars fonts doc.ts</code></b> lists every token, its source, the face drawn and its licence; <code>check</code> reports a family with no source instead of silently falling back.</li>
+      </ul>
+    </div>
+    <figure class="fig">
+      <div class="frame"><div class="chart" data-chart="serif"></div></div>
+      <figcaption><b>A newsroom look in Newsreader</b> — the theme's font tokens point at font files in the project; the bundle carries subsets ({{size:serif}} in all).</figcaption>
+      {{alt:serif}}
+    </figure>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">At runtime, in every host</p>
+      <h2>The app decides the look of the charts it downloads</h2>
+      <p>Hosts pass their own token layer and the reader's mode to charts they didn't build. Token overrides honour the theme's locks.</p>
+    </header>
+    <div class="cards3">
+      <article>
+        <h3>Web</h3>
+<pre><code data-lang="js">const view = document.querySelector("datars-view");
+view.setAttribute("mode", "dark");
+view.setTokens({ accent: "#0f766e", "radius.bar": 6 });</code></pre>
+      </article>
+      <article>
+        <h3>iOS and macOS</h3>
+<pre><code data-lang="swift">let chart = DatarsChartView()
+chart.load(.url(url))
+chart.engine.setMode(.dark)
+chart.engine.setTokens(["accent": "#0f766e"])</code></pre>
+      </article>
+      <article>
+        <h3>Android</h3>
+<pre><code data-lang="kotlin">val chart = DatarsView(context)
+chart.load(url)
+chart.setDarkMode(true)</code></pre>
+        <p class="fine">The Android view follows light and dark today; token overrides are on the web and in DatarsKit.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Make a theme</h2>
+        <p>Tokens, modes, fonts, locks and checks — the whole reference.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/theming/">Themes and brands <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/embed/web/">Runtime overrides</a>
+      </div>
+    </div>
+  </div>
+</section>

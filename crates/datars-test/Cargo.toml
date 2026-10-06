@@ -1,0 +1,25 @@
+[package]
+name = "datars-test"
+description = "The datars visual and motion test harness: scene snapshots, dense transition sweeps, motion invariants, exact CPU goldens."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-scene.workspace = true
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+datars-headless.workspace = true
+datars-devtools.workspace = true
+datars-render-cpu.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+datars-color = { workspace = true, optional = true }
+datars-render-wgpu = { workspace = true, optional = true }
+
+[features]
+# GPU equivalence (`datars gpu`): needs a GPU adapter, so it's a separate, opt-in layer.
+gpu = ["dep:datars-render-wgpu", "dep:datars-color"]

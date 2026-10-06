@@ -1,0 +1,55 @@
+{
+  "states": [
+    {
+      "name": "galaxy",
+      "scene": "62546c4787f5807a",
+      "pixels": "315c5a3eeb589074"
+    },
+    {
+      "name": "arm",
+      "scene": "40cab9a804595590",
+      "pixels": "1d08a3cedf2819e1"
+    },
+    {
+      "name": "bar",
+      "scene": "7c8e61f8df6e5877",
+      "pixels": "1ee6ceaccdad3464"
+    },
+    {
+      "name": "cluster",
+      "scene": "68fbe18a767621ba",
+      "pixels": "e73c9c1feceeece3"
+    },
+    {
+      "name": "local",
+      "scene": "75aa7c18baed4db1",
+      "pixels": "a0724fe50a6057a5"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "galaxy",
+      "to": "arm",
+      "sweep": "2467798f05d5b32b",
+      "samples": 64
+    },
+    {
+      "from": "arm",
+      "to": "bar",
+      "sweep": "4bf75ba335f2cbf8",
+      "samples": 64
+    },
+    {
+      "from": "bar",
+      "to": "cluster",
+      "sweep": "31a76d25d3073c31",
+      "samples": 64
+    },
+    {
+      "from": "cluster",
+      "to": "local",
+      "sweep": "407989e61359f279",
+      "samples": 64
+    }
+  ]
+}

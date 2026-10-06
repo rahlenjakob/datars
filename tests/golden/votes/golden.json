@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "bars",
+      "scene": "c0a9b6fb383f3d4a",
+      "pixels": "72b81aa3c0817791"
+    },
+    {
+      "name": "ranked",
+      "scene": "47c6987042e41846",
+      "pixels": "0d403d01a42d35a1"
+    },
+    {
+      "name": "pie",
+      "scene": "bd561cfffd356531",
+      "pixels": "ba24f1d6fab2f1a6"
+    },
+    {
+      "name": "donut",
+      "scene": "7489d7ef9f1b1571",
+      "pixels": "111601db8cf517ec"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "bars",
+      "to": "ranked",
+      "sweep": "8928a0353eb24b7b",
+      "samples": 64
+    },
+    {
+      "from": "ranked",
+      "to": "pie",
+      "sweep": "48bea8948ed1e7ff",
+      "samples": 64
+    },
+    {
+      "from": "pie",
+      "to": "donut",
+      "sweep": "e8a28faed5de05b3",
+      "samples": 64
+    }
+  ]
+}

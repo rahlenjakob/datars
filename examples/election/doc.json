@@ -1,0 +1,143 @@
+{
+ "datars": 1,
+ "id": "election",
+ "title": "Election night, replayed",
+ "size": {
+  "width": 720,
+  "height": 440
+ },
+ "locale": "en",
+ "data": {
+  "count": {
+   "url": "count.json",
+   "key": [
+    "party"
+   ],
+   "live": {
+    "every": 2
+   }
+  }
+ },
+ "tables": {
+  "ranked": {
+   "from": "count",
+   "ops": [
+    {
+     "op": "sort",
+     "by": [
+      [
+       "share",
+       "desc"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "keys": {
+  "S": {
+   "name": "Social Democrats",
+   "color": "#e8112d"
+  },
+  "SD": {
+   "name": "Sweden Democrats",
+   "color": "#dddd00"
+  },
+  "M": {
+   "name": "Moderates",
+   "color": "#1b49dd"
+  },
+  "V": {
+   "name": "Left",
+   "color": "#a01313"
+  },
+  "C": {
+   "name": "Centre",
+   "color": "#009933"
+  },
+  "KD": {
+   "name": "Christian Democrats",
+   "color": "#005ea8"
+  },
+  "MP": {
+   "name": "Greens",
+   "color": "#83cf39"
+  },
+  "L": {
+   "name": "Liberals",
+   "color": "#3a8fd6"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "rows",
+   "gap": 8,
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "text",
+    "key": "headline",
+    "size": {
+     "h": "auto"
+    },
+    "text": {
+     "expr": "`Election night — ${format(table.max(\"count\", \"counted\"), \".0f\")}% of districts counted`"
+    },
+    "at": [
+     0,
+     0
+    ],
+    "style": {
+     "font": "font.title",
+     "size": "$size.title",
+     "ink": "$ink",
+     "baseline": "top"
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "ranked",
+     "x": "share",
+     "y": "party",
+     "xType": "linear",
+     "yType": "band",
+     "color": "party",
+     "xDomain": [
+      0,
+      35
+     ],
+     "title": "Vote share (%)",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ".1f"
+       }
+      }
+     ]
+    },
+    "key": "chart"
+   }
+  ]
+ },
+ "program": {
+  "preset": "interactive",
+  "states": [
+   {
+    "name": "main"
+   }
+  ]
+ }
+}

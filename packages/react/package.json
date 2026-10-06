@@ -1,0 +1,42 @@
+{
+  "name": "@datars/react",
+  "version": "0.1.0",
+  "description": "React bindings for datars: <DatarsView chart={…} /> — SSR-safe, sized before it loads, with state, signals, theme tokens and data as props.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/react"
+  },
+  "keywords": ["datars", "react", "charts", "data-visualization", "ssr"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "dependencies": {
+    "@datars/web": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "node --test test/*.test.mjs"
+  }
+}

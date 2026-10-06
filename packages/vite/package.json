@@ -1,0 +1,47 @@
+{
+  "name": "@datars/vite",
+  "version": "0.1.0",
+  "description": "Vite plugin for datars: import chart files (sales.chart.ts, doc.ts?datars) as ready-to-play charts, with HMR, and the web runtime served and emitted for you.",
+  "license": "UNLICENSED",
+  "homepage": "https://datars.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rahlenjakob/datars.git",
+    "directory": "packages/vite"
+  },
+  "keywords": ["datars", "vite", "vite-plugin", "charts", "data-visualization"],
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "client.d.ts"
+  ],
+  "peerDependencies": {
+    "vite": ">=5"
+  },
+  "dependencies": {
+    "@datars/compile": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "vite": "^8.0.0",
+    "@datars/sdk": "workspace:*",
+    "@datars/std": "workspace:*",
+    "@datars/web": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p .",
+    "test": "node --test test/*.test.mjs"
+  }
+}

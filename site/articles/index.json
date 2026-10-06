@@ -1,0 +1,52 @@
+[
+ {
+  "article": "covid-lockdowns",
+  "theme": "health",
+  "stories": 3
+ },
+ {
+  "article": "greece-debt-crisis",
+  "theme": "financial",
+  "stories": 4
+ },
+ {
+  "article": "marathon",
+  "theme": "sport",
+  "stories": 3
+ },
+ {
+  "article": "oil-2020",
+  "theme": "financial",
+  "stories": 2
+ },
+ {
+  "article": "swedish-election-2022",
+  "theme": "broadsheet",
+  "stories": 3
+ },
+ {
+  "article": "us-debt",
+  "theme": "fiscal",
+  "stories": 3
+ },
+ {
+  "article": "us-election-2024",
+  "theme": "civic",
+  "stories": 5
+ },
+ {
+  "article": "warming",
+  "theme": "science",
+  "stories": 5
+ },
+ {
+  "article": "westeros",
+  "theme": "fantasy",
+  "stories": 3
+ },
+ {
+  "article": "zodiac",
+  "theme": "noir",
+  "stories": 2
+ }
+]

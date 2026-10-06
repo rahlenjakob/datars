@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "world",
+      "scene": "c4b174bed74373da",
+      "pixels": "0c39b26621007f1c"
+    },
+    {
+      "name": "brazil",
+      "scene": "716414cab95c59e3",
+      "pixels": "46839e24b20a7944"
+    },
+    {
+      "name": "rio",
+      "scene": "4ef2f1f0a67f80d1",
+      "pixels": "30ead2e15d90c282"
+    },
+    {
+      "name": "copacabana",
+      "scene": "82ac8feb6bf2b46c",
+      "pixels": "c0ba58be9f732457"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "world",
+      "to": "brazil",
+      "sweep": "50d1880bc10d6a7f",
+      "samples": 64
+    },
+    {
+      "from": "brazil",
+      "to": "rio",
+      "sweep": "f2d9e25260e1906c",
+      "samples": 64
+    },
+    {
+      "from": "rio",
+      "to": "copacabana",
+      "sweep": "b429df1d1275e368",
+      "samples": 64
+    }
+  ]
+}

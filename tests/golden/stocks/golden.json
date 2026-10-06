@@ -1,0 +1,66 @@
+{
+  "states": [
+    {
+      "name": "candles",
+      "scene": "080c7b079fa3326c",
+      "pixels": "4492312d8d9e335b"
+    },
+    {
+      "name": "month",
+      "scene": "199efb0708373026",
+      "pixels": "f535b748d948b2cd"
+    },
+    {
+      "name": "indicators",
+      "scene": "ac28990570bb17e0",
+      "pixels": "be47dea583072cb1"
+    },
+    {
+      "name": "indexed",
+      "scene": "c051c6cf9637b2ac",
+      "pixels": "cf63b6277dd7be6c"
+    },
+    {
+      "name": "peers",
+      "scene": "80b2890c139cd8fa",
+      "pixels": "c7b15d25d5b991b0"
+    },
+    {
+      "name": "drawdown",
+      "scene": "03df3a917402a2da",
+      "pixels": "976ad1a2b9606b02"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "candles",
+      "to": "month",
+      "sweep": "c2e3ca6aa2f2e891",
+      "samples": 64
+    },
+    {
+      "from": "month",
+      "to": "indicators",
+      "sweep": "3340bf4c92d95f9a",
+      "samples": 64
+    },
+    {
+      "from": "indicators",
+      "to": "indexed",
+      "sweep": "2334c7a130f34006",
+      "samples": 64
+    },
+    {
+      "from": "indexed",
+      "to": "peers",
+      "sweep": "494f03fa885ab907",
+      "samples": 64
+    },
+    {
+      "from": "peers",
+      "to": "drawdown",
+      "sweep": "8b8cccd2f26c5c1e",
+      "samples": 64
+    }
+  ]
+}

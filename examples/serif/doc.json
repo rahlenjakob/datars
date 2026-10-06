@@ -1,0 +1,205 @@
+{
+ "datars": 1,
+ "id": "serif",
+ "title": "Europe’s longest rivers",
+ "size": {
+  "width": 720,
+  "height": 440
+ },
+ "theme": {
+  "use": "newsroom",
+  "themes": [
+   {
+    "name": "newsroom",
+    "extends": "datars/neutral",
+    "tokens": {
+     "paper": "#fbf8f1",
+     "ink": "#1f1c17",
+     "accent": "#8c2f1b",
+     "font.body": {
+      "family": "Newsreader",
+      "weight": 400,
+      "src": "../../assets/fonts/Newsreader-Regular.ttf"
+     },
+     "font.number": {
+      "family": "Newsreader",
+      "weight": 400,
+      "src": "../../assets/fonts/Newsreader-Regular.ttf"
+     },
+     "font.strong": {
+      "family": "Newsreader",
+      "weight": 600,
+      "src": "../../assets/fonts/Newsreader-SemiBold.ttf"
+     },
+     "font.title": {
+      "family": "Newsreader",
+      "weight": 600,
+      "src": "../../assets/fonts/Newsreader-SemiBold.ttf"
+     },
+     "size.title": 20,
+     "size.label": 12
+    }
+   }
+  ]
+ },
+ "locale": "en",
+ "data": {
+  "rivers": {
+   "values": {
+    "river": [
+     "Volga",
+     "Danube",
+     "Ural",
+     "Dnieper",
+     "Don",
+     "Pechora",
+     "Kama",
+     "Oka",
+     "Dniester",
+     "Rhine"
+    ],
+    "km": [
+     3530,
+     2850,
+     2428,
+     2290,
+     1870,
+     1809,
+     1805,
+     1500,
+     1352,
+     1233
+    ],
+    "mi": [
+     2193,
+     1771,
+     1509,
+     1423,
+     1162,
+     1124,
+     1122,
+     932,
+     840,
+     766
+    ]
+   },
+   "key": [
+    "river"
+   ]
+  }
+ },
+ "signals": {
+  "unit": {
+   "type": "str",
+   "default": "km"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "rivers",
+     "x": "km",
+     "y": "river",
+     "xType": "linear",
+     "yType": "band",
+     "title": "Europe’s longest rivers — length in kilometres",
+     "format": ",.0f",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ",.0f",
+        "fill": "$accent"
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "unit == \"km\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "rivers",
+     "x": "mi",
+     "y": "river",
+     "xType": "linear",
+     "yType": "band",
+     "title": "…and in miles, for the flow of transatlantic readers",
+     "format": ",.0f",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ",.0f",
+        "fill": "$accent"
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "unit == \"mi\""
+    }
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "datum"
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "km",
+    "set": {
+     "unit": "km"
+    },
+    "narration": {
+     "text": "The Volga is Europe’s longest river."
+    }
+   },
+   {
+    "name": "miles",
+    "set": {
+     "unit": "mi"
+    },
+    "narration": {
+     "text": "The same lengths in miles."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

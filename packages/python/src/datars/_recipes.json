@@ -1,0 +1,2451 @@
+{
+  "@datars/std/annotate": {
+    "doc": "A callout: text offset from a point (in plot coordinates via scales, or px), with a connector and a dot.",
+    "id": "@datars/std/annotate",
+    "params": {
+      "connector": {
+        "default": "line",
+        "type": "enum",
+        "values": [
+          "line",
+          "elbow",
+          "curve",
+          "none"
+        ]
+      },
+      "dot": {
+        "default": true,
+        "type": "bool"
+      },
+      "dx": {
+        "default": 40,
+        "type": "number"
+      },
+      "dy": {
+        "default": -36,
+        "type": "number"
+      },
+      "head": {
+        "default": false,
+        "doc": "An arrowhead at the point.",
+        "type": "bool"
+      },
+      "ink": {
+        "default": "$ink",
+        "type": "ink"
+      },
+      "pin": {
+        "default": false,
+        "doc": "Pinned at the point: dot, connector and text keep screen size under cameras (map callouts).",
+        "type": "bool"
+      },
+      "text": {
+        "default": "",
+        "type": "string"
+      },
+      "width": {
+        "default": 160,
+        "type": "number"
+      },
+      "x": {
+        "doc": "x position (expression, e.g. scale.x('SD'))",
+        "type": "prop"
+      },
+      "y": {
+        "type": "prop"
+      }
+    },
+    "tokens": [
+      "ink",
+      "paper",
+      "size.label"
+    ]
+  },
+  "@datars/std/area": {
+    "doc": "Filled areas from a baseline (0, or `y0`) to y — one per series. For stacked areas, give a stacked table (op.stack) and y0/y fields.",
+    "id": "@datars/std/area",
+    "params": {
+      "clip": {
+        "default": false,
+        "doc": "Clip to the plot area.",
+        "type": "bool"
+      },
+      "color": {
+        "type": "field"
+      },
+      "curve": {
+        "default": "monotone-x",
+        "type": "string"
+      },
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "type": "prop"
+      },
+      "opacity": {
+        "default": 0.85,
+        "type": "number"
+      },
+      "series": {
+        "type": "field"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "linear",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "y0": {
+        "doc": "Lower bound field (default: zero).",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "mark"
+    ]
+  },
+  "@datars/std/attribution": {
+    "doc": "The data credit a map owes (OpenStreetMap's licence requires it), in the bottom-right corner of its box, legible and linked to the licence page (hosts make it a real link; SVG/PDF keep it). Place it outside the map's view so it stays put while the camera moves.",
+    "id": "@datars/std/attribution",
+    "params": {
+      "ink": {
+        "default": "$map.label",
+        "type": "ink"
+      },
+      "link": {
+        "default": "https://www.openstreetmap.org/copyright",
+        "doc": "Where the credit links (OpenStreetMap's copyright page, as its guidelines ask).",
+        "type": "string"
+      },
+      "text": {
+        "default": "© OpenStreetMap contributors, Natural Earth",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "map.label",
+      "map.label-halo"
+    ]
+  },
+  "@datars/std/axis": {
+    "doc": "An axis for a scale: tick labels, tick marks and a domain line. Labels never pile up: a horizontal numeric axis asks for as many ticks as its measured labels fit; category names wrap in their band, turn 45° when a word is wider than the band, and leave out every k-th name only when even that doesn't fit.",
+    "id": "@datars/std/axis",
+    "params": {
+      "data": {
+        "doc": "The table a band scale's categories come from (with `field`): their names are measured, so a horizontal axis wraps, turns or leaves out labels only as they need.",
+        "type": "table"
+      },
+      "field": {
+        "doc": "The categories' field in `data`.",
+        "type": "field"
+      },
+      "format": {
+        "doc": "Number format for labels (d3-format).",
+        "type": "string"
+      },
+      "label": {
+        "doc": "Axis title.",
+        "type": "string"
+      },
+      "line": {
+        "default": true,
+        "doc": "Draw the domain line.",
+        "type": "bool"
+      },
+      "orient": {
+        "default": "left",
+        "type": "enum",
+        "values": [
+          "left",
+          "bottom",
+          "right",
+          "top"
+        ]
+      },
+      "prefix": {
+        "doc": "Before each number label ('$').",
+        "type": "string"
+      },
+      "scale": {
+        "default": "y",
+        "doc": "The scale to draw.",
+        "type": "string"
+      },
+      "suffix": {
+        "doc": "After it ('M', ' kr').",
+        "type": "string"
+      },
+      "ticks": {
+        "default": 0,
+        "doc": "Tick count hint (0 = automatic: from the axis length, and across, from how many of its measured labels fit).",
+        "type": "number"
+      },
+      "type": {
+        "doc": "The scale's type (`linear`, `log`, `time`, …; the plot passes it). A horizontal numeric axis fits its tick count to its labels' measured width.",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "muted",
+      "rule",
+      "size.label"
+    ]
+  },
+  "@datars/std/bar": {
+    "doc": "Bars from a category field on a band scale to a value on a linear scale (vertical or horizontal, decided by which axis is the band). Negative values hang below zero.",
+    "id": "@datars/std/bar",
+    "params": {
+      "chapter": {
+        "doc": "Clicking a bar enters this program chapter with the bar's category (drill-down).",
+        "type": "string"
+      },
+      "color": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "doc": "Fill ink or expression (default: the colour scale, else $mark).",
+        "type": "prop"
+      },
+      "format": {
+        "default": ",.1~f",
+        "doc": "Label number format.",
+        "type": "string"
+      },
+      "label": {
+        "doc": "Bar label (tooltip, accessible name): an expression over the row; default `name: value`.",
+        "type": "prop"
+      },
+      "labels": {
+        "default": false,
+        "doc": "Value labels on the bars (they count when values change).",
+        "type": "bool"
+      },
+      "prefix": {
+        "doc": "Before each value label's number ('$').",
+        "type": "string"
+      },
+      "radius": {
+        "default": 0,
+        "doc": "Corner radius (0: the theme's `radius.bar`).",
+        "type": "number"
+      },
+      "selected": {
+        "doc": "A keyset signal: selected bars stay strong, others recede.",
+        "type": "string"
+      },
+      "suffix": {
+        "doc": "After it ('M', ' kr').",
+        "type": "string"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "mark",
+      "ink",
+      "muted",
+      "dim",
+      "size.label",
+      "radius.bar"
+    ]
+  },
+  "@datars/std/basemap": {
+    "doc": "A basemap from a vector-tile source (our own OSM / Natural Earth archives): sea, land, water, parks, buildings, roads by class, borders and place labels, in the enclosing map's projection, styled by the theme's map tokens. Put it first inside a view with a `geo` coordinate system; data layers go after it (or between `part: base` and `part: labels`).",
+    "id": "@datars/std/basemap",
+    "params": {
+      "boundaries": {
+        "default": true,
+        "doc": "Country borders.",
+        "type": "bool"
+      },
+      "buildings": {
+        "default": true,
+        "type": "bool"
+      },
+      "labels": {
+        "default": true,
+        "doc": "Place names (screen-space placement, no overlaps).",
+        "type": "bool"
+      },
+      "layers": {
+        "doc": "Archive layer names, if they differ from the defaults: { land, water, lakes, parks, rivers, buildings, roads, boundaries, places }.",
+        "type": "json"
+      },
+      "part": {
+        "default": "all",
+        "doc": "Split the map around data layers: `base` below them, `labels` above.",
+        "type": "enum",
+        "values": [
+          "all",
+          "base",
+          "labels"
+        ]
+      },
+      "roads": {
+        "default": true,
+        "type": "bool"
+      },
+      "sea": {
+        "default": true,
+        "doc": "Fill the world behind the land with $map.water.",
+        "type": "bool"
+      },
+      "source": {
+        "doc": "A `tiles` source (data.tiles(url)).",
+        "type": "table"
+      },
+      "tileSize": {
+        "default": 512,
+        "doc": "On-screen tile size the zoom aims for (px). Smaller: more detail, more tiles.",
+        "type": "number"
+      }
+    },
+    "tokens": [
+      "map.water",
+      "map.land",
+      "map.park",
+      "map.building",
+      "map.road",
+      "map.road-major",
+      "map.border",
+      "map.label",
+      "map.label-halo"
+    ]
+  },
+  "@datars/std/bollinger": {
+    "doc": "Bollinger bands: the moving average of `y` over `window` rows with a shaded band `k` standard deviations (population σ) above and below it — where the price is stretched, and how volatile it is. Computes over `source` when given, like `movingAverage`; the plot fits its value axis to the band.",
+    "id": "@datars/std/bollinger",
+    "params": {
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "fill": {
+        "default": "$accent",
+        "doc": "Band ink.",
+        "type": "ink"
+      },
+      "full": {
+        "default": true,
+        "doc": "Only full windows.",
+        "type": "bool"
+      },
+      "k": {
+        "default": 2,
+        "doc": "Band half-width in standard deviations.",
+        "type": "number"
+      },
+      "label": {
+        "doc": "Name in the indicator key (default `BB 20, 2`).",
+        "type": "string"
+      },
+      "middle": {
+        "default": true,
+        "doc": "Draw the middle (moving average) line.",
+        "type": "bool"
+      },
+      "opacity": {
+        "default": 0.1,
+        "doc": "Band opacity.",
+        "type": "number"
+      },
+      "series": {
+        "doc": "One band per series.",
+        "type": "field"
+      },
+      "source": {
+        "doc": "A longer history to compute over (see movingAverage).",
+        "type": "table"
+      },
+      "stroke": {
+        "default": "$accent",
+        "doc": "Ink of the band's edges and middle line.",
+        "type": "ink"
+      },
+      "width": {
+        "default": 1,
+        "doc": "Edge stroke width.",
+        "type": "number"
+      },
+      "window": {
+        "default": 20,
+        "doc": "Rows per window.",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The field (default: the plot's `y`).",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "accent"
+    ]
+  },
+  "@datars/std/calendar": {
+    "doc": "A calendar heatmap: a week-column × weekday-row grid per year, coloured by value.",
+    "id": "@datars/std/calendar",
+    "params": {
+      "cell": {
+        "default": 0,
+        "doc": "Cell size in px (0 = fit the width).",
+        "type": "number"
+      },
+      "data": {
+        "type": "table"
+      },
+      "date": {
+        "doc": "A date (or day-of-year with a year field).",
+        "type": "field"
+      },
+      "label": {
+        "doc": "Day label (tooltip, accessible name); default `date: value`.",
+        "type": "prop"
+      },
+      "value": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/candlestick": {
+    "doc": "Candlesticks: per row a wick from low to high and a body from open to close, in `$up` when the close is at or above the open and `$down` below. Use in a plot with `xType: \"band\"` over dates for trading days without gaps; the plot fits its value axis to the lows and highs. Hovering a candle reads its date, OHLC and change.",
+    "id": "@datars/std/candlestick",
+    "params": {
+      "close": {
+        "doc": "Closing price field (default: the plot's `y`, else `close`).",
+        "type": "field"
+      },
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "down": {
+        "default": "$down",
+        "doc": "Ink of falling candles.",
+        "type": "ink"
+      },
+      "format": {
+        "default": ",.2f",
+        "doc": "Price format in labels.",
+        "type": "string"
+      },
+      "high": {
+        "default": "high",
+        "doc": "High field.",
+        "type": "string"
+      },
+      "hollow": {
+        "default": false,
+        "doc": "Hollow candles: rising bodies outlined, falling ones filled.",
+        "type": "bool"
+      },
+      "label": {
+        "doc": "Candle label (tooltip, accessible name); default date · O H L C (change).",
+        "type": "prop"
+      },
+      "low": {
+        "default": "low",
+        "doc": "Low field.",
+        "type": "string"
+      },
+      "open": {
+        "default": "open",
+        "doc": "Opening price field.",
+        "type": "string"
+      },
+      "up": {
+        "default": "$up",
+        "doc": "Ink of rising candles.",
+        "type": "ink"
+      },
+      "width": {
+        "default": 0,
+        "doc": "Body width: a fraction of the band on a band scale (0 = the band, whose padding leaves the gaps), px on a continuous scale (0 = 70% of the spacing).",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date (or time) field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The plot's value field: the close, unless `close` is given.",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "up",
+      "down",
+      "paper"
+    ]
+  },
+  "@datars/std/card": {
+    "doc": "A text card over the chart: an optional kicker and title over wrapped body text, on the theme's card surface, anchored to a corner or edge of its box. Drawn by the engine (so it's in video, PNG and PDF too); empty text hides it, and a card whose text changes between states morphs.",
+    "id": "@datars/std/card",
+    "params": {
+      "at": {
+        "default": "auto",
+        "doc": "Where the card sits in its box — or an expression over signals, for a card that moves between states. With `dodge`, `auto` (and any anchor, as a first choice) moves it to where it covers the least data and text.",
+        "type": "enum",
+        "values": [
+          "auto",
+          "top-left",
+          "top",
+          "top-right",
+          "left",
+          "center",
+          "right",
+          "bottom-left",
+          "bottom",
+          "bottom-right"
+        ]
+      },
+      "dodge": {
+        "default": true,
+        "doc": "Move out of the way of data and text (taking a band below the chart when nowhere is free). Off: the card stays at `at` (`auto`: top-right), over whatever is there — a card over a map, where land covers everything.",
+        "type": "bool"
+      },
+      "kicker": {
+        "doc": "A small accent line above the title (empty: no line).",
+        "type": "prop"
+      },
+      "margin": {
+        "default": 12,
+        "doc": "Space between the card and its box's edges (px, or [top, right, bottom, left]).",
+        "type": "number"
+      },
+      "text": {
+        "doc": "The body text (a string, or an expression over signals: one card narrating every state).",
+        "type": "prop"
+      },
+      "title": {
+        "doc": "A bold line above the text (empty: no line).",
+        "type": "prop"
+      },
+      "width": {
+        "default": 260,
+        "doc": "Card width (px); text wraps inside.",
+        "type": "number"
+      }
+    },
+    "tokens": [
+      "card",
+      "card-ink",
+      "card-ink-2",
+      "card-line",
+      "radius.card",
+      "accent",
+      "size.body",
+      "size.small"
+    ]
+  },
+  "@datars/std/cell": {
+    "doc": "Heatmap cells: a rectangle per (x, y) on two band scales, coloured by the colour scale. Keys (x, y) match grouped bars, so the two morph.",
+    "id": "@datars/std/cell",
+    "params": {
+      "color": {
+        "doc": "The value field (on a sequential/diverging colour scale).",
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ".1~f",
+        "type": "string"
+      },
+      "gap": {
+        "default": 1,
+        "type": "number"
+      },
+      "label": {
+        "doc": "Cell label (tooltip, accessible name); default `y, x: value`.",
+        "type": "prop"
+      },
+      "x": {
+        "type": "field"
+      },
+      "y": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/cloud": {
+    "doc": "A point cloud of any size (millions of rows): dots at their own x/y in an explorable view — a density-preserving sample at every zoom, every row up close, a tooltip on each.",
+    "id": "@datars/std/cloud",
+    "params": {
+      "bbox": {
+        "doc": "The extent to frame, [x0, y0, x1, y1] in the rows' units. Default: the rows' extent — give it for millions of rows (finding it reads them all) and for point archives.",
+        "type": "json"
+      },
+      "budget": {
+        "default": 2048,
+        "doc": "Rows per tile of the index at average density (smaller: lighter tiles, more of them).",
+        "type": "number"
+      },
+      "children": {
+        "default": [],
+        "doc": "Drawn over the dots, in the same coordinates (annotations, marks).",
+        "type": "children"
+      },
+      "data": {
+        "doc": "A table, or a point archive (a `tiles` source the publish compiler wrote).",
+        "type": "table"
+      },
+      "explore": {
+        "default": "cloud",
+        "doc": "The signals the camera explores with (`<explore>.x`, `.y`, `.zoom`).",
+        "type": "string"
+      },
+      "fill": {
+        "doc": "Dot ink, or an expression over the row (default $mark).",
+        "type": "prop"
+      },
+      "glow": {
+        "doc": "Radius (px) of a glow under the dots (a number or an expression over the row): a sample drawn large and faint, so density reads at a glance and, up close, stars bloom. None by default.",
+        "type": "prop"
+      },
+      "glowOpacity": {
+        "doc": "The glow's opacity per dot: a number (default 0.05) or an expression over the row (weight bright rows).",
+        "type": "prop"
+      },
+      "glowPoints": {
+        "default": 6000,
+        "doc": "How many dots the glow draws at most.",
+        "type": "number"
+      },
+      "label": {
+        "doc": "Tooltip and accessible name per row (default `x, y`).",
+        "type": "prop"
+      },
+      "maxZoom": {
+        "default": 2048,
+        "doc": "How far in the reader can zoom, × the whole.",
+        "type": "number"
+      },
+      "name": {
+        "doc": "What the rows are, for the accessible description ('4,000,000 stars').",
+        "type": "string"
+      },
+      "opacity": {
+        "doc": "Per-dot opacity: an expression over the row.",
+        "type": "prop"
+      },
+      "padding": {
+        "default": 12,
+        "type": "number"
+      },
+      "points": {
+        "default": 150000,
+        "doc": "The most dots a frame draws: a view holding more shows a uniform sample this size, one holding fewer shows every row.",
+        "type": "number"
+      },
+      "r": {
+        "doc": "Dot radius in screen px: a number, or an expression over the row.",
+        "type": "prop"
+      },
+      "x": {
+        "type": "field"
+      },
+      "y": {
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "mark"
+    ]
+  },
+  "@datars/std/dot": {
+    "doc": "A dot per category at its value (a dot plot).",
+    "id": "@datars/std/dot",
+    "params": {
+      "color": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "type": "prop"
+      },
+      "r": {
+        "default": 6,
+        "type": "number"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "string"
+      }
+    }
+  },
+  "@datars/std/dotDensity": {
+    "doc": "Dot density: one dot per `per` units of a region's value, scattered evenly inside it (seeded, deterministic).",
+    "id": "@datars/std/dotDensity",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "type": "prop"
+      },
+      "key": {
+        "type": "field"
+      },
+      "per": {
+        "default": 1000,
+        "type": "number"
+      },
+      "r": {
+        "default": 1.2,
+        "type": "number"
+      },
+      "seed": {
+        "default": 1,
+        "type": "number"
+      },
+      "source": {
+        "type": "table"
+      },
+      "value": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/drawdown": {
+    "doc": "Drawdown: how far each series sits below its running peak (0 at a new high, −25 % a quarter below it), as an area hanging from zero — the pain chart next to a performance chart. With `source`, peaks count from the start of the whole history instead of the first visible row. Use with `format: \".0%\"` on the plot.",
+    "id": "@datars/std/drawdown",
+    "params": {
+      "area": {
+        "default": true,
+        "doc": "Shade from zero (one series; several draw lines only).",
+        "type": "bool"
+      },
+      "color": {
+        "doc": "The plot's colour field (line and label inks).",
+        "type": "field"
+      },
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "fill": {
+        "default": "$down",
+        "doc": "Area ink (one series).",
+        "type": "ink"
+      },
+      "format": {
+        "default": "+.1%",
+        "doc": "Format of the drawdown in end labels.",
+        "type": "string"
+      },
+      "labels": {
+        "default": true,
+        "doc": "Label each series' end with its name and current drawdown (with a series; pushed apart).",
+        "type": "bool"
+      },
+      "opacity": {
+        "default": 0.22,
+        "doc": "Area opacity.",
+        "type": "number"
+      },
+      "series": {
+        "doc": "One drawdown per series (default: the colour field).",
+        "type": "field"
+      },
+      "source": {
+        "doc": "A longer history: peaks before the rows on show count too.",
+        "type": "table"
+      },
+      "stroke": {
+        "doc": "Line ink (default: $down, or the colour scale per series).",
+        "type": "prop"
+      },
+      "width": {
+        "default": 1.5,
+        "doc": "Stroke width.",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The price field (default: the plot's `y`).",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "down",
+      "size.label"
+    ]
+  },
+  "@datars/std/facet": {
+    "doc": "Small multiples: the given chart once per value of `by`, in a grid; inside, the chart's `data` is that group's rows (\"@group\"), on scales shared across panels unless `shared: false`.",
+    "id": "@datars/std/facet",
+    "params": {
+      "by": {
+        "type": "field"
+      },
+      "chart": {
+        "doc": "A chart (e.g. plot(...)) to repeat; its data is replaced by each group.",
+        "type": "json"
+      },
+      "columns": {
+        "default": 3,
+        "type": "number"
+      },
+      "data": {
+        "type": "table"
+      },
+      "gap": {
+        "default": 16,
+        "type": "number"
+      },
+      "shared": {
+        "default": true,
+        "doc": "Every panel on the same x and y scales (the whole table's extent), so panels compare at a glance; off: each fits its own rows.",
+        "type": "bool"
+      }
+    }
+  },
+  "@datars/std/funnel": {
+    "doc": "A funnel: stage names in a measured column, centred bars in stage order joined by tapering connectors, each labelled with the conversion from the stage before.",
+    "id": "@datars/std/funnel",
+    "params": {
+      "conversion": {
+        "default": true,
+        "doc": "Connectors between stages, labelled with the share that carries on (↓ 44 %).",
+        "type": "bool"
+      },
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "doc": "The bars' colour (default $mark); labels inside take whichever of ink and paper reads on it.",
+        "type": "prop"
+      },
+      "format": {
+        "default": ",.0f",
+        "type": "string"
+      },
+      "stage": {
+        "type": "field"
+      },
+      "title": {
+        "doc": "A title above the funnel.",
+        "type": "string"
+      },
+      "value": {
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "mark",
+      "ink",
+      "ink-2",
+      "muted",
+      "paper",
+      "size.label",
+      "font.title",
+      "size.title"
+    ]
+  },
+  "@datars/std/geoLines": {
+    "doc": "Line features of a geo source (roads, borders, courses, routes) as non-scaling strokes. With `data` and `key`, one line per row (the feature with that id) — data, not decoration — coloured by `value` on piecewise `stops`.",
+    "id": "@datars/std/geoLines",
+    "params": {
+      "dash": {
+        "default": false,
+        "type": "bool"
+      },
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ",.1~f",
+        "type": "string"
+      },
+      "ink": {
+        "default": "$map.border",
+        "type": "ink"
+      },
+      "key": {
+        "doc": "The data field holding each row's feature id.",
+        "type": "field"
+      },
+      "source": {
+        "type": "table"
+      },
+      "stops": {
+        "doc": "Piecewise colour stops for `value` (`#a 0 · #b 10`).",
+        "type": "string"
+      },
+      "value": {
+        "doc": "Colour lines by this field (with `stops`).",
+        "type": "field"
+      },
+      "width": {
+        "default": 1,
+        "type": "number"
+      }
+    }
+  },
+  "@datars/std/geoPoints": {
+    "doc": "Points at lon/lat (cities, events, stations), in the enclosing map's projection, in $map.marker ringed by $map.label-halo so they read on any land.",
+    "id": "@datars/std/geoPoints",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "type": "prop"
+      },
+      "key": {
+        "type": "field"
+      },
+      "label": {
+        "type": "prop"
+      },
+      "lat": {
+        "type": "field"
+      },
+      "lon": {
+        "type": "field"
+      },
+      "r": {
+        "type": "prop"
+      }
+    },
+    "tokens": [
+      "map.marker",
+      "map.label-halo"
+    ]
+  },
+  "@datars/std/grid": {
+    "doc": "Gridlines at a scale's ticks across the plot area.",
+    "id": "@datars/std/grid",
+    "params": {
+      "count": {
+        "doc": "A tick count as an expression — the axis's own (a plot passes it), so every gridline meets a tick.",
+        "type": "prop"
+      },
+      "orient": {
+        "default": "horizontal",
+        "type": "enum",
+        "values": [
+          "horizontal",
+          "vertical"
+        ]
+      },
+      "scale": {
+        "default": "y",
+        "type": "string"
+      },
+      "ticks": {
+        "default": 0,
+        "type": "number"
+      }
+    },
+    "tokens": [
+      "grid",
+      "stroke.grid"
+    ]
+  },
+  "@datars/std/grouped": {
+    "doc": "Grouped (dodged) bars: a group per x, a bar per series side by side. Keys (series, x), shared with stacked segments and heatmap cells, so the three morph.",
+    "id": "@datars/std/grouped",
+    "params": {
+      "color": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ",.1~f",
+        "doc": "Number format of each bar's label.",
+        "type": "string"
+      },
+      "gap": {
+        "default": 0.08,
+        "doc": "Padding between bars of a group (band fraction).",
+        "type": "number"
+      },
+      "labels": {
+        "default": false,
+        "doc": "Value labels on the bars (they count when values change), where they fit a bar's width.",
+        "type": "bool"
+      },
+      "prefix": {
+        "doc": "Before each bar's number in its label ('$').",
+        "type": "string"
+      },
+      "series": {
+        "doc": "The series within each group (default: the colour field).",
+        "type": "field"
+      },
+      "suffix": {
+        "doc": "After it ('M', ' kr').",
+        "type": "string"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "ink-2",
+      "size.label",
+      "radius.bar"
+    ]
+  },
+  "@datars/std/hemicycle": {
+    "doc": "A parliament: one dot per seat on concentric arcs, grouped by party left to right. Seats are keyed (party, Unit i).",
+    "id": "@datars/std/hemicycle",
+    "params": {
+      "align": {
+        "default": "middle",
+        "doc": "In a box taller than it needs (a phone): centred up and down, or at the bottom (with a line of text right under it).",
+        "type": "enum",
+        "values": [
+          "middle",
+          "bottom"
+        ]
+      },
+      "category": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "rows": {
+        "default": 0,
+        "doc": "Rows of seats (0 = automatic).",
+        "type": "number"
+      },
+      "total": {
+        "default": true,
+        "type": "bool"
+      },
+      "value": {
+        "doc": "Seats per party.",
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/indexed": {
+    "doc": "Series rebased to their first visible row — 100 (or 0 %) — so instruments at any price compare as performance: one line per series with a baseline, each labelled at its end with its change. Filter the rows to a range and every line starts from the base again. Use with `format: \"+.0%\"` on the plot for `percent`.",
+    "id": "@datars/std/indexed",
+    "params": {
+      "base": {
+        "default": 100,
+        "doc": "The value every series starts at.",
+        "type": "number"
+      },
+      "baseline": {
+        "default": true,
+        "doc": "A rule at the base.",
+        "type": "bool"
+      },
+      "color": {
+        "doc": "The plot's colour field (line and label inks).",
+        "type": "field"
+      },
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "format": {
+        "default": "+.1%",
+        "doc": "Format of the change in end labels.",
+        "type": "string"
+      },
+      "labels": {
+        "default": true,
+        "doc": "Label each line's end: series and change (pushed apart so they never overlap).",
+        "type": "bool"
+      },
+      "percent": {
+        "default": false,
+        "doc": "Change from the start (0 = no change, 0.1 = +10 %) instead of an index.",
+        "type": "bool"
+      },
+      "series": {
+        "doc": "One line per series (default: the colour field).",
+        "type": "field"
+      },
+      "stroke": {
+        "doc": "Line ink (default: the colour scale, else $mark).",
+        "type": "prop"
+      },
+      "width": {
+        "default": 0,
+        "doc": "Stroke width (0 = the theme's).",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The price field (default: the plot's `y`).",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "mark",
+      "ink-2",
+      "size.label"
+    ]
+  },
+  "@datars/std/legend": {
+    "doc": "A legend for a colour scale: a swatch and a label per entry, flowing in rows (spaced by the labels' widths, wrapping at the box edge).",
+    "id": "@datars/std/legend",
+    "params": {
+      "scale": {
+        "default": "color",
+        "type": "string"
+      },
+      "title": {
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "ink-2",
+      "size.label"
+    ]
+  },
+  "@datars/std/line": {
+    "doc": "One line per series (the colour field, or `series`), through x/y. Draws on as it enters.",
+    "id": "@datars/std/line",
+    "params": {
+      "clip": {
+        "default": false,
+        "doc": "Clip the lines to the plot area (the end labels stay outside it).",
+        "type": "bool"
+      },
+      "color": {
+        "type": "field"
+      },
+      "curve": {
+        "default": "monotone-x",
+        "type": "enum",
+        "values": [
+          "linear",
+          "monotone-x",
+          "catmull-rom",
+          "step",
+          "step-before",
+          "step-after"
+        ]
+      },
+      "data": {
+        "type": "table"
+      },
+      "labels": {
+        "default": false,
+        "doc": "Label each line at its last point (labels pushed apart so they never overlap).",
+        "type": "bool"
+      },
+      "points": {
+        "default": false,
+        "doc": "Dots at the data points.",
+        "type": "bool"
+      },
+      "selected": {
+        "doc": "A keyset signal: selected series stay strong, the others recede.",
+        "type": "string"
+      },
+      "series": {
+        "doc": "Group rows into lines by this field (default: the colour field).",
+        "type": "field"
+      },
+      "stroke": {
+        "doc": "Stroke ink or expression.",
+        "type": "prop"
+      },
+      "width": {
+        "default": 0,
+        "doc": "Stroke width (0 = the theme's stroke.line).",
+        "type": "number"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "linear",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yScale": {
+        "default": "y",
+        "doc": "The value scale: `y2` for a plot's right axis.",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "mark",
+      "stroke.line",
+      "size.label"
+    ]
+  },
+  "@datars/std/map": {
+    "doc": "A map: regions of a geo source, coloured by a data table joined on a key (choropleth), with neutral backdrop land, over which children (symbols, points, lines, annotations) draw in the same projection.",
+    "id": "@datars/std/map",
+    "params": {
+      "backdrop": {
+        "default": true,
+        "doc": "Draw regions without data too (in $map.no-data); off: only regions with data.",
+        "type": "bool"
+      },
+      "base": {
+        "default": [],
+        "doc": "Layers beneath everything, moving with the camera: a basemap (`basemap({ part: 'base' })`).",
+        "type": "children"
+      },
+      "camera": {
+        "doc": "A camera over the map: {fit: {keys: [...]} | {bbox: [x0, y0, x1, y1]}, padding} — bbox corners may be expressions like geo.x(lon, lat). Cameras fly between states; the projection stays.",
+        "type": "json"
+      },
+      "chapter": {
+        "doc": "Clicking a region enters this program chapter with the region's id (drill-down).",
+        "type": "string"
+      },
+      "children": {
+        "default": [],
+        "doc": "Layers drawn on top: symbols, geoPoints, geoLines, annotations.",
+        "type": "children"
+      },
+      "colorType": {
+        "default": "sequential",
+        "type": "enum",
+        "values": [
+          "sequential",
+          "diverging",
+          "categorical",
+          "piecewise"
+        ]
+      },
+      "data": {
+        "doc": "Values per region (optional).",
+        "type": "table"
+      },
+      "fillOpacity": {
+        "doc": "Region opacity; default 0.85 over a `base` basemap (its streets and water show through), else 1.",
+        "type": "number"
+      },
+      "fit": {
+        "doc": "What the projection fits: {keys: [...]}, {bbox: [lon0, lat0, lon1, lat1]} or the whole source (default). A fit clips the map to its box.",
+        "type": "json"
+      },
+      "format": {
+        "default": ".1~f",
+        "type": "string"
+      },
+      "key": {
+        "doc": "The data column holding region ids.",
+        "type": "field"
+      },
+      "label": {
+        "doc": "Region label (tooltip, accessible name): an expression over the region row; default `name: value`.",
+        "type": "prop"
+      },
+      "labels": {
+        "default": false,
+        "type": "bool"
+      },
+      "legend": {
+        "default": false,
+        "doc": "A colour ramp (or swatches, for categorical colour) in the lower-left corner.",
+        "type": "bool"
+      },
+      "padding": {
+        "default": 8,
+        "type": "number"
+      },
+      "projection": {
+        "default": "equal-earth",
+        "doc": "equal-earth, mercator, web-mercator, natural-earth, albers-usa, orthographic, sweref99tm, planar, …",
+        "type": "string"
+      },
+      "regions": {
+        "default": true,
+        "doc": "Draw the source's regions; off: only the layers (a camera beat over a basemap).",
+        "type": "bool"
+      },
+      "sea": {
+        "default": false,
+        "doc": "Fill the map's box with $map.water first (the sea around atlas regions, in themes that colour it).",
+        "type": "bool"
+      },
+      "selected": {
+        "doc": "A keyset signal: selected regions stay strong, the others recede.",
+        "type": "string"
+      },
+      "source": {
+        "doc": "A geo source (GeoJSON, TopoJSON or an atlas like `countries`).",
+        "type": "table"
+      },
+      "stops": {
+        "doc": "Piecewise colour stops: '#22c55e 2 · #f5a524 4 · #f97362 6.5'.",
+        "type": "string"
+      },
+      "stroke": {
+        "default": true,
+        "doc": "Borders between regions.",
+        "type": "bool"
+      },
+      "under": {
+        "doc": "Another geo source drawn beneath as neutral land (countries around admin-1 regions).",
+        "type": "table"
+      },
+      "value": {
+        "doc": "The value to colour by.",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "map.land",
+      "map.no-data",
+      "map.border",
+      "map.water",
+      "sequential",
+      "diverging",
+      "categorical"
+    ]
+  },
+  "@datars/std/movingAverage": {
+    "doc": "A moving average of the plot's `y` (a closing price) as a line: simple (the mean of the last `window` rows) or exponential (span `window`). Computed over `source` — the whole history — when given, so the first day on show already has its full window. Shown in the plot's indicator key.",
+    "id": "@datars/std/movingAverage",
+    "params": {
+      "color": {
+        "doc": "The plot's colour field (per-series inks).",
+        "type": "field"
+      },
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "full": {
+        "default": true,
+        "doc": "Only full windows: no line until `window` rows (else the first rows average what there is).",
+        "type": "bool"
+      },
+      "kind": {
+        "default": "sma",
+        "doc": "Simple or exponential.",
+        "type": "enum",
+        "values": [
+          "sma",
+          "ema"
+        ]
+      },
+      "label": {
+        "doc": "Name in the indicator key and to screen readers (default `SMA 20`).",
+        "type": "string"
+      },
+      "series": {
+        "doc": "One average per series (tickers).",
+        "type": "field"
+      },
+      "source": {
+        "doc": "A longer history of the same rows to compute over (the chart shows only the rows of `data`).",
+        "type": "table"
+      },
+      "stroke": {
+        "doc": "Line ink (default: $accent, or the colour scale per series).",
+        "type": "prop"
+      },
+      "width": {
+        "default": 1.5,
+        "doc": "Stroke width.",
+        "type": "number"
+      },
+      "window": {
+        "default": 20,
+        "doc": "Rows per window (trading days on a band scale): 20 ≈ a month, 50, 200.",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The averaged field (default: the plot's `y`).",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "accent"
+    ]
+  },
+  "@datars/std/ohlc": {
+    "doc": "OHLC bars: per row a vertical line from low to high with the open ticked to the left and the close to the right, in `$up`/`$down` by direction (or ink). Same fields and plot fitting as `candlestick`.",
+    "id": "@datars/std/ohlc",
+    "params": {
+      "close": {
+        "doc": "Closing price field (default: the plot's `y`, else `close`).",
+        "type": "field"
+      },
+      "colored": {
+        "default": true,
+        "doc": "Colour by direction; off: every bar in `$ink`.",
+        "type": "bool"
+      },
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "down": {
+        "default": "$down",
+        "doc": "Ink of falling bars.",
+        "type": "ink"
+      },
+      "format": {
+        "default": ",.2f",
+        "doc": "Price format in labels.",
+        "type": "string"
+      },
+      "high": {
+        "default": "high",
+        "doc": "High field.",
+        "type": "string"
+      },
+      "label": {
+        "doc": "Bar label; default date · O H L C (change).",
+        "type": "prop"
+      },
+      "low": {
+        "default": "low",
+        "doc": "Low field.",
+        "type": "string"
+      },
+      "open": {
+        "default": "open",
+        "doc": "Opening price field.",
+        "type": "string"
+      },
+      "up": {
+        "default": "$up",
+        "doc": "Ink of rising bars.",
+        "type": "ink"
+      },
+      "width": {
+        "default": 0,
+        "doc": "Tick span: a fraction of the band (0 = the band), px on a continuous scale.",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date (or time) field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The plot's value field: the close, unless `close` is given.",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "up",
+      "down",
+      "ink"
+    ]
+  },
+  "@datars/std/pareto": {
+    "doc": "The running share of the total, from the largest category down, as a line with points on the plot's right axis (`right: { domain: [0, 1], format: '.0%' }`) — over bars sorted descending, a Pareto chart.",
+    "id": "@datars/std/pareto",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "stroke": {
+        "doc": "Line ink (default: the theme's secondary mark).",
+        "type": "prop"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "ink-2"
+    ]
+  },
+  "@datars/std/pie": {
+    "doc": "Parts of a whole as slices (set `inner` > 0 for a donut). Colours from the categorical palette by category.",
+    "id": "@datars/std/pie",
+    "params": {
+      "category": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ".1~f",
+        "type": "string"
+      },
+      "inner": {
+        "default": 0,
+        "doc": "Inner radius as a fraction of the outer (0 = pie, 0.6 = donut).",
+        "type": "number"
+      },
+      "labels": {
+        "default": true,
+        "type": "bool"
+      },
+      "pad": {
+        "default": 0.006,
+        "doc": "Pad angle between slices (radians).",
+        "type": "number"
+      },
+      "sort": {
+        "default": "none",
+        "type": "enum",
+        "values": [
+          "none",
+          "asc",
+          "desc"
+        ]
+      },
+      "total": {
+        "default": false,
+        "doc": "Show the total in the middle (donuts).",
+        "type": "bool"
+      },
+      "value": {
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "categorical",
+      "paper",
+      "ink",
+      "muted",
+      "size.label",
+      "size.title"
+    ]
+  },
+  "@datars/std/plot": {
+    "doc": "A cartesian frame: x/y (and colour) scales from data, axes and gridlines sized by the engine, a title, and marks as children.",
+    "id": "@datars/std/plot",
+    "params": {
+      "axes": {
+        "default": "both",
+        "type": "enum",
+        "values": [
+          "both",
+          "x",
+          "y",
+          "none"
+        ]
+      },
+      "brush": {
+        "doc": "A signal to brush into: dragging across the plot selects a range of the category/time axis (see `brush()` and `brushed()`).",
+        "type": "string"
+      },
+      "children": {
+        "default": [],
+        "doc": "Marks and annotations.",
+        "type": "children"
+      },
+      "clip": {
+        "default": false,
+        "doc": "Clip marks to the plot area (for explicit domains narrower than the data: a zoom).",
+        "type": "bool"
+      },
+      "color": {
+        "doc": "Field mapped to colour (categorical by default).",
+        "type": "field"
+      },
+      "colorType": {
+        "default": "categorical",
+        "type": "enum",
+        "values": [
+          "categorical",
+          "sequential",
+          "diverging",
+          "piecewise"
+        ]
+      },
+      "data": {
+        "doc": "The table marks read by default.",
+        "type": "table"
+      },
+      "format": {
+        "doc": "Number format for value-axis labels.",
+        "type": "string"
+      },
+      "grid": {
+        "default": true,
+        "doc": "Gridlines along the value axis.",
+        "type": "bool"
+      },
+      "labelSpace": {
+        "default": 110,
+        "doc": "Room at the right (px) when a line child labels its ends.",
+        "type": "number"
+      },
+      "legend": {
+        "default": false,
+        "doc": "A colour legend below the plot.",
+        "type": "bool"
+      },
+      "lower": {
+        "doc": "A pane under the plot area on the same x with its own value axis, scale `lower`: {y, data?, height? (fraction or px, 0.22), format?, label?}. Marks go there with `yScale: \"lower\"`; a `volume` child makes one when it isn't given.",
+        "type": "json"
+      },
+      "nice": {
+        "default": true,
+        "doc": "Round linear domains to nice numbers.",
+        "type": "bool"
+      },
+      "padding": {
+        "default": 0.22,
+        "doc": "Band padding.",
+        "type": "number"
+      },
+      "prefix": {
+        "doc": "Before each value-axis number ('$').",
+        "type": "string"
+      },
+      "right": {
+        "doc": "A second value axis on the right, scale `y2`: {y, data?, domain?, label?, format?, prefix?, suffix?}. Marks use it with `yScale: \"y2\"`.",
+        "type": "json"
+      },
+      "stops": {
+        "doc": "Piecewise colour stops (colorType piecewise): '#bae6fd 7 · #0b1f3a 14.2'.",
+        "type": "string"
+      },
+      "subtitle": {
+        "type": "string"
+      },
+      "suffix": {
+        "doc": "After it ('M', ' kr').",
+        "type": "string"
+      },
+      "title": {
+        "doc": "Title above the plot.",
+        "type": "string"
+      },
+      "x": {
+        "doc": "Field on the horizontal axis.",
+        "type": "field"
+      },
+      "xDomain": {
+        "doc": "Explicit x domain.",
+        "type": "json"
+      },
+      "xFormat": {
+        "doc": "Number format for the x axis's labels, whichever axis holds the values: 'd' reads decimal years on a linear axis as whole years (a whole-number format labels whole-number ticks only).",
+        "type": "string"
+      },
+      "xLabel": {
+        "type": "string"
+      },
+      "xTicks": {
+        "default": 0,
+        "doc": "Tick count hint for the x axis (0 = from its length).",
+        "type": "number"
+      },
+      "xType": {
+        "default": "band",
+        "type": "enum",
+        "values": [
+          "band",
+          "point",
+          "linear",
+          "log",
+          "sqrt",
+          "time"
+        ]
+      },
+      "y": {
+        "doc": "Field on the vertical axis.",
+        "type": "field"
+      },
+      "yDomain": {
+        "doc": "Explicit y domain.",
+        "type": "json"
+      },
+      "yFormat": {
+        "doc": "Number format for the y axis's labels (overrides `format` there).",
+        "type": "string"
+      },
+      "yLabel": {
+        "type": "string"
+      },
+      "yTicks": {
+        "default": 0,
+        "doc": "Tick count hint for the y axis (0 = from its length).",
+        "type": "number"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "enum",
+        "values": [
+          "band",
+          "point",
+          "linear",
+          "log",
+          "sqrt",
+          "time"
+        ]
+      },
+      "zero": {
+        "doc": "Include zero in the value axis's domain (default: yes; prices under candles, averages, bands and indexed lines fit their range instead).",
+        "type": "bool"
+      }
+    },
+    "tokens": [
+      "ink",
+      "muted",
+      "grid",
+      "rule",
+      "size.title",
+      "size.label"
+    ]
+  },
+  "@datars/std/point": {
+    "doc": "A dot per row (instanced: scales to 10⁵–10⁶ points).",
+    "id": "@datars/std/point",
+    "params": {
+      "clip": {
+        "default": false,
+        "doc": "Clip to the plot area.",
+        "type": "bool"
+      },
+      "color": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "type": "prop"
+      },
+      "label": {
+        "doc": "Accessible label per point.",
+        "type": "prop"
+      },
+      "opacity": {
+        "type": "prop"
+      },
+      "r": {
+        "doc": "Radius (px) or expression.",
+        "type": "prop"
+      },
+      "symbol": {
+        "default": "circle",
+        "type": "string"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "linear",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "mark",
+      "point.radius"
+    ]
+  },
+  "@datars/std/route": {
+    "doc": "Great-circle routes between two lon/lat points per row.",
+    "id": "@datars/std/route",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "ink": {
+        "default": "$accent@0.6",
+        "type": "ink"
+      },
+      "lat0": {
+        "type": "field"
+      },
+      "lat1": {
+        "type": "field"
+      },
+      "lon0": {
+        "type": "field"
+      },
+      "lon1": {
+        "type": "field"
+      },
+      "width": {
+        "type": "prop"
+      }
+    }
+  },
+  "@datars/std/rule": {
+    "doc": "A reference line at a value on the x or y scale (a target, an average, 'today').",
+    "id": "@datars/std/rule",
+    "params": {
+      "axis": {
+        "default": "y",
+        "type": "enum",
+        "values": [
+          "x",
+          "y"
+        ]
+      },
+      "dashed": {
+        "default": true,
+        "type": "bool"
+      },
+      "ink": {
+        "default": "$ink-2",
+        "type": "ink"
+      },
+      "label": {
+        "type": "string"
+      },
+      "value": {
+        "type": "prop"
+      }
+    }
+  },
+  "@datars/std/sankey": {
+    "doc": "Flows between nodes: nodes in columns by depth, ribbons as wide as their flow. Links keep their row key (bars of the same rows morph into ribbons).",
+    "id": "@datars/std/sankey",
+    "params": {
+      "data": {
+        "doc": "One row per link.",
+        "type": "table"
+      },
+      "label": {
+        "doc": "Link label (tooltip, accessible name); default `source → target: value`.",
+        "type": "prop"
+      },
+      "nodePadding": {
+        "default": 12,
+        "type": "number"
+      },
+      "nodeWidth": {
+        "default": 14,
+        "type": "number"
+      },
+      "selected": {
+        "doc": "A keyset signal of node names: links touching them stay strong, the others recede.",
+        "type": "string"
+      },
+      "source": {
+        "type": "field"
+      },
+      "target": {
+        "type": "field"
+      },
+      "value": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/slider": {
+    "doc": "A slider for a numeric signal: press or drag to set it (snapped to `step`). Shows the label and the current value.",
+    "id": "@datars/std/slider",
+    "params": {
+      "format": {
+        "default": ",.0f",
+        "doc": "Value format.",
+        "type": "string"
+      },
+      "label": {
+        "default": "",
+        "type": "string"
+      },
+      "max": {
+        "default": 100,
+        "type": "number"
+      },
+      "min": {
+        "default": 0,
+        "type": "number"
+      },
+      "signal": {
+        "doc": "The numeric signal it sets.",
+        "type": "string"
+      },
+      "step": {
+        "default": 0,
+        "doc": "Snap step (0 = continuous).",
+        "type": "number"
+      }
+    },
+    "tokens": [
+      "accent",
+      "rule",
+      "ink-2",
+      "size.label"
+    ]
+  },
+  "@datars/std/span": {
+    "doc": "A shaded band between two values on the x or y scale (a recession, a target range).",
+    "id": "@datars/std/span",
+    "params": {
+      "axis": {
+        "default": "x",
+        "type": "enum",
+        "values": [
+          "x",
+          "y"
+        ]
+      },
+      "from": {
+        "type": "prop"
+      },
+      "ink": {
+        "default": "$ink",
+        "type": "ink"
+      },
+      "label": {
+        "type": "string"
+      },
+      "opacity": {
+        "default": 0.07,
+        "type": "number"
+      },
+      "to": {
+        "type": "prop"
+      }
+    }
+  },
+  "@datars/std/sparkline": {
+    "doc": "A sparkline: a word-sized line of `y` over `x` that fills its box (a table cell, a card) — no axes, the last value marked with a dot, coloured `$up` or `$down` by whether it ended above where it started. Works on any table, `@group` too (one per ticker in a repeat).",
+    "id": "@datars/std/sparkline",
+    "params": {
+      "data": {
+        "doc": "The rows (a named table, or `@group` inside a repeat).",
+        "type": "table"
+      },
+      "dot": {
+        "default": true,
+        "doc": "A dot at the last value.",
+        "type": "bool"
+      },
+      "fill": {
+        "default": true,
+        "doc": "A soft area under the line.",
+        "type": "bool"
+      },
+      "format": {
+        "default": ",.2f",
+        "doc": "Value format in the label.",
+        "type": "string"
+      },
+      "name": {
+        "doc": "What the line is (its accessible label starts with it).",
+        "type": "string"
+      },
+      "stroke": {
+        "doc": "Line ink (overrides the trend colour).",
+        "type": "prop"
+      },
+      "trend": {
+        "default": true,
+        "doc": "Colour by the change over the line ($up / $down); off: $mark.",
+        "type": "bool"
+      },
+      "width": {
+        "default": 1.5,
+        "doc": "Stroke width.",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date (or order) field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "point",
+        "doc": "x scale: `point` spaces rows evenly (trading days), `time` by date.",
+        "type": "enum",
+        "values": [
+          "linear",
+          "time",
+          "point"
+        ]
+      },
+      "y": {
+        "doc": "The value field.",
+        "type": "field"
+      }
+    },
+    "tokens": [
+      "up",
+      "down",
+      "mark"
+    ]
+  },
+  "@datars/std/stacked": {
+    "doc": "Stacked bars: a segment per series in each category (offset `expand` for 100 %); horizontal when y is the band axis. Keys (series, x), shared with grouped bars and heatmap cells.",
+    "id": "@datars/std/stacked",
+    "params": {
+      "color": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ",.1~f",
+        "doc": "Number format of each segment's label (its value label, hover, screen readers).",
+        "type": "string"
+      },
+      "labels": {
+        "default": false,
+        "doc": "Value labels inside the segments (they count when values change), where they fit.",
+        "type": "bool"
+      },
+      "offset": {
+        "default": "zero",
+        "type": "enum",
+        "values": [
+          "zero",
+          "expand"
+        ]
+      },
+      "prefix": {
+        "doc": "Before the number ('$').",
+        "type": "string"
+      },
+      "segmentKey": {
+        "doc": "Segment key (default the composite `(series, category)`, so segments merge into their series' bar); e.g. `d.party` so one 100 % bar's segments pair with that party's bar or slice.",
+        "type": "prop"
+      },
+      "series": {
+        "type": "field"
+      },
+      "suffix": {
+        "doc": "After it ('M', ' kr').",
+        "type": "string"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "size.label"
+    ]
+  },
+  "@datars/std/stripes": {
+    "doc": "Colour stripes: one full-height band per ordered value, on a diverging scale around `mid`.",
+    "id": "@datars/std/stripes",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "label": {
+        "doc": "Stripe label (tooltip, accessible name); default `x: value`.",
+        "type": "prop"
+      },
+      "mid": {
+        "default": 0,
+        "type": "number"
+      },
+      "value": {
+        "type": "field"
+      },
+      "x": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/swarm": {
+    "doc": "A beeswarm: every row a dot along one value axis, packed so none overlap (windowed neighbour search; 20k dots in about a second).",
+    "id": "@datars/std/swarm",
+    "params": {
+      "color": {
+        "type": "field"
+      },
+      "data": {
+        "type": "table"
+      },
+      "r": {
+        "default": 3.5,
+        "type": "number"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "linear",
+        "type": "string"
+      }
+    }
+  },
+  "@datars/std/symbols": {
+    "doc": "Proportional symbols: a circle per region (or point feature) at its visual centre, area ∝ value — or all one size (`r`) without a value field.",
+    "id": "@datars/std/symbols",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "fill": {
+        "type": "prop"
+      },
+      "format": {
+        "default": ",.0f",
+        "type": "string"
+      },
+      "key": {
+        "type": "field"
+      },
+      "label": {
+        "doc": "Label per symbol (tooltip, accessible name); default `name: value`.",
+        "type": "prop"
+      },
+      "max": {
+        "default": 28,
+        "doc": "Largest radius (px).",
+        "type": "number"
+      },
+      "r": {
+        "default": 4,
+        "doc": "Radius without a value field (px).",
+        "type": "number"
+      },
+      "source": {
+        "type": "table"
+      },
+      "stops": {
+        "doc": "Colour by value on piecewise stops ('#bae6fd 7 · #0b1f3a 14.2') instead of one fill.",
+        "type": "string"
+      },
+      "value": {
+        "doc": "Size by this field (omit for same-size dots).",
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/title": {
+    "doc": "A title (and optional subtitle and source line).",
+    "id": "@datars/std/title",
+    "params": {
+      "source": {
+        "type": "string"
+      },
+      "subtitle": {
+        "type": "string"
+      },
+      "text": {
+        "default": "",
+        "type": "string"
+      }
+    }
+  },
+  "@datars/std/track": {
+    "doc": "A path over time (a storm, a flight): drawn up to `until` (a data-time signal) with a moving head.",
+    "id": "@datars/std/track",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "future": {
+        "default": false,
+        "doc": "Draw the whole path faintly underneath (where it will go).",
+        "type": "bool"
+      },
+      "head": {
+        "default": true,
+        "type": "bool"
+      },
+      "ink": {
+        "default": "$negative",
+        "type": "ink"
+      },
+      "lat": {
+        "type": "field"
+      },
+      "lon": {
+        "type": "field"
+      },
+      "time": {
+        "type": "field"
+      },
+      "until": {
+        "doc": "Data time to draw up to (e.g. the `year` signal).",
+        "type": "prop"
+      }
+    }
+  },
+  "@datars/std/treemap": {
+    "doc": "A squarified treemap: area ∝ value, one rectangle per category, labels where they fit. Coloured by category, or by a value on piecewise stops.",
+    "id": "@datars/std/treemap",
+    "params": {
+      "category": {
+        "type": "field"
+      },
+      "color": {
+        "doc": "Colour by this field (default: the category).",
+        "type": "field"
+      },
+      "colorType": {
+        "default": "categorical",
+        "type": "enum",
+        "values": [
+          "categorical",
+          "piecewise"
+        ]
+      },
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ".1~f",
+        "type": "string"
+      },
+      "labels": {
+        "default": true,
+        "type": "bool"
+      },
+      "stops": {
+        "doc": "Piecewise colour stops: '#bae6fd 7 · #0b1f3a 14.2'.",
+        "type": "string"
+      },
+      "value": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/volume": {
+    "doc": "Volume bars under a price chart: in a plot, they go to a pane below the price area that shares its x axis and has its own value axis (the plot's `lower` pane, made for them when not given), coloured like their day's candle.",
+    "id": "@datars/std/volume",
+    "params": {
+      "close": {
+        "doc": "Closing price field (default: the plot's `y`, else `close`).",
+        "type": "field"
+      },
+      "colored": {
+        "default": true,
+        "doc": "Colour by the day's direction; off: `$muted`.",
+        "type": "bool"
+      },
+      "data": {
+        "doc": "The rows to draw (default: the plot's).",
+        "type": "table"
+      },
+      "down": {
+        "default": "$down",
+        "doc": "Ink on falling days.",
+        "type": "ink"
+      },
+      "format": {
+        "default": ",.0f",
+        "doc": "Volume format in labels.",
+        "type": "string"
+      },
+      "opacity": {
+        "default": 0.55,
+        "doc": "Bar opacity (volume recedes behind price).",
+        "type": "number"
+      },
+      "open": {
+        "default": "open",
+        "doc": "Opening price field (for the colour).",
+        "type": "string"
+      },
+      "up": {
+        "default": "$up",
+        "doc": "Ink on rising days.",
+        "type": "ink"
+      },
+      "volume": {
+        "default": "volume",
+        "doc": "Volume field.",
+        "type": "string"
+      },
+      "width": {
+        "default": 0,
+        "doc": "Bar width: a fraction of the band (0 = the band), px on a continuous scale.",
+        "type": "number"
+      },
+      "x": {
+        "doc": "The date field.",
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "doc": "`band`: trading days side by side, no weekend gaps (the plot's); `time`/`linear`: rows by value.",
+        "type": "string"
+      },
+      "y": {
+        "doc": "The plot's value field: the close, unless `close` is given.",
+        "type": "field"
+      },
+      "yScale": {
+        "default": "lower",
+        "doc": "The value scale: `lower` (the plot's lower pane), or `y` for a volume chart of its own.",
+        "type": "string"
+      }
+    },
+    "tokens": [
+      "up",
+      "down",
+      "muted"
+    ]
+  },
+  "@datars/std/waffle": {
+    "doc": "One square per unit (e.g. per percentage point). Units are keyed (category, Unit i), so bars split into squares and back.",
+    "id": "@datars/std/waffle",
+    "params": {
+      "category": {
+        "type": "field"
+      },
+      "columns": {
+        "default": 10,
+        "type": "number"
+      },
+      "data": {
+        "type": "table"
+      },
+      "gap": {
+        "default": 2,
+        "type": "number"
+      },
+      "rows": {
+        "default": 10,
+        "type": "number"
+      },
+      "value": {
+        "type": "field"
+      }
+    }
+  },
+  "@datars/std/waterfall": {
+    "doc": "A waterfall/bridge: each change floats from the running total; rows marked as totals (a boolean field, or keys starting with '=') are bars from zero.",
+    "id": "@datars/std/waterfall",
+    "params": {
+      "data": {
+        "type": "table"
+      },
+      "format": {
+        "default": ",.0f",
+        "type": "string"
+      },
+      "prefix": {
+        "doc": "Before each label's number ('$').",
+        "type": "string"
+      },
+      "suffix": {
+        "doc": "After it ('M', ' kr').",
+        "type": "string"
+      },
+      "total": {
+        "type": "field"
+      },
+      "x": {
+        "type": "field"
+      },
+      "xType": {
+        "default": "band",
+        "type": "string"
+      },
+      "y": {
+        "type": "field"
+      },
+      "yType": {
+        "default": "linear",
+        "type": "string"
+      }
+    }
+  }
+}

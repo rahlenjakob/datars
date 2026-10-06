@@ -1,0 +1,81 @@
+scene 760.00×420.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Revenue bridge, 2023 → 2024"
+      ("title",) text "Revenue bridge, 2023 → 2024" at (0.00, 0.00) size=17.00 ink=$ink role=title "Revenue bridge, 2023 → 2024"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 26.52 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 337.62) stroke=$rule/1.00
+          group (0,) role=tick "0"
+            ("#0",) segment (0.00, 337.62)→(-5.00, 337.62) stroke=$rule/1.00
+            ("#1",) text "0" at (-8.00, 337.62) size=11.00 ink=$muted
+          group (20,) role=tick "20"
+            ("#0",) segment (0.00, 289.39)→(-5.00, 289.39) stroke=$rule/1.00
+            ("#1",) text "20" at (-8.00, 289.39) size=11.00 ink=$muted
+          group (40,) role=tick "40"
+            ("#0",) segment (0.00, 241.16)→(-5.00, 241.16) stroke=$rule/1.00
+            ("#1",) text "40" at (-8.00, 241.16) size=11.00 ink=$muted
+          group (60,) role=tick "60"
+            ("#0",) segment (0.00, 192.93)→(-5.00, 192.93) stroke=$rule/1.00
+            ("#1",) text "60" at (-8.00, 192.93) size=11.00 ink=$muted
+          group (80,) role=tick "80"
+            ("#0",) segment (0.00, 144.69)→(-5.00, 144.69) stroke=$rule/1.00
+            ("#1",) text "80" at (-8.00, 144.69) size=11.00 ink=$muted
+          group (100,) role=tick "100"
+            ("#0",) segment (0.00, 96.46)→(-5.00, 96.46) stroke=$rule/1.00
+            ("#1",) text "100" at (-8.00, 96.46) size=11.00 ink=$muted
+          group (120,) role=tick "120"
+            ("#0",) segment (0.00, 48.23)→(-5.00, 48.23) stroke=$rule/1.00
+            ("#1",) text "120" at (-8.00, 48.23) size=11.00 ink=$muted
+          group (140,) role=tick "140"
+            ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+            ("#1",) text "140" at (-8.00, 0.00) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 33.02 0.00]
+          group ("area",)
+            group ("grid-y",) role=decoration
+              (0,) segment (0.00, 337.62)→(694.98, 337.62) stroke=$grid/1.00 role=decoration
+              (20,) segment (0.00, 289.39)→(694.98, 289.39) stroke=$grid/1.00 role=decoration
+              (40,) segment (0.00, 241.16)→(694.98, 241.16) stroke=$grid/1.00 role=decoration
+              (60,) segment (0.00, 192.93)→(694.98, 192.93) stroke=$grid/1.00 role=decoration
+              (80,) segment (0.00, 144.69)→(694.98, 144.69) stroke=$grid/1.00 role=decoration
+              (100,) segment (0.00, 96.46)→(694.98, 96.46) stroke=$grid/1.00 role=decoration
+              (120,) segment (0.00, 48.23)→(694.98, 48.23) stroke=$grid/1.00 role=decoration
+              (140,) segment (0.00, 0.00)→(694.98, 0.00) stroke=$grid/1.00 role=decoration
+            group ("waterfall",)
+              group ("2023",)
+                ("bar",) rect x=12.74 y=96.46 w=90.35 h=241.16 fill=$ink-2 role=datum "2023: 100"
+                ("label",) text "100" at (57.92, 92.46) size=11.00 ink=$ink-2
+              group ("Price",)
+                ("bar",) rect x=128.57 y=67.52 w=90.35 h=28.94 fill=$positive role=datum "Price: 12"
+                ("label",) text "12" at (173.75, 63.52) size=11.00 ink=$ink-2
+              group ("Volume",)
+                ("bar",) rect x=244.40 y=24.12 w=90.35 h=43.41 fill=$positive role=datum "Volume: 18"
+                ("label",) text "18" at (289.58, 20.12) size=11.00 ink=$ink-2
+              group ("Mix",)
+                ("bar",) rect x=360.23 y=24.12 w=90.35 h=14.47 fill=$negative role=datum "Mix: −6"
+                ("label",) text "−6" at (405.41, 20.12) size=11.00 ink=$ink-2
+              group ("FX",)
+                ("bar",) rect x=476.06 y=38.59 w=90.35 h=9.65 fill=$negative role=datum "FX: −4"
+                ("label",) text "−4" at (521.24, 34.59) size=11.00 ink=$ink-2
+              group ("2024",)
+                ("bar",) rect x=591.89 y=48.23 w=90.35 h=289.39 fill=$ink-2 role=datum "2024: 120"
+                ("label",) text "120" at (637.07, 44.23) size=11.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 344.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(694.98, 0.00) stroke=$rule/1.00
+            group ("2023",) role=tick "2023"
+              ("#0",) segment (57.92, 0.00)→(57.92, 5.00) stroke=$rule/1.00
+              ("#2",) text "2023" at (57.92, 8.00) size=11.00 ink=$muted
+            group ("Price",) role=tick "Price"
+              ("#0",) segment (173.75, 0.00)→(173.75, 5.00) stroke=$rule/1.00
+              ("#2",) text "Price" at (173.75, 8.00) size=11.00 ink=$muted
+            group ("Volume",) role=tick "Volume"
+              ("#0",) segment (289.58, 0.00)→(289.58, 5.00) stroke=$rule/1.00
+              ("#2",) text "Volume" at (289.58, 8.00) size=11.00 ink=$muted
+            group ("Mix",) role=tick "Mix"
+              ("#0",) segment (405.41, 0.00)→(405.41, 5.00) stroke=$rule/1.00
+              ("#2",) text "Mix" at (405.41, 8.00) size=11.00 ink=$muted
+            group ("FX",) role=tick "FX"
+              ("#0",) segment (521.24, 0.00)→(521.24, 5.00) stroke=$rule/1.00
+              ("#2",) text "FX" at (521.24, 8.00) size=11.00 ink=$muted
+            group ("2024",) role=tick "2024"
+              ("#0",) segment (637.07, 0.00)→(637.07, 5.00) stroke=$rule/1.00
+              ("#2",) text "2024" at (637.07, 8.00) size=11.00 ink=$muted

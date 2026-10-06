@@ -1,0 +1,15 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    { "type": "Feature", "properties": { "id": "lake-herman", "name": "Lake Herman Road" },
+      "geometry": { "type": "Point", "coordinates": [-122.1416, 38.0945] } },
+    { "type": "Feature", "properties": { "id": "blue-rock", "name": "Blue Rock Springs" },
+      "geometry": { "type": "Point", "coordinates": [-122.1973, 38.1336] } },
+    { "type": "Feature", "properties": { "id": "berryessa", "name": "Lake Berryessa" },
+      "geometry": { "type": "Point", "coordinates": [-122.2256, 38.5617] } },
+    { "type": "Feature", "properties": { "id": "presidio-heights", "name": "Washington & Cherry" },
+      "geometry": { "type": "Point", "coordinates": [-122.4547, 37.7895] } },
+    { "type": "Feature", "properties": { "id": "highway-132", "name": "Highway 132 (disputed)" },
+      "geometry": { "type": "Point", "coordinates": [-121.2500, 37.6400] } }
+  ]
+}

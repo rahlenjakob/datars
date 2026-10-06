@@ -1,0 +1,126 @@
+---
+title: Maps from the globe to a street corner, no tile server · datars
+description: Automatic basemaps cut from OpenStreetMap and Natural Earth at publish time, camera flights from the world to a street, choropleths that morph into bars — with no tile server, no API key and no per-view bill.
+og: rio
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Maps, no tile server</p>
+    <h1>From the globe to a street corner — no tile server, no API key, no bill</h1>
+    <p class="lede-2">Maps in datars aren't a second library bolted onto a chart library. Projections, region atlases and vector tiles are primitives of the same engine, so a country is a keyed shape like a bar, the basemap is a node in the scene, and one camera flies from space to a street. The basemap is one static file on your own host — made for you, for exactly the places your story visits.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Automatic basemap · {{archive:rio}} for the whole flight</span>
+        <h3>World → Brazil → Rio → Copacabana</h3>
+        <p>Nobody made a tile archive for Rio. The document says <code>data.tiles.auto()</code>; the publish step worked out every view the story shows and every frame of the flights between them, fetched OpenStreetMap and Natural Earth data for exactly those tiles, and wrote one archive. The page reads it by HTTP range request as the camera moves.</p>
+        {{alt:rio}}
+      </div>
+      <div class="chart" data-chart="rio" data-caption></div>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Automatic basemaps</p>
+      <h2>Street level anywhere on Earth, with one line</h2>
+<pre><code data-lang="ts">data: {
+  // No archive to make: the build cuts one to this document's cameras.
+  basemap: data.tiles.auto(),
+  cities: data.values({ name, lon, lat, pop }, { key: "name" }),
+},
+scene: view({
+  coord: { type: "geo", projection: "web-mercator" },
+  camera: { fit: { geo: "=bounds" }, padding: 12 },
+  children: [
+    basemap({ source: "basemap", part: "base" }),
+    instances({ from: "cities", x: e("geo.x(d.lon, d.lat)"), y: e("geo.y(d.lon, d.lat)"),
+      r: e("scale.r(d.pop)"), fill: "$accent@0.72", screenSize: true }),
+    basemap({ source: "basemap", part: "labels" }),   // names stay on top of your data
+  ],
+}),</code></pre>
+    </div>
+    <div>
+      <ul class="bullets">
+        <li><b>Views from the document itself.</b> Every state's camera and 48 frames of each flight decide which tiles, at which zooms, go into the archive — plus extra zoom levels around maps readers can explore.</li>
+        <li><b>Open data, fetched once.</b> Natural Earth for the world, OpenStreetMap from zoom 10: coastline-assembled land, water, rivers, parks, roads by class, buildings from zoom 13, place names in the document's language.</li>
+        <li><b>A cache and a lockfile.</b> Downloads go into a local geodata cache, so rebuilds are offline and byte-identical; the archive's job file records what it was made from.</li>
+        <li><b>Polite by default.</b> Public OpenStreetMap servers are used within a daily budget; teams point the build at their own instance or a static cell server with one environment variable.</li>
+        <li><b><code>datars dev</code> never waits:</b> the preview shows Natural Earth at once and swaps streets in as they arrive.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="grid">
+      <article class="card">
+        <div class="chart" data-chart="descent" data-caption></div>
+        <div class="card-text">
+          <span class="tag">One camera · van Wijk flight</span>
+          <h3>World → Sweden → central Stockholm</h3>
+          <p>The camera follows the smooth zoom-and-pan path that keeps the reader oriented; labels fade during the flight; the GPU matches the CPU reference down to street level. Tiles stream in on the way ({{archive:descent}} archive, read in ranges).</p>
+          {{alt:descent}}
+        </div>
+      </article>
+      <article class="card">
+        <div class="chart" data-chart="renewables" data-caption></div>
+        <div class="card-text">
+          <span class="tag">Map ↔ chart</span>
+          <h3>Countries lift off the map into bars</h3>
+          <p>Each country keeps its ISO key, so its outline morphs into its bar and back. No bridge between a map library and a chart library: it's one scene.</p>
+          {{alt:renewables}}
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">What's in the box</p>
+      <h2>Everything a map story needs</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Choropleths as a join</h3><p>The built-in <code>countries</code> atlas (ISO 3166-1 alpha-3 ids) ships as a compact topology, shared by hash across every chart that uses it. <a href="/docs/std/map/"><code>map</code></a> colours regions from your table; bring your own regions as GeoJSON or TopoJSON.</p></article>
+      <article><h3>Symbols, dots, routes, tracks</h3><p><a href="/docs/std/symbols/"><code>symbols</code></a> at each region's visual centre, <a href="/docs/std/dotDensity/"><code>dotDensity</code></a> scattered evenly inside regions, <a href="/docs/std/route/"><code>route</code></a> along great circles, <a href="/docs/std/track/"><code>track</code></a> drawn up to a moment in time, points and lines at longitude and latitude.</p></article>
+      <article><h3>Projections a story needs</h3><p>Web Mercator, Equal Earth, Natural Earth, Albers and Albers USA, Lambert conformal conic, an orthographic globe, transverse Mercator and national grids — plus planar coordinates for floor plans and fantasy worlds.</p></article>
+      <article><h3>Your theme on the map</h3><p>Water, land, roads, parks, buildings, borders and labels are theme tokens (<code>map.water</code>, <code>map.land</code>, …), so the basemap follows your brand and the reader's dark mode. The basemap is a recipe you can eject.</p></article>
+      <article><h3>Labels that don't fight</h3><p>Place names and your own labels go through the same placement engine, by priority, without overlaps; names draw above your data layer.</p></article>
+      <article><h3>Credits handled</h3><p>OpenStreetMap's licence requires attribution. <a href="/docs/std/attribution/"><code>attribution</code></a> draws it, linked; <code>datars lint</code> flags a map that would ship without it.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">What it saves you</p>
+      <h2>No keys, no quotas, no per-view pricing</h2>
+      <p>A basemap is one file next to your chart, on your host or CDN, read in ranges as the camera needs them. There's nothing to sign up for and nothing metered, it keeps working when a vendor changes its terms — and because it's the same engine, the flight in your iOS app, on your site and in the exported video is the same flight, frame for frame.</p>
+    </header>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Make a map</h2>
+        <p>Atlases, projections, cameras, flights and automatic basemaps.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/maps/">Maps guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/std/basemap/">basemap reference</a>
+      </div>
+    </div>
+  </div>
+</section>

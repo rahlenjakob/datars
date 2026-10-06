@@ -1,0 +1,99 @@
+scene 760.00×480.00 background=$paper
+  group ("root",)
+    view ("map",) [0.00 0.00 760.00 480.00] camera=(316.67, 261.73) zoom=8.86
+      group ("basemap",) role=decoration
+        ("sea",) rect x=140.00 y=0.00 w=480.00 h=480.00 fill=$map.water
+        group ("tiles",)
+          group (3, 2, 3) transform=[0.01 0.00 0.00 0.01 260.00 180.00]
+            group ("land",)
+              (0,) path els=808 bounds=[-64.00 -64.00 3981.00 4224.00] fill=$map.land
+            group ("water",)
+              (0,) path els=92 bounds=[54.00 462.00 3150.00 3228.00] fill=$map.water
+            group ("boundaries",)
+              (0,) path els=1162 bounds=[-64.00 2240.00 3552.00 1920.00] stroke=$map.border/0.60
+          group (3, 3, 3) transform=[0.01 0.00 0.00 0.01 320.00 180.00]
+            group ("land",)
+              (0,) path els=322 bounds=[1251.00 -64.00 2909.00 3764.00] fill=$map.land
+            group ("water",)
+              (0,) path els=99 bounds=[3414.00 3263.00 711.00 264.00] fill=$map.water
+            group ("boundaries",)
+              (0,) path els=1318 bounds=[2543.00 -64.00 1617.00 3763.00] stroke=$map.border/0.60
+          group (3, 2, 4) transform=[0.01 0.00 0.00 0.01 260.00 240.00]
+            group ("land",)
+              (0,) path els=368 bounds=[788.00 -64.00 3372.00 4224.00] fill=$map.land
+            group ("water",)
+              (0,) path els=380 bounds=[1543.00 118.00 2564.00 4019.00] fill=$map.water
+            group ("boundaries",)
+              (0,) path els=1354 bounds=[863.00 -64.00 2494.00 4224.00] stroke=$map.border/0.60
+          group (3, 3, 4) transform=[0.01 0.00 0.00 0.01 320.00 240.00]
+            group ("land",)
+              (0,) path els=146 bounds=[-64.00 103.00 993.00 2139.00] fill=$map.land
+            group ("water",)
+              (0,) path els=87 bounds=[-49.00 820.00 430.00 947.00] fill=$map.water
+      group ("cities",)
+        ("circles",) instances circle ×11 role=datum "Brazil's largest cities by population"
+          · ("São Paulo",) (317.83, 272.32) fill=$accent@0.72
+          · ("Rio de Janeiro",) (322.40, 271.39) fill=$accent@0.72
+          · ("Brasília",) (316.16, 261.33) fill=$accent@0.72
+          · … 8 more
+      group ("basemap-labels",) role=decoration
+        group ("tiles",)
+          group (3, 2, 3) transform=[0.01 0.00 0.00 0.01 260.00 180.00]
+          group (3, 3, 3) transform=[0.01 0.00 0.00 0.01 320.00 180.00]
+          group (3, 2, 4) transform=[0.01 0.00 0.00 0.01 260.00 240.00]
+          group (3, 3, 4) transform=[0.01 0.00 0.00 0.01 320.00 240.00]
+          group ("labels",)
+            group (3, 2, 3) transform=[0.01 0.00 0.00 0.01 260.00 180.00]
+              ("Boa Vista",) text "Boa Vista" at (2670.00, 3840.00) size=11.50 ink=$map.label role=label "Boa Vista"
+              ("Mitú",) text "Mitú" at (1805.00, 3987.00) size=11.50 ink=$map.label role=label "Mitú"
+            group (3, 2, 4) transform=[0.01 0.00 0.00 0.01 260.00 240.00]
+              ("São Paulo",) text "São Paulo" at (3948.00, 2207.00) size=13.00 ink=$map.label role=label "São Paulo"
+              ("Lima",) text "Lima" at (1179.00, 1105.00) size=13.00 ink=$map.label role=label "Lima"
+              ("Santiago",) text "Santiago" at (1761.00, 3233.00) size=13.00 ink=$map.label role=label "Santiago"
+              ("Porto Alegre",) text "Porto Alegre" at (3531.00, 2870.00) size=13.00 ink=$map.label role=label "Porto Alegre"
+              ("Brasília",) text "Brasília" at (3830.00, 1455.00) size=13.00 ink=$map.label role=label "Brasília"
+              ("Curitiba",) text "Curitiba" at (3703.00, 2393.00) size=13.00 ink=$map.label role=label "Curitiba"
+              ("Belém",) text "Belém" at (3779.00, 132.00) size=13.00 ink=$map.label role=label "Belém"
+              ("Santa Cruz de la Sierra",) text "Santa Cruz de la Sierra" at (2437.00, 1642.00) size=11.50 ink=$map.label role=label "Santa Cruz de la Sierra"
+              ("Asunción",) text "Asunción" at (2947.00, 2381.00) size=11.50 ink=$map.label role=label "Asunción"
+              ("Manaus",) text "Manaus" at (2730.00, 282.00) size=11.50 ink=$map.label role=label "Manaus"
+              ("Córdoba",) text "Córdoba" at (2350.00, 3013.00) size=11.50 ink=$map.label role=label "Córdoba"
+              ("Rosario",) text "Rosario" at (2670.00, 3180.00) size=11.50 ink=$map.label role=label "Rosario"
+              ("Florianópolis",) text "Florianópolis" at (3775.00, 2613.00) size=11.50 ink=$map.label role=label "Florianópolis"
+              ("San Miguel de Tucumán",) text "San Miguel de Tucumán" at (2256.00, 2535.00) size=11.50 ink=$map.label role=label "San Miguel de Tucumán"
+              ("Arequipa",) text "Arequipa" at (1681.00, 1515.00) size=11.50 ink=$map.label role=label "Arequipa"
+              ("Cuiabá",) text "Cuiabá" at (3087.00, 1435.00) size=11.50 ink=$map.label role=label "Cuiabá"
+              ("Campo Grande",) text "Campo Grande" at (3220.00, 1902.00) size=11.50 ink=$map.label role=label "Campo Grande"
+              ("Salta",) text "Salta" at (2238.00, 2330.00) size=11.50 ink=$map.label role=label "Salta"
+              ("Iquitos",) text "Iquitos" at (1525.00, 342.00) size=11.50 ink=$map.label role=label "Iquitos"
+              ("Cuzco",) text "Cuzco" at (1641.00, 1243.00) size=11.50 ink=$map.label role=label "Cuzco"
+              ("Posadas",) text "Posadas" at (3105.00, 2591.00) size=11.50 ink=$map.label role=label "Posadas"
+              ("Pelotas",) text "Pelotas" at (3429.00, 3050.00) size=11.50 ink=$map.label role=label "Pelotas"
+              ("Pucallpa",) text "Pucallpa" at (1408.00, 764.00) size=11.50 ink=$map.label role=label "Pucallpa"
+              ("Antofagasta",) text "Antofagasta" at (1784.00, 2217.00) size=11.50 ink=$map.label role=label "Antofagasta"
+              ("Porto Velho",) text "Porto Velho" at (2376.00, 800.00) size=11.50 ink=$map.label role=label "Porto Velho"
+              ("Tacna",) text "Tacna" at (1798.00, 1666.00) size=11.50 ink=$map.label role=label "Tacna"
+              ("Ica",) text "Ica" at (1299.00, 1294.00) size=11.50 ink=$map.label role=label "Ica"
+              ("Santarém",) text "Santarém" at (3213.00, 222.00) size=11.50 ink=$map.label role=label "Santarém"
+              ("Iquique",) text "Iquique" at (1809.00, 1883.00) size=11.50 ink=$map.label role=label "Iquique"
+              ("Marabá",) text "Marabá" at (3721.00, 488.00) size=11.50 ink=$map.label role=label "Marabá"
+              ("Tarija",) text "Tarija" at (2298.00, 2006.00) size=11.50 ink=$map.label role=label "Tarija"
+              ("La Serena",) text "La Serena" at (1707.00, 2854.00) size=11.50 ink=$map.label role=label "La Serena"
+              ("Trinidad",) text "Trinidad" at (2285.00, 1366.00) size=11.50 ink=$map.label role=label "Trinidad"
+              ("Riberalta",) text "Riberalta" at (2175.00, 1006.00) size=11.50 ink=$map.label role=label "Riberalta"
+              ("Vilhena",) text "Vilhena" at (2720.00, 1167.00) size=11.50 ink=$map.label role=label "Vilhena"
+              ("Alta Floresta",) text "Alta Floresta" at (3103.00, 906.00) size=11.50 ink=$map.label role=label "Alta Floresta"
+              ("Durazno",) text "Durazno" at (3048.00, 3230.00) size=11.50 ink=$map.label role=label "Durazno"
+              ("Alvorada",) text "Alvorada" at (3724.00, 1144.00) size=11.50 ink=$map.label role=label "Alvorada"
+            group (3, 3, 4) transform=[0.01 0.00 0.00 0.01 320.00 240.00]
+              ("Belo Horizonte",) text "Belo Horizonte" at (99.00, 1850.00) size=11.50 ink=$map.label role=label "Belo Horizonte"
+              ("Recife",) text "Recife" at (919.00, 736.00) size=13.00 ink=$map.label role=label "Recife"
+              ("Fortaleza",) text "Fortaleza" at (584.00, 341.00) size=13.00 ink=$map.label role=label "Fortaleza"
+              ("Salvador",) text "Salvador" at (593.00, 1191.00) size=13.00 ink=$map.label role=label "Salvador"
+              ("Maceió",) text "Maceió" at (844.00, 880.00) size=11.50 ink=$map.label role=label "Maceió"
+              ("Natal",) text "Natal" at (888.00, 527.00) size=11.50 ink=$map.label role=label "Natal"
+              ("São Luís",) text "São Luís" at (67.00, 229.00) size=11.50 ink=$map.label role=label "São Luís"
+              ("Vitória da Conquista",) text "Vitória da Conquista" at (379.00, 1367.00) size=11.50 ink=$map.label role=label "Vitória da Conquista"
+              ("Petrolina",) text "Petrolina" at (409.00, 858.00) size=11.50 ink=$map.label role=label "Petrolina"
+              ("Caxias",) text "Caxias" at (150.00, 440.00) size=11.50 ink=$map.label role=label "Caxias"
+    ("attribution",) text "© OpenStreetMap contributors, Natural Earth" at (754.00, 475.00) size=10.50 ink=$map.label role=annotation "© OpenStreetMap contributors, Natural Earth"

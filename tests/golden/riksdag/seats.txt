@@ -1,0 +1,9 @@
+scene 760.00×440.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 16.00 16.00]
+      ("seats",) instances circle ×349
+        · ("V", Unit(0)) (221.71, 384.89) fill=#a01313
+        · ("V", Unit(1)) (199.22, 384.89) fill=#a01313
+        · ("V", Unit(2)) (176.72, 384.89) fill=#a01313
+        · … 346 more
+      ("total",) text "349" at (364.00, 382.00) size=17.00 ink=$ink

@@ -1,0 +1,28 @@
+[package]
+name = "datars-text"
+description = "The datars text engine: shaping (harfrust), bidi (UAX #9), line breaking (UAX #14), layout, glyph outlines, and locale-aware number/date formatting over fonts the host provides."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+default = ["bundled-fonts"]
+# Compile the default family (Inter 400/600/700, ~160 KB gzipped) into the binary. Build tools,
+# tests and native hosts with a raw-document mode use it; the web runtime leaves it out and gets
+# its faces from bundles (font chunks) or `datars:fonts/…` requests, like any other font.
+bundled-fonts = []
+
+[dependencies]
+datars-math.workspace = true
+datars-theme.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true
+# harfrust 0.5.2 and skrifa 0.40.0 both sit on read-fonts 0.37, so they share one `FontRef` type.
+harfrust.workspace = true
+# Unhinted outlines only: the autohinter's shaping support is not needed.
+skrifa = { version = "0.40.0", default-features = false, features = ["std"] }
+unicode-linebreak.workspace = true
+unicode-bidi.workspace = true

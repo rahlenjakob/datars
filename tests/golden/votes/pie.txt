@@ -1,0 +1,24 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=series "share by party"
+      ("S",) arc c=(344.00, 206.00) r=0.00..170.00 a=0.00..1.92 fill=#e8112d stroke=$paper/1.00 role=datum "Social Democrats: 30.3"
+      ("SD",) arc c=(344.00, 206.00) r=0.00..170.00 a=1.93..3.23 fill=#dddd00 stroke=$paper/1.00 role=datum "Sweden Democrats: 20.5"
+      ("M",) arc c=(344.00, 206.00) r=0.00..170.00 a=3.23..4.44 fill=#1b49dd stroke=$paper/1.00 role=datum "Moderates: 19.1"
+      ("V",) arc c=(344.00, 206.00) r=0.00..170.00 a=4.45..4.88 fill=#a01313 stroke=$paper/1.00 role=datum "Left: 6.8"
+      ("C",) arc c=(344.00, 206.00) r=0.00..170.00 a=4.89..5.31 fill=#009933 stroke=$paper/1.00 role=datum "Centre: 6.7"
+      ("KD",) arc c=(344.00, 206.00) r=0.00..170.00 a=5.32..5.65 fill=#005ea8 stroke=$paper/1.00 role=datum "Christian Democrats: 5.3"
+      ("MP",) arc c=(344.00, 206.00) r=0.00..170.00 a=5.66..5.98 fill=#83cf39 stroke=$paper/1.00 role=datum "Greens: 5.1"
+      ("L",) arc c=(344.00, 206.00) r=0.00..170.00 a=5.99..6.28 fill=#3a8fd6 stroke=$paper/1.00 role=datum "Liberals: 4.6"
+      group ("labels",)
+        ("S",) text "Social Democrats" at (495.05, 100.92) size=11.00 ink=$ink-2
+        ("SD",) text "Sweden Democrats" at (442.22, 361.59) size=11.00 ink=$ink-2
+        ("M",) text "Moderates" at (225.81, 347.02) size=11.00 ink=$ink-2
+        ("V",) text "Left" at (160.20, 214.59) size=11.00 ink=$ink-2
+        ("C",) text "Centre" at (173.61, 136.55) size=11.00 ink=$ink-2
+        ("KD",) text "Christian Democrats" at (212.32, 77.49) size=11.00 ink=$ink-2
+        ("MP",) text "Greens" at (261.97, 41.30) size=11.00 ink=$ink-2
+        ("L",) text "Liberals" at (316.73, 24.03) size=11.00 ink=$ink-2
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("box:Each bar becomes a slice.",) transform=[1.00 0.00 0.00 1.00 445.50 12.50] role=annotation "Each bar becomes a slice."
+        ("backdrop",) rect x=0.00 y=0.00 w=230.00 h=43.73 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("text",) text "Each bar becomes a slice." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 14.00]

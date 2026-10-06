@@ -1,0 +1,18 @@
+[package]
+name = "datars-sandbox"
+description = "The datars kernel sandbox: QuickJS with deterministic Math, no ambient authority, time and memory budgets."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+rquickjs.workspace = true
+
+# rquickjs ships pregenerated bindings for desktop targets only; elsewhere they're generated at
+# build time (needs libclang; the build scripts point it at the platform SDK).
+[target.'cfg(any(target_arch = "wasm32", target_os = "ios", target_os = "android"))'.dependencies]
+rquickjs = { workspace = true, features = ["bindgen"] }

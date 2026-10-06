@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The sample app: built once, it plays whatever chart the URL points at — including charts
+     published after it was built (roadmap Phase 2 exit). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="dev.datars.sample" android:versionCode="1" android:versionName="0.1">
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:label="datars sample" android:usesCleartextTraffic="true" android:extractNativeLibs="true">
+        <activity android:name=".MainActivity" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

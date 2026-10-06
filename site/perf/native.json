@@ -1,0 +1,950 @@
+{
+  "machine": "Apple M3 Pro",
+  "date": "2026-09-28",
+  "runs": [
+    {
+      "platform": "iOS",
+      "device": "iPhone 16 Pro simulator, iOS 18.5",
+      "renderer": "Metal 4×MSAA",
+      "chart": "votes",
+      "rows": [
+        {
+          "tessellated": {
+            "p95": 20,
+            "max": 42,
+            "p50": 10
+          },
+          "cpu": {
+            "p50": 3.2,
+            "p95": 3.9,
+            "max": 6.8
+          },
+          "uploaded": {
+            "p50": 784,
+            "max": 120128,
+            "p95": 28664
+          },
+          "worstAt": 8,
+          "engine": {
+            "max": 0.6,
+            "p50": 0.4,
+            "p95": 0.5
+          },
+          "fps": 60.1,
+          "worst": 16.7,
+          "chart": "votes",
+          "frames": 54,
+          "draws": {
+            "p50": 140,
+            "p95": 191,
+            "max": 204
+          },
+          "render": {
+            "max": 6.6,
+            "p50": 2.8,
+            "p95": 3.5
+          },
+          "label": "bars → ranked",
+          "dropped": 0,
+          "rebuilt": {
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          }
+        },
+        {
+          "worstAt": 9,
+          "cpu": {
+            "p95": 3.6,
+            "p50": 2.5,
+            "max": 3.7
+          },
+          "draws": {
+            "p50": 109,
+            "p95": 109,
+            "max": 154
+          },
+          "worst": 16.7,
+          "chart": "votes",
+          "fps": 60.8,
+          "uploaded": {
+            "p95": 86076,
+            "max": 122004,
+            "p50": 77888
+          },
+          "render": {
+            "p50": 2.1,
+            "max": 3.3,
+            "p95": 3.2
+          },
+          "engine": {
+            "p95": 0.4,
+            "max": 0.4,
+            "p50": 0.4
+          },
+          "frames": 55,
+          "dropped": 0,
+          "label": "ranked → pie",
+          "tessellated": {
+            "p95": 19,
+            "max": 24,
+            "p50": 16
+          },
+          "rebuilt": {
+            "p95": 0,
+            "max": 0,
+            "p50": 0
+          }
+        },
+        {
+          "label": "pie → donut",
+          "engine": {
+            "p95": 0.3,
+            "max": 0.3,
+            "p50": 0.2
+          },
+          "cpu": {
+            "max": 5.4,
+            "p50": 2.8,
+            "p95": 4.1
+          },
+          "draws": {
+            "p50": 40,
+            "max": 71,
+            "p95": 40
+          },
+          "uploaded": {
+            "p95": 27044,
+            "max": 27332,
+            "p50": 23852
+          },
+          "rebuilt": {
+            "p50": 0,
+            "max": 0,
+            "p95": 0
+          },
+          "worstAt": 8,
+          "chart": "votes",
+          "fps": 60.6,
+          "worst": 16.7,
+          "render": {
+            "p95": 3.8,
+            "max": 5.3,
+            "p50": 2.5
+          },
+          "frames": 55,
+          "tessellated": {
+            "p50": 16,
+            "p95": 17,
+            "max": 21
+          },
+          "dropped": 0
+        }
+      ]
+    },
+    {
+      "platform": "iOS",
+      "device": "iPhone 16 Pro simulator, iOS 18.5",
+      "renderer": "Metal 4×MSAA",
+      "chart": "descent",
+      "rows": [
+        {
+          "chart": "descent",
+          "tessellated": {
+            "p95": 21,
+            "max": 112,
+            "p50": 8
+          },
+          "fps": 59.8,
+          "cpu": {
+            "p95": 9.2,
+            "max": 11.8,
+            "p50": 5.5
+          },
+          "uploaded": {
+            "p50": 3588,
+            "p95": 36304,
+            "max": 220132
+          },
+          "draws": {
+            "p50": 91,
+            "p95": 289,
+            "max": 796
+          },
+          "worstAt": 1,
+          "engine": {
+            "p50": 0.8,
+            "max": 3.3,
+            "p95": 1.4
+          },
+          "render": {
+            "max": 11,
+            "p95": 8,
+            "p50": 4.7
+          },
+          "rebuilt": {
+            "max": 16,
+            "p50": 16,
+            "p95": 16
+          },
+          "dropped": 1,
+          "worst": 26.1,
+          "frames": 151,
+          "label": "world → sweden"
+        },
+        {
+          "worstAt": 4,
+          "frames": 159,
+          "render": {
+            "p95": 6.3,
+            "max": 14.8,
+            "p50": 3.9
+          },
+          "chart": "descent",
+          "engine": {
+            "p95": 1.7,
+            "max": 5.3,
+            "p50": 0.6
+          },
+          "tessellated": {
+            "p95": 27,
+            "max": 68,
+            "p50": 12
+          },
+          "uploaded": {
+            "p50": 456,
+            "p95": 49556,
+            "max": 123532
+          },
+          "draws": {
+            "p95": 150,
+            "p50": 107,
+            "max": 307
+          },
+          "dropped": 0,
+          "worst": 16.7,
+          "rebuilt": {
+            "p95": 16,
+            "max": 16,
+            "p50": 0
+          },
+          "fps": 60,
+          "cpu": {
+            "p50": 4.8,
+            "p95": 8,
+            "max": 15.9
+          },
+          "label": "sweden → stockholm"
+        }
+      ]
+    },
+    {
+      "platform": "iOS",
+      "device": "iPhone 16 Pro simulator, iOS 18.5",
+      "renderer": "Metal 4×MSAA",
+      "chart": "galaxy",
+      "rows": [
+        {
+          "tessellated": {
+            "max": 29,
+            "p95": 1,
+            "p50": 0
+          },
+          "worst": 18,
+          "fps": 60,
+          "cpu": {
+            "p95": 6.5,
+            "p50": 3.2,
+            "max": 11.3
+          },
+          "chart": "galaxy",
+          "uploaded": {
+            "p95": 76,
+            "max": 50580,
+            "p50": 0
+          },
+          "label": "galaxy → arm",
+          "render": {
+            "max": 4.3,
+            "p50": 1.7,
+            "p95": 3.2
+          },
+          "dropped": 0,
+          "frames": 151,
+          "worstAt": 1,
+          "rebuilt": {
+            "p50": 542,
+            "p95": 31928,
+            "max": 62030
+          },
+          "draws": {
+            "p50": 136,
+            "max": 295,
+            "p95": 273
+          },
+          "engine": {
+            "p95": 4.6,
+            "p50": 1,
+            "max": 8.2
+          }
+        },
+        {
+          "engine": {
+            "p95": 3.5,
+            "max": 5,
+            "p50": 1
+          },
+          "draws": {
+            "max": 339,
+            "p95": 339,
+            "p50": 167
+          },
+          "dropped": 0,
+          "worstAt": 6,
+          "worst": 16.7,
+          "cpu": {
+            "p50": 3.1,
+            "p95": 6.4,
+            "max": 7.9
+          },
+          "label": "arm → bar",
+          "uploaded": {
+            "p95": 76,
+            "max": 76,
+            "p50": 0
+          },
+          "render": {
+            "p95": 3.3,
+            "max": 4,
+            "p50": 2
+          },
+          "frames": 157,
+          "fps": 60,
+          "rebuilt": {
+            "p95": 29778,
+            "max": 64066,
+            "p50": 704
+          },
+          "tessellated": {
+            "p95": 1,
+            "max": 1,
+            "p50": 0
+          },
+          "chart": "galaxy"
+        },
+        {
+          "frames": 157,
+          "tessellated": {
+            "p95": 1,
+            "max": 29,
+            "p50": 0
+          },
+          "render": {
+            "p95": 3.1,
+            "max": 4.9,
+            "p50": 2.1
+          },
+          "worst": 16.7,
+          "rebuilt": {
+            "p95": 6422,
+            "max": 57138,
+            "p50": 378
+          },
+          "uploaded": {
+            "p95": 76,
+            "max": 51688,
+            "p50": 0
+          },
+          "dropped": 0,
+          "fps": 60.1,
+          "worstAt": 6,
+          "chart": "galaxy",
+          "draws": {
+            "p50": 125,
+            "p95": 190,
+            "max": 303
+          },
+          "label": "bar → cluster",
+          "engine": {
+            "max": 7.6,
+            "p95": 2.5,
+            "p50": 0.7
+          },
+          "cpu": {
+            "max": 9.6,
+            "p50": 2.8,
+            "p95": 4.4
+          }
+        },
+        {
+          "uploaded": {
+            "p50": 0,
+            "max": 49820,
+            "p95": 76
+          },
+          "engine": {
+            "p50": 0.9,
+            "p95": 2.8,
+            "max": 4
+          },
+          "tessellated": {
+            "max": 27,
+            "p95": 1,
+            "p50": 0
+          },
+          "chart": "galaxy",
+          "worst": 16.7,
+          "fps": 60.1,
+          "rebuilt": {
+            "p95": 23869,
+            "max": 46694,
+            "p50": 572
+          },
+          "label": "cluster → local",
+          "render": {
+            "max": 4.1,
+            "p50": 1.9,
+            "p95": 3
+          },
+          "dropped": 0,
+          "worstAt": 5,
+          "draws": {
+            "p50": 145,
+            "p95": 259,
+            "max": 301
+          },
+          "cpu": {
+            "max": 6.3,
+            "p95": 4.5,
+            "p50": 3
+          },
+          "frames": 157
+        }
+      ]
+    },
+    {
+      "platform": "iOS",
+      "device": "iPhone 16 Pro simulator, iOS 18.5",
+      "renderer": "Metal 4×MSAA",
+      "chart": "scatter",
+      "rows": [
+        {
+          "frames": 55,
+          "chart": "scatter",
+          "rebuilt": {
+            "max": 20000,
+            "p50": 20000,
+            "p95": 20000
+          },
+          "label": "all → focus",
+          "worstAt": 2,
+          "fps": 60.6,
+          "engine": {
+            "p95": 3.1,
+            "max": 3.3,
+            "p50": 2.7
+          },
+          "dropped": 0,
+          "worst": 16.7,
+          "tessellated": {
+            "p95": 0,
+            "p50": 0,
+            "max": 9
+          },
+          "cpu": {
+            "max": 5.8,
+            "p95": 5.7,
+            "p50": 4.4
+          },
+          "draws": {
+            "max": 50,
+            "p95": 50,
+            "p50": 50
+          },
+          "render": {
+            "p95": 2.7,
+            "max": 3.5,
+            "p50": 1.7
+          },
+          "uploaded": {
+            "p50": 0,
+            "p95": 0,
+            "max": 18816
+          }
+        }
+      ]
+    },
+    {
+      "platform": "Android",
+      "device": "sdk_gphone64_arm64 emulator, Android 14",
+      "renderer": "Gl 4×MSAA",
+      "chart": "votes",
+      "rows": [
+        {
+          "label": "bars → ranked",
+          "frames": 55,
+          "fps": 60,
+          "dropped": 0,
+          "worst": 16.7,
+          "worstAt": 1,
+          "cpu": {
+            "p50": 2.3,
+            "p95": 7.7,
+            "max": 13
+          },
+          "engine": {
+            "p50": 0.1,
+            "p95": 0.2,
+            "max": 0.3
+          },
+          "render": {
+            "p50": 2.1,
+            "p95": 7.3,
+            "max": 12.9
+          },
+          "draws": {
+            "p50": 140,
+            "p95": 193,
+            "max": 204
+          },
+          "uploaded": {
+            "p50": 784,
+            "p95": 28664,
+            "max": 127820
+          },
+          "rebuilt": {
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "tessellated": {
+            "p50": 10,
+            "p95": 20,
+            "max": 40
+          },
+          "chart": "votes"
+        },
+        {
+          "label": "ranked → pie",
+          "frames": 53,
+          "fps": 58.9,
+          "dropped": 1,
+          "worst": 33.3,
+          "worstAt": 37,
+          "cpu": {
+            "p50": 2.2,
+            "p95": 9.7,
+            "max": 14.2
+          },
+          "engine": {
+            "p50": 0.2,
+            "p95": 0.2,
+            "max": 0.4
+          },
+          "render": {
+            "p50": 1.9,
+            "p95": 9.6,
+            "max": 14
+          },
+          "draws": {
+            "p50": 104,
+            "p95": 109,
+            "max": 152
+          },
+          "uploaded": {
+            "p50": 75760,
+            "p95": 85312,
+            "max": 119876
+          },
+          "rebuilt": {
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "tessellated": {
+            "p50": 16,
+            "p95": 19,
+            "max": 25
+          },
+          "chart": "votes"
+        },
+        {
+          "label": "pie → donut",
+          "frames": 55,
+          "fps": 60,
+          "dropped": 0,
+          "worst": 16.7,
+          "worstAt": 1,
+          "cpu": {
+            "p50": 1.7,
+            "p95": 3.8,
+            "max": 16.1
+          },
+          "engine": {
+            "p50": 0.1,
+            "p95": 0.1,
+            "max": 0.1
+          },
+          "render": {
+            "p50": 1.6,
+            "p95": 3.7,
+            "max": 16
+          },
+          "draws": {
+            "p50": 40,
+            "p95": 40,
+            "max": 71
+          },
+          "uploaded": {
+            "p50": 23852,
+            "p95": 26968,
+            "max": 29188
+          },
+          "rebuilt": {
+            "p50": 0,
+            "p95": 0,
+            "max": 0
+          },
+          "tessellated": {
+            "p50": 16,
+            "p95": 17,
+            "max": 23
+          },
+          "chart": "votes"
+        }
+      ]
+    },
+    {
+      "platform": "Android",
+      "device": "sdk_gphone64_arm64 emulator, Android 14",
+      "renderer": "Gl 4×MSAA",
+      "chart": "descent",
+      "rows": [
+        {
+          "label": "world → sweden",
+          "frames": 131,
+          "fps": 53.1,
+          "dropped": 17,
+          "worst": 50,
+          "worstAt": 129,
+          "cpu": {
+            "p50": 3.9,
+            "p95": 20.6,
+            "max": 31.6
+          },
+          "engine": {
+            "p50": 0.2,
+            "p95": 0.7,
+            "max": 9.1
+          },
+          "render": {
+            "p50": 3.3,
+            "p95": 20,
+            "max": 31.2
+          },
+          "draws": {
+            "p50": 75,
+            "p95": 227,
+            "max": 704
+          },
+          "uploaded": {
+            "p50": 4512,
+            "p95": 89336,
+            "max": 260664
+          },
+          "rebuilt": {
+            "p50": 16,
+            "p95": 16,
+            "max": 16
+          },
+          "tessellated": {
+            "p50": 6,
+            "p95": 29,
+            "max": 62
+          },
+          "chart": "descent"
+        },
+        {
+          "label": "sweden → stockholm",
+          "frames": 131,
+          "fps": 52.3,
+          "dropped": 19,
+          "worst": 83.3,
+          "worstAt": 70,
+          "cpu": {
+            "p50": 4.6,
+            "p95": 15.7,
+            "max": 39.5
+          },
+          "engine": {
+            "p50": 0.4,
+            "p95": 1.5,
+            "max": 2.8
+          },
+          "render": {
+            "p50": 4.1,
+            "p95": 15.3,
+            "max": 39
+          },
+          "draws": {
+            "p50": 95,
+            "p95": 139,
+            "max": 265
+          },
+          "uploaded": {
+            "p50": 532,
+            "p95": 26976,
+            "max": 80428
+          },
+          "rebuilt": {
+            "p50": 0,
+            "p95": 16,
+            "max": 16
+          },
+          "tessellated": {
+            "p50": 12,
+            "p95": 22,
+            "max": 31
+          },
+          "chart": "descent"
+        }
+      ]
+    },
+    {
+      "platform": "Android",
+      "device": "sdk_gphone64_arm64 emulator, Android 14",
+      "renderer": "Gl 4×MSAA",
+      "chart": "galaxy",
+      "rows": [
+        {
+          "label": "galaxy → arm",
+          "frames": 132,
+          "fps": 52.8,
+          "dropped": 18,
+          "worst": 66.7,
+          "worstAt": 129,
+          "cpu": {
+            "p50": 2.4,
+            "p95": 22.6,
+            "max": 51.1
+          },
+          "engine": {
+            "p50": 0.2,
+            "p95": 2.4,
+            "max": 22.5
+          },
+          "render": {
+            "p50": 2.1,
+            "p95": 17.9,
+            "max": 50
+          },
+          "draws": {
+            "p50": 91,
+            "p95": 177,
+            "max": 211
+          },
+          "uploaded": {
+            "p50": 0,
+            "p95": 76,
+            "max": 50580
+          },
+          "rebuilt": {
+            "p50": 320,
+            "p95": 24623,
+            "max": 61550
+          },
+          "tessellated": {
+            "p50": 0,
+            "p95": 1,
+            "max": 29
+          },
+          "chart": "galaxy"
+        },
+        {
+          "label": "arm → bar",
+          "frames": 143,
+          "fps": 56.8,
+          "dropped": 8,
+          "worst": 33.3,
+          "worstAt": 1,
+          "cpu": {
+            "p50": 3.6,
+            "p95": 12.8,
+            "max": 21.9
+          },
+          "engine": {
+            "p50": 0.5,
+            "p95": 1.7,
+            "max": 11
+          },
+          "render": {
+            "p50": 3.1,
+            "p95": 10.9,
+            "max": 21.2
+          },
+          "draws": {
+            "p50": 167,
+            "p95": 222,
+            "max": 267
+          },
+          "uploaded": {
+            "p50": 0,
+            "p95": 76,
+            "max": 51288
+          },
+          "rebuilt": {
+            "p50": 888,
+            "p95": 37921,
+            "max": 56336
+          },
+          "tessellated": {
+            "p50": 0,
+            "p95": 1,
+            "max": 29
+          },
+          "chart": "galaxy"
+        },
+        {
+          "label": "bar → cluster",
+          "frames": 145,
+          "fps": 57.6,
+          "dropped": 6,
+          "worst": 50,
+          "worstAt": 77,
+          "cpu": {
+            "p50": 2.8,
+            "p95": 9.1,
+            "max": 37.1
+          },
+          "engine": {
+            "p50": 0.3,
+            "p95": 2.2,
+            "max": 6.2
+          },
+          "render": {
+            "p50": 2.5,
+            "p95": 7.1,
+            "max": 34.8
+          },
+          "draws": {
+            "p50": 109,
+            "p95": 168,
+            "max": 207
+          },
+          "uploaded": {
+            "p50": 0,
+            "p95": 76,
+            "max": 46616
+          },
+          "rebuilt": {
+            "p50": 378,
+            "p95": 2872,
+            "max": 57138
+          },
+          "tessellated": {
+            "p50": 0,
+            "p95": 1,
+            "max": 27
+          },
+          "chart": "galaxy"
+        },
+        {
+          "label": "cluster → local",
+          "frames": 146,
+          "fps": 58,
+          "dropped": 5,
+          "worst": 33.3,
+          "worstAt": 53,
+          "cpu": {
+            "p50": 2.9,
+            "p95": 12,
+            "max": 27.3
+          },
+          "engine": {
+            "p50": 0.4,
+            "p95": 4.3,
+            "max": 16.7
+          },
+          "render": {
+            "p50": 2.5,
+            "p95": 8.3,
+            "max": 12.8
+          },
+          "draws": {
+            "p50": 118,
+            "p95": 201,
+            "max": 259
+          },
+          "uploaded": {
+            "p50": 0,
+            "p95": 76,
+            "max": 49820
+          },
+          "rebuilt": {
+            "p50": 502,
+            "p95": 11292,
+            "max": 30266
+          },
+          "tessellated": {
+            "p50": 0,
+            "p95": 1,
+            "max": 27
+          },
+          "chart": "galaxy"
+        }
+      ]
+    },
+    {
+      "platform": "Android",
+      "device": "sdk_gphone64_arm64 emulator, Android 14",
+      "renderer": "Gl 4×MSAA",
+      "chart": "scatter",
+      "rows": [
+        {
+          "label": "all → focus",
+          "frames": 55,
+          "fps": 60,
+          "dropped": 0,
+          "worst": 16.7,
+          "worstAt": 1,
+          "cpu": {
+            "p50": 2.2,
+            "p95": 3.2,
+            "max": 8.8
+          },
+          "engine": {
+            "p50": 0.6,
+            "p95": 1.1,
+            "max": 1.4
+          },
+          "render": {
+            "p50": 1.6,
+            "p95": 2.3,
+            "max": 8.7
+          },
+          "draws": {
+            "p50": 50,
+            "p95": 50,
+            "max": 50
+          },
+          "uploaded": {
+            "p50": 0,
+            "p95": 0,
+            "max": 18816
+          },
+          "rebuilt": {
+            "p50": 20000,
+            "p95": 20000,
+            "max": 20000
+          },
+          "tessellated": {
+            "p50": 0,
+            "p95": 0,
+            "max": 9
+          },
+          "chart": "scatter"
+        }
+      ]
+    }
+  ]
+}

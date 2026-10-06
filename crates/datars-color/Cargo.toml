@@ -1,0 +1,13 @@
+[package]
+name = "datars-color"
+description = "Colour for datars: sRGB, linear, OKLab/OKLCH, perceptual interpolation, contrast, colour-vision simulation, palettes."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+serde.workspace = true

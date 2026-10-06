@@ -1,0 +1,33 @@
+{
+  "states": [
+    {
+      "name": "bridge",
+      "scene": "d3c745e633930c80",
+      "pixels": "074235e43418e8db"
+    },
+    {
+      "name": "funnel",
+      "scene": "cb2c8863e12c62d8",
+      "pixels": "3be03f16341d3ecb"
+    },
+    {
+      "name": "stacked",
+      "scene": "eb4179bafed49dec",
+      "pixels": "e7c1e05e67f2965b"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "bridge",
+      "to": "funnel",
+      "sweep": "d1b5217661ef8626",
+      "samples": 64
+    },
+    {
+      "from": "funnel",
+      "to": "stacked",
+      "sweep": "0a18cc1c937bad8c",
+      "samples": 64
+    }
+  ]
+}

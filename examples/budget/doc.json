@@ -1,0 +1,123 @@
+{
+ "datars": 1,
+ "id": "budget",
+ "title": "Where a monthly income goes",
+ "size": {
+  "width": 720,
+  "height": 440
+ },
+ "locale": "en",
+ "data": {
+  "shares": {
+   "values": {
+    "category": [
+     "Housing",
+     "Food",
+     "Transport",
+     "Savings",
+     "Leisure",
+     "Other"
+    ],
+    "share": [
+     32,
+     16,
+     12,
+     15,
+     13,
+     12
+    ]
+   },
+   "key": [
+    "category"
+   ]
+  }
+ },
+ "tables": {
+  "amounts": {
+   "from": "shares",
+   "ops": [
+    {
+     "op": "derive",
+     "as": "amount",
+     "expr": {
+      "expr": "d.share * income / 100"
+     }
+    }
+   ]
+  }
+ },
+ "signals": {
+  "income": {
+   "type": "num",
+   "default": 32000
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "rows",
+   "gap": 8,
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/slider",
+    "params": {
+     "signal": "income",
+     "min": 10000,
+     "max": 80000,
+     "step": 1000,
+     "label": "Monthly income (SEK)",
+     "format": ",.0f"
+    },
+    "size": {
+     "h": 44
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "amounts",
+     "x": "amount",
+     "y": "category",
+     "xType": "linear",
+     "yType": "band",
+     "xDomain": [
+      0,
+      26000
+     ],
+     "title": "Per month (SEK)",
+     "format": ",.0f",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ",.0f",
+        "fill": "$accent"
+       }
+      }
+     ]
+    },
+    "key": "chart"
+   }
+  ]
+ },
+ "program": {
+  "preset": "interactive",
+  "states": [
+   {
+    "name": "main"
+   }
+  ]
+ }
+}

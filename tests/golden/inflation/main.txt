@@ -1,0 +1,77 @@
+scene 720.00×380.00 background=$paper
+  group ("root",)
+    group ("plot",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Inflation (CPIF), annual % — Sweden"
+      ("title",) text "Inflation (CPIF), annual % — Sweden" at (0.00, 0.00) size=17.00 ink=$ink role=title "Inflation (CPIF), annual % — Sweden"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 15.11 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 297.62) stroke=$rule/1.00
+          group (0,) role=tick "0"
+            ("#0",) segment (0.00, 297.62)→(-5.00, 297.62) stroke=$rule/1.00
+            ("#1",) text "0" at (-8.00, 297.62) size=11.00 ink=$muted
+          group (2,) role=tick "2"
+            ("#0",) segment (0.00, 223.22)→(-5.00, 223.22) stroke=$rule/1.00
+            ("#1",) text "2" at (-8.00, 223.22) size=11.00 ink=$muted
+          group (4,) role=tick "4"
+            ("#0",) segment (0.00, 148.81)→(-5.00, 148.81) stroke=$rule/1.00
+            ("#1",) text "4" at (-8.00, 148.81) size=11.00 ink=$muted
+          group (6,) role=tick "6"
+            ("#0",) segment (0.00, 74.41)→(-5.00, 74.41) stroke=$rule/1.00
+            ("#1",) text "6" at (-8.00, 74.41) size=11.00 ink=$muted
+          group (8,) role=tick "8"
+            ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+            ("#1",) text "8" at (-8.00, 0.00) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 21.61 0.00]
+          group ("area",)
+            group ("grid-y",) role=decoration
+              (0,) segment (0.00, 297.62)→(662.39, 297.62) stroke=$grid/1.00 role=decoration
+              (2,) segment (0.00, 223.22)→(662.39, 223.22) stroke=$grid/1.00 role=decoration
+              (4,) segment (0.00, 148.81)→(662.39, 148.81) stroke=$grid/1.00 role=decoration
+              (6,) segment (0.00, 74.41)→(662.39, 74.41) stroke=$grid/1.00 role=decoration
+              (8,) segment (0.00, 0.00)→(662.39, 0.00) stroke=$grid/1.00 role=decoration
+            group ("areas",)
+              group ("",)
+                ("area",) area n=9 fill=$mark opacity=0.25 role=series "value"
+            group ("lines",)
+              group ("",)
+                ("line",) polyline n=9 first=(0.00, 264.14) stroke=$mark/2.50 role=series "value"
+                ("points",) instances circle ×9
+                  · ("2015",) (0.00, 264.14) fill=#00000000
+                  · ("2016",) (82.80, 245.54) fill=#00000000
+                  · ("2017",) (165.60, 223.22) fill=#00000000
+                  · … 6 more
+            group ("rule-y-2",) role=annotation "Target 2%"
+              ("#0",) segment (0.00, 223.22)→(662.39, 223.22) stroke=$ink-2/1.00
+              ("#1",) text "Target 2%" at (662.39, 219.22) size=11.00 ink=$ink-2
+            group ("note-2022 spike",) role=annotation "2022 spike"
+              ("connector",) segment (579.59, 11.16)→(539.59, 31.16) stroke=$ink/1.00
+              ("dot",) ellipse c=(579.59, 11.16) r=(3.00, 3.00) fill=$ink
+              ("text",) text "2022 spike" at (539.59, 35.16) size=11.00 ink=$ink
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 304.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(662.39, 0.00) stroke=$rule/1.00
+            group (2015,) role=tick "2015"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "2015" at (0.00, 8.00) size=11.00 ink=$muted
+            group (2016,) role=tick "2016"
+              ("#0",) segment (82.80, 0.00)→(82.80, 5.00) stroke=$rule/1.00
+              ("#1",) text "2016" at (82.80, 8.00) size=11.00 ink=$muted
+            group (2017,) role=tick "2017"
+              ("#0",) segment (165.60, 0.00)→(165.60, 5.00) stroke=$rule/1.00
+              ("#1",) text "2017" at (165.60, 8.00) size=11.00 ink=$muted
+            group (2018,) role=tick "2018"
+              ("#0",) segment (248.40, 0.00)→(248.40, 5.00) stroke=$rule/1.00
+              ("#1",) text "2018" at (248.40, 8.00) size=11.00 ink=$muted
+            group (2019,) role=tick "2019"
+              ("#0",) segment (331.20, 0.00)→(331.20, 5.00) stroke=$rule/1.00
+              ("#1",) text "2019" at (331.20, 8.00) size=11.00 ink=$muted
+            group (2020,) role=tick "2020"
+              ("#0",) segment (414.00, 0.00)→(414.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "2020" at (414.00, 8.00) size=11.00 ink=$muted
+            group (2021,) role=tick "2021"
+              ("#0",) segment (496.80, 0.00)→(496.80, 5.00) stroke=$rule/1.00
+              ("#1",) text "2021" at (496.80, 8.00) size=11.00 ink=$muted
+            group (2022,) role=tick "2022"
+              ("#0",) segment (579.59, 0.00)→(579.59, 5.00) stroke=$rule/1.00
+              ("#1",) text "2022" at (579.59, 8.00) size=11.00 ink=$muted
+            group (2023,) role=tick "2023"
+              ("#0",) segment (662.39, 0.00)→(662.39, 5.00) stroke=$rule/1.00
+              ("#1",) text "2023" at (662.39, 8.00) size=11.00 ink=$muted

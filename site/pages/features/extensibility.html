@@ -1,0 +1,118 @@
+---
+title: Extend anything — recipes are TypeScript · datars
+description: Every datars chart is a TypeScript recipe over public primitives. Compose them, eject a standard one and change it, or draw a scene no library ships — with motion, accessibility and every platform included.
+og: worlds
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Extendable</p>
+    <h1>Extend anything: every chart is a TypeScript recipe</h1>
+    <p class="lede-2">The engine doesn't know what a bar chart is. It knows primitives — keyed shapes, text, instances, tiles, scales, coordinates, cameras — and the standard library builds every chart, axis, legend and basemap from them with the same public API you use. So when the catalogue runs out, there's no wall: open the recipe, change it, or write your own. Whatever you draw still morphs by key, reads out to screen readers, and plays on every platform.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    <article class="card wide">
+      <div class="card-text">
+        <span class="tag">Live · one custom recipe</span>
+        <h3>Eight billion, four ways</h3>
+        <p>Every country on a spinning globe lifts off as a planet, orbits in its continent's ring, falls into a golden-angle spiral by population and packs into blocks. It's one recipe of about sixty lines; coastlines morph into planets because both are keyed by the country, and the flights are motion rules.</p>
+        <div class="pills small" id="worlds-pills" role="group" aria-label="Layout">
+          <button type="button" data-state="globe" aria-pressed="true">Globe</button>
+          <button type="button" data-state="orbits">Orbits</button>
+          <button type="button" data-state="spiral">Spiral</button>
+          <button type="button" data-state="blocks">Blocks</button>
+        </div>
+        {{alt:worlds}}
+      </div>
+      <div class="chart" data-chart="worlds"></div>
+    </article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The whole recipe</p>
+      <h2>Sixty-seven lines, no animation code</h2>
+      <p>Typed parameters; an <code>expand</code> function that returns a scene of keyed shapes whose positions are expressions over each row; a derived table for ranks. The engine evaluates it for any size, on every platform, and plans the motion between layouts.</p>
+    </header>
+    {{code:examples/worlds/recipes/worlds.ts}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The control ladder</p>
+      <h2>Take as much control as you need — and no more</h2>
+      <p>Each step down the ladder keeps every guarantee: determinism, seekable motion, accessibility, every platform.</p>
+    </header>
+    <ol class="method">
+      <li><b>Use a recipe with parameters.</b> <code>bar({ labels: true, format: ",.0f", suffix: " kr" })</code> — {{count:recipes}} to choose from.</li>
+      <li><b>Override motion and style</b> with motion rules and theme tokens — no change to the recipe.</li>
+      <li><b>Compose recipes.</b> A plot with bars, a target rule and a callout is a few lines; so is your own “ranked bars with a highlight” recipe that wraps them.</li>
+      <li><b>Eject a recipe</b> — <code>datars eject std/bar</code> copies its TypeScript into <code>recipes/</code>; import it from there and change anything. Unedited, it draws exactly what the standard one draws.</li>
+      <li><b>Write a recipe from primitives</b> — shapes, text, instances, repeats, views with cameras, tiles — like the globe above.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cards2">
+      <article>
+        <h3>Eject and edit</h3>
+<pre><code data-lang="sh">datars eject std/waterfall        # → recipes/waterfall.ts
+datars describe std/waterfall     # its parameters, defaults and tokens</code></pre>
+<pre><code data-lang="ts">// Before: import { waterfall } from "@datars/std";
+import { waterfall } from "./recipes/waterfall";
+// The document embeds your copy when it's built and published.</code></pre>
+      </article>
+      <article>
+        <h3>Motion comes with it</h3>
+        <p>Custom scenes get the same planner as the built-in charts: give marks keys and they morph between states; add rules for routes, staggers and ripples; give a recipe its own motion defaults — the way <code>line</code> draws on and <code>bar</code> grows from its baseline.</p>
+<pre><code data-lang="ts">recipe({
+  id: "@local/lollipop/lollipop",
+  params: { data: t.table(), x: t.field(), y: t.field() },
+  expand(p, cx) { /* keyed shapes */ },
+  // Entering stems draw on from their base.
+  motion: [{ select: { kind: "segment" }, enter: { trim: 0 } }],
+});</code></pre>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Why it holds up</p>
+      <h2>Custom code, the same guarantees</h2>
+    </header>
+    <div class="cards3">
+      <article><h3>Dogfooded</h3><p>The standard library is written with exactly this API — no private hooks. When a standard recipe needs something the SDK can't express, the SDK gets it, for everyone.</p></article>
+      <article><h3>Nothing runs per frame</h3><p>A recipe runs once per set of parameters and returns a scene with expressions; frames are the engine's compiled work. Your code can't make an animation stutter.</p></article>
+      <article><h3>Deterministic sandbox</h3><p>Recipes that must run on the device run in the engine's QuickJS sandbox with the engine's own maths — the same bits on every platform, no clock, no randomness without a seed, no network. Most bundles pre-expand them, so apps can refuse downloaded script and still play.</p></article>
+      <article><h3>Measured text</h3><p><code>cx.measure()</code> asks the engine's shaper how wide a label will be — identical on every platform — so your layout decisions hold everywhere.</p></article>
+      <article><h3>Themed</h3><p><code>cx.ink("accent")</code> and <code>cx.token("size.label")</code> return late-bound tokens, so your recipe follows the brand and dark mode like the built-ins.</p></article>
+      <article><h3>Describable</h3><p>Typed parameters become documentation, <code>datars describe</code> output and the descriptions agents read — with “did you mean” for misspelt parameters.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Write a recipe</h2>
+        <p>The recipe API, the expansion context, local recipes and eject.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/custom-recipes/">Custom recipes guide <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/std/">Chart reference</a>
+      </div>
+    </div>
+  </div>
+</section>

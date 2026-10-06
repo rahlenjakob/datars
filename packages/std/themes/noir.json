@@ -1,0 +1,18 @@
+{
+  "name": "datars/noir",
+  "extends": "datars/neutral",
+  "tokens": {
+    "paper": "#121214",
+    "ink": "#ece6db",
+    "accent": "#c0392b",
+    "categorical": ["#c0392b", "#d4a95a", "#8fa3b3", "#6b8f71", "#a26d9a", "#b0826b", "#77736b"],
+    "font.title": { "family": ["Inter"], "weight": 400, "src": "datars:fonts/Inter-Regular.ttf" },
+    "radius.mark": 1,
+    "map.water": "#0f1417",
+    "map.land": "#1a1a1d",
+    "map.road": "#26262a"
+  },
+  "modes": {
+    "high-contrast": { "paper": "#000000", "ink": "#ffffff", "muted": "mix($ink, $paper, 0.25)" }
+  }
+}

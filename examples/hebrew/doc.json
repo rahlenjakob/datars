@@ -1,0 +1,75 @@
+{
+ "datars": 1,
+ "id": "hebrew",
+ "title": "Israel's largest cities",
+ "size": {
+  "width": 720,
+  "height": 420
+ },
+ "locale": "en",
+ "data": {
+  "hebrew": {
+   "font": "../../assets/fonts/NotoSansHebrew-Regular.ttf"
+  },
+  "cities": {
+   "values": {
+    "city": [
+     "ירושלים",
+     "תל אביב–יפו",
+     "חיפה",
+     "ראשון לציון",
+     "פתח תקווה"
+    ],
+    "pop": [
+     981,
+     475,
+     290,
+     260,
+     256
+    ]
+   },
+   "key": [
+    "city"
+   ]
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "cities",
+     "x": "pop",
+     "y": "city",
+     "xType": "linear",
+     "yType": "band",
+     "title": "Population, thousands — הערים הגדולות",
+     "format": ",.0f",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true,
+        "format": ",.0f",
+        "fill": "$accent"
+       }
+      }
+     ]
+    }
+   }
+  ]
+ }
+}

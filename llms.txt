@@ -1,0 +1,167 @@
+# datars
+
+> A deterministic, multi-platform engine for data graphics. A chart is a document — `frame = F(doc, data, signals, t)` — rendered identically on the web, iOS, Android, desktop, in video and static exports. Charts are authored in TypeScript (`@datars/sdk` + `@datars/std`) or as JSON IR, and delivered as small content-addressed bundles to runtimes installed once.
+
+## Author a chart
+
+```ts
+import { doc, data, group } from "@datars/sdk";
+import { plot, bar } from "@datars/std";
+
+export default doc({
+  id: "sales", title: "Sales by region", size: [720, 420],
+  data: { sales: data.values({ region: ["N", "S"], sales: [120, 98] }, { key: "region" }) },
+  scene: group({ key: "root", layout: { type: "stack", padding: [16, 20, 12, 12] },
+    children: [plot({ data: "sales", x: "region", y: "sales", children: [bar({ labels: true })] })] }),
+});
+```
+
+Start from a template: `datars new mychart --template chart|story|explorable|map`.
+
+Loop: `datars check doc.ts` (diagnostics) → `datars render doc.ts --state N` (look at the PNG) → `datars film doc.ts --from A --to B` (motion) → `datars lint doc.ts` → `datars explain doc.ts --key '("SE",)'` (why an element looks as it does) → `datars test` (goldens). The same tools are MCP tools (`datars-mcp`).
+
+Rules of thumb: every data row has a key (identity carries marks through transitions); colours are theme tokens (`$accent`, `$categorical[3]`), not literals; program states set signals, marks read them in expressions (`=d.share * income / 100`); bare names are signals, `d.x` is the row.
+
+## Commands
+
+```
+usage: datars <command> <doc.json|doc.ts> [options]
+
+  render    <doc> [--state N|name] [--size WxH] [--dpr 2] [--mode dark] [--out f.png|f.svg|f.pdf]   render a state (CPU reference, or vector)
+  film      <doc> --from A --to B [--frames 8] [--out prefix]                   filmstrip + motion trails of a transition
+  video     <doc> [--fps 30] [--hold 2.5] [--dpr 1] [--size WxH] [--out f.mp4]    the program as a film (ffmpeg) + WebVTT captions
+  publish   <doc> [--alias name] [--to dir]                                     static delivery layout: c/<alias> + chunks/ (any static host)
+  basemap   <doc> [--build]                                                     an automatic basemap (tiles "auto"): views, tiles per zoom, data to fetch
+  serve     [dir] [--port 8787]                                                 serve a delivery dir + the web runtime, with an index page
+  replay    <session.json> [--frames 8] [--out f.png]                            replay a recorded host session exactly, as a filmstrip
+  budgets   [--update]                                                          bundle + runtime sizes (gzip) against budgets.json
+  profile   <doc> [--dpr 2] [--timeline] [--cpu] [--json]                      states cold/warm, then every transition stepped at 60 fps: stall, per-frame engine + GPU raster
+  dev       <doc.ts|doc.json> [--port 8788]                                     live page: rebuild on save, diagnostics, lint, states
+  lint      <doc> [--size WxH[,WxH]]                                            identity, encoding, legibility, accessibility, theme checks (in those boxes)
+  explain   <doc> --key '("SE",)' [--state N]                             why an element exists: recipes, template, data row, expression values
+  data      profile <file.csv|file.json>                                        column types, missing values, ranges, candidate keys, hints
+  new       <dir> [--template chart|story|explorable|map]                        a working document to start from
+  describe  [std/<recipe>]                                                      std recipes, or one recipe's params, defaults and tokens
+  docs      [--out dir]                                                         regenerate docs/reference (std.md, ir.schema.json) and llms.txt
+  schema                                                                        the IR as a JSON Schema (what a doc.json may contain)
+  diff      <docA> <docB> [--state N] | <doc> --states A,B                      element-level scene diff (added, removed, changed)
+  migrate   <doc.json> [--write]                                                upgrade a document to the current IR; report ignored fields
+  eject     std/<recipe> [--to recipes/]                                        copy a std recipe into the project as editable TypeScript
+  gpu       [filter] [--dpr 2]                                                  GPU (wgpu) vs CPU reference over the examples (ΔE)
+  inspect   <doc> [--state N]                                                   scene snapshot (text)
+  states    <doc>                                                               list program states
+  check     <doc>                                                               diagnostics (incl. fonts with no source)
+  fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
+  semantics <doc> [--state N]                                                   the accessibility tree
+  bundle    <doc> [--out f.datars]                                              publish: document → bundle (T0–T3 variants)
+  bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays
+  test      [filter] [--update] [--samples 64] [--no-pixels]                    visual + motion tests over examples/
+  theme     <theme.json> [--mode light|dark|high-contrast]                      resolve and validate a theme
+  theme     <theme.json | name> --specimen out.png                              std charts, palettes and inks in light, dark, high contrast
+  help
+
+  --json    machine-readable output
+  --data    name=file[,name=file]   fill data slots from files (a user's rows instead of the sample)
+```
+
+## Standard library (88 recipes)
+
+- `std/annotate`: A callout: text offset from a point (in plot coordinates via scales, or px), with a connector and a dot
+- `std/arcDiagram`: Nodes on a line and each link as an arc above it, as tall as it is long
+- `std/area`: Filled areas from a baseline (0, or `y0`) to y — one per series
+- `std/attribution`: The data credit a map owes (OpenStreetMap's licence requires it), in the bottom-right corner of its box, legible and linked to the licence page (hosts make it a real link; SVG/PDF keep it)
+- `std/axis`: An axis for a scale: tick labels, tick marks and a domain line
+- `std/bar`: Bars from a category field on a band scale to a value on a linear scale (vertical or horizontal, decided by which axis is the band)
+- `std/basemap`: A basemap from a vector-tile source (our own OSM / Natural Earth archives): sea, land, water, parks, buildings, roads by class, borders and place labels, in the enclosing map's projection, styled by the theme's map tokens
+- `std/bollinger`: Bollinger bands: the moving average of `y` over `window` rows with a shaded band `k` standard deviations (population σ) above and below it — where the price is stretched, and how volatile it is
+- `std/boxplot`: A box plot per category: the box spans the middle half (first to third quartile) with a line at the median; whiskers reach the furthest values within 1.5 × the box's height (`whisker`) of it, and values beyond are drawn as outliers
+- `std/bullet`: Bullet graphs: per row the actual value as a bar over qualitative bands (poor, fair, good — darkest first) with the target as a tick across it, each on its own scale with its own ticks (or one scale for all with `shared`)
+- `std/bump`: A bump chart: each series' rank at every time, 1 at the top, joined by lines and named at both ends
+- `std/button`: A button: click to fire a program event (`next`, `prev`, `back`, `goto:<state>`) or set a signal to a value (a reset, a preset)
+- `std/calendar`: A calendar heatmap: a week-column × weekday-row grid per year, coloured by value
+- `std/candlestick`: Candlesticks: per row a wick from low to high and a body from open to close, in `$up` when the close is at or above the open and `$down` below
+- `std/card`: A text card over the chart: an optional kicker and title over wrapped body text, on the theme's card surface, anchored to a corner or edge of its box
+- `std/cell`: Heatmap cells: a rectangle per (x, y) on two band scales, coloured by the colour scale
+- `std/checklist`: Checkboxes for a key set: click an option to add it to the signal or take it out (series to show, regions to compare)
+- `std/chord`: A chord diagram: groups around a circle, each as long as the flows touching it, and a ribbon per flow between its two groups, as wide as the flow at both ends
+- `std/cloud`: A point cloud of any size (millions of rows): dots at their own x/y in an explorable view — a density-preserving sample at every zoom, every row up close, a tooltip on each
+- `std/connectedScatter`: A connected scatter plot: points at (x, y) joined in the order of a third field (usually time), an arrow at the end — how two measures moved together
+- `std/contours`: Density contours: the shape of a crowd of rows — a smoothed density of their points cut into nested levels (by default each holding a further share of the rows: the innermost line encloses the densest fifth), drawn as filled bands or lines
+- `std/dataTable`: A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks (`sortable`)
+- `std/dendrogram`: A dendrogram (cluster layout) of a parent-child table: every leaf on one line, each parent centred over its children at its height, joined by elbows
+- `std/dot`: A dot per category at its value (a dot plot)
+- `std/dotDensity`: Dot density: one dot per `per` units of a region's value, scattered evenly inside it (seeded, deterministic)
+- `std/drawdown`: Drawdown: how far each series sits below its running peak (0 at a new high, −25 % a quarter below it), as an area hanging from zero — the pain chart next to a performance chart
+- `std/dumbbell`: Two values per category joined by a bar: a dot per row (coloured by the plot's colour field — the year, the group), a connector from each category's lowest to highest
+- `std/errorBars`: Error bars: each row's interval as a line with caps — from `lo` to `hi` columns, or the value ± `error` — around a dot at the value (a poll's margin, a confidence interval)
+- `std/facet`: Small multiples: the given chart once per value of `by`, in a grid; inside, the chart's `data` is that group's rows ("@group"), on scales shared across panels unless `shared: false`
+- `std/funnel`: A funnel: stage names in a measured column, centred bars in stage order joined by tapering connectors, each labelled with the conversion from the stage before
+- `std/gantt`: A plan: one row per task, a bar from its start to its end on a time axis, tasks under their group's heading (with a thin bar spanning the group), milestones as diamonds, how far each task has got as a solid part of its bar, and a line at today
+- `std/gauge`: A dial: an arc from `min` to `max` filled up to the value — or, with `bands`, coloured ranges and a needle — with the value in the middle, the ends labelled and the label under it
+- `std/geoLines`: Line features of a geo source (roads, borders, courses, routes) as non-scaling strokes
+- `std/geoPoints`: Points at lon/lat (cities, events, stations), in the enclosing map's projection, in $map.marker ringed by $map.label-halo so they read on any land
+- `std/grid`: Gridlines at a scale's ticks across the plot area
+- `std/grouped`: Grouped (dodged) bars: a group per x, a bar per series side by side
+- `std/heatmap2d`: A 2-D density raster: rows of any number counted into a regular grid of cells over the plot's x and y scales in one pass, each cell coloured by its count (or an aggregate of a field)
+- `std/hemicycle`: A parliament: one dot per seat on concentric arcs, grouped by party left to right
+- `std/hexbin`: Hexagonal bins: rows of any number counted into hexagons a few px across, each coloured by its count (or an aggregate of a field) — a density map of a million points, drawn as a few thousand hexagons
+- `std/histogram`: A histogram: the rows of `x` counted into bins of equal width (about `bins` of them at a round width, or exactly `step` wide), a bar per bin from its start to its end
+- `std/icicle`: An icicle: a hierarchy as bands, the root first and each node spanning its share of its parent, its name and value inside where they fit
+- `std/indexed`: Series rebased to their first visible row — 100 (or 0 %) — so instruments at any price compare as performance: one line per series with a baseline, each labelled at its end with its change
+- `std/kpi`: A key figure: its label, the value as a big number (counting when it changes), its change against a comparison — an arrow and the delta in `$positive` or `$negative` by whether the change is good (`better`) — and, from a table, a sparkline of how it got there
+- `std/legend`: A legend for a colour scale: a swatch and a label per entry, flowing in rows (spaced by the labels' widths, wrapping at the box edge), under an optional title
+- `std/line`: One line per series (the colour field, or `series`), through x/y
+- `std/lollipop`: A lollipop per category: a thin stem from zero to the value, a dot at its end — a bar chart with less ink, for many categories or values far from zero
+- `std/manyLines`: Thousands of time series at once: every series a faint path, so their bulk shows where most of them run, with the ones that matter highlighted in the accent colour and labelled
+- `std/map`: A map: regions of a geo source, coloured by a data table joined on a key (choropleth), with neutral backdrop land, over which children (symbols, points, lines, annotations) draw in the same projection
+- `std/marimekko`: A marimekko (mosaic): a column per category as wide as its share of the total, split into segments as tall as each series' share within it — so every area is that pair's share of everything
+- `std/matrix`: An adjacency matrix: a row and a column per node, a cell where two are linked — shaded by weight, coloured where both ends share a colour
+- `std/movingAverage`: A moving average of the plot's `y` (a closing price) as a line: simple (the mean of the last `window` rows) or exponential (span `window`)
+- `std/network`: A node-link diagram laid out by a deterministic force simulation — seeded starts, a fixed number of steps, computed once per data and size, never per frame: links pull, nodes repel, never overlap and stay inside the box
+- `std/ohlc`: OHLC bars: per row a vertical line from low to high with the open ticked to the left and the close to the right, in `$up`/`$down` by direction (or ink)
+- `std/pareto`: The running share of the total, from the largest category down, as a line with points on the plot's right axis (`right: { domain: [0, 1], format: '.0%' }`) — over bars sorted descending, a Pareto chart
+- `std/pie`: Parts of a whole as slices (set `inner` > 0 for a donut)
+- `std/plot`: A cartesian frame: x/y (and colour) scales from data, axes and gridlines sized by the engine, a title, and marks as children
+- `std/point`: A dot per row (instanced: scales to 10⁵–10⁶ points)
+- `std/progress`: Progress toward a goal: a bar (label and share above it) or a ring (the share in the middle), filled to value ÷ goal — past the goal it stays full and the share says how far past
+- `std/pyramid`: A population pyramid: a band per group (age, youngest at the bottom), one side's bars growing left and the other's right from a column of group names, both on one scale so the sides compare
+- `std/radar`: A radar (spider) chart: one spoke per dimension, in the order they first appear, and each series a closed shape through its values, on one radial scale from zero with rings at even steps
+- `std/range`: A slider with two thumbs for a range: drag either end to set the `lo` or `hi` signal (snapped to `step`); the thumbs can't cross
+- `std/ridgeline`: Ridgelines: a kernel density curve per category (a row of the plot's band y axis) over a shared value axis, rising from the row's baseline into the rows above — many distributions (months, years, groups) compared in little space
+- `std/route`: Great-circle routes between two lon/lat points per row
+- `std/rule`: A reference line at a value on the x or y scale (a target, an average, 'today')
+- `std/sankey`: Flows between nodes: nodes in columns by depth, ribbons as wide as their flow
+- `std/segmented`: One of a few options side by side (a segmented control): click one to set the signal to it; the highlight slides to it
+- `std/select`: A dropdown for one of many options: click to open the list over the chart, click an option to set the signal to it; a click anywhere else closes it
+- `std/slider`: A slider for a numeric signal: press or drag to set it (snapped to `step`)
+- `std/slope`: A slope chart: each series' first and last value (two years, before and after) joined by a line, named at both ends — labels pushed apart so none overlap, the plot leaving them room
+- `std/span`: A shaded band between two values on the x or y scale (a recession, a target range)
+- `std/sparkline`: A sparkline: a word-sized line of `y` over `x` that fills its box (a table cell, a card) — no axes, the last value marked with a dot, coloured `$up` or `$down` by whether it ended above where it started
+- `std/stacked`: Stacked bars: a segment per series in each category (offset `expand` for 100 %); horizontal when y is the band axis
+- `std/stackedArea`: Stacked areas: each series a layer on the ones below it, through x — totals and their parts over time
+- `std/stripes`: Colour stripes: one full-height band per ordered value, on a diverging scale around `mid`
+- `std/sunburst`: A sunburst: a hierarchy as rings, the root in the middle and each node an arc spanning its share of its parent
+- `std/swarm`: A beeswarm: every row a dot along one value axis, packed so none overlap (windowed neighbour search; 20k dots in about a second)
+- `std/symbols`: Proportional symbols: a circle per region (or point feature) at its visual centre, area ∝ value — or all one size (`r`) without a value field
+- `std/tileMap`: A tile-grid map (a grid cartogram): every state or country the same size — a square or a hexagon — in roughly its place, coloured by value and marked with its abbreviation, so small places count as much as big ones
+- `std/timeline`: Events on a time axis: a dot per event and its date and label on a stem, packed into as few lanes above and below the line as keep every label clear of the others (an engine op, so it re-packs for a phone); labels that still don't fit the height are left to the dot's tooltip
+- `std/title`: A title (and optional subtitle and source line), each wrapped to the box: on a phone a long line takes two instead of running off
+- `std/toggle`: A switch for a boolean signal: click to flip it
+- `std/track`: A path over time (a storm, a flight): drawn up to `until` (a data-time signal) with a moving head
+- `std/tree`: A tidy tree (Reingold–Tilford) of a parent-child table: parents centred over their children, subtrees packed as close as they go, identical subtrees drawn alike
+- `std/treemap`: A squarified treemap: area ∝ value, one rectangle per category, labels where they fit
+- `std/violin`: A violin per category: the values' kernel density (Gaussian, Silverman's bandwidth unless given) mirrored around the category's centre, over the range of the data — its shape shows where values bunch, where a box plot shows five numbers
+- `std/volume`: Volume bars under a price chart: in a plot, they go to a pane below the price area that shares its x axis and has its own value axis (the plot's `lower` pane, made for them when not given), coloured like their day's candle
+- `std/waffle`: One square per unit (e.g
+- `std/waterfall`: A waterfall/bridge: each change floats from the running total; rows marked as totals (a boolean field, or keys starting with '=') are bars from zero
+
+Full parameters: docs/reference/std.md (`datars describe std/<name>`).
+
+## Docs
+
+- docs/README.md — the design in one page; docs/02-principles.md first
+- docs/04-primitives.md, 05-time-and-motion.md, 06-data-and-reactivity.md, 08-programs.md, 09-geo.md — the model
+- docs/12-delivery.md — bundles, tiers, publishing; docs/18-themes.md — themes
+- docs/14-devtools-and-agents.md — tools and the agent workflow
+- docs/19-status.md — what is built and how it is verified
+- examples/ — small runnable documents, each also a golden test

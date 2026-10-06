@@ -1,0 +1,24 @@
+[package]
+name = "datars-devtools"
+description = "datars dev tools: data-visualization lint rules, recipe descriptions, scene queries — shared by the CLI, MCP server and inspector."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-math.workspace = true
+datars-data.workspace = true
+datars-color.workspace = true
+datars-theme.workspace = true
+datars-scene.workspace = true
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+datars-ir.workspace = true
+datars-text.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[dev-dependencies]
+datars-headless.workspace = true

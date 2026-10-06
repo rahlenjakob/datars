@@ -1,0 +1,60 @@
+scene 390.00×520.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Where it went"
+      ("title",) text "Where it went" at (0.00, 0.00) size=17.00 ink=$ink role=title "Where it went"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 58.34 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 324.24) stroke=$rule/1.00
+          group ("Housing",) role=tick "Housing"
+            ("#0",) segment (0.00, 32.42)→(-5.00, 32.42) stroke=$rule/1.00
+            ("#2",) text "Housing" at (-8.00, 32.42) size=11.00 ink=$muted
+          group ("Food",) role=tick "Food"
+            ("#0",) segment (0.00, 97.27)→(-5.00, 97.27) stroke=$rule/1.00
+            ("#2",) text "Food" at (-8.00, 97.27) size=11.00 ink=$muted
+          group ("Shopping",) role=tick "Shopping"
+            ("#0",) segment (0.00, 162.12)→(-5.00, 162.12) stroke=$rule/1.00
+            ("#2",) text "Shopping" at (-8.00, 162.12) size=11.00 ink=$muted
+          group ("Leisure",) role=tick "Leisure"
+            ("#0",) segment (0.00, 226.97)→(-5.00, 226.97) stroke=$rule/1.00
+            ("#2",) text "Leisure" at (-8.00, 226.97) size=11.00 ink=$muted
+          group ("Transport",) role=tick "Transport"
+            ("#0",) segment (0.00, 291.82)→(-5.00, 291.82) stroke=$rule/1.00
+            ("#2",) text "Transport" at (-8.00, 291.82) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 64.84 0.00]
+          group ("area",)
+            group ("grid-x",) role=decoration
+              (0,) segment (0.00, 0.00)→(0.00, 324.24) stroke=$grid/1.00 role=decoration
+              (20000,) segment (99.05, 0.00)→(99.05, 324.24) stroke=$grid/1.00 role=decoration
+              (40000,) segment (198.10, 0.00)→(198.10, 324.24) stroke=$grid/1.00 role=decoration
+              (60000,) segment (297.16, 0.00)→(297.16, 324.24) stroke=$grid/1.00 role=decoration
+            group ("marks",) role=series "amount by category"
+              ("Housing",) rect x=0.00 y=7.13 w=291.93 h=50.58 fill=#4269d0 role=datum "Housing: 58,944"
+              ("Food",) rect x=0.00 y=71.98 w=127.35 h=50.58 fill=#efb118 role=datum "Food: 25,713"
+              ("Shopping",) rect x=0.00 y=136.83 w=68.40 h=50.58 fill=#ff725c role=datum "Shopping: 13,811"
+              ("Leisure",) rect x=0.00 y=201.68 w=55.40 h=50.58 fill=#a463f2 role=datum "Leisure: 11,186"
+              ("Transport",) rect x=0.00 y=266.53 w=48.47 h=50.58 fill=#6cc5b0 role=datum "Transport: 9,787"
+              group ("labels",)
+                ("Housing",) text "58,944 kr" at (287.93, 32.42) size=11.00 ink=on(#4269d0)
+                ("Food",) text "25,713 kr" at (131.35, 97.27) size=11.00 ink=$ink-2
+                ("Shopping",) text "13,811 kr" at (72.40, 162.12) size=11.00 ink=$ink-2
+                ("Leisure",) text "11,186 kr" at (59.40, 226.97) size=11.00 ink=$ink-2
+                ("Transport",) text "9,787 kr" at (52.47, 291.82) size=11.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 330.74] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(297.16, 0.00) stroke=$rule/1.00
+            group (0,) role=tick "0"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "0" at (0.00, 8.00) size=11.00 ink=$muted
+            group (20000,) role=tick "20,000"
+              ("#0",) segment (99.05, 0.00)→(99.05, 5.00) stroke=$rule/1.00
+              ("#1",) text "20,000" at (99.05, 8.00) size=11.00 ink=$muted
+            group (40000,) role=tick "40,000"
+              ("#0",) segment (198.10, 0.00)→(198.10, 5.00) stroke=$rule/1.00
+              ("#1",) text "40,000" at (198.10, 8.00) size=11.00 ink=$muted
+            group (60000,) role=tick "60,000"
+              ("#0",) segment (297.16, 0.00)→(297.16, 5.00) stroke=$rule/1.00
+              ("#1",) text "60,000" at (292.56, 8.00) size=11.00 ink=$muted
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 394.62]
+      group ("box:Housing is the biggest share; each month's bars add up here.",) transform=[1.00 0.00 0.00 1.00 12.00 12.50] role=annotation "Housing is the biggest share; each month's bars add up here."
+        ("backdrop",) rect x=0.00 y=0.00 w=200.00 h=100.38 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("title",) text "119,441 kr" at (0.00, 0.00) size=15.00 ink=$card-ink transform=[1.00 0.00 0.00 1.00 14.00 14.00]
+        ("text",) text "Housing is the biggest share; each month's bars add up here." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 38.15]

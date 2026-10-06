@@ -1,0 +1,79 @@
+scene 760.00×420.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Revenue by region"
+      ("title",) text "Revenue by region" at (0.00, 0.00) size=17.00 ink=$ink role=title "Revenue by region"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 26.52 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 317.97) stroke=$rule/1.00
+          group (0,) role=tick "0"
+            ("#0",) segment (0.00, 317.97)→(-5.00, 317.97) stroke=$rule/1.00
+            ("#1",) text "0" at (-8.00, 317.97) size=11.00 ink=$muted
+          group (20,) role=tick "20"
+            ("#0",) segment (0.00, 272.54)→(-5.00, 272.54) stroke=$rule/1.00
+            ("#1",) text "20" at (-8.00, 272.54) size=11.00 ink=$muted
+          group (40,) role=tick "40"
+            ("#0",) segment (0.00, 227.12)→(-5.00, 227.12) stroke=$rule/1.00
+            ("#1",) text "40" at (-8.00, 227.12) size=11.00 ink=$muted
+          group (60,) role=tick "60"
+            ("#0",) segment (0.00, 181.70)→(-5.00, 181.70) stroke=$rule/1.00
+            ("#1",) text "60" at (-8.00, 181.70) size=11.00 ink=$muted
+          group (80,) role=tick "80"
+            ("#0",) segment (0.00, 136.27)→(-5.00, 136.27) stroke=$rule/1.00
+            ("#1",) text "80" at (-8.00, 136.27) size=11.00 ink=$muted
+          group (100,) role=tick "100"
+            ("#0",) segment (0.00, 90.85)→(-5.00, 90.85) stroke=$rule/1.00
+            ("#1",) text "100" at (-8.00, 90.85) size=11.00 ink=$muted
+          group (120,) role=tick "120"
+            ("#0",) segment (0.00, 45.42)→(-5.00, 45.42) stroke=$rule/1.00
+            ("#1",) text "120" at (-8.00, 45.42) size=11.00 ink=$muted
+          group (140,) role=tick "140"
+            ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+            ("#1",) text "140" at (-8.00, 0.00) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 33.02 0.00]
+          group ("area",)
+            group ("grid-y",) role=decoration
+              (0,) segment (0.00, 317.97)→(694.98, 317.97) stroke=$grid/1.00 role=decoration
+              (20,) segment (0.00, 272.54)→(694.98, 272.54) stroke=$grid/1.00 role=decoration
+              (40,) segment (0.00, 227.12)→(694.98, 227.12) stroke=$grid/1.00 role=decoration
+              (60,) segment (0.00, 181.70)→(694.98, 181.70) stroke=$grid/1.00 role=decoration
+              (80,) segment (0.00, 136.27)→(694.98, 136.27) stroke=$grid/1.00 role=decoration
+              (100,) segment (0.00, 90.85)→(694.98, 90.85) stroke=$grid/1.00 role=decoration
+              (120,) segment (0.00, 45.42)→(694.98, 45.42) stroke=$grid/1.00 role=decoration
+              (140,) segment (0.00, 0.00)→(694.98, 0.00) stroke=$grid/1.00 role=decoration
+            group ("marks",)
+              ("EU", "Q1") rect x=19.11 y=249.83 w=135.52 h=68.14 fill=$categorical[0] role=datum "EU, Q1: 30"
+              ("US", "Q1") rect x=19.11 y=154.44 w=135.52 h=95.39 fill=$categorical[1] role=datum "US, Q1: 42"
+              ("APAC", "Q1") rect x=19.11 y=127.19 w=135.52 h=27.25 fill=$categorical[2] role=datum "APAC, Q1: 12"
+              ("EU", "Q2") rect x=192.86 y=243.02 w=135.52 h=74.95 fill=$categorical[0] role=datum "EU, Q2: 33"
+              ("US", "Q2") rect x=192.86 y=140.81 w=135.52 h=102.20 fill=$categorical[1] role=datum "US, Q2: 45"
+              ("APAC", "Q2") rect x=192.86 y=106.75 w=135.52 h=34.07 fill=$categorical[2] role=datum "APAC, Q2: 15"
+              ("EU", "Q3") rect x=366.60 y=247.56 w=135.52 h=70.41 fill=$categorical[0] role=datum "EU, Q3: 31"
+              ("US", "Q3") rect x=366.60 y=134.00 w=135.52 h=113.56 fill=$categorical[1] role=datum "US, Q3: 50"
+              ("APAC", "Q3") rect x=366.60 y=90.85 w=135.52 h=43.15 fill=$categorical[2] role=datum "APAC, Q3: 19"
+              ("EU", "Q4") rect x=540.35 y=231.66 w=135.52 h=86.31 fill=$categorical[0] role=datum "EU, Q4: 38"
+              ("US", "Q4") rect x=540.35 y=106.75 w=135.52 h=124.92 fill=$categorical[1] role=datum "US, Q4: 55"
+              ("APAC", "Q4") rect x=540.35 y=52.24 w=135.52 h=54.51 fill=$categorical[2] role=datum "APAC, Q4: 24"
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 324.47] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(694.98, 0.00) stroke=$rule/1.00
+            group ("Q1",) role=tick "Q1"
+              ("#0",) segment (86.87, 0.00)→(86.87, 5.00) stroke=$rule/1.00
+              ("#2",) text "Q1" at (86.87, 8.00) size=11.00 ink=$muted
+            group ("Q2",) role=tick "Q2"
+              ("#0",) segment (260.62, 0.00)→(260.62, 5.00) stroke=$rule/1.00
+              ("#2",) text "Q2" at (260.62, 8.00) size=11.00 ink=$muted
+            group ("Q3",) role=tick "Q3"
+              ("#0",) segment (434.36, 0.00)→(434.36, 5.00) stroke=$rule/1.00
+              ("#2",) text "Q3" at (434.36, 8.00) size=11.00 ink=$muted
+            group ("Q4",) role=tick "Q4"
+              ("#0",) segment (608.11, 0.00)→(608.11, 5.00) stroke=$rule/1.00
+              ("#2",) text "Q4" at (608.11, 8.00) size=11.00 ink=$muted
+      group ("legend-color",) transform=[1.00 0.00 0.00 1.00 0.00 378.35] role=legend "Legend"
+        group ("EU",) role=legend-item "EU"
+          ("#0",) rect x=0.00 y=2.00 w=10.00 h=10.00 r=2.00 fill=$categorical[0]
+          ("#1",) text "EU" at (15.00, 11.00) size=11.00 ink=$ink-2
+        group ("US",) transform=[1.00 0.00 0.00 1.00 43.80 0.00] role=legend-item "US"
+          ("#0",) rect x=0.00 y=2.00 w=10.00 h=10.00 r=2.00 fill=$categorical[1]
+          ("#1",) text "US" at (15.00, 11.00) size=11.00 ink=$ink-2
+        group ("APAC",) transform=[1.00 0.00 0.00 1.00 88.04 0.00] role=legend-item "APAC"
+          ("#0",) rect x=0.00 y=2.00 w=10.00 h=10.00 r=2.00 fill=$categorical[2]
+          ("#1",) text "APAC" at (15.00, 11.00) size=11.00 ink=$ink-2

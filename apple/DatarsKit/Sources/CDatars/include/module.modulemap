@@ -1,0 +1,5 @@
+module CDatars {
+    header "datars.h"
+    link "datars_ffi"
+    export *
+}

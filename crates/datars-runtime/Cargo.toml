@@ -1,0 +1,24 @@
+[package]
+name = "datars-runtime"
+description = "The installed datars runtime core shared by every host: engine + bundle loader + content store + status."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+datars-engine = { workspace = true }
+datars-bundle.workspace = true
+datars-ir.workspace = true
+datars-math.workspace = true
+datars-theme.workspace = true
+datars-render-cpu.workspace = true
+serde_json.workspace = true
+
+[features]
+default = ["sandbox", "bundled-fonts"]
+sandbox = ["datars-engine/sandbox"]
+# The default family compiled in (see datars-engine). The web runtime leaves it out.
+bundled-fonts = ["datars-engine/bundled-fonts"]

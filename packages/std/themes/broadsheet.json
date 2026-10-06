@@ -1,0 +1,15 @@
+{
+  "name": "datars/broadsheet",
+  "extends": "datars/neutral",
+  "tokens": {
+    "ink": "#111111",
+    "accent": "#1f3a68",
+    "categorical": ["#1f3a68", "#c8102e", "#5a8fc4", "#d69a2d", "#2e7d4f", "#7b5ea7", "#8a8a8a"],
+    "font.title": { "family": ["Inter"], "weight": 700, "src": "datars:fonts/Inter-Bold.ttf" },
+    "radius.mark": 0,
+    "grid": "mix($ink, $paper, 0.92)"
+  },
+  "modes": {
+    "dark": { "paper": "#15130f", "ink": "#f2efe6", "accent": "lighten($categorical[0], 0.25)" }
+  }
+}

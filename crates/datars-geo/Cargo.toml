@@ -1,0 +1,23 @@
+[package]
+name = "datars-geo"
+description = "Geographic coordinates, geometry and tile formats for datars (sans-IO): GeoJSON/TopoJSON, projections, adaptive resampling, clipping, simplification, triangulation, measures, tile math, MVT and PMTiles."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[features]
+default = []
+# Build-pipeline extras: robust boolean clipping through the `geo` crate. Never enabled in the
+# runtime (wasm) build, which uses the crate's own rectangle clipper.
+build = ["dep:geo"]
+
+[dependencies]
+datars-math.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+flate2.workspace = true
+geo = { workspace = true, optional = true }

@@ -1,0 +1,27 @@
+[package]
+name = "datars-headless"
+description = "Render datars documents without a GPU or a browser: PNG/SVG frames, filmstrips, motion trails, snapshots."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["visualization", "charts", "headless", "png", "svg"]
+categories = ["visualization", "rendering", "multimedia::images"]
+
+[dependencies]
+datars-math.workspace = true
+datars-color.workspace = true
+datars-theme.workspace = true
+datars-scene.workspace = true
+datars-render.workspace = true
+datars-bundle.workspace = true
+datars-text = { workspace = true, features = ["bundled-fonts"] }
+datars-render-cpu.workspace = true
+datars-render-svg.workspace = true
+datars-render-pdf.workspace = true
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+datars-ir.workspace = true
+datars-motion.workspace = true
+serde_json.workspace = true

@@ -1,0 +1,258 @@
+{
+ "datars": 1,
+ "id": "votes",
+ "title": "Vote share by party, Sweden 2022",
+ "size": {
+  "width": 720,
+  "height": 440
+ },
+ "locale": "en",
+ "data": {
+  "votes": {
+   "values": {
+    "party": [
+     "S",
+     "SD",
+     "M",
+     "V",
+     "C",
+     "KD",
+     "MP",
+     "L"
+    ],
+    "share": [
+     30.3,
+     20.5,
+     19.1,
+     6.8,
+     6.7,
+     5.3,
+     5.1,
+     4.6
+    ]
+   },
+   "key": [
+    "party"
+   ]
+  }
+ },
+ "tables": {
+  "ranked": {
+   "from": "votes",
+   "ops": [
+    {
+     "op": "sort",
+     "by": [
+      [
+       "share",
+       "desc"
+      ]
+     ]
+    }
+   ]
+  }
+ },
+ "signals": {
+  "shape": {
+   "type": "str",
+   "default": "bars"
+  }
+ },
+ "keys": {
+  "S": {
+   "name": "Social Democrats",
+   "color": "#e8112d"
+  },
+  "SD": {
+   "name": "Sweden Democrats",
+   "color": "#dddd00"
+  },
+  "M": {
+   "name": "Moderates",
+   "color": "#1b49dd"
+  },
+  "V": {
+   "name": "Left",
+   "color": "#a01313"
+  },
+  "C": {
+   "name": "Centre",
+   "color": "#009933"
+  },
+  "KD": {
+   "name": "Christian Democrats",
+   "color": "#005ea8"
+  },
+  "MP": {
+   "name": "Greens",
+   "color": "#83cf39"
+  },
+  "L": {
+   "name": "Liberals",
+   "color": "#3a8fd6"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "votes",
+     "x": "party",
+     "y": "share",
+     "color": "party",
+     "title": "Vote share by party, 2022 (%)",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "shape == \"bars\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/plot",
+    "params": {
+     "data": "ranked",
+     "x": "share",
+     "y": "party",
+     "xType": "linear",
+     "yType": "band",
+     "color": "party",
+     "title": "Ranked",
+     "children": [
+      {
+       "kind": "use",
+       "recipe": "@datars/std/bar",
+       "params": {
+        "labels": true
+       }
+      }
+     ]
+    },
+    "key": "chart",
+    "when": {
+     "expr": "shape == \"ranked\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/pie",
+    "params": {
+     "data": "votes",
+     "value": "share",
+     "category": "party"
+    },
+    "key": "chart",
+    "when": {
+     "expr": "shape == \"pie\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/pie",
+    "params": {
+     "data": "votes",
+     "value": "share",
+     "category": "party",
+     "inner": 0.58,
+     "total": true
+    },
+    "key": "chart",
+    "when": {
+     "expr": "shape == \"donut\""
+    }
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/card",
+    "params": {
+     "title": {
+      "expr": "narration.title"
+     },
+     "text": {
+      "expr": "narration.text"
+     },
+     "width": 230
+    },
+    "key": "caption"
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "datum"
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "bars",
+    "set": {
+     "shape": "bars"
+    },
+    "narration": {
+     "title": "30.3%",
+     "text": "for the Social Democrats, still Sweden's largest party."
+    }
+   },
+   {
+    "name": "ranked",
+    "set": {
+     "shape": "ranked"
+    },
+    "narration": {
+     "text": "Ranked: eight parties cleared the 4% threshold."
+    }
+   },
+   {
+    "name": "pie",
+    "set": {
+     "shape": "pie"
+    },
+    "narration": {
+     "text": "Each bar becomes a slice."
+    }
+   },
+   {
+    "name": "donut",
+    "set": {
+     "shape": "donut"
+    },
+    "narration": {
+     "text": "A donut frees the middle for the total."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

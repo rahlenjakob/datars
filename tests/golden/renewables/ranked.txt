@@ -1,0 +1,79 @@
+scene 760.00×480.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Renewable share of energy use (%)"
+      ("title",) text "Renewable share of energy use (%)" at (0.00, 0.00) size=17.00 ink=$ink role=title "Renewable share of energy use (%)"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 55.01 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 397.62) stroke=$rule/1.00
+          group ("Iceland",) role=tick "Iceland"
+            ("#0",) segment (0.00, 39.76)→(-5.00, 39.76) stroke=$rule/1.00
+            ("#2",) text "Iceland" at (-8.00, 39.76) size=11.00 ink=$muted
+          group ("Norway",) role=tick "Norway"
+            ("#0",) segment (0.00, 119.29)→(-5.00, 119.29) stroke=$rule/1.00
+            ("#2",) text "Norway" at (-8.00, 119.29) size=11.00 ink=$muted
+          group ("Sweden",) role=tick "Sweden"
+            ("#0",) segment (0.00, 198.81)→(-5.00, 198.81) stroke=$rule/1.00
+            ("#2",) text "Sweden" at (-8.00, 198.81) size=11.00 ink=$muted
+          group ("Finland",) role=tick "Finland"
+            ("#0",) segment (0.00, 278.33)→(-5.00, 278.33) stroke=$rule/1.00
+            ("#2",) text "Finland" at (-8.00, 278.33) size=11.00 ink=$muted
+          group ("Denmark",) role=tick "Denmark"
+            ("#0",) segment (0.00, 357.86)→(-5.00, 357.86) stroke=$rule/1.00
+            ("#2",) text "Denmark" at (-8.00, 357.86) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 61.51 0.00]
+          group ("area",)
+            group ("grid-x",) role=decoration
+              (0,) segment (0.00, 0.00)→(0.00, 397.62) stroke=$grid/1.00 role=decoration
+              (10,) segment (74.05, 0.00)→(74.05, 397.62) stroke=$grid/1.00 role=decoration
+              (20,) segment (148.11, 0.00)→(148.11, 397.62) stroke=$grid/1.00 role=decoration
+              (30,) segment (222.16, 0.00)→(222.16, 397.62) stroke=$grid/1.00 role=decoration
+              (40,) segment (296.22, 0.00)→(296.22, 397.62) stroke=$grid/1.00 role=decoration
+              (50,) segment (370.27, 0.00)→(370.27, 397.62) stroke=$grid/1.00 role=decoration
+              (60,) segment (444.32, 0.00)→(444.32, 397.62) stroke=$grid/1.00 role=decoration
+              (70,) segment (518.38, 0.00)→(518.38, 397.62) stroke=$grid/1.00 role=decoration
+              (80,) segment (592.43, 0.00)→(592.43, 397.62) stroke=$grid/1.00 role=decoration
+              (90,) segment (666.49, 0.00)→(666.49, 397.62) stroke=$grid/1.00 role=decoration
+            group ("marks",) role=series "share by name"
+              ("ISL",) rect x=0.00 y=8.75 w=629.46 h=62.03 fill=$accent role=datum "Iceland: 85"
+              ("NOR",) rect x=0.00 y=88.27 w=555.41 h=62.03 fill=$accent role=datum "Norway: 75"
+              ("SWE",) rect x=0.00 y=167.80 w=488.76 h=62.03 fill=$accent role=datum "Sweden: 66"
+              ("FIN",) rect x=0.00 y=247.32 w=355.46 h=62.03 fill=$accent role=datum "Finland: 48"
+              ("DNK",) rect x=0.00 y=326.84 w=311.03 h=62.03 fill=$accent role=datum "Denmark: 42"
+              group ("labels",)
+                ("ISL",) text "85" at (633.46, 39.76) size=11.00 ink=$ink-2
+                ("NOR",) text "75" at (559.41, 119.29) size=11.00 ink=$ink-2
+                ("SWE",) text "66" at (492.76, 198.81) size=11.00 ink=$ink-2
+                ("FIN",) text "48" at (359.46, 278.33) size=11.00 ink=$ink-2
+                ("DNK",) text "42" at (315.03, 357.86) size=11.00 ink=$ink-2
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 404.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(666.49, 0.00) stroke=$rule/1.00
+            group (0,) role=tick "0"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "0" at (0.00, 8.00) size=11.00 ink=$muted
+            group (10,) role=tick "10"
+              ("#0",) segment (74.05, 0.00)→(74.05, 5.00) stroke=$rule/1.00
+              ("#1",) text "10" at (74.05, 8.00) size=11.00 ink=$muted
+            group (20,) role=tick "20"
+              ("#0",) segment (148.11, 0.00)→(148.11, 5.00) stroke=$rule/1.00
+              ("#1",) text "20" at (148.11, 8.00) size=11.00 ink=$muted
+            group (30,) role=tick "30"
+              ("#0",) segment (222.16, 0.00)→(222.16, 5.00) stroke=$rule/1.00
+              ("#1",) text "30" at (222.16, 8.00) size=11.00 ink=$muted
+            group (40,) role=tick "40"
+              ("#0",) segment (296.22, 0.00)→(296.22, 5.00) stroke=$rule/1.00
+              ("#1",) text "40" at (296.22, 8.00) size=11.00 ink=$muted
+            group (50,) role=tick "50"
+              ("#0",) segment (370.27, 0.00)→(370.27, 5.00) stroke=$rule/1.00
+              ("#1",) text "50" at (370.27, 8.00) size=11.00 ink=$muted
+            group (60,) role=tick "60"
+              ("#0",) segment (444.32, 0.00)→(444.32, 5.00) stroke=$rule/1.00
+              ("#1",) text "60" at (444.32, 8.00) size=11.00 ink=$muted
+            group (70,) role=tick "70"
+              ("#0",) segment (518.38, 0.00)→(518.38, 5.00) stroke=$rule/1.00
+              ("#1",) text "70" at (518.38, 8.00) size=11.00 ink=$muted
+            group (80,) role=tick "80"
+              ("#0",) segment (592.43, 0.00)→(592.43, 5.00) stroke=$rule/1.00
+              ("#1",) text "80" at (592.43, 8.00) size=11.00 ink=$muted
+            group (90,) role=tick "90"
+              ("#0",) segment (666.49, 0.00)→(666.49, 5.00) stroke=$rule/1.00
+              ("#1",) text "90" at (666.49, 8.00) size=11.00 ink=$muted

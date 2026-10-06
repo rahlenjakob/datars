@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","id":"route","properties":{},"geometry":{"type":"LineString","coordinates":[[139.69,35.69],[-118.24,34.05]]}},{"type":"Feature","id":"box","properties":{},"geometry":{"type":"Polygon","coordinates":[[[170,-20],[-170,-20],[-170,-10],[170,-10],[170,-20]]]}}]}

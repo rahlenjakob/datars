@@ -1,0 +1,246 @@
+---
+title: Performance — on the web, iOS, Android and desktop · datars
+description: How datars performs on every platform it draws on — browsers, iOS and Android apps, desktop — measured transition by transition, with the kinds of charts that are heavy (millions of points, thousands of regions, street-level maps) and what the engine does about each. The method, the tools and every raw run.
+og: galaxy
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Performance</p>
+    <h1>Sixty frames a second on every platform, and where it gets hard</h1>
+    <p class="lede-2">datars is one engine with one GPU renderer: WebGPU or WebGL2 in browsers, Metal on Apple devices, Vulkan or OpenGL ES on Android, Metal, DX12 or Vulkan on desktops. A chart moves the same way wherever it's shown, so it's measured on each: every transition of every chart stepped and timed frame by frame in Chrome, in the iOS and Android sample apps, and in the engine itself. Every number on this page is computed from the raw runs committed with the site; nothing is retyped.</p>
+  </div>
+</section>
+
+<section class="section" style="padding-top:12px">
+  <div class="wrap">
+    {{perf:delivered:transitions,transitions-fast4g-cold,transitions-phone,native}}
+    <p class="fine" style="margin-top:14px">“Steady” means an average of at least 59 fps with at most one dropped frame. Machine: an Apple Silicon Mac, for every platform: real Google Chrome driven headless by Playwright (WebGPU, devicePixelRatio 2) and the iOS Simulator; the Android Emulator's figures are in <a href="#native">its table</a>. What that does and doesn't tell you about phones is <a href="#method">below</a>.</p>
+  </div>
+</section>
+
+<section class="section" id="platforms">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Platforms</p>
+      <h2>The same engine and renderer everywhere</h2>
+      <p>The engine resolves a state, plans each transition once and evaluates the plan every frame; the renderer turns the frame into GPU draws. Both are the same Rust code on every platform, so a chart's cost is the same kind of cost everywhere, and what's heavy on one platform is heavy on all of them, in proportion to the device.</p>
+    </header>
+    <ul class="platforms">
+      <li>
+        <h3>Web</h3>
+        <p>Any browser, desktop and mobile. Draws with WebGPU; WebGL2 where there's no WebGPU (Safari before 26, or WebGPU switched off); the CPU reference into a canvas as the last resort.</p>
+        <p>Measured in Chrome with <code>perf-browser.mjs</code>: <b>{{perf:summary:transitions:steady}}</b> transitions steady, <b>{{perf:summary:transitions-fast4g-cold:steady}}</b> on a cold Fast-4G load, <b>{{perf:summary:transitions-phone:steady}}</b> at phone size with a quarter of the CPU.</p>
+      </li>
+      <li>
+        <h3>iOS, iPadOS and macOS apps</h3>
+        <p>DatarsKit, for SwiftUI, UIKit and AppKit. Draws with Metal.</p>
+        <p>Measured with <code>bench-native.mjs</code>, the sample app in the iOS Simulator: <b>{{perf:nativesummary:native:iOS}}</b> transitions steady.</p>
+      </li>
+      <li>
+        <h3>Android apps</h3>
+        <p>datars-android, a Kotlin view. Draws with Vulkan, else OpenGL ES.</p>
+        <p>Measured with <code>bench-native.mjs</code>, the sample app in the Android Emulator, whose OpenGL translation makes every draw call expensive: every transition in <a href="#native">the table below</a>, until phones are measured.</p>
+      </li>
+      <li>
+        <h3>Desktop apps</h3>
+        <p>datars-host-native, a window on any wgpu surface. Draws with Metal, DX12 or Vulkan.</p>
+        <p>Measured with <code>datars profile</code> on a headless GPU: the engine's own numbers, <a href="#engine">below</a>.</p>
+      </li>
+      <li>
+        <h3>Video, static exports, servers</h3>
+        <p>The CPU reference, or the GPU offscreen: PNG, SVG, PDF and film.</p>
+        <p>Not timed: frame-exact at any frame rate, rendered rather than drawn live, so never late.</p>
+      </li>
+    </ul>
+    <p class="fine" style="margin-top:14px">On every platform the engine renders on demand (no frames while nothing moves) and prepares the next steps while the reader reads. Its per-frame work (points built, tiles decoded and styled, meshes tessellated) is budgeted, and the web runtime and the iOS and Android views scale the budgets to the device, lowering them when frames run long: a slower device gets the same detail over a few more frames instead of dropping them.</p>
+  </div>
+</section>
+
+<section class="section" id="heavy">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">What makes a chart heavy</p>
+      <h2>Most charts are cheap. These are the ones that can lag</h2>
+      <p>Bars, lines, areas, pies, scatterplots of a few thousand points and maps of a few hundred regions cost a fraction of a millisecond of engine time per frame on any of these platforms. Cost grows with a handful of things, and a chart that has several of them is the one to test on the slowest device you care about. The <a href="#engine">engine's numbers</a> show each of these on a desktop; <a href="#misses">where frames dropped</a> shows which ones cost frames in these runs.</p>
+    </header>
+    <div class="cards2">
+      <article>
+        <h3>Millions of points</h3>
+        <p>Point clouds and density maps: every point drawn is an instance built on the CPU and uploaded to the GPU. The engine draws a level-of-detail pyramid (a sample that preserves density at every zoom, every point up close), a published chart streams a prebuilt point archive instead of generating rows in the reader's browser, and sets that don't change keep their GPU buffers through camera moves. What still costs: a new level arriving mid-tour, a burst of instances to build and upload.</p>
+        <p><b>If yours is one:</b> publish it (the archive is built once), and keep the finest level for up close.</p>
+      </article>
+      <article>
+        <h3>Thousands of marks moving at once</h3>
+        <p>A scatterplot of 20,000 points re-sorting, or thousands of units splitting out of bars: every mark that moves is rebuilt and uploaded every frame of the transition. A desktop does it in a millisecond or two; a phone's CPU takes several times as long. <code>datars profile</code> and <code>perf-browser.mjs</code> flag a transition that rebuilds everything every frame.</p>
+        <p><b>If yours is one:</b> move fewer marks at once (stagger, or move the camera: an unchanged set keeps its buffers), or fade instead of flying.</p>
+      </article>
+      <article>
+        <h3>Street-level maps and camera flights</h3>
+        <p>Vector tiles are decoded, styled and tessellated as the camera reaches them, and a city's buildings can be a single path of tens of thousands of points. Each frame decodes, styles and tessellates within a budget scaled to the device; coarser tiles stand in meanwhile; new detail fades in over its coarser stand-in (and fades out when zooming back) instead of popping, which also spreads the work over the fade; the next step's tiles are fetched and prepared while the reader reads. What still costs: the first flight over an area, and zooming back out to where tiles have left the cache. On a first visit, tiles stream in while the camera moves.</p>
+        <p><b>If yours is one:</b> fly between prepared steps rather than free panning, and keep street-level layers few.</p>
+      </article>
+      <article>
+        <h3>Maps of thousands of regions</h3>
+        <p>A choropleth of 3,100 US counties: every region with a colour of its own is its own GPU draw call, and draw calls are what the driver's CPU side pays for, most of all on OpenGL (older Android phones, WebGL). Building such a map for a new state takes tens of milliseconds, so the engine does it in idle time before the reader steps; a step it couldn't prepare stalls for that long. Drawing regions in fewer calls is planned.</p>
+        <p><b>If yours is one:</b> fewer, larger regions where the story allows (states before counties), and steps rather than a slider over the full map.</p>
+      </article>
+      <article>
+        <h3>Morphs and turning globes</h3>
+        <p>An outline that changes shape every frame (a bar becoming a slice, a map morphing into another layout, a globe turning under its projection) can't come from a cache: every frame tessellates it anew, so the cost grows with the number of shapes times their detail. Shapes that only move or fade are tessellated once and reused, and a zoom rebuilds them only every so often, for sharpness.</p>
+        <p><b>If yours is one:</b> simplify outlines for the morph, and let detailed shapes fade rather than morph.</p>
+      </article>
+      <article>
+        <h3>Soft overlap, big screens and no GPU</h3>
+        <p>Many translucent shapes on top of each other (a galaxy's glow, a heat map) are bound by the GPU's fill rate; touch screens render at twice their density at most, and the runtime lowers its resolution while the GPU is the bottleneck. Without a GPU at all, the CPU reference draws exactly the same pixels but too slowly for big charts, and browsers without WebGPU download the larger WebGL2 build.</p>
+        <p><b>If yours is one:</b> fewer, more opaque layers; test the fallback you can't rule out.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="misses">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Where frames dropped</p>
+      <h2>Every transition that wasn't steady, on any platform</h2>
+      <p>From all the runs on this page: the web warm, cold and at phone size, and the iOS and Android apps. In these runs they are the kinds above: street-level map flights, the four-million-point galaxy, the globe morphing into other scenes. One or two dropped frames in a transition read as a hitch; more read as stutter.</p>
+    </header>
+    {{perf:misses:transitions,transitions-fast4g-cold,transitions-phone,native:native}}
+  </div>
+</section>
+
+<section class="section" id="engine">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The engine itself</p>
+      <h2>What each kind of chart costs</h2>
+      <p>A light chart and each heavy kind, through <code>datars profile</code>: every state built cold and from the cache, every transition stepped at 60 fps on a headless GPU at devicePixelRatio 2. This is a desktop's cost, the floor for every platform; a browser adds its WebAssembly overhead and a phone divides by its speed. When a state changes, the engine plans the transition once and each frame evaluates the plan (<a href="/under-the-hood/#motion">how plans work</a>), which is why the frames stay cheap even where building a state is not.</p>
+    </header>
+    {{perf:engine:engine}}
+    <p class="fine">Milliseconds. Build a state: resolving the document for it, median over the chart's states. Unprepared step: handling a step the engine hadn't built in idle time (resolve and plan), median over its transitions; prepared, a step starts moving at once. Engine and GPU per frame: median / worst frame. Draws: GPU draw calls. Rebuilt: instances built and uploaded again rather than kept from the frame before. Source: <code>site/perf/engine.json</code>, from <code>scripts/bench-engine.mjs</code> (release build).</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Web · transition by transition</p>
+      <h2>{{perf:summary:transitions:steady}} transitions steady in Chrome</h2>
+      <p>Every chart on this site stepped through: morphs between chart types, units splitting out of bars, the custom globe scene, map flights to street level streaming their tiles, brushing, and the four-million-point galaxy's camera tours. Every run is in the table, misses included and coloured.</p>
+    </header>
+    <details class="perf-all"><summary>Every transition</summary>{{perf:transitions:transitions}}</details>
+    <p class="fine">Stall: from the step to the first frame on screen. Worst frame: the longest gap between two frames. Engine and raster: the 95th-percentile time per frame spent in the engine (resolve, plan, interpolate, flatten) and in drawing (GPU encode and submit). Source: <code>site/perf/transitions.json</code>, from <code>perf-browser.mjs --dpr 2 --json</code> over <a href="/gallery/">the gallery</a>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Web · a first visit on a phone network</p>
+      <h2>{{perf:summary:transitions-fast4g-cold:steady}} transitions steady on a cold Fast-4G load</h2>
+      <p>The same gallery with the HTTP cache disabled and every request throttled like Chrome's Fast-4G preset, so bundles, map tiles and point archives are still arriving while the charts move. Steps don't wait for the network: the engine prepares the next states in idle time and draws tiles as they land.</p>
+    </header>
+    <details class="perf-all"><summary>Every transition</summary>{{perf:transitions:transitions-fast4g-cold}}</details>
+    <p class="fine">Source: <code>site/perf/transitions-fast4g-cold.json</code>, from <code>perf-browser.mjs --network fast4g --cold --dpr 2 --json</code>.</p>
+  </div>
+</section>
+
+<section class="section" id="phones">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Web · a phone's screen and CPU</p>
+      <h2>{{perf:summary:transitions-phone:steady}} transitions steady at phone size, with a quarter of the CPU</h2>
+      <p>The gallery again, at 390 × 844 CSS pixels with Chrome's CPU slowed fourfold, roughly a mid-range phone. The runtime renders at no more than twice the screen's pixel density on touch screens, drops its resolution when the GPU is the bottleneck, and gives the engine a smaller share of each frame on slower devices, so the heaviest charts keep moving.</p>
+    </header>
+    <details class="perf-all"><summary>Every transition</summary>{{perf:transitions:transitions-phone}}</details>
+    <p class="fine">Source: <code>site/perf/transitions-phone.json</code>, from <code>perf-browser.mjs --cpu 4 --width 390 --height 844 --dpr 2 --json</code>.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Web · opening and scrolling</p>
+      <h2>Pages that don't jump</h2>
+      <p>Each page scrolled top to bottom at 1,500 px/s while its charts open: the frame rate it kept, the frames it dropped, long tasks, and cumulative layout shift. Charts open when scrolling pauses and every chart slot reserves its exact space before any script runs, so text never moves when a chart appears.</p>
+    </header>
+    {{perf:webcards:transitions,scroll}}
+    <div style="margin-top:18px">{{perf:scroll:scroll}}</div>
+    <p class="fine">Source: <code>site/perf/scroll.json</code>, from <code>perf-browser.mjs --scroll --dpr 2 --json</code> over this site's pages.</p>
+  </div>
+</section>
+
+<section class="section" id="native">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">iOS and Android</p>
+      <h2>Native apps draw with the device's GPU</h2>
+      <p>DatarsKit (iOS, iPadOS, macOS) draws with Metal and datars-android with Vulkan or OpenGL ES, through the same renderer as the browser; the CPU reference is only a fallback. Each sample app steps a published chart through every state by itself and times every frame the display showed: the same summary as the browser's frame profiler, with each frame's CPU time split into the engine and the render.</p>
+    </header>
+    {{perf:native:native}}
+    <p class="fine">The iOS figures are from the iOS Simulator, which draws with the Mac's GPU; the Android figures from the Android Emulator drawing through the Mac's GPU with OpenGL ES (its Vulkan can't run on macOS hosts), behind a translation layer that makes every draw call and every GPU buffer expensive. Read them as the native pipeline at work, not as a particular phone's frame rate. Render is the GPU encode, submit and present; draws are the GPU draw calls a frame made. Source: <code>site/perf/native.json</code>, from <code>scripts/bench-native.mjs</code>.</p>
+  </div>
+</section>
+
+<section class="section" id="method">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Method</p>
+      <h2>How these numbers are made</h2>
+    </header>
+    <ol class="method">
+      <li><b>Every transition, frame by frame.</b> Each chart is stepped through all of its states and every frame is recorded: its time, the engine's share and the drawing's share, and the gaps between frames. A dropped frame is a 60 Hz refresh with nothing new on screen.</li>
+      <li><b>The web, in a real browser.</b> <code>scripts/perf-browser.mjs</code> drives the installed Google Chrome through Playwright (headless, but with Chrome's real GPU stack and WebGPU) at devicePixelRatio 2, 1280×900, and finds every <code>&lt;datars-view&gt;</code> on each page. <code>--network fast4g|slow4g|3g</code> throttles every request like Chrome's DevTools presets, <code>--cold</code> disables the HTTP cache, <code>--cpu 4</code> slows the CPU fourfold, and <code>--scroll</code> scrolls each page at a steady speed and reports long tasks and layout shift.</li>
+      <li><b>Native apps.</b> <code>scripts/bench-native.mjs</code> publishes charts, serves them, and has the iOS and Android sample apps step through them by themselves in the simulator and the emulator, collecting each transition's frame profile from their logs.</li>
+      <li><b>The engine.</b> <code>scripts/bench-engine.mjs</code> runs <code>datars profile</code> over a light chart and the heavy kinds: every state built cold and cached, every transition stepped at 60 fps on a headless GPU.</li>
+      <li><b>Budgets.</b> <code>perf-browser.mjs</code> exits non-zero when a transition falls below 50 fps or stalls for more than 100 ms (<code>--budget-fps</code>, <code>--budget-stall</code>), so it can guard a build.</li>
+      <li><b>Honest limits.</b> One machine, an Apple Silicon Mac, for every platform. The browser runs are Chrome's; Safari and Firefox aren't measured yet. The simulator and the emulator aren't phones: physical iPhones and Android phones, including older ones on OpenGL ES, are next. A phone is slower than this Mac, which is what <code>--cpu 4</code> approximates, and why the engine renders on demand, prepares steps ahead, scales its work to the device and gives its frames to the chart the reader is looking at.</li>
+    </ol>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Measure your own</p>
+      <h2>The same tools, for your charts, on your devices</h2>
+    </header>
+    <div class="cards2">
+      <article>
+        <h3><code>datars profile</code></h3>
+        <p>Any document, on your machine: every state resolved cold and warm, then every transition stepped at 60 fps with the stall before it moves and each frame's engine and GPU time, draw calls and meshes tessellated. <code>--timeline</code> for frame by frame, <code>--json</code> for scripts.</p>
+<pre><code data-lang="sh">datars profile story.ts --dpr 2 --timeline</code></pre>
+      </article>
+      <article>
+        <h3>In your app: <code>runBenchmark</code></h3>
+        <p>DatarsKit's <code>DatarsChartView.runBenchmark</code> and datars-android's <code>DatarsView.runBenchmark</code> step a chart through its states on the device in your hand and report each transition: frames, fps, dropped frames, the engine and render time per frame, draw calls and uploads.</p>
+      </article>
+      <article>
+        <h3>In the browser: stats for nerds</h3>
+        <p>Focus any chart and press <kbd>Shift</kbd>+<kbd>D</kbd> (or add <code>?datars-perf</code> to the page URL, or the <code>perf</code> attribute) for the renderer, frame times, a frame graph and what the engine is doing. Each transition logs a summary line, its slowest frame and what that frame did included, and fires a <code>perf</code> event.</p>
+      </article>
+      <article>
+        <h3><code>perf-browser.mjs</code></h3>
+        <p>Whole pages in Chrome, as above. Point it at your site:</p>
+<pre><code data-lang="sh">node scripts/perf-browser.mjs http://localhost:8787 \
+  --network fast4g --cold --json out.json
+node scripts/perf-browser.mjs http://localhost:8787 --scroll</code></pre>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Try the heaviest charts yourself</h2>
+        <p>Four million stars with a live frame counter, and flights to street level.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/features/big-data/">The galaxy <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/features/maps/">Street-level flights</a>
+      </div>
+    </div>
+  </div>
+</section>

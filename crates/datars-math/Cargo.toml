@@ -1,0 +1,13 @@
+[package]
+name = "datars-math"
+description = "Deterministic numerics and 2D geometry for datars: libm wrapper, vectors, affine transforms, paths, seeded RNG, stable hashing."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+
+[dependencies]
+libm.workspace = true
+serde.workspace = true

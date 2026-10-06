@@ -1,0 +1,38 @@
+# Rust and JS build outputs. `crates/datars-engine/js/*.js` IS committed on purpose: the engine
+# embeds those bundles (regenerate with scripts/build-js.sh).
+target/
+node_modules/
+packages/*/dist/
+
+# Renders, test reports, site builds (`datars test` → out/test, build-site.mjs → out/pages).
+/out/
+
+# Apple: SwiftPM build dirs and the xcframework scripts/build-apple.sh makes.
+.build/
+*.xcframework/
+xcuserdata/
+DerivedData/
+
+# Android: Gradle outputs and the libraries scripts/build-android.sh copies in.
+.gradle/
+android/**/build/
+android/datars/src/main/jniLibs/
+local.properties
+
+# Generated next to documents: point archives (name.<12-hex hash>.pmtiles) and app bundles.
+*.[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].pmtiles
+examples/*/web/*.datars
+
+# Python (packages/python has its own .gitignore for its build outputs).
+__pycache__/
+.venv/
+
+# Profiles and local agent settings.
+*.profraw
+.claude/
+dist/
+
+# OS and editor files.
+.DS_Store
+.idea/
+*.swp

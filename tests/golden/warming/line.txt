@@ -1,0 +1,87 @@
+scene 760.00×400.00 background=$paper
+  group ("root",)
+    group ("chart",) transform=[1.00 0.00 0.00 1.00 12.00 16.00] role=group "Temperature anomaly, °C"
+      ("title",) text "Temperature anomaly, °C" at (0.00, 0.00) size=17.00 ink=$ink role=title "Temperature anomaly, °C"
+      group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+        group ("axis-y",) transform=[1.00 0.00 0.00 1.00 32.21 0.00] role=axis "y axis"
+          ("domain",) segment (0.00, 0.00)→(0.00, 317.62) stroke=$rule/1.00
+          group ("-0.4",) role=tick "−0.4"
+            ("#0",) segment (0.00, 317.62)→(-5.00, 317.62) stroke=$rule/1.00
+            ("#1",) text "−0.4" at (-8.00, 317.62) size=11.00 ink=$muted
+          group ("-0.2",) role=tick "−0.2"
+            ("#0",) segment (0.00, 272.25)→(-5.00, 272.25) stroke=$rule/1.00
+            ("#1",) text "−0.2" at (-8.00, 272.25) size=11.00 ink=$muted
+          group (0,) role=tick "+0.0"
+            ("#0",) segment (0.00, 226.87)→(-5.00, 226.87) stroke=$rule/1.00
+            ("#1",) text "+0.0" at (-8.00, 226.87) size=11.00 ink=$muted
+          group ("0.2",) role=tick "+0.2"
+            ("#0",) segment (0.00, 181.50)→(-5.00, 181.50) stroke=$rule/1.00
+            ("#1",) text "+0.2" at (-8.00, 181.50) size=11.00 ink=$muted
+          group ("0.4",) role=tick "+0.4"
+            ("#0",) segment (0.00, 136.12)→(-5.00, 136.12) stroke=$rule/1.00
+            ("#1",) text "+0.4" at (-8.00, 136.12) size=11.00 ink=$muted
+          group ("0.6",) role=tick "+0.6"
+            ("#0",) segment (0.00, 90.75)→(-5.00, 90.75) stroke=$rule/1.00
+            ("#1",) text "+0.6" at (-8.00, 90.75) size=11.00 ink=$muted
+          group ("0.8",) role=tick "+0.8"
+            ("#0",) segment (0.00, 45.37)→(-5.00, 45.37) stroke=$rule/1.00
+            ("#1",) text "+0.8" at (-8.00, 45.37) size=11.00 ink=$muted
+          group (1,) role=tick "+1.0"
+            ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+            ("#1",) text "+1.0" at (-8.00, 0.00) size=11.00 ink=$muted
+        group ("center",) transform=[1.00 0.00 0.00 1.00 38.71 0.00]
+          group ("area",)
+            group ("grid-y",) role=decoration
+              ("-0.4",) segment (0.00, 317.62)→(685.29, 317.62) stroke=$grid/1.00 role=decoration
+              ("-0.2",) segment (0.00, 272.25)→(685.29, 272.25) stroke=$grid/1.00 role=decoration
+              (0,) segment (0.00, 226.87)→(685.29, 226.87) stroke=$grid/1.00 role=decoration
+              ("0.2",) segment (0.00, 181.50)→(685.29, 181.50) stroke=$grid/1.00 role=decoration
+              ("0.4",) segment (0.00, 136.12)→(685.29, 136.12) stroke=$grid/1.00 role=decoration
+              ("0.6",) segment (0.00, 90.75)→(685.29, 90.75) stroke=$grid/1.00 role=decoration
+              ("0.8",) segment (0.00, 45.37)→(685.29, 45.37) stroke=$grid/1.00 role=decoration
+              (1,) segment (0.00, 0.00)→(685.29, 0.00) stroke=$grid/1.00 role=decoration
+            group ("span-x-1951",) role=annotation "Baseline"
+              ("#0",) rect x=304.10 y=0.00 w=124.21 h=317.62 fill=$ink opacity=0.07
+              ("#1",) text "Baseline" at (308.10, 12.00) size=11.00 ink=$muted
+            group ("rule-y-0",) role=annotation "y = 0"
+              ("#0",) segment (0.00, 226.87)→(685.29, 226.87) stroke=$ink-2/1.00
+            group ("areas",)
+              group ("",)
+                ("area",) area n=145 fill=$mark opacity=0.18 role=series "anomaly"
+            group ("lines",)
+              group ("",)
+                ("line",) polyline n=145 first=(0.00, 279.05) stroke=$mark/1.80 role=series "anomaly"
+                ("points",) instances circle ×145
+                  · ("1880",) (0.00, 279.05) fill=#00000000
+                  · ("1881",) (4.28, 290.40) fill=#00000000
+                  · ("1882",) (8.57, 304.01) fill=#00000000
+                  · … 142 more
+          group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 324.12] role=axis "x axis"
+            ("domain",) segment (0.00, 0.00)→(685.29, 0.00) stroke=$rule/1.00
+            group (1880,) role=tick "1880"
+              ("#0",) segment (0.00, 0.00)→(0.00, 5.00) stroke=$rule/1.00
+              ("#1",) text "1880" at (0.00, 8.00) size=11.00 ink=$muted
+            group (1900,) role=tick "1900"
+              ("#0",) segment (85.66, 0.00)→(85.66, 5.00) stroke=$rule/1.00
+              ("#1",) text "1900" at (85.66, 8.00) size=11.00 ink=$muted
+            group (1920,) role=tick "1920"
+              ("#0",) segment (171.32, 0.00)→(171.32, 5.00) stroke=$rule/1.00
+              ("#1",) text "1920" at (171.32, 8.00) size=11.00 ink=$muted
+            group (1940,) role=tick "1940"
+              ("#0",) segment (256.98, 0.00)→(256.98, 5.00) stroke=$rule/1.00
+              ("#1",) text "1940" at (256.98, 8.00) size=11.00 ink=$muted
+            group (1960,) role=tick "1960"
+              ("#0",) segment (342.64, 0.00)→(342.64, 5.00) stroke=$rule/1.00
+              ("#1",) text "1960" at (342.64, 8.00) size=11.00 ink=$muted
+            group (1980,) role=tick "1980"
+              ("#0",) segment (428.30, 0.00)→(428.30, 5.00) stroke=$rule/1.00
+              ("#1",) text "1980" at (428.30, 8.00) size=11.00 ink=$muted
+            group (2000,) role=tick "2000"
+              ("#0",) segment (513.97, 0.00)→(513.97, 5.00) stroke=$rule/1.00
+              ("#1",) text "2000" at (513.97, 8.00) size=11.00 ink=$muted
+            group (2020,) role=tick "2020"
+              ("#0",) segment (599.63, 0.00)→(599.63, 5.00) stroke=$rule/1.00
+              ("#1",) text "2020" at (599.63, 8.00) size=11.00 ink=$muted
+            group (2040,) role=tick "2040"
+              ("#0",) segment (685.29, 0.00)→(685.29, 5.00) stroke=$rule/1.00
+              ("#1",) text "2040" at (685.29, 8.00) size=11.00 ink=$muted

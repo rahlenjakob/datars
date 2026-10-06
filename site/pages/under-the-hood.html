@@ -1,0 +1,454 @@
+---
+title: Under the hood — how datars turns a document into moving pixels
+description: One chart followed through every layer of datars — the document it compiles to, the bundle it is published as, the runtime that loads it, the engine that resolves and animates it, the renderers that draw it — with the reasons behind each design, the per-frame budgets, and the tests that keep every platform identical.
+og: votes
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Under the hood</p>
+    <h1>How a chart gets from a TypeScript file to a frame</h1>
+    <p class="lede-2">This page follows one small chart through every layer of datars: the document it compiles to, the bundle it is published as, the runtime that loads it, the engine that resolves and animates it, and the renderers that draw it. Along the way it explains why each piece works the way it does, what each frame is allowed to cost, and how the tests keep every platform drawing the same pixels. The figures quoted come from the source code or from benchmark data committed with this site, and each one says which.</p>
+  </div>
+</section>
+
+<div class="wrap hood">
+<nav class="hood-toc" aria-label="On this page">
+  <p>On this page</p>
+  <a href="#example">The running example</a>
+  <a href="#overview">The shape of the system</a>
+  <a href="#document">1 · The document</a>
+  <a href="#publishing">2 · Publishing</a>
+  <a href="#runtime">3 · The web runtime</a>
+  <a href="#resolve">4 · Resolving a scene</a>
+  <a href="#motion">5 · Motion</a>
+  <a href="#maps">6 · Maps and big data</a>
+  <a href="#rendering">7 · Rendering</a>
+  <a href="#determinism">8 · Determinism</a>
+  <a href="#testing">9 · Testing</a>
+  <a href="#platforms">10 · Platforms</a>
+  <a href="#delivery">11 · Delivery</a>
+</nav>
+
+<article class="prose hood-body">
+
+<section id="example">
+<h2>The running example</h2>
+<p>Sweden's 2022 election results, as a story of four steps: bars, the same bars ranked, a pie and a donut. Each party keeps its identity from step to step, so its bar turns into its slice. The chart uses four standard-library recipes (plot, bar, pie and card), a derived table, a signal, a key table with names and colours, one motion rule and a program of steps. That is enough to touch almost every part of the system. Step through it; the rest of the page explains what happens when you do.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="votes" data-caption></div></div><figcaption><b>Vote share by party, Sweden 2022</b>: {{size:votes}} gzipped as published. Every change is a keyed transition planned by the engine; the document contains no animation code.</figcaption>{{alt:votes}}</figure>
+</section>
+
+<section id="overview">
+<h2>The shape of the system</h2>
+<p>datars is one Rust engine plus thin hosts around it. The engine never does IO and never reads a clock. Bytes and inputs go in; frames and requests for more bytes come out. It is the same engine at every stage. At publish time it runs in the CLI to bake scenes and draw posters. In the browser it is WebAssembly. In an app it sits behind a C ABI. Whatever the author's machine computed when publishing, a reader's device can compute again and get the same result.</p>
+<figure class="fig hood-fig">
+<div class="hd-io">
+  <div class="hd-side">
+    <p class="hd-h">In: bytes and inputs</p>
+    <ul>
+      <li><b>A document</b>, or a bundle's manifest and chunks</li>
+      <li><b>Bytes it asked for</b>: data, fonts, byte ranges of archives</li>
+      <li><b>The time</b> of each frame</li>
+      <li><b>Input</b>: pointer, keys and wheel, signals, size, mode and tokens, the work share</li>
+    </ul>
+  </div>
+  <div class="hd-core"><b>The engine</b><span>the same Rust in the CLI, in WebAssembly and behind the C ABI</span><em>no clock · no IO · no randomness</em></div>
+  <div class="hd-side">
+    <p class="hd-h">Out: frames and requests</p>
+    <ul>
+      <li><b>A display list</b> for a renderer to draw</li>
+      <li><b>Requests</b> for the bytes it needs next</li>
+      <li><b>Semantics</b> for screen readers</li>
+      <li><b>When to wake it</b>, once nothing moves</li>
+    </ul>
+  </div>
+</div>
+<figcaption>The engine as its hosts see it. A page, an app, the CLI or a test owns the clock, the network and the screen, and hands the engine bytes and inputs; everything that decides pixels happens inside, so every host gets the same frames. (The host contract in <a href="{{src}}/docs/03-architecture.md">docs/03-architecture.md</a>.)</figcaption>
+</figure>
+<p>A chart then travels through six stages, from the author's file to the reader's screen:</p>
+<ol class="hood-flow">
+  <li><b>doc.ts</b>TypeScript using <code>@datars/sdk</code> and the standard library. Run once, at authoring time.</li>
+  <li><b>The document</b>JSON: data, tables, signals, a keyed scene template, states and motion rules. No code.</li>
+  <li><b>The bundle</b>A small manifest plus content-addressed chunks, with variants from a static poster up to the full source.</li>
+  <li><b>A runtime</b><code>&lt;datars-view&gt;</code> on the web, DatarsKit on iOS and macOS, datars-android, a desktop window, or the video exporter.</li>
+  <li><b>The engine</b>Resolve a scene for the current state, plan the motion to the next one, evaluate the plan every frame, flatten it to a display list.</li>
+  <li><b>A renderer</b>wgpu on WebGPU, WebGL2, Metal, Vulkan or DX12; or the CPU reference rasterizer; or SVG and PDF.</li>
+</ol>
+<p>Work happens in three places, and most design decisions come down to moving work from the last to the first two:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>When</th><th>What runs</th><th>Budget</th></tr></thead>
+<tbody>
+<tr><td>Publish time</td><td>Recipe expansion, fetching data, subsetting fonts, baking every state, drawing the poster, cutting map archives</td><td>Whatever it takes</td></tr>
+<tr><td>Idle time on the device</td><td>Resolving the steps next to the one on screen, planning the transitions to them, tessellating their meshes, downloading their map tiles</td><td>Slices of idle callbacks, while the reader reads</td></tr>
+<tr><td>A frame</td><td>Evaluating the plan at time <i>t</i>, filling map tiles and point levels within per-frame budgets, flattening, drawing</td><td>16.7 ms at 60 Hz, shared with the page</td></tr>
+</tbody></table></div>
+<p>On one timeline, from publishing to a reader stepping through the chart, the three look like this:</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-times" data-min="290" data-phone-ratio="1.36" data-caption></div></div><figcaption><b>Three places work happens</b>, not to scale. Publishing runs once, before any reader. On the device, idle slices between steps prepare the next ones, and frames run only while something moves. <a href="{{src}}/site/figures/how/times.ts">Figure source</a></figcaption>{{alt:how-times}}</figure>
+<p>Nothing the author wrote runs in a frame: no recipe, no callback, no user JavaScript. That is why frame cost is predictable.</p>
+</section>
+
+<section id="document">
+<h2>1 · The document</h2>
+<p>A chart starts as an ordinary TypeScript module whose default export is a call to <code>doc()</code>. The <code>datars</code> CLI compiles it with esbuild and runs it once in Node, and what the module returns is plain JSON. Inside a user's project the CLI uses that project's own <code>@datars/sdk</code> and <code>@datars/std</code>. Nothing from the TypeScript survives into the output: there are no closures left to call later. This is what the example looks like, trimmed:</p>
+<pre><code data-lang="ts">export default doc({
+  data: { votes: data.values({ party, share }, { key: "party" }) },
+  keys: { S: { name: "Social Democrats", color: "#e8112d" }, /* … */ },
+  tables: { ranked: { from: "votes", ops: [{ op: "sort", by: [["share", "desc"]] }] } },
+  signals: { shape: signal.str("bars") },
+  motion: motion({ select: { role: "datum" }, matcher: "by-key" }),
+  scene: group({ key: "root", layout: { type: "stack" }, children: [
+    plot({ data: "votes", x: "party", y: "share", color: "party", children: [bar({ labels: true })] },
+         { key: "chart", when: e('shape == "bars"') }),
+    pie({ data: "votes", value: "share", category: "party" }, { key: "chart", when: e('shape == "pie"') }),
+    /* the ranked plot, the donut, a narration card */
+  ] }),
+  program: story({ steps: [step("bars", { set: { shape: "bars" } }), step("pie", { set: { shape: "pie" } }) /* … */] }),
+});</code></pre>
+<h3>Recipes are calls, not code</h3>
+<p><code>plot()</code> and <code>bar()</code> don't draw anything. Each returns a node that names a recipe and its parameters. This is the plot as it appears in <code>examples/votes/doc.json</code>:</p>
+<pre><code data-lang="json">{ "kind": "use", "recipe": "@datars/std/plot",
+  "params": { "data": "votes", "x": "party", "y": "share", "color": "party",
+              "title": "Vote share by party, 2022 (%)",
+              "children": [ { "kind": "use", "recipe": "@datars/std/bar", "params": { "labels": true } } ] },
+  "key": "chart", "when": { "expr": "shape == \"bars\"" } }</code></pre>
+<p>The engine expands <code>use</code> nodes later, inside a sandbox (see <a href="#resolve">resolving</a>). That timing matters. A recipe can be expanded at publish time and shipped ready to draw. Or it can be expanded on the reader's device, against the standard library the runtime carries, pinned by content hash, so a runtime with a different library can't silently draw a different chart. An expansion produces templates: primitives such as shapes, texts, instances and groups, with expressions for their properties. It can also add derived tables.</p>
+<p>Here is the example's scene at those stages: as the document holds it, expanded into primitives, and resolved for its first step. Rows that are the same node keep their place as the tree grows.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-tree" data-min="370" data-phone-ratio="1.3" data-caption></div></div><figcaption><b>One scene, three forms.</b> The <code>bar</code> recipe's call becomes the <code>marks</code> group it expands to, and its repeat becomes eight keyed rects once the table's rows are there. Transcribed from <code>examples/votes/doc.json</code>, its published T2 document and <code>datars inspect</code>. <a href="{{src}}/site/figures/how/tree.ts">Figure source</a></figcaption>{{alt:how-tree}}</figure>
+<h3>Expressions: a small, total language</h3>
+<p>Wherever a property depends on data or state, the document holds an expression: <code>shape == "bars"</code>, or, inside the bar recipe, <code>scale.x(d.party)</code> and <code>`${key.name(d.party)}: ${format(d.share, ",.1~f")}`</code>. TypeScript lambdas compile to the same language. It is a typed JavaScript subset: <code>d.x</code> reads a column of the current row, a bare name is a column or a signal, and <code>a.b(…)</code> calls a host function (scales, formatting, key tables, measuring text). It is <em>total</em>. Division by zero follows IEEE rules, a missing column or signal is null, and NaN is the numeric null, so no data can make an expression throw.</p>
+<h3>Why a document</h3>
+<p>Because the chart is data, tools can work on it. <code>datars diff</code> compares two states or two versions. <code>datars migrate</code> upgrades it between IR versions. It validates against a <a href="/schema/ir-1.json">JSON Schema</a>. <code>datars explain</code> can say where any pixel came from, and a coding agent can write a chart and check it with the same tools. One more property matters for performance: the engine knows the whole chart before the first frame, so it can plan motion, prepare the next step and pre-build meshes without running anything the author wrote.</p>
+</section>
+
+<section id="publishing">
+<h2>2 · Publishing</h2>
+<p><code>datars publish doc.ts --alias votes --to site/</code> loads the document into the same engine a reader will run, then works through it in order:</p>
+<ol>
+  <li><b>Data.</b> Every source the document names is fetched and handed to the engine, and ships as a data chunk. Tile archives are the exception. They are never bundled: the runtime reads the byte ranges its views need.</li>
+  <li><b>Map tiles for every state</b> are settled the way a host would settle them: resolve, answer the engine's range requests, repeat. Posters and baked scenes then show the basemap.</li>
+  <li><b>Baking.</b> Every state of the program is resolved to a complete scene.</li>
+  <li><b>Expansion.</b> Every <code>use</code> node is expanded through the sandbox, giving a document of primitives only.</li>
+  <li><b>Fonts.</b> The build works out which characters each face could ever be asked to draw. It gathers them from the document's text, the data bytes and the baked scenes. It adds month and weekday names only if dates are formatted, and both cases if the chart changes case. A face that draws only what the baked states show gets exactly those characters, plus the ten digits if its numbers tween. The body and number faces get the full set, as does every face of an interactive chart or of one whose text can arrive later (live data, host slots, streamed tiles). Subsets ship as chunks, and extra scripts' subsets load only when needed.</li>
+  <li><b>Accessible text.</b> For every state, the narration and the semantics tree (roles, labels, depth) go into one chunk. It becomes the chart's text alternative and its crawlable HTML.</li>
+  <li><b>The poster:</b> an SVG of the first state. Point clouds are drawn from a tenth of their sample for it, because every dot costs bytes. The SVG is tagged with the mode it was drawn in, taken from its background's luminance, so a runtime showing the chart in the other mode can skip it instead of flashing it.</li>
+</ol>
+<h3>Variants: the same chart at four capability levels</h3>
+<p>A bundle carries several variants, and a runtime plays the best one it can:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Variant</th><th>Contains</th><th>A runtime needs</th><th>The example, gzipped</th></tr></thead>
+<tbody>
+<tr><td><b>T0</b> static</td><td>The poster and the accessible text</td><td>Nothing: an <code>&lt;img&gt;</code> and HTML work</td><td>{{tier:votes:T0}}</td></tr>
+<tr><td><b>T1</b> playback</td><td>Every state baked into a scene, the program and motion rules, fonts</td><td>The <code>core</code> module</td><td>{{tier:votes:T1}}</td></tr>
+<tr><td><b>T2</b> reactive</td><td>The pre-expanded document, its data, fonts</td><td><code>core</code> and <code>graph</code></td><td>{{tier:votes:T2}}</td></tr>
+<tr><td><b>T3</b> programmable</td><td>The source document, expanded on the device</td><td><code>core</code>, <code>graph</code> and <code>sandbox</code>, pinned to the build's standard library by hash</td><td>{{tier:votes:T3}}</td></tr>
+</tbody></table></div>
+<p>Drawn to scale, each variant is the chunks it needs. The poster and the accessible text are in all four; the font subsets in the three a runtime draws:</p>
+<figure class="fig hood-fig">{{variants:votes}}<figcaption><b>The example's four variants</b>, each bar as long as its gzipped first load and made of its chunks, measured when this site was built. T1 carries a baked scene for every state, T2 one expanded document and T3 the smaller source, which the device expands. Hover a segment for its chunk.</figcaption></figure>
+<p>T1 exists for runtimes that can only play states back. It is shipped only when it pays for itself. Baked scenes of dense geometry, such as a map resolved into every state, can dwarf the source they came from. The build decides with this rule:</p>
+{{code:crates/datars-build/src/lib.rs#L269-278}}
+<h3>Content addressing</h3>
+<p>Every chunk is named by the BLAKE3 hash of its bytes (<code>b3:…</code>), and the manifest lists which chunks each variant needs. Three things follow from that:</p>
+<ul>
+  <li>A chunk that several variants or charts share, such as a dataset shared by twenty charts, is stored and downloaded once. (Font subsets are cut per chart, so they are shared only between that chart's variants.)</li>
+  <li>A chunk never changes, so it can be cached forever.</li>
+  <li>Republishing writes only the chunks that are new, and writes the manifest last, by renaming it into place, so a reader never sees a manifest whose chunks aren't there yet.</li>
+</ul>
+<p>This is what republishing the example looks like after one step's narration changed:</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-republish" data-min="290" data-phone-ratio="1.8" data-caption></div></div><figcaption><b>Republishing, chunk by chunk.</b> The chunk lists are what <code>datars publish</code> reported for exactly this change: 9 chunks written, 7 already there (the poster, the three font subsets and the scenes of the other three steps). <a href="{{src}}/site/figures/how/republish.ts">Figure source</a></figcaption>{{alt:how-republish}}</figure>
+<p>The manifest, <code>c/&lt;alias&gt;</code>, is the only file that changes. Fixing a typo in a published chart means publishing again; no page or app has to be redeployed.</p>
+<h3>Automatic basemaps</h3>
+<p>A map source declared as <code>data.tiles.auto()</code> gets an archive cut to fit the document's own cameras. The build asks the engine for every view the states settle on and every flight between them, the same way the engine evaluates them for a reader. It then fills a PMTiles archive with standard basemap layers from OpenStreetMap and Natural Earth, fetched once into a local cache. Write a story about Rio, and the build fetches Rio. The archive sits next to the document with a job file acting as its lockfile: while the cameras don't change, the archive is current and is reused byte for byte, offline. Publishing ships it under a content-hashed name. It is still not part of the bundle: readers fetch it by range.</p>
+</section>
+
+<section id="runtime">
+<h2>3 · The web runtime</h2>
+<p>On a page the chart is <code>&lt;datars-view src="…/c/votes"&gt;</code>. It is a custom element with a shadow root holding the canvas, the poster, a text layer, an accessible mirror of the chart (a list plus a live region), the narration card and link overlays. Everything that decides pixels runs in the WebAssembly engine. The element's job is to feed it bytes, time and input, and to put what comes back on screen.</p>
+<h3>Starting a chart</h3>
+<ol>
+  <li><b>The manifest</b>, a few kilobytes, arrives first.</li>
+  <li><b>An engine build</b> is chosen from three, and each loads at most once per page, shared by every chart on it. <code>full</code> includes the QuickJS sandbox and is used only when every variant needs it (T3, or raw source documents). Otherwise the runtime uses <code>core</code> where the browser has a WebGPU adapter, and <code>core-gl</code>, which adds the WebGL2 backend, where it doesn't. The check for an adapter happens once, as the runtime loads, alongside the first manifest. It checks for a real adapter, not just <code>navigator.gpu</code>: some browsers have the API and no adapter.</li>
+  <li><b>The poster</b> downloads at the same time, unless it's over 200 KB. It appears only if the engine hasn't drawn within 600 ms, and never when an engine is already running on the page (the chart will be ready quickly). It is also skipped if it was drawn in the other light/dark mode, since a light poster flashing before a dark chart looks worse than a moment of empty space.</li>
+  <li><b>Chunks.</b> The engine opens the manifest, picks the best variant it can play and asks for that variant's chunks. They download in parallel. If two charts ask for the same chunk at the same moment (the same fonts, say), it downloads once.</li>
+  <li><b>Heavy steps wait for a quiet page.</b> Opening the document and attaching the GPU surface are the costly parts of a start. They wait until scrolling has paused (180 ms since the last scroll event) and no other chart is mid-transition. GPU surfaces attach one at a time.</li>
+  <li><b>The first frame</b> is drawn and the canvas fades in over the poster (0.22 s).</li>
+</ol>
+<p>So what a reader sees while a chart starts depends on how quickly its engine draws:</p>
+<figure class="fig hood-fig">
+<div class="hd-start">
+  <div class="hd-run">
+    <p class="hd-h">The engine draws within 600 ms</p>
+    <ol>
+      <li><span class="hd-shot hd-empty"></span>the box, reserved by the page</li>
+      <li><span class="hd-shot"><svg viewBox="0 0 96 60" aria-hidden="true"><g class="hd-bars"><rect x="12" y="14" width="12" height="38"/><rect x="30" y="26" width="12" height="26"/><rect x="48" y="22" width="12" height="30"/><rect x="66" y="38" width="12" height="14"/></g></svg></span>the first frame: no poster, which would only flash</li>
+    </ol>
+  </div>
+  <div class="hd-run">
+    <p class="hd-h">The engine takes longer</p>
+    <ol>
+      <li><span class="hd-shot hd-empty"></span>the reserved box</li>
+      <li><span class="hd-shot"><svg viewBox="0 0 96 60" aria-hidden="true"><g class="hd-bars hd-poster"><rect x="12" y="14" width="12" height="38"/><rect x="30" y="26" width="12" height="26"/><rect x="48" y="22" width="12" height="30"/><rect x="66" y="38" width="12" height="14"/></g></svg></span>at 600 ms, the poster</li>
+      <li><span class="hd-shot"><svg viewBox="0 0 96 60" aria-hidden="true"><g class="hd-bars hd-poster"><rect x="12" y="14" width="12" height="38"/><rect x="30" y="26" width="12" height="26"/><rect x="48" y="22" width="12" height="30"/><rect x="66" y="38" width="12" height="14"/></g><g class="hd-bars hd-half"><rect x="12" y="14" width="12" height="38"/><rect x="30" y="26" width="12" height="26"/><rect x="48" y="22" width="12" height="30"/><rect x="66" y="38" width="12" height="14"/></g></svg></span>the first frame fades in over it in 0.22 s</li>
+    </ol>
+  </div>
+  <div class="hd-run">
+    <p class="hd-h">The poster was drawn in the other mode, or an engine is already running on the page</p>
+    <ol>
+      <li><span class="hd-shot hd-empty"></span>the reserved box</li>
+      <li><span class="hd-shot"><svg viewBox="0 0 96 60" aria-hidden="true"><g class="hd-bars"><rect x="12" y="14" width="12" height="38"/><rect x="30" y="26" width="12" height="26"/><rect x="48" y="22" width="12" height="30"/><rect x="66" y="38" width="12" height="14"/></g></svg></span>the first frame, with no poster before it</li>
+    </ol>
+  </div>
+</div>
+<figcaption><b>A chart's first moments, three ways.</b> The box never changes size, and nothing is shown that would be replaced a moment later by something different. The 600 ms delay and the poster rules are in <code>packages/web/src/index.ts</code>.</figcaption>
+</figure>
+<p>Nothing on the page moves at any point. The page reserves the chart's box before any script runs, from the document's aspect ratio, a minimum height and a phone ratio written into CSS variables. <code>@datars/react</code> sizes its box the same way on first render, before the chart has loaded. The site mounts a chart when its slot comes within 700 px of the screen. Off screen a chart draws nothing, and its clock, levels and tiles resume when it's back. Far away, the React component releases its engine altogether.</p>
+<h3>The frame loop</h3>
+<p>Frames run only while something moves. When nothing does, the engine returns a <code>wake_at</code> time (an autoplay hold ending, a live refresh due) and the element sleeps until then. Each frame the element passes the time to <code>View.frame(now)</code>. The engine evaluates, fills and flattens, the renderer draws, and the element learns whether anything is still moving. If one chart is mid-transition, other charts that are only busy (a clock ticking, tiles arriving) draw every third frame, so the one being read keeps its frame rate.</p>
+<h3>Idle time, the most important time</h3>
+<p>While the reader looks at a step, the element runs <code>View.prepare()</code> in idle callbacks, a slice at a time:</p>
+<ol>
+  <li>It resolves the steps before and after the current one, and plans the transitions to them. A step then starts from a finished plan and has nothing to compute on input.</li>
+  <li>It hands each prepared target's display list to the renderer to <em>warm</em>: every mesh the landing frame will draw is tessellated and uploaded in advance. If a target's map tiles are still downloading, it warms again when more bytes arrive, so the landing frame doesn't tessellate what arrived late.</li>
+  <li>It downloads the map tiles those steps will need, along their flights and around the view, behind anything visible now.</li>
+</ol>
+<p>The result is on the <a href="/performance/">performance page</a>: in the committed runs, the median stall from a click to the first moving frame is a few milliseconds.</p>
+<h3>Adapting to the device</h3>
+<p>The engine's per-frame budgets are sized for a desktop, and a phone's CPU takes three or four times as long for the same work. So the page gives the engines a share of their per-frame budgets, and times the main-thread cost of every frame that moves. The share starts at a half and never goes above three quarters, since WebAssembly runs the same work two to three times slower than native code. A frame over 14 ms cuts it to 70% at once; while the running average is above about 8 ms it drops by a tenth a frame, down to a fifth. When frames are cheap again (the average under 4 ms), it grows back. On a slow device, detail then arrives over more frames instead of frames being dropped. The share is one per page, because it is the device that is slow, not a particular chart. The engine treats it like any other input (see <a href="#determinism">determinism</a>).</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-share" data-phone-ratio="1.1"></div></div><figcaption><b>The work share, frame by frame.</b> A made-up workload (each frame costs 2 ms plus its pending work times the share) through the page's own rule, <code>noteFrame</code> in <code>packages/web/src/index.ts</code>: when a flight starts, frame times jump and the share falls to its floor within a few frames; afterwards it climbs back. <a href="{{src}}/site/figures/how/share.ts">Figure source</a></figcaption>{{alt:how-share}}</figure>
+<h3>Text you can select, and a chart you can hear</h3>
+<p>The canvas is pixels, but the chart's words are real text as well. The engine reports where every line of every text is drawn, with its box, baseline, direction and font face. The text layer lays one transparent span per line exactly there, in the chart's own font (the engine hands over the face's bytes, and each face is registered once per page), stretched to the drawn width. The selection highlight then sits on the drawn glyphs, and copy, find-in-page and crawlers all see the words.</p>
+<p>That layer is <code>aria-hidden</code>. Screen readers get the <em>mirror</em> instead: the engine's semantics tree as a list of labelled items in reading order ("Social Democrats: 30.3"), the chart's controls as native range inputs, and each step's narration in a live region. Otherwise every title and label would be read twice. Keyboard: → or space for the next step, ← for the previous, Escape to go back. <kbd>Shift</kbd>+<kbd>D</kbd>, or <code>?datars-perf</code> in the URL, opens a panel with every frame's cost.</p>
+</section>
+
+<section id="resolve">
+<h2>4 · Resolving a scene</h2>
+<p>A <em>resolve</em> turns the document and the current signal values into a <b>scene</b>: a keyed tree of groups, views (a clipped viewport with a camera), shapes, texts, images and instance sets. The engine walks the scene template with a context: the layout box it's in, the scales in scope and the current datum. Along the way it evaluates properties, expands recipes, lays out boxes and shapes text.</p>
+<h3>Tables</h3>
+<p>Sources become typed, columnar, keyed tables. The example's <code>votes</code> table is keyed by <code>party</code>. Derived tables are pipelines of operations over another table: <code>filter</code>, <code>derive</code>, <code>aggregate</code>, <code>sort</code>, <code>top</code>, <code>bin</code>, <code>window</code>, <code>join</code>, <code>pivot</code>, <code>unpivot</code>, <code>union</code>, <code>sample</code> and <code>interpolate</code>, plus layout algorithms: treemaps, packs, waffles, parliaments, beeswarms, Sankey links and more. A table that doesn't depend on the layout box or scales is computed once and kept across resolves until its data changes. One that does is cached per box and scope. The example's <code>ranked</code> table is computed once, however often the reader steps back and forth.</p>
+<h3>The expression VM</h3>
+<p>Expressions are parsed and type-checked when the document loads, then compiled to register bytecode. They run over rows in chunks of 1,024. Each instruction runs over a whole chunk before the next begins, so an expression over a hundred thousand rows costs about a hundred dispatches per instruction, not a hundred thousand. Registers hold typed lanes (numbers, booleans, values), and columns are borrowed, never copied. Fast kernels cover arithmetic, comparisons, maths and selects. Everything else falls back to a scalar interpreter that defines the semantics, so results are the same either way. Output NaNs are canonicalized, because hardware differs in the NaN bits it produces.</p>
+<h3>Recipes in a sandbox</h3>
+<p>Unless the bundle was expanded at publish time, <code>use</code> nodes expand here, in QuickJS. The sandbox has no ambient authority: no <code>Date</code>, no <code>Math.random</code>, no IO, no timers. <code>Math</code>'s transcendental functions are replaced with the engine's deterministic ones, and every call runs under a time budget and a memory limit. Expansions are cached by recipe, parameters and context. The same QuickJS is compiled into the web runtime's WebAssembly and into native builds, so a recipe expands identically everywhere.</p>
+<h3>Layout, scales and keys</h3>
+<p>Layout is engine-level because it depends on measured text: an axis is as wide as its widest label, so a recipe can't guess the margins. A container lays its children out in <code>rows</code> or <code>columns</code>, stacks them, or places them in a <code>grid</code>. A child's size is a fixed length, a percentage, <code>auto</code> (measured) or <code>fill</code> with a weight. Scales resolve within their layout box, so <code>scale.x(d.party)</code> is a pixel position in the plot's box.</p>
+<p>A <code>repeat</code> puts the pieces together: a template, a table's rows, the scales of the box it's in. Step through one:</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-repeat" data-phone-ratio="1.36" data-caption></div></div><figcaption><b>A template times a table.</b> One node per row, keyed by the row; the numbers beside the bars are their widths in pixels, computed by the engine in this figure's own box. Narrow the box and they resolve again, keys unchanged, so the bars move rather than being replaced. <a href="{{src}}/site/figures/how/repeat.ts">Figure source</a></figcaption>{{alt:how-repeat}}</figure>
+<p>Every mark gets a key, usually from its data row. Keys chain into <b>key paths</b> from the root. A key part is a number, a string, or the <i>i</i>-th unit of its parent datum (one seat of a party, one cell of a waffle). Key paths are how the engine identifies an element across resolves, how motion pairs elements, and how tools address them. This is the Social Democrats' bar, explained by the engine itself (captured when this site was built):</p>
+{{run:explain examples/votes/doc.json --key '("S",)'|18}}
+<p>The output shows the whole chain: two recipes (<code>plot → bar</code>), the data row, the template, and every expression with the value it produced. The same key, <code>("S",)</code>, also names the party's axis tick and its value label, each under its own path.</p>
+<h3>Placement passes, semantics and caching</h3>
+<p>After the tree is built, a few passes place what depends on everything else. Cards move to avoid data marks, labels are decluttered, and text is kept inside its frame. Every node can also carry semantics (a role, a label, a value, an action). That is what the mirror, the text alternative and the accessible-text chunk are made from.</p>
+<p>A resolved scene is cached under a signature: the program's position, the viewport size and every signal's value, up to 256 scenes. Going back to a step never resolves it again.</p>
+<h3>Flattening</h3>
+<p>The scene is flattened into a <b>display list</b>. This is a flat sequence of drawing operations in paint order: fill, stroke, glyphs, instances, image, and push or pop for clips and layers. Each carries its accumulated transform, opacity and clip. Colours in the scene are inks such as <code>$ink-2</code> or <code>$palette[3]</code>, and they are resolved against the theme only here, as late as possible. Switching between light and dark or changing brand tokens flattens again, but never re-resolves. Coordinates are CSS pixels; each renderer multiplies by the device pixel ratio.</p>
+</section>
+
+<section id="motion">
+<h2>5 · Motion</h2>
+<p>When the state changes, the engine resolves the new scene and plans a transition from what's on screen to it. The planning is the expensive part and happens once: at the change, or earlier in idle time. Every frame after that is <code>plan.at(t)</code>, a cheap pure function of normalized time that returns a scene. <code>at(0)</code> is exactly the old scene and <code>at(1)</code> exactly the new one, bit for bit. So the settled state after a transition is identical to resolving that state directly, and anything that can supply <i>t</i> can drive the plan: a scroll position can scrub it, a video exporter can render any <i>t</i>, and a second change mid-flight re-plans from <code>at(t)</code>. For the example, the <a href="/performance/">performance page</a> measures planning bars → pie at 0.2 ms and one frame of it at 0.025 ms (<code>datars profile</code>, CPU reference).</p>
+<h3>Elements and rules</h3>
+<p>Both scenes are flattened into <em>elements</em>: every shape, text and image, and every instance of an instance set. Each records its transform into the root's space, its opacity, its bounds and its structural parent. Groups and views are structure.</p>
+<p>Which element moves how comes from <b>motion rules</b>, which cascade like CSS. A rule applies when its selector (a role, a node kind, a key-path prefix) matches the element and its state globs match the transition's from/to states. Rules are ordered by specificity and then by source order, and for every field the last applicable rule that sets it wins. Unset fields default to 0.9 s, cubic in-out, no delay, matching by key path, all together, straight routes, disc morphs, fading in and out. Recipes can contribute defaults of their own, such as a line drawing on, scoped to where they're used. The example adds one rule: data marks match by key.</p>
+<h3>Matching: who becomes whom</h3>
+<p>By default elements pair by key path, and in the example the paths differ. The Social Democrats' bar lives at <code>…/("body",)/("center",)/("area",)/("marks",)/("S",)</code> inside the plot recipe, and their slice at <code>("chart",)/("S",)</code> inside the pie. The key <code>("S",)</code> is the same, though, and keys are identity across recipes: a data mark that no path matches pairs by its own key, when that key names one data mark on each side. The example's one rule says the same explicitly. Matchers, from most common to least:</p>
+<ul>
+  <li><b>By path</b> (the default): the same element in two versions of the same chart.</li>
+  <li><b>By key</b>: the same datum across different recipes, such as a bar becoming a slice or a country lifting off a map into its bar.</li>
+  <li><b>Hierarchy</b>: a parent key on one side splits into its unit keys on the other, the parent's geometry partitioned into pieces. A party's bar breaks into its seats, and merges back. Data marks left unpaired do this without a rule, too.</li>
+  <li><b>Nearest</b>: for unkeyed sets, a deterministic optimal assignment by position (an auction for up to 2,000 elements per side, greedy nearest beyond).</li>
+</ul>
+<p>Anything unmatched enters or exits through a <em>ghost</em>, a partial state relative to its real one. It can fade, scale about an origin (bars grow from their axis), shift, grow from its parent datum's centre, or draw on along its length.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-match" data-phone-ratio="1.33" data-caption></div></div><figcaption><b>Who becomes whom.</b> Keyed bars between two scenes, and the correspondence the planner builds: pairs move, a new key grows from its axis, a missing one shrinks into it. In the last step one bar's key is the parent of six unit keys, so the bar splits into six pieces; step back and they merge. The figure sets no matcher, only ghosts that grow bars from their axis: the pairing is the default. <a href="{{src}}/site/figures/how/match.ts">Figure source</a></figcaption>{{alt:how-match}}</figure>
+<h3>Tracks: how a pair interpolates</h3>
+<p>Every matched pair becomes a track, and a shape's track picks a plan for its geometry by trying these in order:</p>
+{{code:crates/datars-motion/src/plan.rs#L499-513}}
+<ul>
+  <li><b>Same</b>: nothing to do.</li>
+  <li><b>Shift</b>: every point of the path moved by one vector, as when a map is fitted into a box a few pixels taller. Interpolating point by point would be exactly a translation. So the outline is kept, and a transform moves with the easing: the same frames, but geometry that never changes, and meshes the renderer can keep. On a map of 3,100 counties, that is the difference between re-tessellating every county every frame and not at all.</li>
+  <li><b>Extend</b>: one open line runs on from the other (a series with a new data point). The longer line is drawn, trimmed from the shorter one's length to its own, so it grows along itself instead of bending into shape.</li>
+  <li><b>Param</b>: the same kind of geometry, so its parameters interpolate. Rectangles lerp x, y, width and height (bars to ranked bars); arcs lerp angles and radii.</li>
+  <li><b>Points</b>: lines keep their vertices. A line's vertices are data points, and other marks may sit on them, such as the dots of a line chart. Resampling both lines by arc length would pull every vertex off its point. Instead the two lines are merged: every vertex of both is kept and given a partner on the other line at the same relative place. The place is found by x when both run left to right (points travel straight up and down), otherwise by arc length, anchored at the ends and at the vertices a riding marker shares. A point with no partner grows out of the line.</li>
+  <li><b>Morph</b>: everything else. Both shapes become closed rings, resampled to the same number of points (32 to 256, by on-screen size), wound clockwise and started at the point straight above their centre, so vertex <i>i</i> of each are neighbours. The default <em>disc</em> strategy moves the centre in a straight line while the outline passes through a disc of matched area mid-flight (roundness 0.85·sin π<i>t</i>). A bar rounds into a blob, flies, and unfolds into its slice. Going convex to disc to convex, a shape can never fold over itself. The <em>resample</em> strategy lerps the aligned outlines point by point instead.</li>
+</ul>
+<p>The example's bars becoming its pie, frame by frame, as <code>datars film</code> draws them with the CPU reference:</p>
+<figure class="fig"><div class="hd-strip">{{strip:examples/votes/doc.json|0|2|6}}</div><figcaption><b>Morph, the disc strategy.</b> Six frames from bars to pie: each bar rounds into a blob as it flies, then unfolds into its slice. Keys pair them; nothing in the document animates.</figcaption></figure>
+<p>Lines take the other plans. Here a series runs on, is revised, and moves to a later window:</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-lines" data-phone-ratio="1" data-caption></div></div><figcaption><b>Lines keep their points.</b> From six months to nine, the line extends along itself and each dot appears as the pen reaches it; revised, the same points travel straight up or down; in a later window, points slide out through one edge and new ones are drawn on at the other. A standard <code>line</code> with <code>points</code>; the document has no motion rules. <a href="{{src}}/site/figures/how/lines.ts">Figure source</a></figcaption>{{alt:how-lines}}</figure>
+<p>Paints interpolate in OKLab, so colours pass through perceptually even midpoints rather than muddy ones. A number reshapes every frame as its value tweens. Two different texts crossfade, and never at the same time: the old one fades out in the first half and the new one in during the second, because two overlapping sets of words can't be read. An element moving between containers flies in the root's space, in a flight layer that matching ignores, so it keeps its logical path and a re-plan mid-flight continues it instead of starting over.</p>
+<p>Instance sets, such as a million points, don't become a million tracks. A <b>column track</b> interpolates their columns (x, y, size, width, height, opacity, fill) as flat arrays, each instance with its own time window. Entering and exiting instances ride along in the same node, from and to their ghosts. Past 100,000 instances a set isn't planned one by one: it crossfades as a whole, unless the target is the same set moved by one vector (a dot map fitted to a slightly different box), in which case the one set moves under a transform, as a shifted outline does.</p>
+<h3>Timing, paths and easing</h3>
+<p><b>Choreography</b> gives every element a window [start, end] within the plan's time. The options: everyone together, staggered in an order over a share of the window, phased (exits, then updates, then enters), or a wave or ripple delayed by position. <b>Routes</b> are offsets added to the straight path, such as an arc, an elbow (x first, then y) or a swirl. Every route's offset is exactly zero at both ends, so no detour can leave a settled state off by a hair. <b>Easings</b>: linear, named families in and out, CSS <code>cubic-bezier</code>, steps, keyframes, and springs. A spring is a damped oscillator evaluated in closed form and normalized to end exactly at 1; re-planned mid-flight, it carries its velocity over instead of stopping dead. <b>Cameras</b> are a centre and a log scale, so zoom interpolates the way people perceive it. Long moves follow the van Wijk–Nuij path (zoom out, pan, zoom in), which makes a world-to-street flight read as one continuous move.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-timing" data-phone-ratio="1.4" data-caption></div></div><figcaption><b>Choreography, as windows in plan time.</b> Each step is reached with a different choreography; beside the bars, the window it gives every element, with a playhead running through the plan. The windows follow the formulas in <code>crates/datars-motion/src/choreo.rs</code>. <a href="{{src}}/site/figures/how/timing.ts">Figure source</a></figcaption>{{alt:how-timing}}</figure>
+</section>
+
+<section id="maps">
+<h2>6 · Maps and big data</h2>
+<p>A <code>geo</code> coordinate system on a group fits a projection to the group's layout box. Cameras fit to a lon/lat box, or to a list signal a story step sets. Map data at every zoom is too much to resolve into a scene, so a <code>tiles</code> node resolves to an empty placeholder plus a <em>binding</em>. The binding is filled every frame, settled or mid-flight, from the camera that frame has.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="descent" data-caption></div></div><figcaption><b>From the world to a street</b>: one camera flight from the whole world to central Stockholm over vector tiles streamed by range from a {{archive:descent}} archive. Step it and watch coarser tiles stand in while finer ones arrive.</figcaption>{{alt:descent}}</figure>
+<h3>Which tiles, and how they arrive</h3>
+<p>From the transform that takes projected content to the screen (camera included) and the rectangle the view clips to, the engine computes which tiles are visible, and at what zoom they would appear 512 px across. For Web Mercator that is exact. For other projections it uses the local scale at the view's centre, so an Equal Earth world map and a SWEREF city map both ask for sensibly detailed tiles.</p>
+<p>As the camera moves, squares change level without popping. Zooming in, finer data fades in over 0.3 s above the coarser data drawn there before; zooming out, the coarser squares draw at once and the finer ones fade out on top of them, so nothing shows through:</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-tiles" data-phone-ratio="1.45" data-caption></div></div><figcaption><b>A camera over a tile pyramid.</b> What the view draws, beside the whole world at the current zoom with the camera's box on it and the squares that box needs. Schematic: these squares are drawn about 100 px across and the map is made up; the fades are the engine's (<code>crates/datars-engine/src/tiles/fill.rs</code>). <a href="{{src}}/site/figures/how/tiles.ts">Figure source</a></figcaption>{{alt:how-tiles}}</figure>
+<p>Archives are single PMTiles files: a header, directories, and tiles. Because the engine does no IO, a missing tile becomes a range request (source, offset, length). The host fetches it with an HTTP <code>Range</code> header, any static host or CDN answers, and the bytes go back through <code>provide_range</code>. There is no tile server and nothing per view to pay for.</p>
+<h3>Budgets, so a flight never freezes</h3>
+<p>A flight arriving at street level wants dozens of new tiles at once, and each costs time to decode and style. A frame that did it all would freeze. So each frame has budgets, and whatever isn't ready yet is drawn from something close enough:</p>
+{{code:crates/datars-engine/src/tiles/mod.rs#L207-221}}
+<ul>
+  <li><b>Decoding:</b> 64 KB of decompressed tile bytes per frame, beyond the first tile, which always gets through. A tile too big for a frame's budget mid-flight waits for the landing: from 85% of the way through, big tiles decode one per frame as the camera slows. Bytes that arrive but can't be decoded yet are kept (up to 512 tiles' worth), so nothing is downloaded twice.</li>
+  <li><b>Styling:</b> 8,000 features per frame, again with at least one tile always getting through. Styling runs each feature through its layer's template, at roughly half a microsecond a feature, and a street tile holds thousands. A tile already styled at a nearby zoom keeps that styling a frame or two longer.</li>
+  <li><b>Stand-ins:</b> a square whose tile isn't ready is drawn from its nearest ancestor that is, up to eight levels up, overzoomed and clipped to the square. The view is always covered, and detail sharpens into place.</li>
+</ul>
+<figure class="fig hood-fig"><svg viewBox="0 0 720 220" role="img" aria-labelledby="standin-t standin-d"><title id="standin-t">Ancestor stand-ins</title><desc id="standin-d">A view covering sixteen squares at zoom 14. Eleven are drawn from their own tiles; five, whose tiles are still arriving, are drawn from the zoom-12 tile above them, enlarged and clipped to each square.</desc>
+  <rect class="hf-box" x="20" y="20" width="180" height="180" rx="4"/><text class="hf-t" x="110" y="112" text-anchor="middle">zoom 12 tile</text><text class="hf-s" x="110" y="130" text-anchor="middle">decoded, styled</text>
+  <path class="hf-arrow" d="M210 110 H 262"/><path class="hf-arrow-head" d="M262 104 L272 110 L262 116 Z"/>
+  <g transform="translate(290 20)">
+    <rect class="hf-own" x="0" y="0" width="43" height="43"/><rect class="hf-own" x="45" y="0" width="43" height="43"/><rect class="hf-stand" x="90" y="0" width="43" height="43"/><rect class="hf-own" x="135" y="0" width="43" height="43"/>
+    <rect class="hf-own" x="0" y="45" width="43" height="43"/><rect class="hf-stand" x="45" y="45" width="43" height="43"/><rect class="hf-stand" x="90" y="45" width="43" height="43"/><rect class="hf-own" x="135" y="45" width="43" height="43"/>
+    <rect class="hf-own" x="0" y="90" width="43" height="43"/><rect class="hf-own" x="45" y="90" width="43" height="43"/><rect class="hf-stand" x="90" y="90" width="43" height="43"/><rect class="hf-own" x="135" y="90" width="43" height="43"/>
+    <rect class="hf-own" x="0" y="135" width="43" height="43"/><rect class="hf-own" x="45" y="135" width="43" height="43"/><rect class="hf-own" x="90" y="135" width="43" height="43"/><rect class="hf-stand" x="135" y="135" width="43" height="43"/>
+  </g>
+  <rect class="hf-own" x="500" y="60" width="16" height="16"/><text class="hf-s" x="524" y="73">own tile</text>
+  <rect class="hf-stand" x="500" y="96" width="16" height="16"/><text class="hf-s" x="524" y="109">ancestor, overzoomed</text>
+  <text class="hf-s" x="500" y="146">sixteen squares</text><text class="hf-s" x="500" y="164">at zoom 14</text>
+</svg><figcaption>Every visible square is drawn every frame. Five squares whose tiles are still downloading, decoding or styling show the zoom-12 tile above them, enlarged and clipped to the square.</figcaption></figure>
+<h3>Labels</h3>
+<p>Place names are placed by priority without overlapping, and they give way to every authored text on the canvas: titles, legends, callouts, data labels, the attribution. During a flight, placement changes as tiles and zooms change, and a label that simply appeared or vanished would flicker. So each flight frame also looks six samples back over the last 0.3 s. A label's opacity is the share of those samples in which it was placed, so labels fade rather than pop.</p>
+<h3>Point pyramids: millions of rows, a frame's worth at a time</h3>
+<p>An <code>instances</code> node with <code>lod</code> draws a table of any size. Its rows are indexed once into a quadtree of tiles, or read by range from a point archive. Each row gets a priority, a hash of its index. Level ℓ holds the fraction budget · 4<sup>ℓ</sup> / <i>n</i> of all rows, and a row belongs to the shallowest level whose fraction its priority falls under. The rows down to any level are therefore a uniform random sample of the data: dense regions stay dense, sparse ones sparse, and no seam shows where tiles meet, because the fraction is the same everywhere. A tile that fills up, in a region far denser than average, passes the rest of its rows to its children. Tiles stay bounded, and dense regions simply get deeper levels.</p>
+<p>Which levels a frame draws depends on how many of their rows are in view. Levels join coarse to fine while the rows drawn so far, times the next level's growth, still fit the frame's budget (150,000 rows by default). A view of everything stops early; zoomed in, it goes on down to every row:</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-points" data-phone-ratio="1.62" data-caption></div></div><figcaption><b>A point pyramid.</b> 4,096 generated rows in four levels, coloured by level; every count is computed by the engine from the rows in view. The budget here is 500 rows, sized for the figure. <a href="{{src}}/site/figures/how/points.ts">Figure source</a></figcaption>{{alt:how-points}}</figure>
+<p>A frame draws only the tiles its camera shows: at most 256 per level, none smaller than 96 px on screen. Each tile's instances are built once, by running its rows through the node's template, and then reused, so panning re-resolves nothing. Building is budgeted too, at 4,000 rows per frame times the device's work share, and new detail fades in over 0.35 s instead of appearing. That is how the <a href="/features/big-data/">four-million-star galaxy</a> on the front page draws its stars from a {{size:galaxy}} bundle: its stars are generated from a seed, and a view only ever builds the few levels it shows.</p>
+</section>
+
+<section id="rendering">
+<h2>7 · Rendering</h2>
+<p>A display list is backend-neutral. The GPU backend is one renderer for every platform, built on wgpu: WebGPU in the browser with a WebGL2 fallback, Metal, Vulkan or DX12 natively, and an offscreen target with readback for tests and image export.</p>
+<h3>Meshes are made once and kept</h3>
+<p>Every path is tessellated into triangles by lyon <em>once</em>, in its own local coordinates, and cached by content hash. A frame is then mostly uniform writes, instance uploads and draw calls. Moving, scaling or recolouring a mark changes a uniform, not its mesh. The cache key decides when a mesh can be reused:</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Mesh</th><th>Keyed by</th><th>So</th></tr></thead>
+<tbody>
+<tr><td>Fill</td><td>Path hash, fill rule, tolerance bucket (one per octave of scale)</td><td>A path with only straight edges (buildings, water, counties) has one key at every zoom: a camera flight doesn't re-tessellate the city. Curves get finer as they grow.</td></tr>
+<tr><td>Stroke</td><td>Path hash, width bucket (a quarter octave), cap, join, miter limit, dash, tolerance</td><td>The shader extrudes to the exact width, so a width bucket only shapes the joins. Under a non-uniform scale the mesh is built in device space instead, to keep the stroke even.</td></tr>
+<tr><td>Glyph</td><td>Font, glyph, size bucket (an eighth octave), tolerance</td><td>Text at every size shares outlines; a halo is a round-joined stroke under the fill.</td></tr>
+</tbody></table></div>
+<p>Vertices are stored relative to their path's centre, and the translation back is composed with the draw's transform in double precision on the CPU. So a street far from the map's origin, under a huge zoom, still lands within single-precision accuracy on screen.</p>
+<h3>Per-frame budgets and stand-ins</h3>
+<p>A mesh drawn for the first time goes into a per-frame arena, one buffer for everything new. Drawn again the next frame, it is retained: its vertices and indices are appended to shared GPU pages of 1 MB, and each page is uploaded in one write a frame. Creating or destroying a buffer is a trip through the driver on OpenGL and to the GPU process on WebGPU, so retained meshes share pages rather than getting buffers of their own. At most 64 meshes are retained per frame (times the device's work share, at least 16), but meshes of 16 KB or more are retained at once rather than copied through the arena again. A morph's outlines are new every frame and never touch the cache: thousands of entries per frame would be the hitch, and would evict the city.</p>
+<p>A frame tessellates 24 meshes (times the device's work share) before it starts looking for stand-ins: a mesh already built for a neighbouring width or tolerance bucket, drawn instead of building the exact one this frame. Zooming crosses a stroke-width bucket every quarter octave, and without stand-ins each crossing would re-tessellate every road on screen in one frame. For thin strokes on straight edges (up to 2.5 device px: borders, grid lines) the stand-in is the path's last mesh at any width, and while the host says the frame is moving it is used at once, without spending the budget on a width that will be stale a frame later. Exact meshes are built when things settle, and in idle warming, so still frames are always exact.</p>
+{{code:crates/datars-render-wgpu/src/frame.rs#L17-28}}
+<p>Meshes nobody drew for 240 frames are evicted, and beyond 256 MB the least recently used go first. The whole life of a mesh:</p>
+<figure class="fig hood-fig">
+<ol class="hd-cycle">
+  <li><b>A draw in the display list</b>Looked up by its key: path hash, fill rule, tolerance bucket (strokes add width bucket, cap, join, dash). A hit is drawn at once.</li>
+  <li><b>Tessellated</b>By lyon, in the path's own coordinates: at most 24 a frame, times the work share.</li>
+  <li><b>This frame's arena</b>One buffer for everything new, the mesh kept on the CPU for one more frame.</li>
+  <li><b>Drawn again: retained</b>Into a shared GPU page, up to 64 a frame; 16 KB or more at once.</li>
+  <li><b>Reused every frame</b>Moving, scaling or recolouring it writes a uniform, not a mesh.</li>
+  <li><b>Evicted</b>After 240 frames undrawn, or least recently used past 256 MB.</li>
+</ol>
+<div class="hd-notes">
+  <p><b>Budget spent?</b> A mesh built for a neighbouring width or tolerance bucket stands in, and thin straight strokes keep their last mesh while things move. The exact mesh comes when they settle, or in idle warming.</p>
+  <p><b>Morphing?</b> A morph's outlines are new every frame and never enter the cache. Text runs drawn two frames running are joined into one mesh, 24 runs a frame.</p>
+</div>
+<figcaption><b>The life of a mesh</b> in the GPU renderer. The numbers are constants in <code>crates/datars-render-wgpu</code> (<code>frame.rs</code>, <code>cache.rs</code>, <code>gpu.rs</code>).</figcaption>
+</figure>
+<p>Text is outlines, tessellated like any path, and each glyph's mesh is cached per font, size bucket and tolerance. A run of text drawn two frames running is joined into one mesh for its fill and one for its halo, as the CPU reference fills a run as one path. Every draw call costs on OpenGL (older phones, the Android emulator, WebGL), and a map's place names had been most of its draws: a flight over Sweden went from 730 draws a frame to 118. Text new every frame, such as numbers counting up, stays glyph by glyph, drawn from the glyph cache. At most 24 runs are joined per frame (times the device's work share), and text never waits for a stand-in, so labels don't blink.</p>
+<h3>Instances, clips, layers, colour</h3>
+<p>An instance set is one instanced draw. Symbols are analytic signed-distance shapes (the polygon comes from the same symbol geometry the CPU reference fills), and rectangles are per-axis box SDFs, each with its own colour, opacity, size and optional outline. A million points are a million quads with exact anti-aliased edges, not a million meshes. A set of 32 or more that doesn't change from frame to frame, as when the camera moves over a dot map, is flattened once (its inks resolved, its columns converted) and, from its second frame, drawn from instances kept in GPU pages of their own: not rebuilt and uploaded again every frame. Fading doesn't count as a change: the opacity of the groups around a set is a per-draw alpha, not baked into its columns, so a tile easing in or a level crossfading draws from the same buffer. A frame keeps at most 48 new sets (times the device's work share), so a whole level of cells arriving at once spreads over a few frames. Clips count in the stencil buffer: a clip increments the samples it covers inside the current clip, content draws where the count equals the clip depth, and popping decrements it. A translucent stroke blends each sample once, also through the stencil, so it doesn't darken where lyon's triangles overlap at joins. Layers render offscreen and composite with opacity and Normal, Multiply or Screen blending. Paths and glyphs get 4× MSAA. Colours are straight sRGB and the target is a non-sRGB format, so blending happens in the same space as in the CPU reference.</p>
+<h3>Choosing a backend in the browser</h3>
+<p>The renderer asks for a WebGPU adapter and device <em>before</em> touching the canvas. A WebGPU surface claims its canvas for good, and a browser that offers WebGPU without an adapter would otherwise leave nothing for the fallbacks, and no chart. If there's no adapter, the <code>core-gl</code> engine tries WebGL2 (every Safari since iOS 15 has it). If that fails too, the CPU reference draws into a 2D canvas.</p>
+<h3>The CPU reference</h3>
+<p>One renderer is written to be <em>identical everywhere</em> rather than fast. Geometry is flattened at 0.1 device px and stroked in double precision using only basic IEEE operations (+, −, ×, ÷, √, rounding) plus the engine's own maths for round joins and caps. Rust never fuses or reorders float operations, so this is bit-identical on every CPU. Coverage is computed in 24.8 fixed point with integer accumulation, which gives exact-area anti-aliasing. Compositing is integer arithmetic on premultiplied RGBA8, with one correctly rounded division by 255 per result. It's single-threaded, with no hash maps, no time and no IO. The bytes it produces are the same on x86-64, arm64 and WebAssembly, which makes it the anchor of every test. It renders goldens, server-side images and the fallback, and, for now, the iOS and Android views. SVG and PDF backends draw the same display list as vectors.</p>
+</section>
+
+<section id="determinism">
+<h2>8 · Determinism</h2>
+<p>The first principle is that the same document and the same inputs give the same pixels on every target. It's what lets a chart be authored on a Mac, tested on Linux CI and shown on an Android phone with confidence that all three agree. Keeping it takes discipline in a few specific places:</p>
+<ul>
+  <li><b>Maths.</b> Platform maths libraries differ in their last bits. The engine's crates are forbidden by lint (<code>clippy.toml</code>) from calling <code>sin</code>, <code>cos</code>, <code>exp</code>, <code>ln</code>, <code>powf</code>, <code>atan2</code>, <code>hypot</code> and the rest, and must use <code>datars_math::m</code>, a wrapper over a pure-Rust libm that gives the same bits natively and in WebAssembly. <code>sqrt</code>, <code>floor</code>, <code>ceil</code>, <code>round</code> and <code>abs</code> are exact IEEE operations and allowed. Fused multiply-add is banned, because targets differ in it.</li>
+  <li><b>Collections.</b> <code>HashMap</code> and <code>HashSet</code> are forbidden in engine crates, because their iteration order is random. Ordered maps are used instead.</li>
+  <li><b>Randomness.</b> Only a seeded generator. The dot-density layout, the point pyramid's priorities and the galaxy are all functions of their seeds.</li>
+  <li><b>Time</b> is an input. The engine is handed the time of each frame and never reads a clock. That is also why its budgets are counts (bytes, features, rows, meshes) and not milliseconds. A millisecond budget would make the frame's content depend on how fast the machine happened to be. Adapting to slow devices is therefore explicit: the host measures and hands the engine a work share, and that share is an input like any other.</li>
+  <li><b>IO</b> doesn't exist inside the engine. It emits requests (a source, a data slot, an atlas, a byte range) and receives bytes. Timing of the network can change <em>when</em> something is drawn, never <em>what</em>.</li>
+  <li><b>Recipes</b> run in a sandbox without clocks, randomness or IO, with the same deterministic maths.</li>
+</ul>
+<p>The payoff is that every platform can check itself against the same few hashes:</p>
+<figure class="fig hood-fig">
+<div class="hd-det">
+  <div class="hd-src"><b>Every example, every state</b><span>the same document and inputs</span></div>
+  <ul class="hd-targets">
+    <li><b>Native, CPU reference</b><span>x86-64 and arm64: <code>datars test</code> records the goldens</span><em>scene hash · pixel hash</em></li>
+    <li><b>WebAssembly</b><span>the web runtime, run in Node</span><em>= the goldens' pixels</em></li>
+    <li><b>Swift</b><span>DatarsKit's tests, through the C ABI</span><em>= the goldens' pixels</em></li>
+    <li><b>Android</b><span>the C ABI on an emulator</span><em>= the goldens' pixels</em></li>
+    <li class="hd-gpu"><b>GPU, wgpu</b><span><code>datars gpu</code>, against the CPU pixels</span><em>≈ within the ΔE limits</em></li>
+  </ul>
+</div>
+<figcaption><b>One oracle, every target.</b> The CPU reference's pixels are bit-identical everywhere, so wasm, Swift and Android compare against the hashes a native run wrote; any difference is a real change. Only the GPU, whose rasterizers cover edge pixels differently, is compared perceptually (see <a href="#testing">testing</a>).</figcaption>
+</figure>
+<p>A consequence worth having: <b>sessions</b>. With recording on, the engine logs every input, including frame times, clock sets, pointer and wheel events, program events, gotos, signal values, provided bytes and ranges, resizes, seeks, play and pause, reduced motion, mode and token changes, and the work share. <code>datars replay session.json</code> reproduces the session exactly, frame by frame, as a filmstrip. A bug report can then be the session itself, replayed on the developer's machine.</p>
+</section>
+
+<section id="testing">
+<h2>9 · Testing</h2>
+<h3>Goldens: the cross-target oracle</h3>
+<p><code>datars test</code> runs every example document. For each state it records a hash of the scene and a hash of the CPU reference's pixels. Each transition is sampled 64 times and the samples are hashed together. Over the samples it checks the motion invariants: <code>at(0)</code> is the old scene and <code>at(1)</code> the new one, bit for bit; no NaN appears anywhere; entering elements never fade back out and exiting ones never come back (a flash); an element on both sides never dips in opacity and recovers (a blink); and nothing visible jumps more than about a third of the view's diagonal between two samples (a pop). That morphing outlines never turn inside out is property-tested in the motion crate itself.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="how-sweep" data-phone-ratio="1.42" data-caption></div></div><figcaption><b>A transition, sampled 64 times.</b> One element's opacity or position at every sample: in blue a plan that passes, in red the bug each check exists for, with the kind of message <code>datars test</code> prints. The curves are made up; the rules are the harness's (<code>check_motion</code> in <code>crates/datars-test/src/lib.rs</code>). <a href="{{src}}/site/figures/how/sweep.ts">Figure source</a></figcaption>{{alt:how-sweep}}</figure>
+<p>The goldens are hashes and text, kilobytes in git. Images are made only for failures and review, as filmstrips and motion trails. This is the example's golden file:</p>
+{{code:tests/golden/votes/golden.json#L1-12}}
+<p>Because the engine is deterministic, every other target checks itself against the same hashes. The web tests run the WebAssembly runtime over every example that needs no external files (the native tests cover the rest) and require the same pixels. The C ABI golden test runs on an Android emulator. The Swift package has its own tests. A difference anywhere is a real change, never noise. That is also why a golden is accepted only after looking at the renders, with every other test passing: a wrong golden would hide the same regression on every platform at once.</p>
+<h3>GPU against the reference</h3>
+<p>The GPU renderer can't be bit-identical to the CPU reference: rasterizers differ in how they cover edge pixels. <code>datars gpu</code> draws every example state both ways and compares them in ΔE (perceptual colour difference). The limits are a mean ΔE of at most 1, at most 0.5% of pixels visibly different, and at most eight pixels inside regions that differ, where a region is a 3×3 block of visibly different pixels: anything 3 px thick that one renderer drew and the other didn't. All 56 example states pass. The closest are the globe's rim, where whole islands are thinner than a pixel and a sub-pixel border's coverage rounds differently under 4×MSAA than under exact coverage, and the pixels where many such borders cross.</p>
+<h3>Performance, measured frame by frame</h3>
+<ul>
+  <li><b><code>datars profile doc.ts</code></b> resolves every state cold and warm. It then steps every transition at 60 fps on a headless GPU and reports, per transition: the stall, per-frame engine and GPU time, meshes tessellated by kind, map tiles decoded and styled, instances rebuilt and uploaded, and the worst frames with what they did. <code>--timeline</code> prints every frame. Times are this machine's, but the counts aren't: a transition that rebuilds 20,000 or more instances every frame is flagged even when a desktop draws it in 3 ms, because a phone won't.</li>
+  <li><b><code>scripts/perf-browser.mjs</code></b> does the same in real Google Chrome, with its GPU stack, WebGPU and devicePixelRatio 2. It steps every transition of every chart on a site and records frame rate, lowest frame rate, dropped frames, stalls and time per frame. It can also scroll pages and record layout shift and long tasks (attributed to each chart's start-up phases), and throttle the network and the CPU to phone speeds. With <code>--profile</code> it records a CPU profile of each transition (wasm included, 0.1 ms samples) and names the functions behind its busiest 50 ms, which catches a one-frame spike that a frame-time readout can only point at. The shipped engines carry no function names, so <code>NAMES=1 scripts/build-wasm.sh</code> builds a named copy of the same code for it to load instead. That is how a 50 ms frame in a morphing map came down to one cache freeing thousands of per-frame outlines at once. The <a href="/performance/">performance page</a> is built from its committed runs.</li>
+  <li><b><code>datars budgets</code></b> checks every bundle's and runtime's gzipped size against committed budgets.</li>
+</ul>
+</section>
+
+<section id="platforms">
+<h2>10 · Platforms</h2>
+<p>A <em>host</em> owns the surface, the clock, input, IO, accessibility and native overlays, and hands everything else to the engine. Hosts are thin, so a chart behaves the same everywhere: the same layout, line breaks, motion and hit-testing, because the engine decides all of them.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Where</th><th>Host</th><th>Draws with</th></tr></thead>
+<tbody>
+<tr><td>Web</td><td><code>datars-host-web</code> through wasm-bindgen: <code>@datars/web</code>, <code>&lt;datars-view&gt;</code>, and <code>@datars/react</code> for React, Vite and Next.js</td><td>WebGPU; WebGL2 (the <code>core-gl</code> build); the CPU reference into a 2D canvas</td></tr>
+<tr><td>Desktop</td><td><code>datars-host-native</code>: a window whose surface wgpu draws into; frames only while something moves</td><td>Metal, Vulkan or DX12</td></tr>
+<tr><td>iOS and macOS</td><td>DatarsKit (Swift) over the C ABI in <code>datars-ffi</code></td><td>Metal, through wgpu, on a <code>CAMetalLayer</code> of the view's own, on <code>CADisplayLink</code> ticks (paused in the background, where iOS refuses GPU work). Without a GPU, the CPU reference into a <code>CGImage</code>.</td></tr>
+<tr><td>Android</td><td>datars-android (Kotlin) over the same C ABI, through JNI shims</td><td>Vulkan, else GLES, through wgpu, on the <code>TextureView</code>'s surface, on <code>Choreographer</code> frames. wgpu tries one backend at a time: made for both at once, the Vulkan surface kept the window and GLES could no longer draw on it. Without a GPU, the CPU reference into a <code>Bitmap</code>.</td></tr>
+<tr><td>Video, images, print</td><td><code>datars-headless</code>: <code>datars film</code>, <code>video</code> and <code>render</code></td><td>The CPU reference or wgpu offscreen; ffmpeg for MP4 with WebVTT captions; SVG; PDF</td></tr>
+<tr><td>Notebooks</td><td>The Python package: the web runtime as a notebook widget</td><td>As on the web</td></tr>
+</tbody></table></div>
+<p>The C ABI is small on purpose. It creates a view, loads a document or opens a manifest and provides its chunks, and answers the engine's data and range requests. It forwards frames, pointer and wheel events, gotos, signals, modes and tokens, and reads back pixels and status as JSON. Strings cross as UTF-8 pointers and lengths. Swift and Kotlin wrap it in native views, so the app and site both install the runtime once, and charts arrive later as bundles by URL.</p>
+</section>
+
+<section id="delivery">
+<h2>11 · Delivery</h2>
+<p>A published chart is two kinds of file: <code>c/&lt;alias&gt;</code>, the live manifest, and <code>chunks/&lt;hash&gt;</code>, immutable content. Any static host serves that layout, GitHub Pages included, under any subpath. This site's charts are published exactly that way. <code>datars serve</code> is a small server for the same layout plus the runtime, and it behaves the way a CDN would:</p>
+<ul>
+  <li>It answers HTTP <code>Range</code> requests: tile and point archives are tens of megabytes, and a view asks for a few kilobytes of them at a time.</li>
+  <li>It gzips whole responses for clients that accept it: text, WebAssembly, JSON, fonts and chunks, but not formats that are already compressed (PNG, JPEG, MP4, WOFF2, PMTiles), and not ranges. Each file is compressed once and the result kept. The engine's WebAssembly goes out at about a third of its size.</li>
+  <li>Content-addressed paths are cached as immutable: chunks wherever the site puts its delivery folder, and hashed runtime folders. Manifests are <code>no-cache</code>, because republishing rewrites them.</li>
+</ul>
+<p>Which variant a reader gets is decided on their device, from the manifest alone: the runtime takes the first variant, richest first, whose needs it meets. The same published chart therefore plays differently on different runtimes, and never fails to show something:</p>
+<figure class="fig hood-fig">
+<div class="table-wrap"><table class="hd-picks">
+<thead><tr><th>Runtime</th><th>T3 <span>source</span></th><th>T2 <span>pre-expanded</span></th><th>T1 <span>baked</span></th><th>T0 <span>poster</span></th></tr></thead>
+<tbody>
+<tr><td>Web, <code>full</code> engine</td><td class="pick">plays</td><td class="can">could</td><td class="can">could</td><td class="can">could</td></tr>
+<tr><td>App, script allowed</td><td class="pick">plays</td><td class="can">could</td><td class="can">could</td><td class="can">could</td></tr>
+<tr><td>Web, <code>core</code> engine</td><td class="no">no sandbox</td><td class="pick">plays</td><td class="can">could</td><td class="can">could</td></tr>
+<tr><td>App, <code>allowScript: false</code></td><td class="no">no script</td><td class="pick">plays</td><td class="can">could</td><td class="can">could</td></tr>
+<tr><td>A runtime with another standard library</td><td class="no">pinned by hash</td><td class="pick">plays</td><td class="can">could</td><td class="can">could</td></tr>
+<tr><td>A playback-only runtime (<code>core</code> module)</td><td class="no">no sandbox</td><td class="no">no graph</td><td class="pick">plays</td><td class="can">could</td></tr>
+<tr><td>No runtime: email, RSS, a strict CMS</td><td class="no"></td><td class="no"></td><td class="no"></td><td class="pick">shows</td></tr>
+</tbody></table></div>
+<figcaption><b>Who plays what</b>, for the example's bundle. Most rows are what <code>datars bundle inspect</code> reports for it; the rule is <code>Manifest::select</code> in <code>crates/datars-bundle</code>. Each variant also names the oldest runtime version that plays it, and an older runtime skips to the next variant, down to T0.</figcaption>
+</figure>
+<p>The runtime folder that <code>@datars/vite</code> writes is named after a hash of the engines' contents. A rebuilt engine therefore always gets a new name, and a returning reader's cache can never pair old WebAssembly with new glue code. The runtime is {{runtime}} gzipped, loaded only on pages with charts, and shared by every chart on the page. Each chart after that is its own bundle; the example is {{size:votes}}.</p>
+<h3>Where to go from here</h3>
+<p>The <a href="/performance/">performance page</a> has the measured numbers and the method. The <a href="/docs/">documentation</a> covers writing charts. The design documents in the <a href="{{src}}/docs">repository</a> go deeper into each layer, and the source is on <a href="{{repo}}">GitHub</a>.</p>
+</section>
+
+</article>
+</div>
