@@ -54,6 +54,9 @@ function mount(slot) {
   const view = document.createElement("datars-view");
   view.setAttribute("src", slot.dataset.src);
   if (slot.dataset.steps) view.setAttribute("steps", slot.dataset.steps);
+  // `data-scrubbed`: the page's scroll scrubs the story — through the nearest `[data-scrub]` box's
+  // passage through the viewport (the runtime's `scrub` attribute).
+  if ("scrubbed" in slot.dataset) view.setAttribute("scrub", "");
   view.setAttribute("mode", slot.dataset.mode ?? root.dataset.theme);
   lookAtMount(view, slot);
   const style = getComputedStyle(slot);
@@ -547,3 +550,6 @@ function highlight(el) {
 }
 document.querySelectorAll("pre code[data-lang]:not([data-hl])").forEach(highlight);
 showLook(); // after the highlighter's tables above exist
+
+// For page scripts (motion.js writes the playground's motion rule as the reader changes it).
+export { highlight };

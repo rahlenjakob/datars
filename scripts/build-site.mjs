@@ -110,6 +110,10 @@ if (existsSync(figuresDir)) {
     }
   }
 }
+// Documents a page rebuilds in the browser (the animation page's playground swaps in the reader's
+// motion rule with `setDocument`): published as a bundle like any chart, and also as the document
+// itself, at `/play/<alias>.json`.
+for (const alias of ["motion-playground"]) if (CHARTS[alias]) CHARTS[alias].raw = true;
 const showcase = Object.keys(CHARTS).filter((a) => !CHARTS[a].figure);
 
 if (!existsSync(cli)) {
@@ -210,6 +214,10 @@ for (const [alias, c] of Object.entries(CHARTS)) {
   // downloaded — a reader fetches the parts in view.
   archives[alias] = (r.copied ?? []).filter((f) => f.endsWith(".pmtiles")).reduce((n, f) => n + statSync(join(out, f)).size, 0);
   if (!c.figure) console.log(`${alias.padEnd(12)} ${kb(sizes[alias]).padStart(8)} gzipped  (${c.src})`);
+  if (c.raw) {
+    mkdirSync(join(out, "play"), { recursive: true });
+    copyFileSync(file, join(out, "play", `${alias}.json`));
+  }
 }
 // Files a page's demo reads besides the chart (`files`: repo path → site path; a folder copies its
 // files): accounts to hand a data slot, a live feed to replay.
@@ -384,7 +392,8 @@ for (const f of ["Inter-Regular.ttf", "Inter-SemiBold.ttf", "Inter-Bold.ttf", "I
 // The type a reader can pick in "Make it yours" (site.js): whole faces, fetched only when chosen.
 for (const f of ["Newsreader-Regular.ttf", "Newsreader-SemiBold.ttf", "Newsreader-OFL.txt"]) copyFileSync(join(root, "assets/fonts", f), join(out, "fonts", f));
 for (const f of readdirSync(join(root, "site/fonts"))) copyFileSync(join(root, "site/fonts", f), join(out, "fonts", f));
-for (const f of ["site.css", "site.js"]) copyFileSync(join(siteDir, f), join(out, f));
+// motion.js: the animation page's playground and showcase controls (only that page loads it).
+for (const f of ["site.css", "site.js", "motion.js"]) copyFileSync(join(siteDir, f), join(out, f));
 // Screenshots and other images the pages (and the README) show.
 if (existsSync(join(siteDir, "img"))) {
   mkdirSync(join(out, "img"), { recursive: true });
