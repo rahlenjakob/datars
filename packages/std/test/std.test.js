@@ -996,9 +996,30 @@ test("table: rows keyed and placed by a sort, headers that sort, optional column
   assert.ok(row.transform.translate[1].expr.includes("d.__pos - 1"), "a row's place is its position: a new sort slides it");
   assert.equal(out.template.scales.c3.type, "diverging");
   const sortable = stdTable.__expand({ data: "shops", key: "shop", columns, sortable: "sortBy" }, {});
-  assert.ok(bizOps(sortable).find((o) => o.as === "__pos").expr.expr.includes('sortBy == "revenue"'));
+  const pos = bizOps(sortable).find((o) => o.as === "__pos").expr.expr;
+  assert.ok(pos.includes('sortBy == "revenue" || sortBy == "-revenue"') && pos.includes('sortBy == "+revenue" ? d.__r2'), "a field sorts its own way, + and - either way");
+  assert.ok(bizOps(sortable).some((o) => o.fn === "cumsum" && o.as === "__r2" && o.order === "revenue"), "numbers reversed: smallest first");
+  assert.ok(bizOps(sortable).some((o) => o.fn === "cumsum" && o.as === "__r0" && o.order === "-shop"), "text reversed: Z to A");
   const head = bizFind(sortable, "h2");
-  assert.deepEqual(head.on.activate, { set: "sortBy", value: "revenue" });
+  assert.equal(head.on.activate.set, "sortBy");
+  assert.ok(head.on.activate.value.expr.endsWith('? "+revenue" : "revenue"'), "a click sorts by the column; another reverses it");
+  // The whole cell takes the click (the pointer finds shapes, not groups): a pointer over it.
+  const hit = head.children.find((n) => n.key === "hit");
+  assert.ok(hit && hit.pickable && hit.fill === "transparent", "a hit area the pointer finds");
+  assert.equal(head.semantics.role, "control");
+  assert.ok(head.semantics.label.expr.includes("revenue, sorted ") && head.semantics.label.expr.includes("Sort by revenue"), "says how it sorts");
+  // The label never changes (a changed text cross-fades: a blink); an arrow fades in and turns.
+  const label = head.children.find((n) => n.key === "text");
+  assert.equal(label.text, "revenue");
+  assert.ok(label.style.ink.expr.includes("hover()"), "it lights up under the pointer");
+  const arrow = head.children.find((n) => n.key === "arrow");
+  assert.ok(arrow.opacity.expr.includes('sortBy == "revenue"') && arrow.transform.rotate.expr.endsWith("? 0 : 180"));
+  assert.ok(!bizFind(sortable, "h4").on && !bizFind(sortable, "h4").children.some((n) => n.key === "hit"), "a sparkline column doesn't sort");
+  // Not sortable: no hit area, no pointer; a fixed sort's arrow is just there.
+  const fixed = bizFind(out, "h2");
+  assert.ok(!fixed.on && !fixed.children.some((n) => n.key === "hit") && !fixed.semantics);
+  assert.equal(fixed.children.find((n) => n.key === "arrow").opacity.expr, "true ? 1 : 0");
+  assert.ok(!bizFind(out, "h0").children.some((n) => n.key === "arrow"));
 });
 
 test("tileMap: a built-in grid as its own rows (op.values), data joined on the id", () => {

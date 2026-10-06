@@ -87,7 +87,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
 - `std/cloud`: A point cloud of any size (millions of rows): dots at their own x/y in an explorable view — a density-preserving sample at every zoom, every row up close, a tooltip on each
 - `std/connectedScatter`: A connected scatter plot: points at (x, y) joined in the order of a third field (usually time), an arrow at the end — how two measures moved together
 - `std/contours`: Density contours: the shape of a crowd of rows — a smoothed density of their points cut into nested levels (by default each holding a further share of the rows: the innermost line encloses the densest fifth), drawn as filled bands or lines
-- `std/dataTable`: A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks (`sortable`)
+- `std/dataTable`: A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks or taps, a second click reversing it (`sortable`)
 - `std/dendrogram`: A dendrogram (cluster layout) of a parent-child table: every leaf on one line, each parent centred over its children at its height, joined by elbows
 - `std/dot`: A dot per category at its value (a dot plot)
 - `std/dotDensity`: Dot density: one dot per `per` units of a region's value, scattered evenly inside it (seeded, deterministic)

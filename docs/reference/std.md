@@ -506,7 +506,7 @@ Theme tokens: `sequential`, `ink`, `size.small`
 
 ## dataTable
 
-`@datars/std/dataTable` — A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks (`sortable`). Rows are keyed, so a new sort slides them to their places and a filter lets rows leave and arrive. Columns are as wide as their widest cell; on a narrow screen `optional` columns step aside.
+`@datars/std/dataTable` — A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks or taps, a second click reversing it (`sortable`). Rows are keyed, so a new sort slides them to their places and a filter lets rows leave and arrive. Columns are as wide as their widest cell; on a narrow screen `optional` columns step aside.
 
 | param | type | default | |
 |---|---|---|---|
@@ -517,7 +517,7 @@ Theme tokens: `sequential`, `ink`, `size.small`
 | `maxRows` | number | `0` | Show only the first rows after sorting (0: all). |
 | `rowHeight` | number | `0` | Row height in px (0: from the body text size). |
 | `sort` | field |  | Sort the rows by this field (default: as they come). |
-| `sortable` | string |  | A text signal holding the field to sort by: clicking a header sets it (declare it: `signal.str("revenue")`). |
+| `sortable` | string |  | A text signal holding the field to sort by — `revenue` in the column's own direction, `-revenue` largest (or Z) first, `+revenue` smallest (or A) first: clicking (or tapping) a header sorts by its column, clicking it again reverses the sort (declare it: `signal.str("revenue")`). |
 | `striped` | bool | `true` | Shade every other row (else a hairline between rows). |
 
 Theme tokens: `ink`, `ink-2`, `muted`, `surface`, `grid`, `rule`, `mark`, `up`, `down`, `sequential`, `diverging`, `size.body`, `size.label`

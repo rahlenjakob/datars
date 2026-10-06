@@ -491,14 +491,14 @@ function cellText(c: Col): string {
 
 export const dataTable = recipe<TableParams>({
   id: "@datars/std/dataTable",
-  doc: "A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks (`sortable`). Rows are keyed, so a new sort slides them to their places and a filter lets rows leave and arrive. Columns are as wide as their widest cell; on a narrow screen `optional` columns step aside.",
+  doc: "A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks or taps, a second click reversing it (`sortable`). Rows are keyed, so a new sort slides them to their places and a filter lets rows leave and arrive. Columns are as wide as their widest cell; on a narrow screen `optional` columns step aside.",
   params: {
     data: t.table("The rows."),
     columns: t.json("The columns, in order: `{ field, label?, type?, format?, prefix?, suffix?, align?, width?, bar?, color?, stops?, spark?: { data, x, y }, optional? }`.") as never,
     key: t.field("The field that names a row (its key: rows morph by it). Needed for sparklines, which match their rows on it."),
     sort: t.field("Sort the rows by this field (default: as they come)."),
     descending: t.bool(true, "Numbers largest first (text always sorts A to Z)."),
-    sortable: t.string(undefined, "A text signal holding the field to sort by: clicking a header sets it (declare it: `signal.str(\"revenue\")`)."),
+    sortable: t.string(undefined, "A text signal holding the field to sort by — `revenue` in the column's own direction, `-revenue` largest (or Z) first, `+revenue` smallest (or A) first: clicking (or tapping) a header sorts by its column, clicking it again reverses the sort (declare it: `signal.str(\"revenue\")`)."),
     maxRows: t.number(0, "Show only the first rows after sorting (0: all)."),
     striped: t.bool(true, "Shade every other row (else a hairline between rows)."),
     rowHeight: t.number(0, "Row height in px (0: from the body text size)."),
@@ -512,14 +512,24 @@ export const dataTable = recipe<TableParams>({
     const G = 16, P = 8;
     const rowH = p.rowHeight ? String(p.rowHeight) : 'round(token("size.body") * 2.3)';
     const sortCols = cols.filter((c) => c.field && c.kind !== "spark");
-    const dirOf = (c: Col | undefined, field: string) => (c && c.kind === "text") || !p.descending ? field : `-${field}`;
+    // A column's own direction: text A to Z, numbers largest first (unless `descending: false`).
+    const down = (c: Col | undefined) => !(c && c.kind === "text") && p.descending;
+    const dirOf = (c: Col | undefined, field: string) => (down(c) ? `-${field}` : field);
+    // The `sortable` signal: `field` sorts by it in its own direction, `-field` largest (or Z)
+    // first, `+field` smallest (or A) first. Is the table sorted by `c`, its own way or reversed?
+    const sig = p.sortable;
+    const own = (c: Col) => `(${sig} == ${q(c.field as string)} || ${sig} == ${q(`${down(c) ? "-" : "+"}${c.field}`)})`;
+    const reversed = (c: Col) => `${sig} == ${q(`${down(c) ? "+" : "-"}${c.field}`)}`;
     // Row positions: sorted by a field, by whichever the `sortable` signal holds, or as they come.
     const order: Op[] = [op.derive("__one", 1)];
-    if (p.sortable) {
-      sortCols.forEach((c) => order.push(op.window("cumsum", "__one", `__p${c.i}`, { order: dirOf(c, c.field as string) })));
+    if (sig) {
+      sortCols.forEach((c) => order.push(
+        op.window("cumsum", "__one", `__p${c.i}`, { order: dirOf(c, c.field as string) }),
+        op.window("cumsum", "__one", `__r${c.i}`, { order: down(c) ? (c.field as string) : `-${c.field}` }),
+      ));
       const def = p.sort ? sortCols.find((c) => c.field === p.sort) : undefined;
       if (!def) order.push(op.window("cumsum", "__one", "__pin"));
-      order.push(op.derive("__pos", e(sortCols.map((c) => `${p.sortable} == ${q(c.field as string)} ? d.__p${c.i} : `).join("") + (def ? `d.__p${def.i}` : "d.__pin"))));
+      order.push(op.derive("__pos", e(sortCols.map((c) => `${own(c)} ? d.__p${c.i} : ${reversed(c)} ? d.__r${c.i} : `).join("") + (def ? `d.__p${def.i}` : "d.__pin"))));
     } else {
       order.push(op.window("cumsum", "__one", "__pos", p.sort ? { order: dirOf(cols.find((c) => c.field === p.sort), p.sort) } : {}));
     }
@@ -527,7 +537,8 @@ export const dataTable = recipe<TableParams>({
     const widths = cols.filter((c) => c.kind !== "spark").map((c) => op.derive(`__w${c.i}`, e(`measure(${cellText(c)}, token("size.body"))`)));
     const T1 = cx.table("table", p.data, ...order, ...(p.maxRows > 0 ? [op.filter(e(`d.__pos <= ${p.maxRows}`))] : []), ...widths);
     const T1q = q(T1);
-    const head = (c: Col) => `measure(${q(c.head)}, token("size.label"), 600) + ${p.sortable && c.kind !== "spark" ? 14 : 0}`;
+    // A header is as wide as its label and the arrow that shows it sorts the table.
+    const head = (c: Col) => `measure(${q(c.head)}, token("size.label"), 600) + ${(sig && c.field && c.kind !== "spark") || (p.sort && c.field === p.sort) ? 14 : 0}`;
     const nat = (c: Col) => c.width ? String(c.width)
       : c.kind === "spark" ? "84"
         : c.kind === "bar" ? `max(${head(c)}, table.max(${T1q}, "__w${c.i}") + 6 + 56)`
@@ -620,20 +631,39 @@ export const dataTable = recipe<TableParams>({
         group({ key: "cells", layout: { type: "columns", gap: G, padding: [0, P] }, children: cols.map(cell) }),
       ],
     });
+    // A header: its label, and an arrow beside it while the table is sorted by its column — drawn,
+    // not a glyph in the label, so a new sort changes no text (a changed text would cross-fade:
+    // the header blinks). The arrow fades in on the sorted column and turns over when the sort
+    // reverses. A sortable header is a control: its whole cell (the gaps between them too) takes
+    // the click or tap, shows a pointer and lights up under it, and says how the table is sorted.
     const headerCell = (c: Col) => {
       const align = alignOf(c);
-      const sorted = p.sortable && c.field ? `${p.sortable} == ${q(c.field)}` : p.sort && c.field === p.sort ? "true" : "false";
-      const arrow = c.kind === "text" || !p.descending ? "↑" : "↓";
-      const label = sorted === "false" ? q(c.head) : `${q(c.head)} + (${sorted} ? ${q(align === "end" ? "" : ` ${arrow}`)} : "")`;
-      const pre = align === "end" && sorted !== "false" ? `(${sorted} ? ${q(`${arrow} `)} : "") + ` : "";
+      const clicks = !!(sig && c.field && c.kind !== "spark");
+      const [mine, rev] = clicks ? [own(c), reversed(c)] : p.sort && c.field === p.sort ? ["true", "false"] : ["false", "false"];
+      const sorted = mine === "false" ? "false" : rev === "false" ? mine : `(${mine} || ${rev})`;
+      // Largest (Z) first: its own way on a column that sorts down, reversed on one that sorts up.
+      const desc = down(c) ? `!(${rev})` : rev;
+      const lw = `measure(${q(c.head)}, token("size.label"), 600)`;
+      const ax = align === "end" ? `box.w - ${lw} - 7` : align === "center" ? `box.w / 2 + ${lw} / 2 + 7` : `${lw} + 7`;
+      const [deep, flipped] = [down(c) ? "largest first" : "Z to A", down(c) ? "smallest first" : "A to Z"];
+      const said = `${sorted} ? ${q(`${c.head}, sorted `)} + (${rev} ? ${q(flipped)} : ${q(deep)}) + ${q(". Reverse the sort")} : ${q(`Sort by ${c.head}`)}`;
       return group({
         key: `h${c.i}`,
         size: { w: e(`table.first(${T2q}, "__W${c.i}")`) },
         when: c.optional ? e(`table.first(${T2q}, "__V${c.i}") == 1`) : undefined,
-        on: p.sortable && c.field && c.kind !== "spark" ? { activate: { set: p.sortable, value: c.field } } : undefined,
-        pickable: p.sortable && c.field && c.kind !== "spark" ? true : undefined,
-        semantics: p.sortable && c.field && c.kind !== "spark" ? { role: "control", label: `Sort by ${c.head}` } : undefined,
-        children: [text(e(pre + label), [align === "end" ? e("box.w") : align === "center" ? e("box.w / 2") : 0, e(mid)], { key: "text", style: { size: "$size.label", weight: 600, ink: e(`${sorted} ? "$ink" : "$ink-2"`), baseline: "middle", align } })],
+        // Its own way first; again, the other way; again, its own way.
+        on: clicks ? { activate: { set: sig, value: e(`${mine} ? ${q(`${down(c) ? "+" : "-"}${c.field}`)} : ${q(c.field as string)}`) } } : undefined,
+        semantics: clicks ? { role: "control", label: e(said) } : undefined,
+        children: [
+          ...(clicks ? [shape(geom.rect({ x: -G / 2, y: 0, w: e(`box.w + ${G}`), h: e(rowH) }), { key: "hit", pickable: true, fill: "transparent" })] : []),
+          text(c.head, [align === "end" ? e("box.w") : align === "center" ? e("box.w / 2") : 0, e(mid)], { key: "text", style: { size: "$size.label", weight: 600, ink: e(`${sorted}${clicks ? " || hover()" : ""} ? "$ink" : "$ink-2"`), baseline: "middle", align } }),
+          ...(sorted === "false" ? [] : [group({
+            key: "arrow",
+            opacity: e(`${sorted} ? 1 : 0`),
+            transform: { translate: [e(ax), e(mid)], rotate: e(`${desc} ? 0 : 180`) },
+            children: [shape(geom.path("M0 -3.5 L0 3.5 M-2.75 0.75 L0 3.5 L2.75 0.75"), { key: "glyph", stroke: { paint: "$ink", width: 1.25, cap: "round", join: "round" }, semantics: { role: "decoration" } })],
+          })]),
+        ],
       });
     };
     const n_ = `table.count(${T2q})`;

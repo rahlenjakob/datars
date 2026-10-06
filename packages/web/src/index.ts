@@ -37,6 +37,11 @@ function oneAtATime<T>(f: () => Promise<T>): Promise<T> {
  * further down the page doesn't make the one being read stutter. */
 const moving = new Set<object>();
 let quiet: (() => void)[] = [];
+/** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
+function actionsKey(actions: { path: string; label: string }[]): string {
+  return actions.map((a) => `${a.path}\t${a.label}`).join("\n");
+}
+
 function setMoving(v: object, on: boolean) {
   if (on) moving.add(v);
   else if (moving.delete(v) && moving.size === 0) {
@@ -283,6 +288,8 @@ export class DatarsView extends ElementBase {
   private card!: HTMLDivElement;
   private tip!: HTMLDivElement;
   private mirror!: HTMLUListElement;
+  /** What the mirror's buttons offer (each action's path and label), as last built. */
+  private mirrorActions = "";
   private live!: HTMLDivElement;
   private view: Wasm = null;
   /** A document handed in by the page (`setDocument`), shown instead of `src`/`doc`. */
@@ -500,6 +507,9 @@ export class DatarsView extends ElementBase {
       // Not under a selection being made: its spans stay until the press ends.
       if (this.pressed?.text) return this.scheduleTexts(120);
       this.textLayer.update(this.view.text_layer());
+      // The mirror too: a step's buttons (a sortable table's headers) are there once it settles.
+      const actions = this.view.chrome?.().actions;
+      if (actions && actionsKey(actions) !== this.mirrorActions) this.syncChrome();
     }, ms);
   }
 
@@ -1400,8 +1410,11 @@ export class DatarsView extends ElementBase {
     this.card.innerHTML = n && (n.title || n.text) && !s.narrationDrawn ? `${n.title ? `<h3></h3>` : ""}<div></div>` : "";
     if (n?.title) this.card.querySelector("h3")?.replaceChildren(n.title);
     if (n?.text) this.card.querySelector("div")?.replaceChildren(n.text);
+    // Where the keyboard is, read before the mirror is rebuilt: rebuilding mustn't lose it.
     const focused = (this.root.activeElement as HTMLInputElement | null)?.dataset?.signal;
+    const focusedPath = (this.root.activeElement as HTMLElement | null)?.dataset?.path;
     this.mirror.innerHTML = "";
+    this.mirrorActions = actionsKey(s.actions ?? []);
     this.placePickers(s.controls ?? []);
     // Engine-drawn controls as native ones: keyboards and screen readers can operate them.
     for (const c of s.controls ?? []) {
@@ -1425,11 +1438,12 @@ export class DatarsView extends ElementBase {
       this.mirror.appendChild(li);
       if (c.signal === focused) input.focus(); // rebuilding mustn't steal the keyboard's place
     }
-    const focusedPath = (this.root.activeElement as HTMLElement | null)?.dataset?.path;
     // A select is its native select above, not its drawn box; a dragged control (a slider's
     // thumb) is its range input.
     const selectLabels = new Set((s.controls ?? []).filter((c: { kind?: string }) => c.kind === "select").map((c: { label: string }) => c.label));
-    for (const item of s.semantics ?? []) {
+    // The brief status has no semantics tree, but it has what a click acts on (`actions`): those
+    // are the buttons a keyboard needs (a sortable table's headers, a chart's clickable marks).
+    for (const item of s.semantics ?? s.actions ?? []) {
       if (item.role === "control" && (!item.actionable || selectLabels.has(item.label))) continue;
       const li = document.createElement("li");
       li.style.paddingLeft = `${item.depth}em`;

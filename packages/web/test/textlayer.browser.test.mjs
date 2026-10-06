@@ -159,3 +159,27 @@ test("chart text can be selected and copied, and the chart keeps its pointer", {
     server.close();
   }
 });
+
+test("what a click acts on is a button in the semantics mirror: a keyboard presses it and keeps its place", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    const p = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    const errors = [];
+    p.on("pageerror", (e) => errors.push(e.message));
+    await p.goto(`http://127.0.0.1:${server.address().port}`);
+    // The page's chrome reads the brief status (no semantics tree): its `actions` are the buttons.
+    const button = p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" });
+    await button.waitFor({ state: "attached", timeout: 30_000 });
+    await button.focus();
+    await p.keyboard.press("Enter");
+    await p.waitForFunction(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll(".texts span[data-key]")].some((s) => s.textContent === "Picked: A"), null, { timeout: 10_000 });
+    // The mirror is rebuilt after a press: the keyboard stays on the same button.
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.textContent), "Bar A: 42");
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});

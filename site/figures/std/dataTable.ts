@@ -45,7 +45,7 @@ export default doc({
     steps: [
       step("default", { title: "dataTable({ data, key, columns })", text: "Text left, numbers right; a bar for revenue, colour for growth, a line for the year. Rows as they come." }),
       step("sort", { title: "sort: \"revenue\"", text: "Largest first: the rows slide to their places." }),
-      step("sortable", { title: "sortable: \"sortBy\"", text: "Headers set the signal when clicked; here it holds growth." }),
+      step("sortable", { title: "sortable: \"sortBy\"", text: "Click a header to sort by it, again to reverse the sort; the signal holds the column (here growth)." }),
     ],
   }),
 });

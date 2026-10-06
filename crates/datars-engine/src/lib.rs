@@ -2549,8 +2549,22 @@ impl Engine {
     /// The accessible description with each item's bounds in root coordinates (CSS px): what
     /// native accessibility bridges and touch exploration need.
     pub fn semantic_items(&mut self) -> Vec<SemanticItem> {
-        let scene = self.scene();
+        self.semantic_walk(false)
+    }
+
+    /// Only the [`SemanticItem`]s a reader can activate (`actionable`): what a host offers as
+    /// buttons to keyboards and screen readers — cheap however many marks the chart has (no
+    /// instance labels; nothing at all when nothing is clickable).
+    pub fn actionable_items(&mut self) -> Vec<SemanticItem> {
+        self.semantic_walk(true)
+    }
+
+    fn semantic_walk(&mut self, only_actionable: bool) -> Vec<SemanticItem> {
         let actionable: std::collections::BTreeSet<KeyPath> = self.shown.as_ref().map(|r| r.actions.iter().filter(|(_, a)| a.contains_key("activate")).map(|(p, _)| p.clone()).collect()).unwrap_or_default();
+        if only_actionable && actionable.is_empty() {
+            return Vec::new();
+        }
+        let scene = self.scene();
         let mut out = Vec::new();
         #[allow(clippy::too_many_arguments)]
         fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut usize) {
@@ -2590,8 +2604,12 @@ impl Engine {
                 }
             }
         }
-        let mut budget = MAX_INSTANCE_ITEMS;
+        // Actionable only: no instance's label (they have no intents of their own) is ever made.
+        let mut budget = if only_actionable { 0 } else { MAX_INSTANCE_ITEMS };
         walk(&scene.root, &KeyPath::default(), 0, datars_math::Affine::IDENTITY, 1.0, &actionable, &mut out, &mut budget);
+        if only_actionable {
+            out.retain(|i| i.actionable);
+        }
         out
     }
 

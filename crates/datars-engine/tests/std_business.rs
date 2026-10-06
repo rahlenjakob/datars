@@ -135,6 +135,74 @@ fn a_table_places_rows_by_their_sort() {
 }
 
 #[test]
+fn a_sortable_table_sorts_by_the_header_clicked_and_reverses_on_another_click() {
+    use datars_engine::{Cursor, Pointer};
+    use datars_expr::Value as V;
+    let data = json!({ "t": { "values": { "shop": ["A", "B", "C"], "sales": [10, 30, 20] }, "key": ["shop"] } });
+    let cols = json!([{ "field": "shop" }, { "field": "sales", "format": ",.0f" }]);
+    let mut d = doc((400, 200), data, use_("dataTable", json!({ "data": "t", "key": "shop", "columns": cols, "sortable": "by" })));
+    d["signals"] = json!({ "by": { "type": "string", "default": "" } });
+    let mut e = Engine::new();
+    let diags = e.load(datars_ir::Doc::from_json(&d.to_string()).unwrap());
+    assert!(diags.is_empty(), "{diags:?}");
+    let mut now = 0.0;
+    e.frame(now);
+    let order = |e: &mut Engine| {
+        let s = e.scene().snapshot();
+        let y = |k: &str| {
+            let l = s.lines().find(|l| l.contains(&format!("group (\"{k}\",)"))).unwrap_or_else(|| panic!("{k}: {s}"));
+            l.split("transform=[").nth(1).and_then(|t| t.split(']').next()).and_then(|t| t.split(' ').nth(5)).and_then(|v| v.parse::<f64>().ok()).unwrap_or(0.0)
+        };
+        let mut rows = [("A", y("A")), ("B", y("B")), ("C", y("C"))];
+        rows.sort_by(|a, b| a.1.total_cmp(&b.1));
+        rows.iter().map(|r| r.0).collect::<String>()
+    };
+    assert_eq!(order(&mut e), "ABC", "as they come");
+    // The header's middle, from what keyboards are offered (the same place the pointer finds).
+    let header = |e: &mut Engine, name: &str| {
+        let items = e.actionable_items();
+        let it = items.iter().find(|i| i.label.contains(name)).unwrap_or_else(|| panic!("{name}: {items:?}")).clone();
+        (it.rect.x + it.rect.w / 2.0, it.rect.y + it.rect.h / 2.0, it.label)
+    };
+    let (x, y, label) = header(&mut e, "sales");
+    assert_eq!(label, "Sort by sales");
+    // A pointer over a sortable header: the hand; over a row: not.
+    e.pointer(Pointer::Move { x, y });
+    assert_eq!(e.cursor(), Cursor::Pointer, "a header that sorts shows a pointer");
+    e.pointer(Pointer::Move { x, y: y + 60.0 });
+    assert_eq!(e.cursor(), Cursor::Default, "a row doesn't");
+    let mut click = |e: &mut Engine, x: f64, y: f64| {
+        e.pointer(Pointer::Down { x, y });
+        e.pointer(Pointer::Up { x, y });
+        now += 5.0;
+        e.frame(now);
+    };
+    click(&mut e, x, y);
+    assert_eq!(e.signal("by"), Some(V::Str("sales".into())));
+    assert_eq!(order(&mut e), "BCA", "largest first");
+    assert_eq!(header(&mut e, "sales").2, "sales, sorted largest first. Reverse the sort", "says how it's sorted");
+    click(&mut e, x, y);
+    assert_eq!(e.signal("by"), Some(V::Str("+sales".into())));
+    assert_eq!(order(&mut e), "ACB", "the same header again: smallest first");
+    assert_eq!(header(&mut e, "sales").2, "sales, sorted smallest first. Reverse the sort");
+    click(&mut e, x, y);
+    assert_eq!(order(&mut e), "BCA", "and back");
+    // A tap (touch) sorts too: text A to Z first, then Z to A.
+    let (sx, sy, _) = header(&mut e, "shop");
+    e.pointer(Pointer::Tap { x: sx, y: sy });
+    now += 5.0;
+    e.frame(now);
+    assert_eq!(order(&mut e), "ABC");
+    // From a keyboard: the header's activate.
+    let path = e.actionable_items().into_iter().find(|i| i.label.contains("shop")).unwrap().path;
+    assert!(e.activate(&path));
+    now += 5.0;
+    e.frame(now);
+    assert_eq!(e.signal("by"), Some(V::Str("-shop".into())));
+    assert_eq!(order(&mut e), "CBA", "Z to A");
+}
+
+#[test]
 fn a_kpi_reads_its_value_and_change() {
     let data = json!({ "m": { "values": { "month": ["2026-07-01", "2026-08-01", "2026-09-01"], "orders": [900, 1000, 1100] }, "key": ["month"], "types": { "month": "date" } } });
     let s = snapshot(doc((300, 160), data, use_("kpi", json!({ "label": "Orders", "data": "m", "x": "month", "y": "orders", "compareLabel": "vs August" }))));

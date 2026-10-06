@@ -4586,14 +4586,14 @@ function cellText(c) {
 }
 var dataTable = recipe16({
   id: "@datars/std/dataTable",
-  doc: "A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column \u2014 or by whichever header the reader clicks (`sortable`). Rows are keyed, so a new sort slides them to their places and a filter lets rows leave and arrive. Columns are as wide as their widest cell; on a narrow screen `optional` columns step aside.",
+  doc: "A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column \u2014 or by whichever header the reader clicks or taps, a second click reversing it (`sortable`). Rows are keyed, so a new sort slides them to their places and a filter lets rows leave and arrive. Columns are as wide as their widest cell; on a narrow screen `optional` columns step aside.",
   params: {
     data: t16.table("The rows."),
     columns: t16.json("The columns, in order: `{ field, label?, type?, format?, prefix?, suffix?, align?, width?, bar?, color?, stops?, spark?: { data, x, y }, optional? }`."),
     key: t16.field("The field that names a row (its key: rows morph by it). Needed for sparklines, which match their rows on it."),
     sort: t16.field("Sort the rows by this field (default: as they come)."),
     descending: t16.bool(true, "Numbers largest first (text always sorts A to Z)."),
-    sortable: t16.string(void 0, 'A text signal holding the field to sort by: clicking a header sets it (declare it: `signal.str("revenue")`).'),
+    sortable: t16.string(void 0, 'A text signal holding the field to sort by \u2014 `revenue` in the column\'s own direction, `-revenue` largest (or Z) first, `+revenue` smallest (or A) first: clicking (or tapping) a header sorts by its column, clicking it again reverses the sort (declare it: `signal.str("revenue")`).'),
     maxRows: t16.number(0, "Show only the first rows after sorting (0: all)."),
     striped: t16.bool(true, "Shade every other row (else a hairline between rows)."),
     rowHeight: t16.number(0, "Row height in px (0: from the body text size).")
@@ -4607,20 +4607,27 @@ var dataTable = recipe16({
     const G = 16, P = 8;
     const rowH = p.rowHeight ? String(p.rowHeight) : 'round(token("size.body") * 2.3)';
     const sortCols = cols.filter((c) => c.field && c.kind !== "spark");
-    const dirOf = (c, field) => c && c.kind === "text" || !p.descending ? field : `-${field}`;
+    const down = (c) => !(c && c.kind === "text") && p.descending;
+    const dirOf = (c, field) => down(c) ? `-${field}` : field;
+    const sig = p.sortable;
+    const own = (c) => `(${sig} == ${q2(c.field)} || ${sig} == ${q2(`${down(c) ? "-" : "+"}${c.field}`)})`;
+    const reversed = (c) => `${sig} == ${q2(`${down(c) ? "+" : "-"}${c.field}`)}`;
     const order = [op11.derive("__one", 1)];
-    if (p.sortable) {
-      sortCols.forEach((c) => order.push(op11.window("cumsum", "__one", `__p${c.i}`, { order: dirOf(c, c.field) })));
+    if (sig) {
+      sortCols.forEach((c) => order.push(
+        op11.window("cumsum", "__one", `__p${c.i}`, { order: dirOf(c, c.field) }),
+        op11.window("cumsum", "__one", `__r${c.i}`, { order: down(c) ? c.field : `-${c.field}` })
+      ));
       const def = p.sort ? sortCols.find((c) => c.field === p.sort) : void 0;
       if (!def) order.push(op11.window("cumsum", "__one", "__pin"));
-      order.push(op11.derive("__pos", e16(sortCols.map((c) => `${p.sortable} == ${q2(c.field)} ? d.__p${c.i} : `).join("") + (def ? `d.__p${def.i}` : "d.__pin"))));
+      order.push(op11.derive("__pos", e16(sortCols.map((c) => `${own(c)} ? d.__p${c.i} : ${reversed(c)} ? d.__r${c.i} : `).join("") + (def ? `d.__p${def.i}` : "d.__pin"))));
     } else {
       order.push(op11.window("cumsum", "__one", "__pos", p.sort ? { order: dirOf(cols.find((c) => c.field === p.sort), p.sort) } : {}));
     }
     const widths = cols.filter((c) => c.kind !== "spark").map((c) => op11.derive(`__w${c.i}`, e16(`measure(${cellText(c)}, token("size.body"))`)));
     const T1 = cx.table("table", p.data, ...order, ...p.maxRows > 0 ? [op11.filter(e16(`d.__pos <= ${p.maxRows}`))] : [], ...widths);
     const T1q = q2(T1);
-    const head = (c) => `measure(${q2(c.head)}, token("size.label"), 600) + ${p.sortable && c.kind !== "spark" ? 14 : 0}`;
+    const head = (c) => `measure(${q2(c.head)}, token("size.label"), 600) + ${sig && c.field && c.kind !== "spark" || p.sort && c.field === p.sort ? 14 : 0}`;
     const nat = (c) => c.width ? String(c.width) : c.kind === "spark" ? "84" : c.kind === "bar" ? `max(${head(c)}, table.max(${T1q}, "__w${c.i}") + 6 + 56)` : `max(${head(c)}, table.max(${T1q}, "__w${c.i}") + ${c.kind === "color" ? 12 : 0})`;
     const flex = (c) => !c.width && (c.kind === "text" || c.kind === "bar");
     const n = cols.length;
@@ -4701,18 +4708,31 @@ var dataTable = recipe16({
     });
     const headerCell = (c) => {
       const align = alignOf(c);
-      const sorted = p.sortable && c.field ? `${p.sortable} == ${q2(c.field)}` : p.sort && c.field === p.sort ? "true" : "false";
-      const arrow = c.kind === "text" || !p.descending ? "\u2191" : "\u2193";
-      const label = sorted === "false" ? q2(c.head) : `${q2(c.head)} + (${sorted} ? ${q2(align === "end" ? "" : ` ${arrow}`)} : "")`;
-      const pre = align === "end" && sorted !== "false" ? `(${sorted} ? ${q2(`${arrow} `)} : "") + ` : "";
+      const clicks = !!(sig && c.field && c.kind !== "spark");
+      const [mine, rev] = clicks ? [own(c), reversed(c)] : p.sort && c.field === p.sort ? ["true", "false"] : ["false", "false"];
+      const sorted = mine === "false" ? "false" : rev === "false" ? mine : `(${mine} || ${rev})`;
+      const desc = down(c) ? `!(${rev})` : rev;
+      const lw = `measure(${q2(c.head)}, token("size.label"), 600)`;
+      const ax = align === "end" ? `box.w - ${lw} - 7` : align === "center" ? `box.w / 2 + ${lw} / 2 + 7` : `${lw} + 7`;
+      const [deep, flipped] = [down(c) ? "largest first" : "Z to A", down(c) ? "smallest first" : "A to Z"];
+      const said2 = `${sorted} ? ${q2(`${c.head}, sorted `)} + (${rev} ? ${q2(flipped)} : ${q2(deep)}) + ${q2(". Reverse the sort")} : ${q2(`Sort by ${c.head}`)}`;
       return group15({
         key: `h${c.i}`,
         size: { w: e16(`table.first(${T2q}, "__W${c.i}")`) },
         when: c.optional ? e16(`table.first(${T2q}, "__V${c.i}") == 1`) : void 0,
-        on: p.sortable && c.field && c.kind !== "spark" ? { activate: { set: p.sortable, value: c.field } } : void 0,
-        pickable: p.sortable && c.field && c.kind !== "spark" ? true : void 0,
-        semantics: p.sortable && c.field && c.kind !== "spark" ? { role: "control", label: `Sort by ${c.head}` } : void 0,
-        children: [text14(e16(pre + label), [align === "end" ? e16("box.w") : align === "center" ? e16("box.w / 2") : 0, e16(mid)], { key: "text", style: { size: "$size.label", weight: 600, ink: e16(`${sorted} ? "$ink" : "$ink-2"`), baseline: "middle", align } })]
+        // Its own way first; again, the other way; again, its own way.
+        on: clicks ? { activate: { set: sig, value: e16(`${mine} ? ${q2(`${down(c) ? "+" : "-"}${c.field}`)} : ${q2(c.field)}`) } } : void 0,
+        semantics: clicks ? { role: "control", label: e16(said2) } : void 0,
+        children: [
+          ...clicks ? [shape15(geom15.rect({ x: -G / 2, y: 0, w: e16(`box.w + ${G}`), h: e16(rowH) }), { key: "hit", pickable: true, fill: "transparent" })] : [],
+          text14(c.head, [align === "end" ? e16("box.w") : align === "center" ? e16("box.w / 2") : 0, e16(mid)], { key: "text", style: { size: "$size.label", weight: 600, ink: e16(`${sorted}${clicks ? " || hover()" : ""} ? "$ink" : "$ink-2"`), baseline: "middle", align } }),
+          ...sorted === "false" ? [] : [group15({
+            key: "arrow",
+            opacity: e16(`${sorted} ? 1 : 0`),
+            transform: { translate: [e16(ax), e16(mid)], rotate: e16(`${desc} ? 0 : 180`) },
+            children: [shape15(geom15.path("M0 -3.5 L0 3.5 M-2.75 0.75 L0 3.5 L2.75 0.75"), { key: "glyph", stroke: { paint: "$ink", width: 1.25, cap: "round", join: "round" }, semantics: { role: "decoration" } })]
+          })]
+        ]
       });
     };
     const n_ = `table.count(${T2q})`;

@@ -175,12 +175,24 @@ impl Core {
         if self.tier == Some(datars_bundle::Tier::T0) {
             return Vec::new();
         }
-        self.engine.semantic_items().into_iter().map(|s| serde_json::json!({ "role": s.role, "label": s.label, "depth": s.depth, "rect": [s.rect.x, s.rect.y, s.rect.w, s.rect.h], "path": s.path, "actionable": s.actionable })).collect()
+        self.engine.semantic_items().into_iter().map(semantic_json).collect()
+    }
+
+    /// The semantic items a reader can activate (`actionable`, in [`Core::semantics`]' shape):
+    /// what a host offers as buttons to keyboards and screen readers. Cheap, so part of
+    /// [`Core::status_brief`].
+    pub fn actions(&mut self) -> Vec<serde_json::Value> {
+        if self.tier == Some(datars_bundle::Tier::T0) {
+            return Vec::new();
+        }
+        self.engine.actionable_items().into_iter().map(semantic_json).collect()
     }
 
     /// [`Core::status`] without the semantics: what a host's chrome needs on every step (state,
-    /// steps, narration, controls, theme tokens), cheap however many marks the chart has.
+    /// steps, narration, controls, what a click acts on, theme tokens), cheap however many marks
+    /// the chart has.
     pub fn status_brief(&mut self) -> serde_json::Value {
+        let actions = self.actions();
         serde_json::json!({
             "state": self.engine.state(),
             "index": self.engine.state_index(),
@@ -192,6 +204,7 @@ impl Core {
                     "options": c.options.iter().map(|(v, l)| serde_json::json!({ "value": v, "label": l })).collect::<Vec<_>>() }),
                 _ => serde_json::json!({ "kind": "slider", "signal": c.signal, "label": c.label, "min": c.min, "max": c.max, "step": c.step, "value": c.value, "rect": c.rect }),
             }).collect::<Vec<_>>(),
+            "actions": actions,
             "tier": self.tier.map(|t| format!("{t:?}")),
             "tokens": self.engine.theme().to_json(),
             "diagnostics": self.engine.diagnostics().iter().map(|d| d.message.clone()).collect::<Vec<_>>(),
@@ -199,6 +212,10 @@ impl Core {
     }
 }
 
+/// A [`datars_engine::SemanticItem`] as hosts read it.
+fn semantic_json(s: datars_engine::SemanticItem) -> serde_json::Value {
+    serde_json::json!({ "role": s.role, "label": s.label, "depth": s.depth, "rect": [s.rect.x, s.rect.y, s.rect.w, s.rect.h], "path": s.path, "actionable": s.actionable })
+}
 
 impl Core {
     /// Where the views on screen look at their tile sources, as JSON `[{source, bbox, zoom, state,
@@ -227,6 +244,28 @@ impl Core {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_brief_status_offers_what_a_click_acts_on() {
+        // Hosts build their keyboard buttons from it, without the whole semantics tree.
+        let mut core = Core::default();
+        let doc = r#"{"datars": 1, "size": {"width": 200, "height": 100}, "signals": {"s": {"type": "string", "default": ""}},
+            "scene": {"kind": "group", "key": "root", "children": [
+              {"kind": "shape", "key": "go", "geom": {"type": "rect", "x": 0, "y": 0, "w": 50, "h": 50}, "fill": "$accent",
+               "semantics": {"role": "control", "label": "=s == \"on\" ? \"Turn off\" : \"Turn on\""}, "on": {"activate": {"set": "s", "value": "on"}}},
+              {"kind": "shape", "key": "mark", "geom": {"type": "rect", "x": 60, "y": 0, "w": 50, "h": 50}, "fill": "$ink",
+               "semantics": {"role": "datum", "label": "a mark"}}]}}"#;
+        core.load_doc_json(doc).unwrap();
+        core.engine.frame(0.0);
+        let brief = core.status_brief();
+        let actions = brief["actions"].as_array().unwrap();
+        assert_eq!(actions.len(), 1, "{actions:?}");
+        assert_eq!(actions[0]["label"], "Turn on");
+        assert_eq!(actions[0]["actionable"], true);
+        assert!(core.engine.activate(actions[0]["path"].as_str().unwrap()));
+        assert_eq!(core.status_brief()["actions"][0]["label"], "Turn off", "the label follows the state");
+        assert!(core.semantics().len() > 1, "the full tree still has the rest");
+    }
 
     #[test]
     fn tile_archives_ask_for_their_header_first() {
