@@ -157,9 +157,11 @@ h1, h2, h3 { line-height: 1.12; letter-spacing: -0.02em; margin: 0; }
 .chart { position: relative; min-height: 120px; }
 /* Until its chart is there, a slot holds the chart's exact space (content box at its aspect), so
    nothing below moves when it mounts. */
-.chart[style*="--aspect"]:not(:has(datars-view)) { box-sizing: content-box; aspect-ratio: 1 / var(--aspect); min-height: var(--min, 240px); width: -moz-available; width: -webkit-fill-available; width: stretch; }
+.chart[style*="--aspect"]:not(:has(datars-view)) { box-sizing: content-box; aspect-ratio: 1 / var(--aspect); min-height: var(--min, 240px); width: -moz-available; width: -webkit-fill-available; width: stretch; min-width: 0; max-width: 100%; }
 /* (An explicit width: with `auto`, the minimum height would turn into a minimum width through the
-   aspect ratio, and a tall-minimum slot would push past a phone's screen.) */
+   aspect ratio, and a tall-minimum slot would push past a phone's screen. Safari still widens it
+   that way — a 240 px minimum made a slot 601 px wide on a 390 px iPhone, and the page scrolled
+   sideways until the charts mounted — so the width is also capped at the column's.) */
 @media (max-width: 640px) { .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
 .chart datars-view { display: block; width: 100%; }
 .chart.pending::after { content: ""; position: absolute; inset: 0; border-radius: 12px; background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--rule) 55%, transparent) 50%, transparent 70%) 0 0 / 300% 100%; animation: shimmer 1.4s linear infinite; }
@@ -236,7 +238,7 @@ pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
 /* Make it yours: the reader's look for every chart (site.js). The header's menu and the home page's
    editor share the controls: presets, accent dots, palette and type chips, corner and line ranges. */
 .dd.look summary::after { display: none; }
-.dd.look summary { padding: 0; }
+.dd.look summary { padding: 0; justify-content: center; }
 .look summary svg { width: 20px; height: 20px; }
 .look summary path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .look summary circle { stroke: none; transition: fill .25s; }
