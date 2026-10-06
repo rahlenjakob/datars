@@ -162,7 +162,7 @@ og: galaxy
     <header class="section-head">
       <p class="eyebrow">Web · opening and scrolling</p>
       <h2>Pages that don't jump</h2>
-      <p>Each page scrolled top to bottom at 1,500 px/s while its charts open: the frame rate it kept, the frames it dropped, long tasks, and cumulative layout shift. Charts open when scrolling pauses and every chart slot reserves its exact space before any script runs, so text never moves when a chart appears.</p>
+      <p>Each page scrolled top to bottom at 1,500 px/s while its charts open: the frame rate it kept, the frames it dropped, long tasks, and cumulative layout shift. Charts open a screen and a half ahead of the reader, so each is drawn by the time it scrolls into view; they prefer a pause in the scroll but wait for one at most 400 ms, so on a page scrolled without a pause the heavy ones open mid-scroll and cost a few frames (the long tasks below). Every chart slot reserves its exact space before any script runs, so text never moves when a chart appears.</p>
     </header>
     {{perf:webcards:transitions,scroll}}
     <div style="margin-top:18px">{{perf:scroll:scroll}}</div>
