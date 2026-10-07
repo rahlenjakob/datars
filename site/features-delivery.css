@@ -74,7 +74,18 @@
 .dl-k-font { background: #efb118; } .dl-k-program { background: #a463f2; } .dl-k-scene { background: #ff725c; } .dl-k-entry { background: var(--ink-2); }
 .dl-tiers-h { margin: 32px 0 12px; font-size: 1.05rem; }
 .dl-tiers .fine { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
-.dl-signed { aspect-ratio: 640 / 400; }
+.dl-trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 18px 0 10px; }
+.dl-card { margin: 0; }
+.dl-trust-box { aspect-ratio: 640 / 400; }
+.dl-card figcaption { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: 13px; line-height: 1.45; }
+.dl-what { color: var(--muted); }
+.dl-verdict { min-height: 2.9em; color: var(--muted); }
+.dl-card { --ok: #1a7f37; --bad: #b42318; }
+:root[data-theme="dark"] .dl-card { --ok: #4ade80; --bad: #f87171; }
+.dl-card[data-verdict="played"] .dl-verdict { color: var(--ok); }
+.dl-card[data-verdict="refused"] .dl-verdict { color: var(--bad); }
+.dl-card[data-verdict="refused"] .frame { background-image: repeating-linear-gradient(135deg, transparent 0 10px, color-mix(in srgb, var(--rule) 45%, transparent) 10px 11px); }
+@media (max-width: 860px) { .dl-trust { grid-template-columns: minmax(0, 1fr); } }
 
 @media (max-width: 1000px) {
   .dl-embeds { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

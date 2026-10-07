@@ -90,17 +90,31 @@ css: features-delivery.css
 </section>
 
 <section class="section" id="signed">
-  <div class="wrap split">
-    <div>
+  <div class="wrap">
+    <header class="section-head">
       <p class="eyebrow">Trust</p>
-      <h2>Signed manifests: the runtimes check, the CLI doesn't sign yet</h2>
-      <p>A manifest can carry an ed25519 signature, and every runtime can be told whose charts to play: <code>&lt;datars-view publishers="ed25519:…"&gt;</code>. A chart that isn't signed by one of them doesn't play. That's the checking half, and it works today — the chart beside this text is the one above, unsigned, embedded with a key it can't match.</p>
-      <p>The signing half isn't exposed yet: <code>datars publish</code> doesn't sign bundles, so leave <code>publishers</code> unset for charts you publish with the CLI. It's on the list in the <a href="{{src}}/docs/19-status.md">status page</a>.</p>
+      <h2>Signed charts: a page plays only what you published</h2>
+      <p>Make a key once, sign as you publish, and name the key in the embed. The manifest lists every chunk by its hash and the signature covers the manifest, so nothing in the chart can be swapped, edited or added without the check failing — and a chart that fails it shows nothing of itself, not even its poster.</p>
+    </header>
+<pre><code data-lang="sh">datars keygen --out newsroom.key       # prints the public key
+datars publish chart.ts --alias votes --to site/ --sign newsroom.key</code></pre>
+<pre><code data-lang="html">&lt;datars-view src="/c/votes" publishers="{{signer:newsroom}}"&gt;&lt;/datars-view&gt;</code></pre>
+    <p class="fine">The keys here were made for this build of the site; their secrets were deleted when it finished. All three charts below are embedded with the same <code>publishers</code> — the newsroom's key above — and checked in your browser as the page loaded.</p>
+    <div class="dl-trust">
+      <figure class="dl-card" data-trust="signed">
+        <div class="frame"><div class="dl-box dl-trust-box" data-src="c/delivery-signed" data-publishers="{{signer:newsroom}}"></div></div>
+        <figcaption><b>Signed by the newsroom</b><span class="dl-what">with the key the page names</span><span class="dl-verdict" aria-live="polite">Checking…</span></figcaption>
+      </figure>
+      <figure class="dl-card" data-trust="tampered">
+        <div class="frame"><div class="dl-box dl-trust-box" data-src="c/delivery-tampered" data-publishers="{{signer:newsroom}}"></div></div>
+        <figcaption><b>Signed, then changed in transit</b><span class="dl-what">one field of the manifest, its title, edited after signing</span><span class="dl-verdict" aria-live="polite">Checking…</span></figcaption>
+      </figure>
+      <figure class="dl-card" data-trust="foreign">
+        <div class="frame"><div class="dl-box dl-trust-box" data-src="c/delivery-foreign" data-publishers="{{signer:newsroom}}"></div></div>
+        <figcaption><b>Signed by someone else</b><span class="dl-what">a valid signature, from a key the page didn't name</span><span class="dl-verdict" aria-live="polite">Checking…</span></figcaption>
+      </figure>
     </div>
-    <figure class="fig">
-      <div class="frame"><div class="dl-box dl-signed" data-alias="delivery" data-publishers="ed25519:abababababababababababababababababababababababababababababababab"></div></div>
-      <figcaption><b>Refused:</b> <code>publishers</code> is set and the manifest has no signature, so the runtime never opens the playable variants. What's left on the page is the chart's poster. <span class="dl-signed-state"></span></figcaption>
-    </figure>
+    <p class="fine">A refused chart fires an <code>error</code> event (<code>detail.refused</code>, <code>detail.message</code>) for the page to handle, and says so in its box. In CI, <code>DATARS_SIGNING_KEY</code> (the key's hex) does what <code>--sign</code> does; <code>keygen</code> writes the key readable by you alone and never overwrites one. The check lives in the runtime core every platform shares, but only <code>&lt;datars-view&gt;</code> lets a host name publishers today — the iOS and Android views don't expose the setting yet. <a href="/docs/publishing/#signed-charts">Signed charts in the docs</a>.</p>
   </div>
 </section>
 

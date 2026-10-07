@@ -10,7 +10,8 @@
 // if missing) and the web runtime (`scripts/build-wasm.sh && pnpm -C packages/web build`).
 // Preview: `datars serve out/pages` (or any static server over the folder).
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 import { escapeAttr, escapeHtml, frontMatter, inline, markdown } from "./site/markdown.mjs";
@@ -222,6 +223,27 @@ for (const [alias, c] of Object.entries(CHARTS)) {
     mkdirSync(join(out, "play"), { recursive: true });
     copyFileSync(file, join(out, "play", `${alias}.json`));
   }
+}
+// The delivery page's trust demo: the same chart signed by "the newsroom", signed and then changed in
+// transit, and signed by someone else — each with a key made for this build (`datars keygen`; the
+// secrets stay in a temporary folder and are gone after the build). `{{signer:newsroom}}` and
+// `{{signer:someone}}` are their public keys, for the page's `publishers`.
+const signers = {};
+if (staged["delivery-v3"]) {
+  const keys = mkdtempSync(join(tmpdir(), "datars-site-keys-"));
+  try {
+    for (const [who, alias] of [["newsroom", "delivery-signed"], ["someone", "delivery-foreign"]]) {
+      signers[who] = JSON.parse(execFileSync(cli, ["keygen", "--out", join(keys, `${who}.key`), "--json"]).toString()).publisher;
+      execFileSync(cli, ["publish", staged["delivery-v3"], "--alias", alias, "--to", out, "--sign", join(keys, `${who}.key`)], { stdio: "ignore" });
+    }
+  } finally {
+    rmSync(keys, { recursive: true, force: true });
+  }
+  // One field changed after signing (the title, as a proxy in the middle might): the signature no
+  // longer covers what's there.
+  const m = JSON.parse(readFileSync(join(out, "c", "delivery-signed"), "utf8"));
+  m.title = `${m.title ?? "Chart"} (edited in transit)`;
+  writeFileSync(join(out, "c", "delivery-tampered"), JSON.stringify(m));
 }
 // Files a page's demo reads besides the chart (`files`: repo path → site path; a folder copies its
 // files): accounts to hand a data slot, a live feed to replay.
@@ -592,6 +614,7 @@ function fill(html, where) {
   let s = html
     .replaceAll("{{repo}}", repo)
     .replaceAll("{{src}}", blob("").replace(/\/$/, ""))
+    .replace(/\{\{signer:(newsroom|someone)\}\}/g, (_, w) => signers[w] ?? (() => { throw new Error(`${where}: {{signer:${w}}} needs the delivery-v3 figure`); })())
     .replaceAll("{{runtime}}", runtime)
     .replaceAll("{{count:recipes}}", String(recipeCount))
     .replaceAll("{{count:charts}}", String(showcase.length))

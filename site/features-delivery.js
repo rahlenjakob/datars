@@ -263,27 +263,37 @@ function tiers(section) {
 
 // ---- signed --------------------------------------------------------------------------------------
 
+/** Three embeds, all naming the newsroom's key: each verdict is what the runtime decided in this
+ * browser — the chart's first frame, or its `error` event with the runtime's own reason. */
 function signed(section) {
-  const box = section.querySelector(".dl-signed");
-  const state = section.querySelector(".dl-signed-state");
-  // The runtime's refusal arrives as a rejected promise from inside <datars-view> (it has no error
-  // event): it's what this demo is for, so show it rather than leave it to the console.
-  let refusal = "";
-  addEventListener("unhandledrejection", (e) => {
-    const m = String(e.reason?.message ?? e.reason ?? "");
-    if (!/publisher|signature|unsigned/i.test(m)) return;
-    e.preventDefault();
-    refusal = m;
-  });
-  new IntersectionObserver(([e], io) => {
-    if (!e.isIntersecting) return;
-    io.disconnect();
-    const d = view(box, 1, 0);
-    box.append(d);
-    views.add(d);
-    fit(box);
-    setTimeout(() => { state.textContent = d.status ? "(It played — the check didn't refuse it.)" : refusal ? `The runtime, in your browser just now: “${refusal}”.` : "Checked in your browser just now: the view never started its engine."; }, 3000);
-  }, { rootMargin: "50% 0px" }).observe(box);
+  const short = (k) => (k ? `${k.slice(0, 16)}…${k.slice(-6)}` : "");
+  for (const card of section.querySelectorAll(".dl-card")) {
+    const box = card.querySelector(".dl-trust-box");
+    const verdict = card.querySelector(".dl-verdict");
+    new IntersectionObserver(([e], io) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      const d = document.createElement("datars-view");
+      d.setAttribute("src", new URL(box.dataset.src, site).href);
+      d.setAttribute("publishers", box.dataset.publishers);
+      d.setAttribute("mode", mode());
+      d.setAttribute("no-controls", "");
+      d.setAttribute("aria-label", `Vote share by party, Sweden 2022 — ${card.querySelector("b").textContent.toLowerCase()}`);
+      d.setAttribute("height", String(Math.round(box.clientHeight)));
+      d.addEventListener("error", (ev) => {
+        card.dataset.verdict = ev.detail.refused ? "refused" : "error";
+        const said = ev.detail.message.replace(/^signature: /, "").replace(/ed25519:[0-9a-f]{64}/g, (k) => short(k));
+        verdict.textContent = `Refused: “${said}”`;
+      });
+      d.addEventListener("state", () => {
+        if (card.dataset.verdict) return;
+        card.dataset.verdict = "played";
+        verdict.textContent = `Played: signed by ${short(box.dataset.publishers)}, checked before anything showed`;
+      }, { once: true });
+      box.append(d);
+      views.add(d);
+    }, { rootMargin: "50% 0px" }).observe(box);
+  }
 }
 
 const r = document.getElementById("republish");
