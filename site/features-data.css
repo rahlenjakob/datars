@@ -1,0 +1,57 @@
+/* The data page's own styles (site/pages/features/data.html: `css:` in its front matter): the data
+   lab (features-data.js) — the chart stays in view (sticky) while the reader edits the rows — the
+   misbehaving API and the account switcher. */
+:root { --dx-bad: #b3261e; }
+:root[data-theme="dark"] { --dx-bad: #ff8a80; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --dx-bad: #ff8a80; } }
+.dx-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+/* The reserved space follows the slot's own width (its phone ratio under 600 px), so nothing moves. */
+.dx-cq { container-type: inline-size; }
+@container (max-width: 627.98px) { .card.dx-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+@container (max-width: 599.98px) { .frame.dx-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.dx-stage { position: sticky; top: 76px; z-index: 2; }
+.dx-status { margin: 10px 4px 0; min-height: 3em; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+.dx-verdict.bad { color: var(--dx-bad); }
+.dx-samples button { font-size: 12.5px; padding: 6px 10px; }
+.dx-samples small { font-weight: 500; color: var(--muted); }
+.dx-drop { margin-top: 12px; border-radius: 12px; transition: box-shadow .15s; }
+.dx-drop.over { box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 45%, transparent); }
+.dx-drop textarea { display: block; width: 100%; box-sizing: border-box; min-height: 190px; resize: vertical; font: 12.5px/1.55 var(--mono); padding: 12px 14px; border: 1px solid var(--rule); border-radius: 12px; background: var(--bg); color: var(--ink); tab-size: 14; white-space: pre; overflow: auto; }
+.dx-drop textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 1px; }
+.dx-drop-note { margin: 8px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.dx-map { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+.dx-map label { display: grid; gap: 4px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.dx-map select { width: 100%; font: 500 13.5px var(--font); padding: 7px 8px; border: 1px solid var(--rule); border-radius: 9px; background: var(--surface); color: var(--ink); }
+.dx-code { max-height: none; margin-top: 0; white-space: pre; }
+.dx-panel .fine { margin: 12px 0 0; font-size: 13px; line-height: 1.55; color: var(--muted); }
+.dx-profile pre { margin-top: 0; font-size: 11.5px; }
+.dx-profile[hidden] { display: none; }
+.dx-own { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
+.dx-doc { margin-top: 22px; }
+.dx-doc pre { max-height: 480px; }
+.dx-live-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+.dx-api .mp-ranges { margin-top: 0; }
+.dx-api .mp-ranges label { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-top: 4px; }
+.dx-api .mp-ranges output { font-weight: 500; color: var(--muted); font-variant-numeric: tabular-nums; }
+.dx-api .mp-ranges input { width: 100%; margin: 4px 0; accent-color: var(--accent); cursor: pointer; }
+.dx-api-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.dx-api-buttons button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+/* Six lines, always: new entries replace old ones without moving anything around the log. */
+.dx-log { list-style: none; margin: 16px 0 0; padding: 10px 12px; height: calc(6 * 1.6em + 20px); box-sizing: border-box; overflow: hidden; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); font: 12px/1.6 var(--mono); font-variant-numeric: tabular-nums; }
+.dx-log li { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ink-2); }
+.dx-log li.wait { color: var(--muted); }
+.dx-log li.bad { color: var(--dx-bad); }
+.dx-api-code { margin-top: 14px; }
+.dx-notes { margin-top: 28px; }
+.dx-refused { min-height: 3em; margin: 10px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--dx-bad); }
+.card pre { margin: 4px 0 0; font-size: 11.5px; }
+@media (max-width: 1000px) {
+  .dx-grid, .dx-live-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  /* On a phone the chart stays in view while the rows scroll under it. */
+  .dx-stage { top: 60px; background: var(--bg); padding: 6px 0 8px; margin: -6px 0 0; }
+  .dx-stage .frame { padding: 10px; }
+}
+@media (max-width: 720px) {
+  .dx-status { font-size: 12.5px; min-height: 2.6em; margin-top: 6px; }
+  .dx-drop textarea { min-height: 150px; }
+}
