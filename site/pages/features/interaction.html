@@ -1,75 +1,159 @@
 ---
 title: Interactive charts — hover, click, brush, drag, zoom · datars
-description: Linked views, brushes, engine-drawn controls (sliders, ranges, dropdowns, switches, checkboxes, buttons), explorable maps and point clouds, drill-downs and tooltips — declared as signals and intents in the document, with no event-handling code, the same with mouse, touch, keyboard and screen readers.
-og: dashboard
+description: Brush, click, drag, pan and zoom a live chart and watch the signals it writes. In datars an interaction is a line in the document — linked views, drill-downs, scrubbers and engine-drawn controls with no event-handling code, the same with a mouse, a finger, a keyboard and a screen reader.
+og: interaction-lab
+css: features-interaction.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Interactive</p>
-    <h1>Charts that answer back — without event-handling code</h1>
-    <p class="lede-2">In datars, interaction is part of the document. A chart declares <em>signals</em> — a selected set of keys, a brushed range, a number — and binds <em>intents</em> like inspect, activate, brush, drag, pan and zoom to its marks. Tables filter on signals, marks read them in expressions, and the engine does the rest: hit-testing, gestures, tooltips, and a keyed transition every time something changes. Views link because signals are global — no glue.</p>
+    <h1>Hover, click, brush, drag, zoom — and not one event handler</h1>
+    <p class="lede-2">In datars an interaction is a line in the document. A mark binds an <em>intent</em> — inspect, activate, brush, drag, pan, zoom — to an action that writes a <em>signal</em>; every table and mark that reads the signal follows, with a keyed transition. Views link because signals are global. The lab below is one document with four of those lines. Use it, watch the signals change on the right, and switch the lines off.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
+<section class="section il" id="lab" style="padding-top:8px">
   <div class="wrap">
-    <article class="card wide">
-      <div class="card-text">
-        <span class="tag">Click a bar</span>
-        <h3>Linked views from one signal</h3>
-        <p>Click a region's bar: it toggles in the <code>selected</code> key set, the other bars recede, and the trend's table filters to the selection — its lines morph as series come and go. Click again to clear.</p>
-<pre><code data-lang="ts">signals: { selected: signal.keyset() },
-tables: {
-  trend: { from: "sales", ops: [
-    op.filter(e("selected.isEmpty() || selected.has(d.region)")),
-  ] },
-},
-scene: group({ layout: { type: "columns" }, children: [
-  plot({ data: "totals", x: "region", y: "total", color: "region",
-    children: [bar({ selected: "selected" })] }),   // click toggles the key set
-  plot({ data: "trend", x: "month", y: "sales", color: "region",
-    children: [line({ points: true })] }),
-] }),</code></pre>
-        {{alt:dashboard}}
+    <div class="il-grid">
+      <div class="il-stage">
+        <div class="frame il-cq">
+          <div class="chart" data-chart="interaction-lab" data-min="320" data-phone-ratio="1.9"></div>
+          <p class="il-status" aria-live="polite"><span class="il-what">Drag across the days · click a bike · wheel or pinch over the trips · drag the dashed line</span></p>
+        </div>
       </div>
-      <div class="chart" data-chart="dashboard"></div>
-    </article>
+      <aside class="theme-panel il-panel" aria-label="The lab's signals and the lines that wire them">
+        <h3>Signals, as the engine holds them</h3>
+        <table class="il-signals">
+          <thead><tr><th scope="col">Signal</th><th scope="col">Value</th><th scope="col">Written by</th></tr></thead>
+          <tbody>
+            <tr data-sig="days"><th scope="row"><code>days</code></th><td class="il-v">not brushed</td><td class="il-by">brush</td></tr>
+            <tr data-sig="kinds"><th scope="row"><code>kinds</code></th><td class="il-v">[]</td><td class="il-by">activate → toggle</td></tr>
+            <tr data-sig="zoom"><th scope="row"><code>zoom</code></th><td class="il-v">fitted</td><td class="il-by">pan, zoom</td></tr>
+            <tr data-sig="limit"><th scope="row"><code>limit</code></th><td class="il-v">30</td><td class="il-by">drag → scrub</td></tr>
+            <tr data-sig="inspected"><th scope="row"><code>inspected</code></th><td class="il-v">—</td><td class="il-by">inspect</td></tr>
+          </tbody>
+        </table>
+        <p class="fine il-read">Read with <code>chart.signals</code> on every <code>signal</code> event — the page draws nothing in the chart.</p>
+
+        <h3>The lines that wire it</h3>
+        <div class="il-switches" role="group" aria-label="Interactions in the document">
+          <label class="il-switch"><input type="checkbox" data-line="brush" checked><span><b>Brush</b> the days</span></label>
+          <label class="il-switch"><input type="checkbox" data-line="click" checked><span><b>Click</b> a bike</span></label>
+          <label class="il-switch"><input type="checkbox" data-line="explore" checked><span><b>Pan and zoom</b> the trips</span></label>
+          <label class="il-switch"><input type="checkbox" data-line="drag" checked><span><b>Drag</b> the limit</span></label>
+        </div>
+<pre class="live-code il-code" aria-label="The document's interaction lines"><code data-lang="ts" data-hl>signals: { days: signal.range(), kinds: signal.keyset(), limit: signal.num(30) },</code></pre>
+        <p class="fine">A switch takes its line out of the document and hands the chart the new one with <code>setDocument</code>, then puts back what you had set with <code>setSignal</code>: that one gesture stops working, everything else stays.</p>
+
+        <h3>The page drives it too</h3>
+        <div class="chips il-host" role="group" aria-label="Set a signal from the page">
+          <button type="button" data-host="week">Last week</button>
+          <button type="button" data-host="ebikes">E-bikes</button>
+          <button type="button" data-host="long">Over 40 min</button>
+          <button type="button" data-host="closer">Zoom in</button>
+          <button type="button" data-host="reset">Reset</button>
+        </div>
+<pre class="live-code il-hostcode"><code data-lang="js" id="il-host">chart.setSignal("days", { lo: 24, hi: 30 });</code></pre>
+
+        <h3>What the page heard</h3>
+        <ol class="il-log" aria-label="Events from the chart"></ol>
+      </aside>
+    </div>
+    {{alt:interaction-lab}}
+  </div>
+</section>
+
+<section class="section" id="inputs">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Every input, the same signal</p>
+      <h2>Intents, not mouse events</h2>
+      <p>A document never says <em>click</em> or <em>mousemove</em>. It says <em>activate</em> or <em>brush</em>, and each host turns its own inputs into those. So the lab works with a finger on a phone, with a keyboard, and with a screen reader — where it can, and this table says where it can't yet.</p>
+    </header>
+    <div class="table-wrap il-matrix-wrap">
+      <table class="il-matrix">
+        <thead><tr><th scope="col">Intent → action</th><th scope="col">Mouse</th><th scope="col">Touch</th><th scope="col">Keyboard</th><th scope="col">Screen reader</th><th scope="col">The page</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><code>inspect</code> → tooltip, <code>inspected</code></th><td data-label="Mouse">hover</td><td data-label="Touch">tap (the tip stays until the next tap)</td><td data-label="Keyboard" class="il-no">no tooltip — the label is in the chart's list</td><td data-label="Screen reader">reads the same label</td><td data-label="The page"><code>pick</code> event</td></tr>
+          <tr><th scope="row"><code>activate</code> → set, toggle, drill</th><td data-label="Mouse">click</td><td data-label="Touch">tap</td><td data-label="Keyboard">Tab to the mark's button, Enter</td><td data-label="Screen reader">the same button</td><td data-label="The page"><code>setSignal</code>, <code>send</code></td></tr>
+          <tr><th scope="row"><code>drag</code> → <code>scrub</code></th><td data-label="Mouse">drag</td><td data-label="Touch">drag</td><td data-label="Keyboard">Tab to its slider, arrow keys</td><td data-label="Screen reader">the same slider, adjusted</td><td data-label="The page"><code>setSignal</code></td></tr>
+          <tr><th scope="row"><code>brush</code></th><td data-label="Mouse">drag</td><td data-label="Touch">drag</td><td data-label="Keyboard" class="il-no">none of its own</td><td data-label="Screen reader" class="il-no">none of its own</td><td data-label="The page"><code>setSignal("days", { lo, hi })</code></td></tr>
+          <tr><th scope="row">explore → pan, zoom</th><td data-label="Mouse">drag, wheel</td><td data-label="Touch">drag, two-finger pinch</td><td data-label="Keyboard" class="il-no">none of its own</td><td data-label="Screen reader" class="il-no">none of its own</td><td data-label="The page"><code>setSignal("zoom.zoom", 3)</code></td></tr>
+          <tr><th scope="row"><code>pick</code> → a select's choice</th><td data-label="Mouse">the drawn list</td><td data-label="Touch">the phone's own picker</td><td data-label="Keyboard">a native select</td><td data-label="Screen reader">the same select</td><td data-label="The page"><code>setSignal</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cards3 il-notes">
+      <article><h3>A finger is the chart's where the chart drags</h3><p>A touch that lands on a brush, a pannable view or a slider stays with the chart; a touch anywhere else scrolls the page, so a chart as wide as the phone never traps the reader. Two fingers over an explorable view zoom it.</p></article>
+      <article><h3>The keyboard reaches what you can click</h3><p>Each chart keeps a hidden list in step with what it draws: clickable marks as buttons, engine-drawn sliders as native range inputs. In the lab, Tab past the chart into the bikes' buttons and the time limit's slider. <a href="/features/accessibility/">Accessibility →</a></p></article>
+      <article><h3>Brushes and cameras need a second way in</h3><p>A brush or a pan has no keyboard equivalent of its own yet. Give the same signal a control — a std <code>range</code> or <code>slider</code> — or set it from the page, as the lab's buttons do: the chart can't tell the difference.</p></article>
+    </div>
   </div>
 </section>
 
 <section class="section">
   <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Each one a line</p>
+      <h2>Scrubbers, drill-downs, overview and detail, controls</h2>
+      <p>Four more documents, each built around one binding. Nothing on this page handles their events.</p>
+    </header>
+    <article class="card wide il-cq">
+      <div class="card-text">
+        <span class="tag">Drag across the day</span>
+        <h3>Scrub a chart with a chart</h3>
+        <p>The day's curve is the scrubber: a shape over the plot's area turns a drag into <code>hour</code> through the plot's own x scale, snapped to whole hours, and the stations re-rank — each bar keyed by its station, so it slides to its new place. A keyboard gets the same as a native slider.</p>
+<pre><code data-lang="ts">plot({ data: "day", x: "hour", y: "trips", children: [
+  area(), line(), rule({ axis: "x", value: e("hour") }),
+  shape(plotArea, { on: { drag: scrub("hour", { step: 1, min: 0, max: 23 }) } }),
+] }),
+// the ranking reads it
+now: { from: "trips", ops: [op.filter(e("d.hour == hour")), op.sort(["trips", "desc"])] },</code></pre>
+        <p class="hint"><a href="{{src}}/site/figures/interaction/hours.ts">Figure source</a> · made-up data</p>
+        {{alt:interaction-hours}}
+      </div>
+      <div class="chart" data-chart="interaction-hours" data-phone-ratio="1.2"></div>
+    </article>
     <div class="grid">
       <article class="card">
         <div class="chart" data-chart="prices" data-caption></div>
         <div class="card-text">
           <span class="tag">Drag across the lower chart</span>
-          <h3>Brush and zoom</h3>
-          <p>Brushing the overview writes a range signal; the detail's table keeps the rows inside it and a text mark shows the mean. A click clears the brush.</p>
-<pre><code data-lang="ts">signals: { range: signal.range() },
-tables: { detail: { from: "prices", ops: [op.filter(brushed("range", "d.day"))] } },
-// …
-plot({ data: "prices", x: "day", y: "price", xType: "linear", brush: "range",
-  children: [area({ opacity: 0.3 }), line({ width: 1 })] }),</code></pre>
+          <h3>Overview and detail</h3>
+          <p>Brushing the year writes a range; the detail's table keeps the rows inside it and a text mark shows their mean. A click clears it, and the story's steps set the same range to tour the year.</p>
+<pre><code data-lang="ts">tables: { detail: { from: "prices", ops: [op.filter(brushed("range", "d.day"))] } },
+plot({ data: "prices", x: "day", y: "price", brush: "range" }),</code></pre>
           {{alt:prices}}
         </div>
       </article>
       <article class="card">
-        <div class="chart" data-chart="controls"></div>
+        <div class="chart" data-chart="interaction-drill"></div>
         <div class="card-text">
-          <span class="tag">Try every control</span>
-          <h3>Engine-drawn controls</h3>
-          <p>Sliders and ranges, segmented choices, dropdowns, switches, checkboxes and buttons are part of the chart, drawn by the engine: identical on the web, in apps and in a video export, as quick as a UI, and offered to keyboards and screen readers as native controls. Each sets a signal the bars read.</p>
-<pre><code data-lang="ts">segmented({ signal: "quarter", options: ["q1", "q2"], labels: ["Q1", "Q2"] }),
-select({ signal: "region", options: regions, label: "Highlight" }),
-toggle({ signal: "average", label: "Average line" }),
-checklist({ signal: "shown", options: regions }),
-range({ lo: "lo", hi: "hi", min: 0, max: 50 }),
-button({ label: "Show every region", set: "shown", value: regions }),</code></pre>
-          {{alt:controls}}
+          <span class="tag">Click a station</span>
+          <h3>Drill down, and back</h3>
+          <p>A bar enters a program chapter with its key — that station's day, hour by hour — and <kbd>Esc</kbd> or the <code>back</code> event leaves it. A keyboard gets there through the bar's button.</p>
+<pre><code data-lang="ts">bar({ chapter: "station" }),
+chapters: { station: chapter("s", [
+  step("day", { set: { scene: "day", focus: "{s}" } }),
+]) },</code></pre>
+          <p class="hint"><a href="{{src}}/site/figures/interaction/drill.ts">Figure source</a> · made-up data</p>
+          {{alt:interaction-drill}}
         </div>
       </article>
     </div>
+    <article class="card wide il-gap">
+      <div class="card-text">
+        <span class="tag">Try every control</span>
+        <h3>Controls the engine draws</h3>
+        <p>Sliders, ranges, segmented choices, dropdowns, switches, checkboxes and buttons are std recipes: drawn by the engine, identical on the web, in apps and in a video, as quick as a UI — and offered to keyboards and screen readers as native controls. On a phone a dropdown opens the phone's own picker.</p>
+<pre><code data-lang="ts">segmented({ signal: "quarter", options: ["q1", "q2"], labels: ["Q1", "Q2"] }),
+select({ signal: "region", options: regions, label: "Highlight" }),
+checklist({ signal: "shown", options: regions }),
+range({ lo: "lo", hi: "hi", min: 0, max: 50 }),</code></pre>
+        {{alt:controls}}
+      </div>
+      <div class="chart" data-chart="controls"></div>
+    </article>
   </div>
 </section>
 
@@ -81,33 +165,24 @@ button({ label: "Show every region", set: "shown", value: regions }),</code></pr
       <p>Everything interactive on this site is built from these — declared in the document, so it travels with the chart to every platform.</p>
     </header>
     <div class="cards3">
-      <article><h3>Signals</h3><p><code>signal.num</code>, <code>str</code>, <code>bool</code>, <code>key</code>, <code>keyset</code>, <code>range</code> — and <code>clock</code>, which counts up while a settled scene reads it (the spinning globe on the home page). Story steps set them; marks, tables and cameras read them.</p></article>
-      <article><h3>Intents</h3><p><code>inspect</code> (hover, tap, focus), <code>activate</code> (click, tap, Enter, a screen reader's double-tap), <code>brush</code>, <code>drag</code>, <code>pan</code> and <code>zoom</code>. Documents bind intents, not mouse events, so the same chart works with every input.</p></article>
-      <article><h3>Actions</h3><p>Set a signal, toggle a key in a set, brush a range, scrub a value along a scale, fire an event for the host, or enter a drill-down chapter with the clicked key — all data, no callbacks.</p></article>
-      <article><h3>Tooltips</h3><p>Every data mark has a label — <em>“Sweden Democrats: 20.5”</em> — shown on inspect, drawn by the engine so it's the same on every platform, and read by screen readers.</p></article>
-      <article><h3>Explorable views</h3><p>A view's camera can name signals that drag and wheel or pinch move, between a minimum and a maximum zoom. The <a href="/features/big-data/">four-million-star galaxy</a> is one; stepping a story flies the camera back into the narrative.</p></article>
-      <article><h3>Drill-down</h3><p>A bar can enter a program chapter with its category when clicked — a sub-story about that one key — and the <code>back</code> event leaves it.</p></article>
+      <article><h3>Signals</h3><p><code>signal.num</code>, <code>str</code>, <code>bool</code>, <code>key</code>, <code>keyset</code>, <code>range</code> — and <code>clock</code>, which counts up while a settled scene reads it. Story steps set them; marks, tables and cameras read them. Built in: <code>inspected</code>, a brush's <code>.lo</code>/<code>.hi</code>/<code>.active</code>, a view's <code>.x</code>/<code>.y</code>/<code>.zoom</code>.</p></article>
+      <article><h3>Intents</h3><p><code>inspect</code>, <code>activate</code>, <code>brush</code>, <code>drag</code>, <code>pan</code>, <code>zoom</code> and <code>pick</code>. Documents bind intents, not mouse events, so the same chart works with every input the host has.</p></article>
+      <article><h3>Actions</h3><p>Set a signal, toggle a key in a set, brush a range, scrub a value along a scale, send the program an event, or enter a drill-down chapter with the clicked key — all data, no callbacks.</p></article>
+      <article><h3>Tooltips</h3><p>Every data mark has a label — <em>“E-bike, 12 October: 4.6 km in 17 min”</em> — shown on inspect, drawn by the engine so it's the same on every platform, and read by screen readers.</p></article>
+      <article><h3>Explorable views</h3><p>A view's camera can name signals that drag, the wheel and a pinch move, between a minimum and a maximum zoom. The <a href="/features/big-data/">four-million-star galaxy</a> is one; a story step flies the camera back into the narrative.</p></article>
+      <article><h3>Hover states</h3><p><code>hover()</code> is true while the pointer is over the element: a control's wash, a halo round a thumb, a label lighting up — animated, never on a touch screen, and costing a new scene only for the elements that ask.</p></article>
     </div>
   </div>
 </section>
 
 <section class="section">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Text</p>
-      <h2>Chart text you can select, copy and find</h2>
-      <p>A chart's titles, labels and annotations are drawn by the engine, and on the web they're also laid out as real text over the canvas, glyph for glyph: drag to select a title and copy it, find a label with Ctrl+F, and search engines read it. Hover, clicks on marks and panning a map work as before — a drag on a label only selects when it's a text drag.</p>
-    </header>
-  </div>
-</section>
-<section class="section">
   <div class="wrap split">
     <div>
       <p class="eyebrow">Talk to the page or the app</p>
       <h2>Host and chart, both ways</h2>
-      <p>The page or app can drive the chart — set a signal from your own filter, jump to a state, hand in data — and listen to it: the <code>state</code> event reports the step, its narration and the chart's semantics.</p>
+      <p>The page or app can drive the chart — set a signal from its own filter, jump to a state, hand in data — and follow it: <code>signal</code> says what the reader changed, <code>pick</code> which row a click landed on, <code>state</code> which step the story is on. The lab's right-hand panel is built from exactly these.</p>
       <ul class="bullets">
-        <li><b>Web:</b> <code>setSignal(name, value)</code>, <code>send("goto:ranked")</code>, <code>data = { slot: rows }</code>, the <code>state</code> event.</li>
+        <li><b>Web:</b> <code>setSignal(name, value)</code>, <code>signals</code>, <code>send("goto:ranked")</code>, <code>data = { slot: rows }</code>, and the <code>signal</code>, <code>pick</code> and <code>state</code> events.</li>
         <li><b>iOS:</b> <code>DatarsChart(source:state:)</code> follows SwiftUI state; the engine's <code>setSignal</code> sets numeric signals.</li>
         <li><b>Android:</b> <code>send("next")</code>, <code>goTo(index)</code>, <code>provideData(…)</code>.</li>
       </ul>
@@ -116,14 +191,24 @@ button({ label: "Show every region", set: "shown", value: regions }),</code></pr
 <pre><code data-lang="js">const chart = document.querySelector("datars-view");
 
 // The page drives the chart…
-myRegionFilter.addEventListener("change", (e) =&gt;
-  chart.setSignal("region", e.target.value));
+weekPicker.addEventListener("change", () =&gt;
+  chart.setSignal("days", { lo: weekPicker.from, hi: weekPicker.to }));
 
 // …and follows it.
-chart.addEventListener("state", (e) =&gt; {
-  const { state, narration } = e.detail;
-  caption.textContent = narration?.text ?? "";
-});</code></pre>
+chart.addEventListener("signal", (e) =&gt; {
+  if (e.detail.changed.includes("kinds")) showBikes(e.detail.signals.kinds);
+});
+chart.addEventListener("pick", (e) =&gt; showTrip(e.detail.row));</code></pre>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Text</p>
+      <h2>Chart text you can select, copy and find</h2>
+      <p>A chart's titles, labels and annotations are drawn by the engine, and on the web they're also laid out as real text over the canvas, glyph for glyph: drag to select a title and copy it, find a label with Ctrl+F, and search engines read it. A drag that starts on a label inside a brush or a pannable view is the chart's drag, not a selection.</p>
+    </header>
   </div>
 </section>
 
@@ -132,12 +217,14 @@ chart.addEventListener("state", (e) =&gt; {
     <div class="next">
       <div>
         <h2>Make it interactive</h2>
-        <p>Signals, intents, brushes, controls, linked views and explorable cameras.</p>
+        <p>Signals, intents, brushes, scrubbers, controls, linked views and explorable cameras.</p>
       </div>
       <div class="cta">
         <a class="btn btn-primary" href="/docs/interaction/">Interaction guide <span aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="/docs/std/#controls">Every control</a>
+        <a class="btn btn-ghost" href="/docs/embed/web/">The web element</a>
       </div>
     </div>
   </div>
 </section>
+<script type="module" src="/features-interaction.js"></script>
