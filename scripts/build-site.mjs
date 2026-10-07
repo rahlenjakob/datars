@@ -482,6 +482,34 @@ function stdList() {
   }).join("");
 }
 
+/** A recipe family's slug (the chart reference's heading ids): "Parts of a whole and flows" →
+ * "parts-of-a-whole-and-flows". */
+const familySlug = (h) => h.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
+/** Every recipe as a card in the gallery's wall, family by family: its live figure (a slot like
+ * any chart's), its family, the first sentence of its documentation, and links to its reference
+ * page and the charts page's playground (`{{std:cards}}`). Recipes no family lists land in "More". */
+function stdCards() {
+  const names = Object.keys(std).map((id) => id.replace("@datars/std/", ""));
+  const listed = new Set(STD_GROUPS.flatMap(([, , l]) => l));
+  const groups = [...STD_GROUPS, ["More", "", names.filter((n) => !listed.has(n))]];
+  return groups.map(([h, blurb, list]) => {
+    const here = list.filter((n) => names.includes(n) && CHARTS[figureAlias(n)]);
+    if (!here.length) return "";
+    const fam = familySlug(h);
+    const cards = here.map((n) => {
+      const doc = std[`@datars/std/${n}`].doc ?? "";
+      const a = figureAlias(n);
+      return `<article class="g-card g-type" id="${a}" data-kind="types" data-families="${fam}" data-tags="" data-words="${escapeAttr(`${n} ${h} ${doc}`)}"><div class="chart" data-chart="${a}"></div><div class="g-text"><p class="g-kicker">${escapeHtml(h)}</p><h3><code>${escapeHtml(n)}</code></h3><p>${inline(firstSentence(doc))}</p><div class="g-foot"><span class="g-meta"><a href="/docs/std/${n}/">Reference</a> · <a href="/features/charts/#play=${n}">Playground</a></span><button type="button" class="g-open" data-lab="${a}" aria-label="Open ${escapeAttr(n)} in the lab">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div></div></article>`;
+    }).join("");
+    return `<section class="g-group g-family" id="${fam}" data-group="types" data-family="${fam}"><div class="wrap"><header class="g-group-head"><h3 class="g-fam-h">${escapeHtml(h)} <small>${here.length}</small></h3>${blurb ? `<p>${escapeHtml(blurb)}</p>` : ""}</header><div class="g-grid g-grid-types">${cards}</div></div></section>`;
+  }).join("\n");
+}
+/** The recipe families a site chart's document uses (`{{families:votes}}`), as slugs. */
+function familiesOf(alias) {
+  const used = siteCharts[alias]?.recipes ?? new Set();
+  return STD_GROUPS.filter(([, , l]) => l.some((n) => used.has(`@datars/std/${n}`))).map(([h]) => familySlug(h)).join(" ");
+}
+
 /** `datars help` as a table: every command, its arguments and what it does. */
 function cliTable() {
   const rows = help.split("\n").filter((l) => /^ {2}[a-z]/.test(l)).map((l) => {
@@ -620,6 +648,8 @@ function fill(html, where) {
     .replaceAll("{{count:charts}}", String(showcase.length))
     .replaceAll("{{count:mcp}}", String(mcpTools.length))
     .replaceAll("{{std:list}}", stdList())
+    .replace(/\{\{std:cards\}\}/g, () => stdCards())
+    .replace(/\{\{families:([a-z0-9_-]+)\}\}/g, (_, a) => familiesOf(known(a)))
     .replaceAll("{{look:presets}}", lookPresets())
     .replaceAll("{{look:accents}}", lookAccents())
     .replaceAll("{{features:grid}}", `<div class="feature-grid">${FEATURES.map((f) => `<a class="feature-card" href="/features/${f.slug}/">${featureIcon(f)}<b>${escapeHtml(f.name)}</b><span>${escapeHtml(f.blurb)}</span></a>`).join("")}</div>`)
