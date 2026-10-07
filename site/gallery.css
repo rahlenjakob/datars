@@ -10,6 +10,8 @@
 .g-stats { display: grid; grid-template-columns: repeat(4, minmax(0, auto)); justify-content: start; gap: 12px 40px; margin: 0 0 8px; }
 .g-stats div { min-width: 0; }
 .g-stats dt { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.g-stats dt a { color: inherit; text-decoration: none; }
+.g-stats dt a:hover { color: var(--accent); }
 .g-stats dd { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
 
 /* ---- the filter bar ---- */
