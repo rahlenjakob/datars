@@ -560,8 +560,12 @@ impl Engine {
                     ex.add_module(&p.name, src);
                 }
             }
-            ex.clear_cache();
-            *ex.host.locale.borrow_mut() = doc.locale.clone();
+            // Expansions depend on the packages (above), the locale, the theme's numbers and texts
+            // and the fonts (where those change): kept across a reload that keeps them all.
+            if *ex.host.locale.borrow() != doc.locale {
+                ex.clear_cache();
+                *ex.host.locale.borrow_mut() = doc.locale.clone();
+            }
         }
         let (sources, geo_store, requests, diags) = tables::load_sources(&doc);
         self.tiles = RefCell::new(tiles::TileState::new(&doc));
@@ -762,6 +766,7 @@ impl Engine {
         #[cfg(feature = "sandbox")]
         if let Some(ex) = &self.expander {
             *ex.host.fonts.borrow_mut() = self.fonts.clone();
+            ex.clear_cache(); // recipes measure text
         }
     }
 
@@ -1055,7 +1060,11 @@ impl Engine {
         self.tiles.borrow_mut().clear_built();
         #[cfg(feature = "sandbox")]
         if let Some(ex) = &self.expander {
-            *ex.host.theme.borrow_mut() = self.theme.clone();
+            let before = ex.host.theme.replace(self.theme.clone());
+            // Recipes read the theme's numbers and texts (`token()`).
+            if (&before.numbers, &before.texts) != (&self.theme.numbers, &self.theme.texts) {
+                ex.clear_cache();
+            }
         }
     }
 

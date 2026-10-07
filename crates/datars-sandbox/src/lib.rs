@@ -56,9 +56,22 @@ impl Default for Options {
 
 type Sources = Rc<RefCell<BTreeMap<String, String>>>;
 
-struct MapResolver(Sources);
+/// QuickJS keeps an evaluated module for the runtime's life, by the name its resolver gave it. A
+/// package whose source changes (an editor's edit, a reloaded document) bumps this epoch, which is
+/// part of every package module's resolved name (`mypkg#3`): the next import evaluates the new
+/// source, and so do the modules importing it. The built-in `@datars/` modules never change and
+/// keep their names, so the standard library is evaluated once.
+type Epoch = Rc<Cell<u32>>;
+
+/// A resolved module name without its epoch.
+fn source_key(resolved: &str) -> &str {
+    resolved.split_once('#').map_or(resolved, |(k, _)| k)
+}
+
+struct MapResolver(Sources, Epoch);
 impl Resolver for MapResolver {
     fn resolve<'js>(&mut self, _ctx: &Ctx<'js>, base: &str, name: &str) -> rquickjs::Result<String> {
+        let base = source_key(base);
         let name = if let Some(rel) = name.strip_prefix("./") {
             // relative to the importing module's package
             match base.rsplit_once('/') {
@@ -70,7 +83,8 @@ impl Resolver for MapResolver {
         };
         let key = name.trim_end_matches(".js").to_string();
         if self.0.borrow().contains_key(&key) {
-            Ok(key)
+            let epoch = self.1.get();
+            Ok(if epoch == 0 || key.starts_with("@datars/") { key } else { format!("{key}#{epoch}") })
         } else {
             Err(rquickjs::Error::new_resolving(base, name))
         }
@@ -80,7 +94,7 @@ impl Resolver for MapResolver {
 struct MapLoader(Sources);
 impl Loader for MapLoader {
     fn load<'js>(&mut self, ctx: &Ctx<'js>, name: &str) -> rquickjs::Result<Module<'js, rquickjs::module::Declared>> {
-        let src = self.0.borrow().get(name).cloned().ok_or_else(|| rquickjs::Error::new_loading(name))?;
+        let src = self.0.borrow().get(source_key(name)).cloned().ok_or_else(|| rquickjs::Error::new_loading(name))?;
         Module::declare(ctx.clone(), name, src)
     }
 }
@@ -94,6 +108,7 @@ pub struct Sandbox {
     ctx: Context,
     rt: Runtime,
     sources: Sources,
+    epoch: Epoch,
     ticks: Rc<Cell<u64>>,
     budget: u64,
 }
@@ -112,7 +127,8 @@ impl Sandbox {
             })));
         }
         let sources: Sources = Rc::new(RefCell::new(BTreeMap::new()));
-        rt.set_loader(MapResolver(sources.clone()), MapLoader(sources.clone()));
+        let epoch: Epoch = Rc::new(Cell::new(0));
+        rt.set_loader(MapResolver(sources.clone(), epoch.clone()), MapLoader(sources.clone()));
         let ctx = Context::full(&rt).map_err(err)?;
         ctx.with(|c| -> Result<(), SandboxError> {
             install_math(&c).map_err(err)?;
@@ -133,13 +149,26 @@ impl Sandbox {
             .catch(&c)
             .map_err(|e| SandboxError(format!("sandbox setup: {e}")))
         })?;
-        Ok(Sandbox { ctx, rt, sources, ticks, budget: opts.budget })
+        Ok(Sandbox { ctx, rt, sources, epoch, ticks, budget: opts.budget })
     }
 
     /// Register an ES module by name (e.g. `"@datars/sdk"`, `"@datars/std/bar"`). Imports resolve
     /// against registered names; `./x` resolves relative to the importing module's directory.
-    pub fn add_module(&mut self, name: &str, source: &str) {
-        self.sources.borrow_mut().insert(name.trim_end_matches(".js").to_string(), source.to_string());
+    /// Add (or replace) a module's source. Returns whether anything changed: a replaced source is
+    /// what later imports and calls see (see [`Epoch`]).
+    pub fn add_module(&mut self, name: &str, source: &str) -> bool {
+        let key = name.trim_end_matches(".js").to_string();
+        let mut sources = self.sources.borrow_mut();
+        match sources.get(&key) {
+            Some(old) if old == source => false,
+            old => {
+                if old.is_some() {
+                    self.epoch.set(self.epoch.get() + 1);
+                }
+                sources.insert(key, source.to_string());
+                true
+            }
+        }
     }
 
     pub fn has_module(&self, name: &str) -> bool {
@@ -262,6 +291,23 @@ mod tests {
         );
         let out = s.call("@x/recipe", "default", Some("expand"), "[{\"n\": 21}]", Rc::new(Measure)).unwrap();
         assert_eq!(out, r#"{"w":42,"m":35}"#);
+    }
+
+    #[test]
+    fn a_replaced_module_is_what_the_next_call_runs() {
+        let mut s = Sandbox::new(Options::default()).unwrap();
+        s.add_module("@x/lib", "export const k = 1;");
+        s.add_module("@x/recipe", "import { k } from '@x/lib'; export default { expand() { return k; } };");
+        let call = |s: &Sandbox| s.call("@x/recipe", "default", Some("expand"), "[]", Rc::new(Measure)).unwrap();
+        assert_eq!(call(&s), "1");
+        // An edit to the recipe itself, and then to a module it imports: both seen at once.
+        assert!(s.add_module("@x/recipe", "import { k } from '@x/lib'; export default { expand() { return k * 10; } };"));
+        assert_eq!(call(&s), "10");
+        assert!(s.add_module("@x/lib", "export const k = 2;"));
+        assert_eq!(call(&s), "20");
+        // The same source again changes nothing.
+        assert!(!s.add_module("@x/lib", "export const k = 2;"));
+        assert_eq!(call(&s), "20");
     }
 
     #[test]

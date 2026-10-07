@@ -73,8 +73,11 @@ impl SandboxExpander {
 
     /// Register a package module (user recipes).
     pub fn add_module(&self, name: &str, source: &str) {
-        self.sandbox.borrow_mut().add_module(name, source);
-        self.cache.borrow_mut().clear();
+        // Expansions are kept while the packages are the same: a document reloaded with the same
+        // recipes (an editor's change of data or settings) expands only what changed.
+        if self.sandbox.borrow_mut().add_module(name, source) {
+            self.cache.borrow_mut().clear();
+        }
     }
 
     pub fn clear_cache(&self) {
