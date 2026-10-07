@@ -1,45 +1,106 @@
 ---
-title: Charts are content — publish without a deploy · datars
-description: Publish datars charts as a manifest and immutable chunks to any static host or CDN. Sites and apps install the runtime once; republishing updates every embed, with a poster and accessible text first.
+title: Charts are content — publish, republish and roll back without a deploy · datars
+description: Publish datars charts as a manifest and immutable chunks to any static host. Republish and every embed updates — a reader downloads only the chunks whose bytes changed. Watch it happen, with the bytes your own browser fetched.
 og: spending
+css: features-delivery.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Charts are content</p>
-    <h1>Publish, update and roll back charts like articles</h1>
-    <p class="lede-2">A site or an app installs the datars runtime once. After that, charts arrive over the network as small bundles — a manifest and content-addressed chunks on any static host — and change on their own schedule: republish tonight's election map into an app that shipped in the spring, fix a typo in a chart embedded on a hundred pages, without a site deploy or an app-store review.</p>
+    <h1>Republish a chart. Every embed updates. Readers fetch only what changed.</h1>
+    <p class="lede-2">A site or an app installs the datars runtime once. After that, charts arrive like articles: a small manifest and content-addressed chunks on any static host, changed on their own schedule — no site deploy, no app-store review. Below, one chart embedded three times. Publish its next version and watch every embed follow, with the bytes your browser actually fetched.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
+<section class="section dl" id="republish" style="padding-top:8px">
   <div class="wrap">
-    <div class="cards3">
-      <article><span class="kicker-num">1</span><h3>Publish</h3>
-<pre><code data-lang="sh">datars publish election.ts \
-  --alias election --to site/</code></pre>
-        <p>Writes <code>site/c/election</code> — the manifest — and <code>site/chunks/…</code>, named by content hash, plus any archives the chart reads by range.</p></article>
-      <article><span class="kicker-num">2</span><h3>Host anywhere static</h3><p>Upload the folder to a bucket, a CDN, GitHub Pages or your own server. Chunks never change, so they cache forever; the manifest is the one small file that does. <code>datars serve site/</code> tries it locally.</p></article>
-      <article><span class="kicker-num">3</span><h3>Embed once</h3>
-<pre><code data-lang="html">&lt;datars-view src="https://charts.example.com/c/election"&gt;&lt;/datars-view&gt;</code></pre>
-        <p>Or <code>DatarsChart(source: .url(…))</code> in SwiftUI, <code>DatarsView.load(…)</code> on Android. Republish, and every embed follows the alias; roll back by moving it back.</p></article>
+    <div class="dl-versions" role="group" aria-label="Versions of the chart">
+      <button type="button" data-v="1" aria-pressed="true"><span>v1</span><b>Published</b><small>with a typo in its title</small></button>
+      <button type="button" data-v="2" aria-pressed="false"><span>v2</span><b>Typo fixed</b><small>one word in the title</small></button>
+      <button type="button" data-v="3" aria-pressed="false"><span>v3</span><b>Seats added</b><small>a new column and a third step</small></button>
+      <button type="button" class="btn btn-primary dl-next">Publish v2 <span aria-hidden="true">→</span></button>
+    </div>
+    <div class="pills small dl-steps" role="group" aria-label="Step, in every embed"><button type="button" data-state="ranked" aria-pressed="true">Ranked</button><button type="button" data-state="donut" aria-pressed="false">Donut</button><button type="button" data-state="seats" aria-pressed="false" disabled title="Only in v3">Seats</button></div>
+    <div class="dl-embeds" data-own-look="ready">
+      <figure class="dl-embed dl-article">
+        <div class="dl-chrome"><span>A news article</span><code>&lt;datars-view src="…/c/election"&gt;</code></div>
+        <div class="dl-page">
+          <p class="dl-kicker">Election 2022</p>
+          <p class="dl-head">The vote, party by party</p>
+          <p class="dl-body">Eight parties cleared the four per cent threshold. The Social Democrats stayed the largest; the Sweden Democrats came second for the first time.</p>
+          <div class="dl-box" data-alias="delivery"></div>
+        </div>
+      </figure>
+      <figure class="dl-embed dl-phone">
+        <div class="dl-chrome"><span>An app</span><code>DatarsChart(source: .url(…))</code></div>
+        <div class="dl-device"><div class="dl-notch"></div><div class="dl-box" data-alias="delivery"></div></div>
+      </figure>
+      <figure class="dl-embed dl-tile">
+        <div class="dl-chrome"><span>A dashboard</span><code>&lt;DatarsView src=… /&gt;</code></div>
+        <div class="dl-dash"><p class="dl-dash-h">Results</p><div class="dl-box" data-alias="delivery"></div><p class="dl-dash-f">Updated when the chart is republished</p></div>
+      </figure>
+    </div>
+    <div class="dl-ledger">
+      <div class="dl-ledger-text">
+        <h3>What changed, in bytes</h3>
+        <p class="dl-summary" aria-live="polite">The chart as first published: every chunk is new to a reader.</p>
+<pre class="live-code dl-cmd"><code data-lang="sh" id="dl-cmd">datars publish election.ts --alias election --to site/
+# v1: the manifest c/election is written;
+# with every chunk it names</code></pre>
+        <p class="dl-measured" aria-live="polite"></p>
+      </div>
+      <div class="dl-chunks-wrap">
+        <div class="dl-chunks" aria-label="The chunks of the version on screen"></div>
+        <div class="dl-key" aria-hidden="true"><span><i class="dl-new"></i>new in this version</span><span><i class="dl-kept"></i>the same bytes as before</span><span><i class="dl-gone"></i>no longer used</span></div>
+      </div>
+    </div>
+    <p class="fine dl-note">A static site can't republish while you watch, so this site's build published the three versions side by side (<a href="{{src}}/site/figures/delivery/_votes.ts">the document</a>), into one chunk folder, as <code>datars publish</code> would publish them over each other. The buttons point the three embeds at the next version, as moving the alias does; each embed then loads it as a reader returning to the page would. The chunks, their sizes and what your browser fetched are real. Rolling back is the same move, backwards: click v1.</p>
+  </div>
+</section>
+
+<section class="section dl-tiers-section" id="tiers">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Tiers</p>
+      <h2>One bundle, four ways to play it</h2>
+      <p>The publish step partially evaluates the document and writes several variants of it, from a picture to the full source. Each runtime plays the best one it can — and every reader gets at least the picture and the text. These are the variants of the chart above, as published.</p>
+    </header>
+    <div class="dl-tiers">
+      <div class="seg dl-tier-tabs" role="group" aria-label="Tier">
+        <button type="button" data-tier="T0" aria-pressed="true">T0 · poster</button>
+        <button type="button" data-tier="T1" aria-pressed="false">T1 · baked</button>
+        <button type="button" data-tier="T2" aria-pressed="false">T2 · reactive</button>
+        <button type="button" data-tier="T3" aria-pressed="false">T3 · source</button>
+      </div>
+      <div class="dl-tier-grid">
+        <div class="dl-tier-view">
+          <div class="frame dl-tier-frame"><div class="dl-tier-poster"></div><div class="dl-box dl-tier-live" data-alias="delivery" hidden></div></div>
+          <p class="dl-tier-cap"></p>
+        </div>
+        <div class="dl-tier-info">
+          <p class="dl-tier-what"></p>
+          <div class="dl-tier-list"></div>
+        </div>
+      </div>
+      <h3 class="dl-tiers-h">Every variant of v3, to scale</h3>
+      {{variants:delivery-v3}}
+      <p class="fine">Nothing executable but data: T0–T2 are scenes, plans, tables, geometry and bytecode for the engine's own expression interpreter; T3 adds the source document, run in the recipe sandbox, which a page (<code>no-script</code>) or an app can refuse. A runtime whose built-in standard library differs from the author's plays T2, so readers see what the author saw.</p>
     </div>
   </div>
 </section>
 
-<section class="section">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Tiers</p>
-      <h2>Every bundle degrades gracefully</h2>
-      <p>The publish step partially evaluates the document and writes several variants, from a poster to the full source. Each runtime plays the best one it can — and every reader gets at least a picture and the text.</p>
-    </header>
-    <ol class="tiers">
-      <li><b>T0</b><span><b>Poster + accessible text.</b> An SVG poster and the chart's text alternative. Needs nothing: email, RSS, strict CMSs, runtimes too old to play the rest.</span></li>
-      <li><b>T1</b><span><b>Playback.</b> Baked scenes per state and the plans between them: stories, flights, scrubbing, tooltips.</span></li>
-      <li><b>T2</b><span><b>Reactive.</b> Recipes pre-expanded; filters, brushes, sliders, linked views, live data and app data slots stay live. What the web runtime plays by default.</span></li>
-      <li><b>T3</b><span><b>Programmable.</b> The source document, for charts whose structure depends on runtime data; needs the recipe sandbox, pinned to the author's standard library.</span></li>
-    </ol>
-    <p class="fine">Nothing executable but data: T0–T2 are scenes, plans, tables, geometry and bytecode for the engine's own expression interpreter; T3 adds sandboxed script, which a page (<code>no-script</code>) or an app can refuse.</p>
+<section class="section" id="signed">
+  <div class="wrap split">
+    <div>
+      <p class="eyebrow">Trust</p>
+      <h2>Signed manifests: the runtimes check, the CLI doesn't sign yet</h2>
+      <p>A manifest can carry an ed25519 signature, and every runtime can be told whose charts to play: <code>&lt;datars-view publishers="ed25519:…"&gt;</code>. A chart that isn't signed by one of them doesn't play. That's the checking half, and it works today — the chart beside this text is the one above, unsigned, embedded with a key it can't match.</p>
+      <p>The signing half isn't exposed yet: <code>datars publish</code> doesn't sign bundles, so leave <code>publishers</code> unset for charts you publish with the CLI. It's on the list in the <a href="{{src}}/docs/19-status.md">status page</a>.</p>
+    </div>
+    <figure class="fig">
+      <div class="frame"><div class="dl-box dl-signed" data-alias="delivery" data-publishers="ed25519:abababababababababababababababababababababababababababababababab"></div></div>
+      <figcaption><b>Refused:</b> <code>publishers</code> is set and the manifest has no signature, so the runtime never opens the playable variants. What's left on the page is the chart's poster. <span class="dl-signed-state"></span></figcaption>
+    </figure>
   </div>
 </section>
 
@@ -106,3 +167,4 @@ chart.loadAsset("spending.datars"); chart.provideData("spending", rowsJson)</cod
     </div>
   </div>
 </section>
+<script type="module" src="/features-delivery.js"></script>
