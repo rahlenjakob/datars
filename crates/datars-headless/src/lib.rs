@@ -338,8 +338,18 @@ pub struct FilmFrame<'a> {
 /// `fps` — the same plans the live views play. `frame` receives every distinct frame in order.
 /// Returns caption cues from the states' narration: a state's text shows from the start of the
 /// transition into it until the transition out of it begins.
-pub fn film(engine: &mut Engine, fps: f64, default_hold: f64, mut frame: impl FnMut(FilmFrame)) -> Vec<Cue> {
+pub fn film(engine: &mut Engine, fps: f64, default_hold: f64, frame: impl FnMut(FilmFrame)) -> Vec<Cue> {
+    film_with_chapters(engine, fps, default_hold, frame).0
+}
+
+/// [`film`], and its chapters: one cue per state, named by the state, for the time the film holds
+/// it (`datars video` writes them as a WebVTT chapters track). Players show them as chapter marks,
+/// and a page that needs a state's exact frame seeks into its hold — captions alone can't say
+/// where the holds are, and a state without narration has none.
+pub fn film_with_chapters(engine: &mut Engine, fps: f64, default_hold: f64, mut frame: impl FnMut(FilmFrame)) -> (Vec<Cue>, Vec<Cue>) {
     let fps = fps.max(1.0);
+    let names = engine.state_names();
+    let mut chapters = Vec::new();
     let states: Vec<datars_ir::State> = engine.doc().program.as_ref().map(|p| p.states.clone()).unwrap_or_default();
     let n = engine.state_names().len().max(1);
     let mut frames = 0usize; // frames emitted so far
@@ -353,6 +363,7 @@ pub fn film(engine: &mut Engine, fps: f64, default_hold: f64, mut frame: impl Fn
         let scene = engine.scene_for_state(i);
         let list = engine.display_list(&scene);
         frame(FilmFrame { scene: &scene, list: &list, fonts: engine.fonts(), repeat: hold_frames });
+        chapters.push(Cue { start: secs(frames), end: secs(frames + hold_frames), text: names.get(i).cloned().unwrap_or_else(|| format!("state {i}")) });
         frames += hold_frames;
         let mut transition_start = secs(frames);
         if i + 1 < n {
@@ -375,7 +386,7 @@ pub fn film(engine: &mut Engine, fps: f64, default_hold: f64, mut frame: impl Fn
         }
         cue_start = transition_start;
     }
-    cues
+    (cues, chapters)
 }
 
 /// WebVTT captions for [`film`] cues.
@@ -422,10 +433,12 @@ mod film_tests {
     fn films_hold_then_transition_frame_exactly() {
         let mut e = load(DOC).unwrap();
         let (mut distinct, mut total) = (0, 0);
-        let cues = film(&mut e, 10.0, 2.0, |f| {
+        let (cues, chapters) = film_with_chapters(&mut e, 10.0, 2.0, |f| {
             distinct += 1;
             total += f.repeat;
         });
+        // Each state's hold, by name: 0–1 s, then (after the transition's 8 in-between frames) 1.8–2.3 s.
+        assert_eq!(chapters.iter().map(|c| (c.text.as_str(), c.start, c.end)).collect::<Vec<_>>(), [("a", 0.0, 1.0), ("b", 1.8, 2.3)]);
         // 1 s hold (10 frames) + 0.9 s transition (8 in-between frames) + 0.5 s hold (5 frames).
         assert_eq!(total, 10 + 8 + 5);
         assert_eq!(distinct, 1 + 8 + 1);

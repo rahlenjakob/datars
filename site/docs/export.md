@@ -39,7 +39,7 @@ These three files were rendered from the Riksdag example when this site was buil
 ## Video: MP4 with captions
 
 ```sh
-datars video story.ts                                    # out/story.mp4 + out/story.vtt
+datars video story.ts                                    # out/story.mp4, .vtt (captions), .chapters.vtt
 datars video story.ts --size 360x640 --dpr 3             # 1080×1920, vertical: the phone layout
 datars video story.ts --size 1080x1080 --dpr 1 --fps 60  # square, 60 fps
 datars video story.ts --hold 4 --out film.mp4            # 4 s on each step
@@ -50,6 +50,8 @@ datars video story.ts --hold 4 --out film.mp4            # 4 s on each step
 **One document, every aspect ratio.** `--size` lays the document out for that box. Recipes lay out for the real size, so a 9:16 film is the phone layout of the chart, with its own label placement — not a crop of the landscape one.
 
 **Captions.** Next to the MP4, `datars video` writes a WebVTT file from the steps' narration: each step's title and text are shown from the start of the transition into it until the transition out of it.
+
+**Chapters.** It also writes `story.chapters.vtt`: one chapter per step, named by the step, for exactly the time the film holds it — a `<track kind="chapters">` for players, and the timestamps to seek when you need a step's frame. The film is BT.709 and tagged so, so players convert its colours as they were encoded.
 
 This film was rendered by `datars video` from the descent example when this site was built ({{filmsize:descent-16x9}}):
 

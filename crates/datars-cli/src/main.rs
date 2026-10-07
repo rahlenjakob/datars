@@ -814,6 +814,9 @@ fn run(a: Args) -> Result<(), String> {
             let (w, h) = ((((vp.width * dpr).round() as u32) + 1) & !1, (((vp.height * dpr).round() as u32) + 1) & !1);
             let mut ff = std::process::Command::new("ffmpeg")
                 .args(["-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", &format!("{w}x{h}"), "-r", &fps.to_string(), "-i", "-"])
+                // BT.709, and said so in the file: untagged, players guess the colour matrix and an HD
+                // frame came out visibly off (the platforms page measured it against the PNG).
+                .args(["-vf", "scale=out_color_matrix=bt709:out_range=tv", "-colorspace", "bt709", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv"])
                 .args(["-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-movflags", "+faststart", &out])
                 .stdin(std::process::Stdio::piped())
                 .spawn()
@@ -822,8 +825,8 @@ fn run(a: Args) -> Result<(), String> {
             let mut err: Option<String> = None;
             let mut frames = 0usize;
             let mut buf: Vec<u8> = Vec::new();
-            let cues = {
-                datars_headless::film(&mut engine, fps, hold, |f| {
+            let (cues, chapters) = {
+                datars_headless::film_with_chapters(&mut engine, fps, hold, |f| {
                     if err.is_some() {
                         return;
                     }
@@ -857,7 +860,10 @@ fn run(a: Args) -> Result<(), String> {
             }
             let vtt = Path::new(&out).with_extension("vtt");
             std::fs::write(&vtt, datars_headless::webvtt(&cues)).map_err(|e| e.to_string())?;
-            println!("{out}  ({frames} frames, {:.1} s at {fps} fps, {w}×{h})\n{}", frames as f64 / fps, vtt.display());
+            // Chapters: each state's hold (a <track kind="chapters">; pages seek a state's exact frame).
+            let chapters_vtt = Path::new(&out).with_extension("chapters.vtt");
+            std::fs::write(&chapters_vtt, datars_headless::webvtt(&chapters)).map_err(|e| e.to_string())?;
+            println!("{out}  ({frames} frames, {:.1} s at {fps} fps, {w}×{h})\n{}\n{}", frames as f64 / fps, vtt.display(), chapters_vtt.display());
         }
         "film" => {
             let from = state_index(&engine, a.flags.get("from"));
