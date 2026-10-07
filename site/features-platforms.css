@@ -1,0 +1,94 @@
+/* The platforms page's own styles (site/pages/features/platforms.html: `css:` in its front matter).
+   The stage and the strip hold 402 × 812 boxes — the iPhone 16 Pro's chart box, which every target
+   drew — scaled to their frame's width by features-platforms.js (`--k`). The frames reserve their
+   space in CSS (an aspect ratio), and what's inside stays hidden until it's scaled, so nothing
+   moves or flashes at full size while the page loads. */
+.pf-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 40px; align-items: start; }
+.pf-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 24px; }
+.pf-sides h3 { margin-top: 0; }
+.pf-panel > h3:first-of-type { margin-top: 22px; }
+.pf-stagecol { display: flex; flex-direction: column; align-items: center; min-width: 0; position: sticky; top: 76px; }
+.pf-steps { justify-content: center; margin-bottom: 14px; }
+.pf-stage {
+  position: relative; width: min(402px, calc((100svh - 190px) * 402 / 812)); aspect-ratio: 402 / 812;
+  border-radius: 22px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--rule), var(--shadow);
+  touch-action: pan-y; cursor: ew-resize; isolation: isolate;
+}
+.pf-stage:not([data-mode="swipe"]) { cursor: default; }
+.pf-canvas { position: absolute; left: 0; top: 0; width: 402px; height: 812px; transform-origin: 0 0; transform: scale(var(--k, 1)); visibility: hidden; }
+.pf-sized > .pf-canvas, .pf-sized > .pf-inner { visibility: visible; }
+.pf-layer { position: absolute; inset: 0; }
+.pf-layer img, .pf-layer video, .pf-heat { position: absolute; inset: 0; width: 402px; height: 812px; display: block; }
+.pf-layer img[hidden], .pf-layer video[hidden], .pf-heat[hidden] { display: none; }
+.pf-livelayer { pointer-events: none; }
+.pf-livelayer .chart, .pf-live .chart { width: 402px; margin: 0; }
+.pf-livelayer datars-view::part(controls), .pf-live datars-view::part(controls), .pf-livelayer datars-view::part(card), .pf-live datars-view::part(card) { display: none; }
+/* Swipe: the left target left of the divider, the right one right of it. */
+.pf-stage[data-mode="swipe"] .pf-a { clip-path: inset(0 calc(100% - var(--split, 50%)) 0 0); }
+.pf-stage[data-mode="swipe"] .pf-b { clip-path: inset(0 0 0 var(--split, 50%)); }
+/* Difference: one over the other; black where they agree. */
+.pf-stage[data-mode="difference"] .pf-top, .pf-stage[data-mode="heatmap"] .pf-top { mix-blend-mode: difference; }
+.pf-stage[data-mode="heatmap"] .pf-heat:not([hidden]) { z-index: 3; }
+.pf-divider { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 0; z-index: 4; pointer-events: none; }
+.pf-divider::before { content: ""; position: absolute; top: 0; bottom: 0; left: -1px; width: 2px; background: var(--accent); }
+.pf-divider span { position: absolute; top: 50%; left: -14px; width: 28px; height: 28px; margin-top: -14px; border-radius: 50%; background: var(--accent); box-shadow: 0 1px 4px rgba(0, 0, 0, .3); }
+.pf-divider span::before { content: "‹ ›"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--accent-ink); font: 700 13px/1 var(--font); letter-spacing: 1px; }
+.pf-stage:not([data-mode="swipe"]) .pf-divider { display: none; }
+.pf-tag { position: absolute; bottom: 10px; z-index: 5; font: 600 11.5px/1 var(--font); padding: 6px 9px; border-radius: 999px; background: rgba(15, 18, 26, .78); color: #fff; pointer-events: none; white-space: nowrap; }
+.pf-tag-a { left: 10px; }
+.pf-tag-b { right: 10px; }
+.pf-swipe { width: 100%; margin: 14px 0 0; accent-color: var(--accent); cursor: pointer; }
+.pf-stage:not([data-mode="swipe"]) + .pf-swipe { visibility: hidden; }
+
+.pf-panel .chips button { flex-direction: column; align-items: flex-start; gap: 1px; padding: 6px 10px; min-width: 74px; font-size: 13px; }
+.pf-panel .chips small { font-weight: 500; font-size: 11px; color: var(--muted); }
+.pf-panel .chips button:disabled { opacity: .45; cursor: not-allowed; }
+.pf-measure { margin: 12px 0 0; min-height: 4.6em; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.pf-measure b { color: var(--ink); }
+.pf-code { max-height: none; min-height: 13.6em; }
+.pf-panel .fine { margin: 10px 0 0; font-size: 13px; color: var(--muted); min-height: 4.5em; }
+
+.pf-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 14px; margin-top: 36px; }
+.pf-card { position: relative; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pf-shot { position: relative; display: block; aspect-ratio: 402 / 812; border-radius: 12px; overflow: hidden; background: #fff; box-shadow: 0 0 0 1px var(--rule); pointer-events: none; }
+.pf-shot > .pf-inner, .pf-shot > img, .pf-shot > video, .pf-shot > .pf-live { position: absolute; left: 0; top: 0; width: 402px; height: 812px; transform-origin: 0 0; transform: scale(var(--k, 1)); visibility: hidden; }
+.pf-sized > img, .pf-sized > video, .pf-sized > .pf-live { visibility: visible; }
+.pf-cap { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.pf-cap b { display: block; color: var(--ink); font-size: 13.5px; }
+.pf-pick { position: absolute; inset: 0; z-index: 2; border: 0; padding: 0; background: transparent; border-radius: 12px; cursor: pointer; }
+.pf-pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.pf-card:hover .pf-shot { box-shadow: 0 0 0 1px var(--accent); }
+.pf-picked .pf-shot { box-shadow: 0 0 0 2px var(--accent); }
+.pf-off .pf-shot { background: var(--chip); display: grid; align-items: center; }
+.pf-none { position: absolute; inset: 0; display: grid; align-content: center; margin: 0; padding: 10px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.pf-none code { font-size: 10.5px; word-break: break-all; }
+.pf-downloads { margin-top: 32px; }
+.pf-downloads > p { color: var(--ink-2); margin: 0 0 14px; }
+.pf-exports { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.pf-exports i { font-style: normal; font-variant-numeric: tabular-nums; }
+.pf-note { margin-top: 22px; font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+.pf-note a { color: var(--accent); }
+
+.pf-proof { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 36px; align-items: start; }
+.pf-hashes h3 { font-size: 1.15rem; margin: 0 0 8px; }
+.pf-hashes p { color: var(--ink-2); font-size: 15px; }
+.pf-hashes pre { font-size: 11.5px; max-height: 300px; }
+.pf-hashes .fine { font-size: 13px; color: var(--muted); }
+
+@media (max-width: 1100px) { .pf-sides { grid-template-columns: minmax(0, 1fr); } .pf-sides > div + div h3 { margin-top: 18px; } }
+@media (max-width: 1000px) {
+  .pf-grid { grid-template-columns: minmax(0, 1fr); gap: 24px; }
+  .pf-stagecol { position: static; }
+  .pf-strip { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pf-proof { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .pf-stage { width: min(402px, 100%); border-radius: 16px; }
+  .pf-swipe { width: min(402px, 100%); }
+  .pf-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .pf-exports { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-cap { font-size: 11.5px; }
+  .pf-measure { min-height: 7.6em; }
+  .pf-panel .fine { min-height: 9em; }
+  .pf-cap b { font-size: 12.5px; }
+}

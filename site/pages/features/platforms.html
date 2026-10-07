@@ -1,18 +1,126 @@
 ---
 title: One chart on the web, iOS, Android, desktop, video and print · datars
-description: The same datars document renders identically in the browser, in native iOS and macOS apps (DatarsKit, SwiftUI, VoiceOver), in Android apps (Kotlin view, TalkBack), on the desktop, as MP4 with captions, and as PNG, SVG and vector PDF.
+description: The same datars document, drawn by the web runtime, the iOS sample app in the simulator, the desktop viewer and the CLI's PNG, SVG, PDF and MP4 exports — laid over each other and measured in your browser. One engine, the same pixels.
 og: descent
+css: features-platforms.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Every platform</p>
-    <h1>One document. The web, your iOS and Android apps, the desktop, video and print.</h1>
-    <p class="lede-2">Most chart libraries live in a browser; in an app they arrive as a web view or a screenshot. datars is a Rust engine that runs natively in each host — the same code shaping the same fonts, laying out, animating and drawing — so a chart is the same chart everywhere, down to the pixel. Apps install the runtime once; charts then arrive as bundles, like images, and update without an app release.</p>
+    <h1>One document. Every screen. The same pixels.</h1>
+    <p class="lede-2">Most chart libraries live in a browser; in an app they arrive as a web view or a screenshot. datars is one Rust engine that runs natively in each host — shaping the same fonts, laying out, animating and drawing — so a chart is the same chart everywhere. Don't take our word for it: below, one chart as the web runtime draws it live on this page, as the iOS sample app drew it in the simulator, as the desktop viewer drew it, and as the CLI exported it to PNG, SVG, PDF and video. Lay any two over each other.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
+<section class="section pf" id="same" style="padding-top:8px">
   <div class="wrap">
+    <div class="pf-grid">
+      <div class="pf-stagecol">
+        <div class="pills small pf-steps" id="platforms-everywhere-pills" role="group" aria-label="Step, on every target"><button type="button" data-step="0" data-state="bars" aria-pressed="true">Bars</button><button type="button" data-step="1" data-state="donut" aria-pressed="false">Donut</button><button type="button" data-step="2" data-state="treemap" aria-pressed="false">Treemap</button><button type="button" data-step="3" data-state="waffle" aria-pressed="false">Waffle</button></div>
+        <div class="pf-stage" data-own-look="ready" data-mode="swipe">
+          <div class="pf-canvas">
+            <div class="pf-layer pf-livelayer"><div class="chart" data-chart="platforms-everywhere" data-mode="light" data-min="100" data-stage></div></div>
+            <div class="pf-layer pf-a"></div>
+            <div class="pf-layer pf-b"></div>
+            <canvas class="pf-heat" width="402" height="812" hidden></canvas>
+          </div>
+          <div class="pf-divider" aria-hidden="true"><span></span></div>
+          <span class="pf-tag pf-tag-a" aria-hidden="true">Web · live</span><span class="pf-tag pf-tag-b" aria-hidden="true">iOS · Metal</span>
+        </div>
+        <input type="range" class="pf-swipe" min="0" max="100" step="0.5" value="50" aria-label="Where the left target ends and the right begins">
+      </div>
+      <aside class="theme-panel pf-panel" aria-label="Targets to compare">
+        <div class="pf-sides"><div>
+        <h3>Left</h3>
+        <div class="chips pf-chips" role="group" aria-label="Left target" data-side="a"><button type="button" data-v="web" aria-pressed="true">Web<small>live</small></button><button type="button" data-v="ios" aria-pressed="false">iOS<small>Metal</small></button><button type="button" data-v="mac" aria-pressed="false">macOS<small>Metal</small></button><button type="button" data-v="png" aria-pressed="false">PNG<small>CPU</small></button><button type="button" data-v="svg" aria-pressed="false">SVG<small>vector</small></button><button type="button" data-v="mp4" aria-pressed="false">Video<small>H.264</small></button><button type="button" data-v="android" disabled title="Not captured on this machine: see the note below">Android<small>—</small></button></div>
+        </div><div>
+        <h3>Right</h3>
+        <div class="chips pf-chips" role="group" aria-label="Right target" data-side="b"><button type="button" data-v="web" aria-pressed="false">Web<small>live</small></button><button type="button" data-v="ios" aria-pressed="true">iOS<small>Metal</small></button><button type="button" data-v="mac" aria-pressed="false">macOS<small>Metal</small></button><button type="button" data-v="png" aria-pressed="false">PNG<small>CPU</small></button><button type="button" data-v="svg" aria-pressed="false">SVG<small>vector</small></button><button type="button" data-v="mp4" aria-pressed="false">Video<small>H.264</small></button><button type="button" data-v="android" disabled title="Not captured on this machine: see the note below">Android<small>—</small></button></div></div></div>
+        <h3>Lay them over each other</h3>
+        <div class="seg pf-modes" role="group" aria-label="Comparison">
+          <button type="button" data-mode="swipe" aria-pressed="true">Swipe</button>
+          <button type="button" data-mode="difference" aria-pressed="false">Difference</button>
+          <button type="button" data-mode="heatmap" aria-pressed="false">Heatmap</button>
+        </div>
+        <p class="pf-measure" aria-live="polite"><span class="pf-measure-text">Pick two targets.</span></p>
+        <h3>How each side was made</h3>
+<pre class="live-code pf-code"><code data-lang="sh" id="pf-code"># the targets' commands</code></pre>
+        <p class="fine pf-facts"></p>
+      </aside>
+    </div>
+
+    <div class="pf-strip" role="group" aria-label="Every target at this step">
+      <div class="pf-card" data-v="web"><span class="pf-shot"><div class="pf-live"><div class="chart" data-chart="platforms-everywhere" data-mode="light" data-min="100"></div></div></span><span class="pf-cap"><b>Web</b> live</span><button type="button" class="pf-pick" aria-label="Web: show it on the right"></button></div><div class="pf-card" data-v="ios"><span class="pf-shot"><img class="pf-file" alt="" width="402" height="812" decoding="async"></span><span class="pf-cap"><b>iOS</b> Metal</span><button type="button" class="pf-pick" aria-label="iOS: show it on the right"></button></div><div class="pf-card" data-v="mac"><span class="pf-shot"><img class="pf-file" alt="" width="402" height="812" decoding="async"></span><span class="pf-cap"><b>macOS</b> Metal</span><button type="button" class="pf-pick" aria-label="macOS: show it on the right"></button></div><div class="pf-card" data-v="png"><span class="pf-shot"><img class="pf-file" alt="" width="402" height="812" decoding="async"></span><span class="pf-cap"><b>PNG</b> CPU</span><button type="button" class="pf-pick" aria-label="PNG: show it on the right"></button></div><div class="pf-card" data-v="svg"><span class="pf-shot"><img class="pf-file" alt="" width="402" height="812" decoding="async"></span><span class="pf-cap"><b>SVG</b> vector</span><button type="button" class="pf-pick" aria-label="SVG: show it on the right"></button></div><div class="pf-card" data-v="mp4"><span class="pf-shot"><video class="pf-file" muted playsinline preload="none" width="402" height="812"></video></span><span class="pf-cap"><b>Video</b> H.264</span><button type="button" class="pf-pick" aria-label="Video: show it on the right"></button></div><div class="pf-card pf-off" data-v="android"><span class="pf-shot"><p class="pf-none">No capture: this machine has no Android system image. The sample app is verified on an emulator by <code>test-android-sample.sh</code>.</p></span><span class="pf-cap"><b>Android</b> not captured here</span></div>
+    </div>
+    <div class="pf-downloads">
+      <p><b>Take this chart with you</b> — made by <code>datars render</code> and <code>datars video</code> when this site was built, at the phone's size and 3× density, of the step on screen:</p>
+      <div class="exports pf-exports">
+        <a data-get="png" href="{{export:platforms-everywhere|0|402x812|3|png}}" download><b>PNG</b><span>CPU reference · <i>{{exportsize:platforms-everywhere|0|402x812|3|png}}</i></span></a>
+        <a data-get="svg" href="{{export:platforms-everywhere|0|402x812|3|svg}}" download><b>SVG</b><span>text as text · <i>{{exportsize:platforms-everywhere|0|402x812|3|svg}}</i></span></a>
+        <a data-get="pdf" href="{{export:platforms-everywhere|0|402x812|3|pdf}}" download><b>PDF</b><span>one vector page · <i>{{exportsize:platforms-everywhere|0|402x812|3|pdf}}</i></span></a>
+        <a data-get="mp4" href="{{export:platforms-everywhere|-|402x812|3|mp4}}" download><b>MP4</b><span>every step, captions · <i>{{exportsize:platforms-everywhere|-|402x812|3|mp4}}</i></span></a>
+      </div>
+    </div>
+    <ul hidden class="pf-files">
+      <li data-target="png" data-step="0" data-src="{{export:platforms-everywhere|0|402x812|3|png}}" data-size="{{exportsize:platforms-everywhere|0|402x812|3|png}}"></li>
+      <li data-target="svg" data-step="0" data-src="{{export:platforms-everywhere|0|402x812|3|svg}}" data-size="{{exportsize:platforms-everywhere|0|402x812|3|svg}}"></li>
+      <li data-target="pdf" data-step="0" data-src="{{export:platforms-everywhere|0|402x812|3|pdf}}" data-size="{{exportsize:platforms-everywhere|0|402x812|3|pdf}}"></li>
+      <li data-target="ios" data-step="0" data-src="/img/platforms-ios-0.png"></li>
+      <li data-target="mac" data-step="0" data-src="/img/platforms-desktop-0.png"></li>
+      <li data-target="png" data-step="1" data-src="{{export:platforms-everywhere|1|402x812|3|png}}" data-size="{{exportsize:platforms-everywhere|1|402x812|3|png}}"></li>
+      <li data-target="svg" data-step="1" data-src="{{export:platforms-everywhere|1|402x812|3|svg}}" data-size="{{exportsize:platforms-everywhere|1|402x812|3|svg}}"></li>
+      <li data-target="pdf" data-step="1" data-src="{{export:platforms-everywhere|1|402x812|3|pdf}}" data-size="{{exportsize:platforms-everywhere|1|402x812|3|pdf}}"></li>
+      <li data-target="ios" data-step="1" data-src="/img/platforms-ios-1.png"></li>
+      <li data-target="mac" data-step="1" data-src="/img/platforms-desktop-1.png"></li>
+      <li data-target="png" data-step="2" data-src="{{export:platforms-everywhere|2|402x812|3|png}}" data-size="{{exportsize:platforms-everywhere|2|402x812|3|png}}"></li>
+      <li data-target="svg" data-step="2" data-src="{{export:platforms-everywhere|2|402x812|3|svg}}" data-size="{{exportsize:platforms-everywhere|2|402x812|3|svg}}"></li>
+      <li data-target="pdf" data-step="2" data-src="{{export:platforms-everywhere|2|402x812|3|pdf}}" data-size="{{exportsize:platforms-everywhere|2|402x812|3|pdf}}"></li>
+      <li data-target="ios" data-step="2" data-src="/img/platforms-ios-2.png"></li>
+      <li data-target="mac" data-step="2" data-src="/img/platforms-desktop-2.png"></li>
+      <li data-target="png" data-step="3" data-src="{{export:platforms-everywhere|3|402x812|3|png}}" data-size="{{exportsize:platforms-everywhere|3|402x812|3|png}}"></li>
+      <li data-target="svg" data-step="3" data-src="{{export:platforms-everywhere|3|402x812|3|svg}}" data-size="{{exportsize:platforms-everywhere|3|402x812|3|svg}}"></li>
+      <li data-target="pdf" data-step="3" data-src="{{export:platforms-everywhere|3|402x812|3|pdf}}" data-size="{{exportsize:platforms-everywhere|3|402x812|3|pdf}}"></li>
+      <li data-target="ios" data-step="3" data-src="/img/platforms-ios-3.png"></li>
+      <li data-target="mac" data-step="3" data-src="/img/platforms-desktop-3.png"></li>
+      <li data-target="mp4" data-src="{{export:platforms-everywhere|-|402x812|3|mp4}}" data-size="{{exportsize:platforms-everywhere|-|402x812|3|mp4}}"></li>
+    </ul>
+    <p class="fine pf-note">How the captures were made: <b>iOS</b> — the SwiftUI sample app (<code>apple/DatarsSample.swiftpm</code>), built from this repository, in the iPhone 16 Pro simulator (iOS 18.5) on an Apple M3 Pro, playing the chart this site publishes; DatarsKit reported its frames on Metal with 4× MSAA; the screen under the status bar is the app's chart view (<a href="{{src}}/site/figures/platforms/capture-ios.sh">capture script</a>, 7 October 2026). <b>macOS</b> — <code>datars-view</code>, the desktop viewer, rendering the published chart offscreen through its window's GPU path (wgpu on Metal). <b>PNG, SVG, PDF, video</b> — the CLI, at this site's build. <b>Android</b> — verified on an emulator (GLES) by <code>scripts/test-android-sample.sh</code>, not captured here. Neither iOS nor Android has run on a physical phone yet (<a href="{{src}}/docs/19-status.md">status</a>). The captures are light: the sample app doesn't pass the system's dark appearance on to the chart.</p>
+    {{alt:platforms-everywhere}}
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Proved, not promised</p>
+      <h2>Cross-platform sameness is a test, not a hope</h2>
+      <p>Text shaping, layout, motion and rasterization all happen in one deterministic engine with its own maths library and no randomly ordered hash maps, so floating point can't drift between platforms. Two checks hold it there.</p>
+    </header>
+    <div class="pf-proof">
+      <figure class="fig">
+        <div class="frame"><div class="chart" data-chart="platforms-gpu" data-caption data-phone-ratio="1.45"></div></div>
+        <figcaption><b>The GPU against the CPU reference, every example state.</b> <code>datars gpu</code> draws each of the 56 states of the 21 examples with wgpu (here Metal, on an Apple M3 Pro) and with the bit-exact CPU reference, and fails a state whose mean colour difference passes ΔE 1 (OKLab × 100; 1–2 is about the smallest difference you'd notice), with more than 0.5 % of its pixels visibly different, or with any solid region one renderer drew and the other didn't. Measured 7 October 2026: the worst mean is 0.41 (the galaxy's four million stars), the worst share 0.43 %. <a href="{{src}}/site/figures/platforms/gpu.ts">The output</a></figcaption>
+        {{alt:platforms-gpu}}
+      </figure>
+      <div class="pf-hashes">
+        <h3>The same hash on five targets</h3>
+        <p>Every example state has a golden: a hash of its scene and of its CPU pixels, written by <code>datars test</code> on any machine. The same files check macOS on arm64 and x86-64, wasm in Node, the iOS simulator (DatarsKit's <code>DeterminismTests</code>) and an Android arm64 emulator (<code>scripts/test-android.sh</code>). The votes example's:</p>
+        {{code:tests/golden/votes/golden.json#L1-23}}
+        <p>Re-checked when this page was built, natively, frames and all:</p>
+        {{run:test votes}}
+        <p class="fine">The phones' hashes are of CPU reference frames read through the C ABI; their GPU frames are compared the way the strip above compares them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The hosts</p>
+      <h2>Native in each, a few lines to embed</h2>
+      <p>Apps install the runtime once; charts then arrive as bundles, like images, and update without an app release (<a href="/features/delivery/">charts are content</a>).</p>
+    </header>
     <ul class="platforms">
       <li>
         <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg>iOS and macOS</h3>
@@ -69,8 +177,8 @@ curl "localhost:8787/render/chart.png?state=1&amp;width=1200&amp;height=630"</co
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Made when this site was built</p>
-      <h2>Same document, as a film</h2>
-      <p>Both films were rendered by <code>datars video</code> from the documents that play live elsewhere on this site — the descent in 16:9, the custom globe scene in 9:16 with its phone layout — captions included. Turn captions on in the player.</p>
+      <h2>Any aspect ratio, as a film</h2>
+      <p><code>datars video</code> renders the program frame by frame from the engine's plan — not a screen recording — with WebVTT captions from the narration. Change <code>--size</code> and the chart lays itself out again: a vertical film is the phone layout, not a crop. Both films play live elsewhere on this site.</p>
     </header>
     <div class="video-row">
       <figure class="v169">
@@ -86,40 +194,6 @@ curl "localhost:8787/render/chart.png?state=1&amp;width=1200&amp;height=630"</co
 </section>
 
 <section class="section">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">Made when this site was built</p>
-      <h2>Same document, as PNG, SVG and PDF</h2>
-      <p>The Riksdag hemicycle — live in the <a href="/gallery/#riksdag">gallery</a> — exported by <code>datars render</code> during the build. Open the PDF and select the text: it's text.</p>
-      <div class="exports" style="margin-top:18px">
-        <a href="/exports/riksdag.png"><b>PNG</b><span>CPU reference, 2× pixel density</span></a>
-        <a href="/exports/riksdag.svg"><b>SVG</b><span>text as text, roles and titles</span></a>
-        <a href="/exports/riksdag.pdf"><b>PDF</b><span>one vector page, searchable</span></a>
-      </div>
-    </div>
-    <figure class="fig">
-      <img class="export-img" src="/exports/riksdag.svg" alt="The Riksdag after the 2022 election as an SVG export: 349 seats as dots on concentric arcs, grouped by party from left to right." width="760" height="440" loading="lazy">
-      <figcaption>The SVG export, shown as an image.</figcaption>
-    </figure>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Proved, not promised</p>
-      <h2>The same pixels on five targets</h2>
-      <p>Because text shaping, layout, motion and rasterization all happen in one deterministic engine, cross-platform consistency is a test, not a hope.</p>
-    </header>
-    <div class="cards3">
-      <article><h3>Identical hashes</h3><p>Every example's sampled frames produce the same pixel hash on macOS arm64 and x86-64, in wasm, in the iOS simulator and on an Android emulator. The engine uses its own maths library and no hash maps with random order, so floating point can't drift between platforms.</p></article>
-      <article><h3>GPU checked against a reference</h3><p>The GPU renderer is compared with a bit-exact CPU reference for every example state, down to street-level maps: mean ΔE under 0.5 everywhere and under 0.15 for most.</p></article>
-      <article><h3>Charts published after the app shipped</h3><p>Tests publish a chart <em>after</em> the web page, the SwiftUI sample app and the Android sample app were built, and open it in each; the web and Android tests then republish and check that the new version shows.</p></article>
-    </div>
-  </div>
-</section>
-
-<section class="section">
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Install once</p>
@@ -129,7 +203,7 @@ curl "localhost:8787/render/chart.png?state=1&amp;width=1200&amp;height=630"</co
     <div class="cards3">
       <article><h3>Update without a release</h3><p>Republish and the app shows the new chart on its next load. Roll back by moving the alias back.</p></article>
       <article><h3>Offline first</h3><p>Ship a <code>.datars</code> file in the app bundle for the first run; downloaded chunks are cached by content hash.</p></article>
-      <article><h3>Private data stays private</h3><p>A chart can declare a data slot; the app fills it with the signed-in user's rows on the device. One chart design for every user, no per-user builds, nothing uploaded.</p></article>
+      <article><h3>Private data stays private</h3><p>A chart can declare a data slot; the app fills it with the signed-in user's rows on the device. One chart design for every user, nothing uploaded.</p></article>
     </div>
   </div>
 </section>
@@ -150,3 +224,4 @@ curl "localhost:8787/render/chart.png?state=1&amp;width=1200&amp;height=630"</co
     </div>
   </div>
 </section>
+<script type="module" src="/features-platforms.js"></script>
