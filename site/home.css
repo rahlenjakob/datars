@@ -5,6 +5,12 @@
 /* ---- the hero: a third button on narrow screens shouldn't wrap the row unevenly ---- */
 .hero-chart figcaption a { color: #b9c9ff; }
 
+/* A slot's phone ratio follows its own width, as site.js sizes the chart (narrower than 600 px), not
+   the viewport's: a stage narrower than that on a wider screen would otherwise reserve one height
+   and get another. */
+.tc-stage, .why-fig .frame { container-type: inline-size; }
+@container (max-width: 599.98px) { .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+
 /* ---- every target (#everywhere) ---- */
 .ev-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: -8px 0 20px; }
 .ev-status { margin: 0; font-size: 13.5px; color: var(--muted); }
@@ -52,6 +58,7 @@
 .ev-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 28px; margin-top: 18px; }
 .ev-foot .fine { flex: 1 1 420px; margin: 0; }
 .ev-foot .more { margin-top: 0; }
+.ev-links { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
 @media (max-width: 1100px) {
   /* Six screens in a row that scrolls sideways, two and a bit at a time on a phone. */
   .ev-row { display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(150px, 30%); overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding: 4px 2px 12px; margin: 0 -2px; scrollbar-width: thin; }
@@ -60,7 +67,7 @@
 @media (max-width: 640px) { .ev-row { grid-auto-columns: 42%; gap: 12px; } }
 
 /* ---- five gestures (#touch) ---- */
-.tc-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.tc-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
 .tc-tabs button { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s; }
 .tc-tabs button:hover { border-color: color-mix(in srgb, var(--ink) 30%, var(--rule)); }
 .tc-tabs button[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent); }
@@ -86,20 +93,15 @@
 .tc-text .more { margin-top: 2px; }
 .tc-text details.alt { margin-top: 0; }
 .tc-live { max-height: none; white-space: pre; }
-.tc-said { font-size: 14px !important; min-height: 3em; }
+/* Room for the longest step narration (the tab panels hold one height: nothing below moves). */
+.tc-said { font-size: 14px !important; min-height: 4.5em; }
+@media (max-width: 1100px) { .tc-said { min-height: 6em; } }
 .tc-said b { color: var(--ink); font-weight: 600; }
 .tc-voice { min-height: 3.2em; margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--chip); color: var(--ink) !important; font-size: 1.12rem !important; font-weight: 600; letter-spacing: -0.01em; }
 .tc-voice small { display: block; margin-top: 2px; font-size: 12.5px; font-weight: 500; color: var(--muted); letter-spacing: 0; }
-.tc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0; }
-.tc-stats dt { font-size: 1.3rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.tc-stats dd { margin: 0; font-size: 12.5px; color: var(--muted); }
 .tc-ring { position: absolute; z-index: 2; pointer-events: none; border: 2px solid var(--accent); border-radius: 6px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); transition: left .18s, top .18s, width .18s, height .18s; }
 @media (prefers-reduced-motion: reduce) { .tc-ring { transition: none; } }
-/* The galaxy plays dark: so does its stage. */
-[data-tc="zoom"] .tc-stage { background: #05070d; border-color: #1c2029; }
-[data-tc="zoom"] .pills.small button { background: #151922; border-color: #2a303c; color: #b9c1cf; }
-[data-tc="zoom"] .pills.small button[aria-pressed="true"] { background: #eef1f6; color: #0b0d12; border-color: #eef1f6; }
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
   .tc-panel { grid-template-columns: minmax(0, 1fr); gap: 18px; }
   .tc-tabs button { grid-template-columns: 1fr; justify-items: center; text-align: center; padding: 10px 4px 9px; row-gap: 4px; }
   .tc-tabs svg { grid-row: auto; }
@@ -162,3 +164,7 @@
 .st-steps p { margin: 12px 0 0; font-size: 14px; color: var(--ink-2); }
 @media (max-width: 1000px) { .st-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .st-steps { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---- the galaxy (#big-data): room for its longest narration, so a tour stop moves nothing below ---- */
+#big-data .space-narration { min-height: 3.2em; }
+@media (max-width: 640px) { #big-data .space-narration { min-height: 6.4em; } }

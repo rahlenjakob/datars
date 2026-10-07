@@ -1,11 +1,11 @@
 // The home page (site/pages/index.html). Everything through <datars-view>'s public API: `send`,
 // `setSignal`, `provideData`, `pick`, `status`, and the `state` and `signal` events. site.js mounts
-// each chart when it scrolls near (and wires the hero, the galaxy's readout and the look editor);
+// each chart when it scrolls near (and wires the hero, the galaxy's tour and readout, and the look editor);
 // this script adds:
 // - #everywhere: one chart stepped on six targets at once — the live web runtime, and what the iOS
 //   app, the desktop viewer and the CLI's PNG and SVG drew at each step (images swapped only once
 //   decoded, so a step never shows a blank or half-loaded screen);
-// - #touch: five gestures as tabs, one live chart at a time (a hidden tab's chart isn't mounted),
+// - #touch: four gestures as tabs, one live chart at a time (a hidden tab's chart isn't mounted),
 //   each with what the chart reports as the reader goes;
 // - #write: a doc.ts whose numbers, names and recipe the reader edits, played by a published chart.
 import { highlight } from "./site.js";
@@ -84,23 +84,28 @@ function everywhere() {
     if (byReader) auto = false;
     step = i;
     for (const [j, p] of pills.entries()) p.setAttribute("aria-pressed", String(j === i));
-    put(status, `${pills[i].textContent}, on six targets: live on the left, then what each one drew.`);
+    put(status, `${pills[i].textContent}, on six targets.`);
     view?.send(`goto:${states[i]}`);
     const run = ++swap;
-    // Swap each target's capture for the new step's once all of them are decoded, together.
-    const imgs = await Promise.all(shots.map(({ srcs }) => decode(srcs[i])));
+    // Each target's new capture is its own element, decoded before it's shown (the step's files are
+    // in the cache by now): all of them swap together, and no frame waits on a decode.
+    const next = shots.map(({ box, srcs }) => {
+      const img = new Image(402, 812);
+      img.decoding = "async";
+      img.alt = box.querySelector("img")?.alt ?? "";
+      img.src = srcs[i];
+      return img;
+    });
+    await Promise.all(next.map((img) => img.decode().catch(() => {})));
     if (run !== swap) return;
     shots.forEach(({ box }, k) => {
       const old = [...box.querySelectorAll("img")];
-      const next = imgs[k].cloneNode();
-      next.alt = old[0]?.alt ?? "";
-      next.width = 402;
-      next.height = 812;
-      if (!reduced) next.classList.add("ev-in");
-      box.appendChild(next);
+      const img = next[k];
+      if (!reduced) img.classList.add("ev-in");
+      box.appendChild(img);
       const done = () => old.forEach((o) => o.remove());
       if (reduced) return done();
-      requestAnimationFrame(() => requestAnimationFrame(() => next.classList.remove("ev-in")));
+      requestAnimationFrame(() => requestAnimationFrame(() => img.classList.remove("ev-in")));
       setTimeout(done, 520);
     });
   }
@@ -123,7 +128,7 @@ function everywhere() {
   }
 }
 
-// ---- #touch: five gestures -------------------------------------------------------------------------
+// ---- #touch: four gestures -------------------------------------------------------------------------
 
 function touch() {
   const section = $("#touch");
@@ -296,7 +301,7 @@ async function listen(panel) {
       const hit = view.pick(x, y).hits.find((h) => h.label && (h.role === "datum" || h.role === "series" || h.role === "region"));
       if (!hit) return;
       ring.hidden = true;
-      say(hit.label, hit.role, `view.pick(${x}, ${y}).hits[0].label`);
+      say(hit.label, hit.role, `view.pick(${x}, ${y}).hits[0]\n// role: ${JSON.stringify(hit.role)}, label: ${JSON.stringify(hit.label)}`);
     });
   });
 }
