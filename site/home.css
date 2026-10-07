@@ -44,9 +44,7 @@
 .ev-svg .ev-frame { border-radius: 4px; padding: 16px 7px; background: #fff; box-shadow: 0 0 0 1px var(--rule), var(--shadow); clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%); }
 .ev-svg .ev-frame::after { content: ""; position: absolute; right: 0; top: 0; width: 22px; height: 22px; background: linear-gradient(225deg, transparent 50%, #dfe3ea 50%); }
 .ev-svg .ev-screen { border-radius: 0; }
-.ev-android .ev-frame { background: transparent; box-shadow: none; border: 2px dashed var(--rule); padding: 14px 5px; }
-.ev-android .ev-island { width: 7px; height: 7px; top: 2px; background: var(--rule); }
-.ev-android .ev-screen { background: var(--chip); }
+.ev-android .ev-island { width: 9px; height: 9px; top: 6px; } /* a punch-hole camera, not an island */
 .ev-none { display: grid; place-items: center; visibility: visible; transform: none; width: 100%; height: 100%; padding: 14px; }
 .ev-none p { margin: 0; font-size: 12px; line-height: 1.45; color: var(--muted); text-align: center; }
 .ev-none p b { display: block; font-size: 14px; color: var(--ink); margin-bottom: 6px; }
