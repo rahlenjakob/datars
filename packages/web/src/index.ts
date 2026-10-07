@@ -316,6 +316,11 @@ export class DatarsView extends ElementBase {
   private raf = 0;
   private timer = 0;
   private idle = 0;
+  /** Counts mirror syncs; `describedGen` is the one whose whole semantics tree the mirror holds
+   * (see `describeSoon`). */
+  private chromeGen = 0;
+  private describedGen = -1;
+  private describeIdle = 0;
   /** On screen (any part of it); frames off screen wait until it is. */
   private onScreen = true;
   private drawn = false;
@@ -533,6 +538,9 @@ export class DatarsView extends ElementBase {
     clearTimeout(this.timer);
     clearTimeout(this.textTimer);
     ((globalThis as any).cancelIdleCallback ?? clearTimeout)(this.idle);
+    ((globalThis as any).cancelIdleCallback ?? clearTimeout)(this.describeIdle);
+    this.describeIdle = 0;
+    this.describedGen = -1;
     this.raf = 0;
     document.removeEventListener("copy", this.onCopy);
     document.fonts?.removeEventListener?.("loadingdone", this.onFonts);
@@ -1077,6 +1085,7 @@ export class DatarsView extends ElementBase {
       // frame under ~10 ms waits for nothing).
       this.clockAt = animating && !transition ? now + 1.5 * (performance.now() - t0) : 0;
       setMoving(this, transition);
+      if (!transition) this.describeSoon();
       // The text layer follows the settled chart: hidden while a transition carries the text
       // elsewhere, rebuilt a moment after the last frame (a clock or tiles arriving keep frames
       // coming without moving much: every so often then).
@@ -1429,12 +1438,45 @@ export class DatarsView extends ElementBase {
     this.card.innerHTML = n && (n.title || n.text) && !s.narrationDrawn ? `${n.title ? `<h3></h3>` : ""}<div></div>` : "";
     if (n?.title) this.card.querySelector("h3")?.replaceChildren(n.title);
     if (n?.text) this.card.querySelector("div")?.replaceChildren(n.text);
+    this.mirrorActions = actionsKey(s.actions ?? []);
+    this.placePickers(s.controls ?? []);
+    this.chromeGen++;
+    // The whole tree follows in idle time (`describeSoon`). Until the first one is there — or with
+    // no tree to come — the mirror is built now from what a click acts on; after that it keeps the
+    // last tree until the next replaces it, rather than dropping every mark for a moment.
+    if (s.semantics || this.describedGen < 0 || !this.view.semantics) this.fillMirror(s, s.semantics ?? s.actions ?? []);
+    if (s.semantics) this.describedGen = this.chromeGen;
+    this.live.textContent = n?.text ?? "";
+  }
+
+  /** The whole semantics tree into the mirror, in idle time and only while no transition runs:
+   * the brief status that keeps every step cheap lists only what a click acts on, and a screen
+   * reader needs every labelled mark — a bar's party and value, the title, the axes. */
+  private describeSoon() {
+    if (this.describedGen === this.chromeGen || this.describeIdle || !this.view?.semantics) return;
+    const ric: (f: () => void, o?: { timeout: number }) => number = (globalThis as any).requestIdleCallback ?? ((f) => window.setTimeout(f, 60));
+    this.describeIdle = ric(() => {
+      this.describeIdle = 0;
+      const view = this.view;
+      if (!view || this.describedGen === this.chromeGen) return;
+      if (view.transitioning?.()) return; // the frame loop asks again when it settles
+      this.describedGen = this.chromeGen;
+      this.fillMirror(view.chrome?.() ?? view.status(), view.semantics());
+    }, { timeout: 1000 });
+  }
+
+  /** Most marks the mirror lists: past that a list helps no one (the chart's text alternative has
+   * the data), and building it would cost the page. */
+  private static MIRROR_MAX = 500;
+
+  /** The hidden list screen readers and keyboards use: engine-drawn controls as native ones,
+   * clickable marks as buttons, and every other labelled item (`items`: the semantics tree, or
+   * only what a click acts on) as text, indented by depth. */
+  private fillMirror(s: Record<string, any>, items: { role: string; label: string; depth: number; path: string; actionable: boolean }[]) {
     // Where the keyboard is, read before the mirror is rebuilt: rebuilding mustn't lose it.
     const focused = (this.root.activeElement as HTMLInputElement | null)?.dataset?.signal;
     const focusedPath = (this.root.activeElement as HTMLElement | null)?.dataset?.path;
     this.mirror.innerHTML = "";
-    this.mirrorActions = actionsKey(s.actions ?? []);
-    this.placePickers(s.controls ?? []);
     // Engine-drawn controls as native ones: keyboards and screen readers can operate them.
     for (const c of s.controls ?? []) {
       const li = document.createElement("li");
@@ -1460,10 +1502,11 @@ export class DatarsView extends ElementBase {
     // A select is its native select above, not its drawn box; a dragged control (a slider's
     // thumb) is its range input.
     const selectLabels = new Set((s.controls ?? []).filter((c: { kind?: string }) => c.kind === "select").map((c: { label: string }) => c.label));
-    // The brief status has no semantics tree, but it has what a click acts on (`actions`): those
-    // are the buttons a keyboard needs (a sortable table's headers, a chart's clickable marks).
-    for (const item of s.semantics ?? s.actions ?? []) {
+    let listed = 0, left = 0;
+    for (const item of items) {
       if (item.role === "control" && (!item.actionable || selectLabels.has(item.label))) continue;
+      if (listed >= DatarsView.MIRROR_MAX && !item.actionable) { left++; continue; }
+      listed++;
       const li = document.createElement("li");
       li.style.paddingLeft = `${item.depth}em`;
       if (item.actionable) {
@@ -1480,8 +1523,15 @@ export class DatarsView extends ElementBase {
       li.textContent = `${item.role}: ${item.label}`;
       this.mirror.appendChild(li);
     }
-    this.live.textContent = n?.text ?? "";
-    this.setAttribute("aria-label", (s.semantics?.[0]?.label as string) || "Chart");
+    if (left) {
+      const li = document.createElement("li");
+      li.textContent = `${left} more`;
+      this.mirror.appendChild(li);
+    }
+    // The chart's name: its root's label (the title), else what the page called it.
+    const name = items[0]?.depth === 0 && !items[0].actionable ? items[0].label : "";
+    if (name) this.setAttribute("aria-label", name);
+    else if (!this.getAttribute("aria-label")) this.setAttribute("aria-label", "Chart");
   }
 
   /** A `<select>` for an engine-drawn one: the options it offers, the chosen one selected, a
