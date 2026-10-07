@@ -27,7 +27,7 @@ const doc = {
   datars: 1, size: { width: 600, height: 400 },
   signals: { picked: { type: "str", default: "nothing" } },
   scene: { kind: "group", key: "root", layout: { type: "rows" }, children: [
-    { kind: "group", key: "head", size: { h: 120 }, children: [
+    { kind: "group", key: "head", size: { h: 120 }, semantics: { role: "group", label: "" }, children: [
       { kind: "text", key: "title", text: "Selectable chart title", at: [20, 36], style: { size: 22, weight: 700 }, semantics: { role: "title", label: "Selectable chart title" } },
       { kind: "text", key: "note", text: "A subtitle long enough to wrap onto a second line", at: [20, 50], style: { size: 13, max_width: 200, baseline: "top" } },
       { kind: "shape", key: "bar", geom: { type: "rect", x: 300, y: 20, w: 200, h: 80 }, fill: "$accent", pickable: true,
@@ -200,6 +200,8 @@ test("the mirror reads every labelled mark, not only what a click acts on", { sk
     const tree = await p.locator("datars-view").ariaSnapshot();
     assert.match(tree, /listitem: "title: Selectable chart title"/, tree);
     assert.match(tree, /button "Bar A: 42"/, tree);
+    const unnamed = await p.evaluate(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll("ul.sr li")].filter((li) => li.textContent.trim() === "group:").length);
+    assert.equal(unnamed, 0, "a group with no name says nothing");
     // A press rebuilds the mirror: the whole tree is back once the chart settles.
     await p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" }).focus();
     await p.keyboard.press("Enter");

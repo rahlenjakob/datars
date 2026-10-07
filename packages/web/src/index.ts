@@ -1599,6 +1599,8 @@ export class DatarsView extends ElementBase {
     let listed = 0, left = 0;
     for (const item of items) {
       if (item.role === "control" && (!item.actionable || selectLabels.has(item.label))) continue;
+      // A group with no name of its own (a plot's frame) says nothing: its marks follow.
+      if (!item.actionable && !item.label) continue;
       if (listed >= DatarsView.MIRROR_MAX && !item.actionable) { left++; continue; }
       listed++;
       const li = document.createElement("li");
