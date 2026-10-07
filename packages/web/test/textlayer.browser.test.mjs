@@ -211,3 +211,47 @@ test("the mirror reads every labelled mark, not only what a click acts on", { sk
     server.close();
   }
 });
+
+test("the page reads the signals and hears what the reader's input changed", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    const p = await browser.newPage({ viewport: { width: 800, height: 600 } });
+    const errors = [];
+    p.on("pageerror", (e) => errors.push(e.message));
+    await p.goto(`http://127.0.0.1:${server.address().port}`);
+    await p.evaluate(() => {
+      window.__changes = [];
+      document.querySelector("datars-view").addEventListener("signal", (e) => window.__changes.push(e.detail.changed));
+    });
+    // Steps stay cheap (the brief status has only what a click acts on); the whole semantics
+    // tree follows in idle time: a screen reader finds the title, not only the buttons.
+    const title = p.locator("datars-view ul.sr li", { hasText: "title: Selectable chart title" });
+    await title.waitFor({ state: "attached", timeout: 30_000 });
+    const tree = await p.locator("datars-view").ariaSnapshot();
+    assert.match(tree, /listitem: "title: Selectable chart title"/, tree);
+    assert.match(tree, /button "Bar A: 42"/, tree);
+    // The page reads the signals as it would set them, and hears when the reader changes one.
+    assert.equal((await p.evaluate(() => document.querySelector("datars-view").signals)).picked, "nothing");
+    await p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" }).focus();
+    await p.keyboard.press("Enter");
+    await p.waitForFunction(() => window.__changes.some((c) => c.includes("picked")), null, { timeout: 10_000 });
+    assert.equal((await p.evaluate(() => document.querySelector("datars-view").signals)).picked, "A");
+    // A drag on the explorable view: its camera's signals.
+    const box = await p.locator("datars-view").boundingBox();
+    await p.mouse.move(box.x + 100, box.y + 300);
+    await p.mouse.down();
+    await p.mouse.move(box.x + 160, box.y + 320, { steps: 6 });
+    await p.mouse.up();
+    await p.waitForFunction(() => window.__changes.some((c) => c.includes("cam.x")), null, { timeout: 10_000 });
+    const cam = await p.evaluate(() => document.querySelector("datars-view").signals);
+    assert.equal(typeof cam["cam.x"], "number");
+    // The mirror still has the whole tree after the press rebuilt it.
+    await title.waitFor({ state: "attached", timeout: 10_000 });
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});

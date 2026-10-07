@@ -406,7 +406,7 @@ export class DatarsView extends ElementBase {
       const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
       // Only an explorable view takes the wheel; otherwise the page scrolls as usual.
       // The content moves under the pointer: whatever the tooltip named isn't there any more.
-      if (this.view.wheel(e.clientX - r.left, e.clientY - r.top, e.deltaY * scale)) { e.preventDefault(); this.tip.hidden = true; this.textLayer.hide(); this.kick(); }
+      if (this.view.wheel(e.clientX - r.left, e.clientY - r.top, e.deltaY * scale)) { e.preventDefault(); this.tip.hidden = true; this.textLayer.hide(); this.kick(); this.noteSignals(); }
     };
     // The pointer leaving the chart (not just going from the canvas to text over it, or back).
     // A finger leaves after every tap (touch has no hover): what the tap showed stays.
@@ -676,6 +676,7 @@ export class DatarsView extends ElementBase {
       this.kick();
       this.syncChrome();
       this.dispatchEvent(new CustomEvent("state", { detail: this.stateDetail() }));
+      this.noteSignals();
     }
   }
 
@@ -686,6 +687,35 @@ export class DatarsView extends ElementBase {
     this.now();
     this.timed(() => this.view?.set_signal(name, JSON.stringify(value)));
     this.kick();
+    this.noteSignals();
+  }
+
+  /** Every signal's value now, `{ name: value }` in the shapes `setSignal` takes: numbers,
+   * strings, booleans, key sets as arrays of keys, null for nothing. Built-ins too: `inspected`
+   * (the key under the pointer), a brush's `<name>.lo`, `.hi` and `.active`, an explorable view's
+   * `<name>.x`, `.y` and `.zoom`. Null until the chart is running. A `signal` event tells when
+   * they change (`detail: { signals, changed }`, the names that did). */
+  get signals(): Record<string, unknown> | null {
+    return this.view?.ready() && this.view.signals ? this.view.signals() : null;
+  }
+
+  /** The signals as last reported (JSON per name), to tell what an input changed. */
+  private signalsSeen: Record<string, string> | null = null;
+  /** After anything that may change a signal — the reader's pointer, wheel, keyboard or screen
+   * reader, a step, the page's own `setSignal` — a `signal` event names those that changed (a
+   * few dozen values compared: cheap enough for every pointer move over the chart). */
+  private noteSignals() {
+    const now = this.signals;
+    if (!now) return;
+    const seen: Record<string, string> = {};
+    const changed: string[] = [];
+    for (const [k, v] of Object.entries(now)) {
+      seen[k] = JSON.stringify(v);
+      if (this.signalsSeen && this.signalsSeen[k] !== seen[k]) changed.push(k);
+    }
+    const first = !this.signalsSeen;
+    this.signalsSeen = seen;
+    if (first || changed.length) this.dispatchEvent(new CustomEvent("signal", { detail: { signals: now, changed } }));
   }
 
   /** Read a tiles source from another archive: `datars dev` swaps in an automatic basemap rebuilt
@@ -1039,6 +1069,7 @@ export class DatarsView extends ElementBase {
     }
     this.kick();
     if (release) this.syncChrome();
+    this.noteSignals();
   }
 
   /** Run frames until nothing moves (render on demand — battery matters). */
@@ -1100,6 +1131,7 @@ export class DatarsView extends ElementBase {
         this.lastIndex = index;
         this.syncChrome();
         this.dispatchEvent(new CustomEvent("state", { detail: this.stateDetail() }));
+        this.noteSignals();
       }
       this.placeCard(animating);
       this.placeLinks();
@@ -1493,7 +1525,7 @@ export class DatarsView extends ElementBase {
       Object.assign(input, { type: "range", min: String(c.min), max: String(c.max), step: c.step > 0 ? String(c.step) : "any", value: String(c.value) });
       input.setAttribute("aria-label", c.label);
       input.dataset.signal = c.signal;
-      input.addEventListener("input", () => { this.view?.set_signal(c.signal, input.value); this.kick(); });
+      input.addEventListener("input", () => { this.view?.set_signal(c.signal, input.value); this.kick(); this.noteSignals(); });
       input.addEventListener("change", () => this.syncChrome());
       li.appendChild(input);
       this.mirror.appendChild(li);
@@ -1514,7 +1546,7 @@ export class DatarsView extends ElementBase {
         const b = document.createElement("button");
         b.textContent = item.label;
         b.dataset.path = item.path;
-        b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); } });
+        b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); } });
         li.appendChild(b);
         this.mirror.appendChild(li);
         if (item.path === focusedPath) b.focus();
@@ -1553,6 +1585,7 @@ export class DatarsView extends ElementBase {
       this.view?.set_signal(c.signal, JSON.stringify(o.value));
       this.kick();
       this.syncChrome();
+      this.noteSignals();
     });
     return sel;
   }

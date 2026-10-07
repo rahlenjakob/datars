@@ -270,3 +270,37 @@ fn a_new_state_flies_to_its_own_camera_after_exploring() {
     let centre = content_at(&mut e, Vec2::new(100.0, 100.0));
     assert!((centre.x - 10.0).abs() < 1e-6 && (centre.y - 10.0).abs() < 1e-6, "the corner's own fit: {centre:?}");
 }
+
+#[test]
+fn hosts_read_every_signal_as_they_would_set_it() {
+    // A page following the chart (its own readout of a selection, a brush, a camera) reads the
+    // values in the shape `set_signal_json` takes: key sets as arrays, nothing as null.
+    let mut e = engine(serde_json::json!({
+        "datars": 1, "size": { "width": 200, "height": 100 },
+        "data": { "t": { "values": { "k": ["a", "b"], "x": [0, 100] }, "key": ["k"] } },
+        "signals": { "picked": { "type": "keyset", "default": [] }, "sel": { "type": "range" }, "n": { "type": "num", "default": 3 } },
+        "scene": { "kind": "group", "key": "area", "scales": { "x": { "type": "linear", "domain": [0, 100], "range": [0, 200] } },
+            "on": { "brush": { "brush": "sel" } },
+            "children": [{ "kind": "repeat", "from": "t", "template": { "kind": "shape",
+                "geom": { "type": "rect", "x": "=d.x", "y": 0, "w": 100, "h": 50 }, "fill": "$accent",
+                "on": { "activate": { "toggle": "picked", "value": "=d.k" } } } }] }
+    }));
+    let s = e.signal_values();
+    assert_eq!(s["picked"], serde_json::json!([]));
+    assert_eq!(s["n"], serde_json::json!(3.0));
+    assert_eq!(s["sel"], serde_json::json!([]), "a range brushed on no bands");
+    assert_eq!(s["viewport.w"], serde_json::json!(200.0));
+    e.pointer(Pointer::Down { x: 150.0, y: 20.0 });
+    e.pointer(Pointer::Up { x: 150.0, y: 20.0 });
+    e.pointer(Pointer::Down { x: 20.0, y: 40.0 });
+    e.pointer(Pointer::Move { x: 120.0, y: 40.0 });
+    e.pointer(Pointer::Up { x: 120.0, y: 40.0 });
+    let s = e.signal_values();
+    assert_eq!(s["picked"], serde_json::json!(["b"]));
+    assert_eq!(s["sel.active"], serde_json::json!(true));
+    assert!((s["sel.lo"].as_f64().unwrap() - 10.0).abs() < 1e-9, "{:?}", s["sel.lo"]);
+    assert!((s["sel.hi"].as_f64().unwrap() - 60.0).abs() < 1e-9, "{:?}", s["sel.hi"]);
+    // What a host reads, it can set back.
+    e.set_signal_json("picked", &s["picked"]);
+    assert_eq!(e.signal_values()["picked"], serde_json::json!(["b"]));
+}

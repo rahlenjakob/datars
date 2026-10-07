@@ -1157,6 +1157,24 @@ impl Engine {
         self.all_signals().get(name).cloned()
     }
 
+    /// Every signal's effective value, written the way hosts set them ([`Engine::set_signal_json`]):
+    /// numbers, strings and booleans as they are, key sets as arrays of keys (a declared `keyset`,
+    /// and the bands a `range` brush covers), `null` for nothing (no key, a brush not drawn yet).
+    /// The built-ins too — `inspected` (the key under the pointer), a brush's `<name>.lo`, `.hi` and
+    /// `.active`, an explorable view's `<name>.x`, `.y` and `.zoom`, `viewport.w`/`.h`,
+    /// `sizeClass` — so a host can follow what the reader does (a page's own readout, an app's
+    /// state) without knowing which intent did it.
+    pub fn signal_values(&self) -> BTreeMap<String, serde_json::Value> {
+        self.all_signals()
+            .into_iter()
+            .map(|(name, v)| {
+                let keys = self.doc.signals.get(&name).is_some_and(|d| d.ty == "keyset" || d.ty == "range");
+                let json = if keys { serde_json::Value::Array(env::decode_keyset(&v).into_iter().map(serde_json::Value::String).collect()) } else { resolve::value_to_json(&v) };
+                (name, json)
+            })
+            .collect()
+    }
+
     // ---- program ----------------------------------------------------------------------------
 
     pub fn state_names(&self) -> Vec<String> {

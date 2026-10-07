@@ -365,6 +365,12 @@ mod web {
         pub fn chrome(&mut self) -> JsValue {
             serde_wasm(&self.core.status_brief())
         }
+        /// Every signal's value now, the way `set_signal` takes them ([`datars_engine::Engine::signal_values`]):
+        /// what the reader's clicks, brushes and drags wrote, for a page that follows the chart.
+        /// Cheap (a few dozen values): fine after every input.
+        pub fn signals(&self) -> JsValue {
+            serde_wasm(&serde_json::json!(self.core.engine.signal_values()))
+        }
         /// The semantics tree alone (`status().semantics`).
         pub fn semantics(&mut self) -> JsValue {
             serde_wasm(&serde_json::Value::Array(self.core.semantics()))

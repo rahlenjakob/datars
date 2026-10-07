@@ -173,7 +173,9 @@ The host can set signals and move the program, and hears when the state changes.
   chart.setSignal("income", 45000);                   // a number
   chart.send("goto:ranked");                          // next, prev, goto:<state>, back
   chart.addEventListener("state", (e) => console.log(e.detail.state, e.detail.narration));
+  chart.addEventListener("signal", (e) => console.log(e.detail.changed, e.detail.signals));  // what the reader did
+  chart.addEventListener("pick", (e) => console.log(e.detail.row));                          // the row a click landed on
 </script>
 ```
 
-`setSignal` takes a number, string or boolean, an array of keys (a key set), `{ lo, hi }` (a range), or `null` to clear. In apps, DatarsKit's engine has `setSignal(name, value)` for numbers and `goto(index)`, and SwiftUI's `DatarsChart(source:state:)` follows your state; the Android view has `send(event)`, `goTo(index)` and `seek(position)`. Details: [web](/docs/embed/web/), [iOS and macOS](/docs/embed/ios/), [Android](/docs/embed/android/).
+`setSignal` takes a number, string or boolean, an array of keys (a key set), `{ lo, hi }` (a range), or `null` to clear. `chart.signals` reads them back the same way — `range.lo`, `range.hi` and `range.active` for a brush, `map.x`, `map.y` and `map.zoom` for an explored view, `inspected` for the key under the pointer — and the `signal` event says when the reader changed one. In apps, DatarsKit's engine has `setSignal(name, value)` for numbers and `goto(index)`, and SwiftUI's `DatarsChart(source:state:)` follows your state; the Android view has `send(event)`, `goTo(index)` and `seek(position)`. Details: [web](/docs/embed/web/), [iOS and macOS](/docs/embed/ios/), [Android](/docs/embed/android/).

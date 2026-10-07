@@ -142,6 +142,7 @@ chart.addEventListener("state", (e) => {
 | `setDocument(doc)` | Show a document held by the page (JSON text or object) — an editor's working copy; morphs from what's on screen. |
 | `reload()` | Fetch the `doc` attribute's document again and morph to it (the edit loop). |
 | `status` | The current state, all states, narration, the accessibility tree, resolved tokens, diagnostics. `null` until loaded. |
+| `signals` | Every signal's value now, as `setSignal` takes them: numbers, strings, booleans, key sets as arrays, `null` for nothing — and the built-ins: `inspected` (the key under the pointer), a brush's `<name>.lo`, `.hi`, `.active`, an explorable view's `<name>.x`, `.y`, `.zoom`. `null` until loaded. |
 | `stats` | For big data: rows, points drawn, tiles, level, archive bytes and requests so far. |
 | `hitTest(x, y)` | Every element under a point (CSS px), topmost first — for editors and custom tooltips. |
 | `explain(path)` | Why an element looks as it does: recipes, data row, expression values ([like `datars explain`](/docs/tools/)). |
@@ -156,6 +157,7 @@ chart.addEventListener("state", (e) => {
 | `perf` | A summary of each transition's frames, when the profiler is on (see [performance](/performance/)). |
 | `datarequest` | `{ name, url, respond }` — the chart is about to fetch a source (a URL source, or a live source's refresh). Call `event.preventDefault()` and `detail.respond(data)` — bytes, text, an object, or a promise of one — to answer it yourself: your API client with its auth, a cache, a mock, a replayed feed. Unanswered, the element fetches `url`. |
 | `pick` | What a click or tap landed on: `{ x, y, hits, row }` — for routing a click in an app. |
+| `signal` | `{ signals, changed }` — after the reader's pointer, wheel, keyboard or screen reader, a step, or your own `setSignal` changed signals: all of them now (as `signals`), and the names that changed. For a page that follows the chart: a readout of the brush, an app's state. |
 
 ### Keyboard
 
