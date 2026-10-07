@@ -132,6 +132,8 @@ function platforms() {
   const chartUrl = new URL(section.querySelector(".pf-livelayer .chart").dataset.src, location.href).href;
 
   const S = { step: 0, a: "web", b: "ios", mode: "swipe", split: 50 };
+  // `#compare=png,mp4,heatmap,2`: a comparison to link to (left, right, mode, step).
+  const linked = /[#&]compare=([a-z0-9]+),([a-z0-9]+)(?:,([a-z]+))?(?:,(\d))?/.exec(location.hash);
   const views = [];
   let renderer = "";
   let job = 0;
@@ -140,35 +142,45 @@ function platforms() {
   for (const shot of section.querySelectorAll(".pf-shot")) scaleTo(shot);
 
   // ---- the film: each step's hold ----
-  // From its captions when its steps have narration; else from the film's length, as `datars video`
-  // lays a program out: each state held `--hold` seconds (2.5 by default), the transitions between.
+  // `datars video` writes chapters beside the film, one per state for the time it's held: the middle
+  // of a hold is the step's frame, exactly. (Without them, from the film's length, as `datars video`
+  // lays a program out: each state held `--hold` seconds, 2.5 by default, the transitions between.)
   let holds = null;
   const HOLD = 2.5;
-  const film = files.mp4 ? fetch(files.mp4.url.replace(/\.mp4$/, ".vtt")).then((r) => r.text()).then((vtt) => {
+  const film = files.mp4 ? fetch(files.mp4.url.replace(/\.mp4$/, ".chapters.vtt")).then((r) => (r.ok ? r.text() : "")).then((vtt) => {
     const t = (s) => s.split(":").reduce((n, x) => n * 60 + Number(x), 0);
     const cues = [...vtt.matchAll(/(\d+:\d+:[\d.]+) --> (\d+:\d+:[\d.]+)/g)];
-    if (cues.length === steps.length) holds = cues.map((m) => Math.max(t(m[1]), t(m[2]) - 0.3));
+    if (cues.length === steps.length) holds = cues.map((m) => (t(m[1]) + t(m[2])) / 2);
   }).catch(() => {}) : Promise.resolve();
   const holdAt = (v, step) => {
     if (holds) return holds[step];
     const seg = (v.duration - HOLD) / Math.max(1, steps.length - 1);
     return Math.max(0, HOLD + step * seg - 0.3);
   };
-  /** Put a video at the step's hold; resolves when that frame is there. */
+  /** The next frame the video presents (or a moment, where the browser can't say): after a seek,
+   * `seeked` can fire before the sought frame reaches what a canvas reads (Safari). */
+  const presented = (v) => new Promise((resolve) => {
+    const timer = setTimeout(resolve, 400);
+    v.requestVideoFrameCallback?.(() => { clearTimeout(timer); resolve(); });
+  });
+  /** Put a video at the step's hold; resolves when that frame is there to be read. */
   async function seekVideo(v, step) {
     if (!files.mp4) return;
     if (!v.src) { v.preload = "auto"; v.src = files.mp4.url; }
     await film;
-    await new Promise((resolve) => {
-      const done = () => { v.removeEventListener("seeked", done); resolve(); };
-      const go = () => {
-        const t = holdAt(v, step);
-        if (Math.abs(v.currentTime - t) < 0.01 && v.readyState >= 2) return resolve();
-        v.addEventListener("seeked", done);
-        v.currentTime = t;
-      };
-      if (v.readyState >= 1) go(); else v.addEventListener("loadedmetadata", go, { once: true });
-    });
+    await new Promise((resolve) => (v.readyState >= 1 ? resolve() : v.addEventListener("loadedmetadata", resolve, { once: true })));
+    // iOS Safari hands a canvas nothing from a video that has never played: play it (muted, inline —
+    // no gesture needed) for a moment, once.
+    if (!v.dataset.primed) {
+      v.dataset.primed = "1";
+      try { await v.play(); } catch { /* the seek below still shows it on screen */ }
+      v.pause();
+    }
+    const t = holdAt(v, step);
+    if (Math.abs(v.currentTime - t) >= 0.01 || v.readyState < 2) {
+      await new Promise((resolve) => { v.addEventListener("seeked", resolve, { once: true }); v.currentTime = t; });
+    }
+    await presented(v);
   }
 
   // ---- media: one <img> and one <video> per layer, swapped only once the new frame is decoded ----
@@ -291,11 +303,17 @@ function platforms() {
     }
   }
 
+  /** The comparison on screen, in the URL — copy the address to share it. */
+  function remember() {
+    history.replaceState(null, "", `#compare=${S.a},${S.b},${S.mode},${S.step}`);
+  }
+
   function goStep(i) {
     S.step = i;
     for (const v of views) v.send(`goto:${stateOf(i)}`);
     render();
     strip();
+    remember();
   }
   for (const b of steps) b.addEventListener("click", () => goStep(Number(b.dataset.step)));
   section.querySelector(".pf-panel").addEventListener("click", (e) => {
@@ -309,6 +327,7 @@ function platforms() {
     } else if (b.dataset.mode) S.mode = b.dataset.mode;
     else return;
     render();
+    remember();
   });
   for (const card of section.querySelectorAll(".pf-card")) {
     card.querySelector(".pf-pick")?.addEventListener("click", () => {
@@ -342,6 +361,16 @@ function platforms() {
       r();
       setTimeout(r, 1000);
     });
+  }
+  if (linked) {
+    const known = new Set([...section.querySelectorAll('.pf-chips[data-side="a"] button')].map((b) => b.dataset.v));
+    const modes = new Set([...section.querySelectorAll(".pf-modes button")].map((b) => b.dataset.mode));
+    const [, a, b, m, st] = linked;
+    if (known.has(a) && known.has(b) && a !== b) Object.assign(S, { a, b });
+    if (m && modes.has(m)) S.mode = m;
+    if (st && Number(st) < steps.length) S.step = Number(st);
+    // The comparison and its numbers in view (on a phone the stage is taller than the screen).
+    (measure ?? stage).scrollIntoView({ block: "end", behavior: "instant" });
   }
   render();
   // The strip loads its files (and the film) once it comes near.
