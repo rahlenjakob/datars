@@ -26,7 +26,7 @@
 .xe-input { resize: none; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: #fff; outline: none; }
 .xe-input::selection { background: rgba(130, 170, 255, .3); -webkit-text-fill-color: transparent; }
 .xe-editor:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
-.xe-try-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.xe-try-row { min-height: 30px; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-top: 10px; font-size: 13px; color: var(--muted); }
 .xe-try-row[hidden] { display: none; }
 .xe-tries button { font-size: 12.5px; padding: 5px 10px; }
 .xe-tries button:disabled { opacity: .45; cursor: default; }
@@ -65,3 +65,4 @@
   .xe-editor { --lh: 17px; font-size: 11.5px; height: 340px; }
   .xe-status { font-size: 12px; margin-top: 6px; }
 }
+.xe-view datars-view::part(card) { display: none; }

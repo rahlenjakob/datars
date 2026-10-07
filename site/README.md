@@ -26,7 +26,7 @@ the site links there only as "how it works".
 |---|---|---|
 | `/` | Home: the hero, then one section per strength, each with a live chart | `pages/index.html` |
 | `/features/` | The strengths at a glance | `pages/features/index.html` |
-| `/features/charts/` | Batteries included: the standard library, every recipe listed | `pages/features/charts.html` + generated list |
+| `/features/charts/` | Batteries included: the recipe playground (any std recipe's figure on the engine with the recipe sandbox: controls from `datars describe`, editable CSV, the doc.ts behind it), one table drawn by nine recipes that morph into each other (the reader's data via `provideData`), the catalogue as the playground's picker | `pages/features/charts.html` + `features-charts.js` (its doc.ts writer is checked by `features-charts.test.mjs`); figures in `figures/charts/` |
 | `/features/data/` | Data from anywhere: in the bundle, fetched, live, from the app, answered by your code, generated, by range — with two live demos | `pages/features/data.html` |
 | `/features/theming/` | Your brand at runtime: tokens, modes, fonts, locks, checks | `pages/features/theming.html` |
 | `/features/big-data/` | Four million points, point pyramids, streaming archives | `pages/features/big-data.html` |
@@ -35,7 +35,7 @@ the site links there only as "how it works".
 | `/features/animation/` | The motion playground (the reader edits a motion rule on the live engine), the vocabulary of moves, scroll scrubbing, reduced motion | `pages/features/animation.html` + `motion.js`; figures in `figures/motion/` |
 | `/features/interaction/` | Signals, intents, linked views, brushes, sliders, explorable views | `pages/features/interaction.html` |
 | `/features/accessibility/` | Semantics, screen readers, keyboard, reduced motion, text alternatives | `pages/features/accessibility.html` |
-| `/features/extensibility/` | Recipes in TypeScript, custom scenes, eject | `pages/features/extensibility.html` |
+| `/features/extensibility/` | The recipe workbench: the reader edits the ejected std/bar, a recipe from scratch or a scene's JSON, and the engine's sandbox expands it in the page, morphing to the std chart beside it; eject proved with `datars diff`; the worlds recipe | `pages/features/extensibility.html` + `features-extensibility.js`; figures (and their local recipes) in `figures/extensibility/` |
 | `/features/delivery/` | Charts are content: bundles, tiers, republishing | `pages/features/delivery.html` |
 | `/features/developers/` | CLI, live page, lint/explain/film/profile, MCP, llms.txt | `pages/features/developers.html` |
 | `/gallery/` | Every live chart, filterable, and the lab (`#lab=<alias>`): step, scrub, restyle, remix the data and copy an embed for any chart (`gallery.js`, `gallery.css`) | `pages/gallery.html` |
@@ -80,8 +80,11 @@ head with canonical/OG/Twitter tags, nav, footer), then fills placeholders:
 `<section>-<name>` — the chart reference's examples (`std/`), the SDK reference's (`sdk/`), the
 explanations' diagrams (`how/`), the animation page's (`motion/`) — live like the rest, but not
 counted or listed with the site's charts. `thumb(alias)` in the build renders one's first state as
-light and dark SVG thumbnails. A figure a page rebuilds in the browser (the motion playground, via
-`setDocument`) is also published as its document, at `/play/<alias>.json` (the build's `raw` list).
+light and dark SVG thumbnails. A figure a page rebuilds in the browser (the motion playground, the recipe playground, the
+workbench — via `setDocument`) is also published as its document, at `/play/<alias>.json` (the
+build's `raw` list: `motion-playground` and every `std-`, `charts-` and `extensibility-` figure),
+beside `/play/std.json` (every recipe's description and the catalogue's families). The runtime's
+atlas is published at `runtime/atlas/` for such documents' maps.
 A page's own script (`motion.js`) is copied beside `site.js` and loaded by that page alone.
 Screenshots live in `img/` (a light and a dark capture where the page's theme should pick).
 
