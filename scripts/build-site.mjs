@@ -113,9 +113,10 @@ if (existsSync(figuresDir)) {
 }
 // Documents a page rebuilds in the browser (the animation page's playground swaps in the reader's
 // motion rule with `setDocument`; the charts page's recipe playground edits any std figure, the
-// extensibility page's workbench its own, the developers page swaps in its bench's fixes): published
-// as a bundle like any chart, and also as the document itself, at `/play/<alias>.json`.
-const RAW = ["motion-playground", /^(std|charts|extensibility)-/, /^developers-bench-/];
+// extensibility page's workbench its own, the developers page swaps in its bench's fixes, the
+// interaction lab switches its intents on and off): published as a bundle like any chart, and also
+// as the document itself, at `/play/<alias>.json`.
+const RAW = ["motion-playground", "interaction-lab", /^(std|charts|extensibility)-/, /^developers-bench-/];
 for (const alias of Object.keys(CHARTS)) if (RAW.some((r) => (typeof r === "string" ? r === alias : r.test(alias)))) CHARTS[alias].raw = true;
 const showcase = Object.keys(CHARTS).filter((a) => !CHARTS[a].figure);
 
