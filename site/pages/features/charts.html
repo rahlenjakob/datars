@@ -1,91 +1,92 @@
 ---
-title: Batteries included — 40 ready-made charts · datars
-description: The datars standard library — bars, lines, areas, scatters, pies, treemaps, waffles, funnels, waterfalls, sankeys, beeswarms, calendars, parliaments, maps, cards and sliders — themed, animated and ejectable.
-og: business
+title: Batteries included — 88 ready-made charts to play with · datars
+description: The datars standard library — bars to sankeys, maps to cards, 88 recipes — in a playground that runs the real engine: pick any recipe, change its settings, paste your own data, and copy the doc.ts behind the chart.
+og: charts-fits
+css: features-charts.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Batteries included</p>
-    <h1>{{count:recipes}} recipes for the charts people actually publish</h1>
-    <p class="lede-2">The standard library covers what newsrooms, analysts and product dashboards ship: comparisons, parts of a whole, change over time, distributions, flows, maps — plus the axes, legends, titles, callouts, cards and controls around them. Every recipe draws with your theme, animates by key, is accessible, and is a TypeScript file you can open.</p>
+    <h1>{{count:recipes}} recipes, from bars to sankeys, maps to cards</h1>
+    <p class="lede-2">The standard library covers what newsrooms, analysts and product dashboards publish — comparisons, parts of a whole, change over time, distributions, flows, networks, finance, maps — and what goes around them: axes, legends, titles, callouts, cards and controls. Every recipe draws in your theme, morphs by key, reads out to screen readers and plays on every platform. Try any of them below, on the real engine, with your own data.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
+<section class="section rp" id="recipe-playground" style="padding-top:8px">
   <div class="wrap">
-    <article class="card wide">
-      <div class="card-text">
-        <span class="tag">Live · waterfall · funnel · stacked</span>
-        <h3>A bridge, a funnel, a stack</h3>
-        <p>Three recipes in one document. Step through them: each bar keeps its key, so it finds its place in the next chart instead of blinking out.</p>
-<pre><code data-lang="ts">plot({ data: "bridge", x: "item", y: "delta", title: "Revenue bridge, 2023 → 2024",
-  children: [waterfall({ total: "total" })] }, { when: e('view == "bridge"') }),
-funnel({ data: "stages", stage: "stage", value: "n" }, { when: e('view == "funnel"') }),
-plot({ data: "revenue", x: "quarter", y: "value", color: "region", legend: true,
-  children: [stacked({ series: "region" })] }, { when: e('view == "stacked"') }),</code></pre>
-        {{alt:business}}
+    <div class="rp-grid">
+      <div class="rp-stage">
+        <div class="frame rp-frame">
+          <div class="rp-bar">
+            <button type="button" class="rp-prev rp-arrow" aria-label="Previous recipe" title="Previous recipe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
+            <select id="rp-recipe" class="rp-pick" data-start="bar" aria-label="Recipe"><option value="bar">bar</option></select>
+            <button type="button" class="rp-next rp-arrow" aria-label="Next recipe" title="Next recipe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg></button>
+          </div>
+          <div class="rp-view" data-own-look>
+            <div class="chart" data-chart="std-pareto" data-ratio="0.56" data-min="220" data-phone-ratio="0.66" data-label="The recipe playground's chart"></div>
+          </div>
+          <p class="rp-about"><b>bar()</b> Bars from a category field on a band scale to a value on a linear scale (vertical or horizontal, decided by which axis is the band).</p>
+          <ul class="rp-notes" aria-live="polite" hidden></ul>
+        </div>
       </div>
-      <div class="chart" data-chart="business" data-caption></div>
-    </article>
-  </div>
-</section>
-<section class="section">
-  <div class="wrap">
-    <article class="card wide">
-      <div class="card-text">
-        <span class="tag">Live · candlestick · volume · moving averages · Bollinger · indexed · drawdown</span>
-        <h3>Markets, on trading days</h3>
-        <p>Candles and OHLC bars in your theme's up and down colours, volume in a pane of its own, moving averages and Bollinger bands computed from the full history, performance rebased to 100, drawdowns, and sparklines for a watchlist. The date axis runs on trading days — no gaps for weekends and holidays — and ticks on the first session of each week, month or year. Zooming from six months to one widens every candle instead of redrawing it.</p>
-<pre><code data-lang="ts">plot({ data: "shown", x: "date", y: "close", xType: "band", title: "Nordhavn (NORD), daily",
-  children: [
-    bollinger({ source: "nord" }),
-    candlestick(),
-    movingAverage({ window: 20, source: "nord" }),
-    movingAverage({ window: 50, source: "nord", stroke: "$highlight" }),
-    volume(),
-  ] }),</code></pre>
-        {{alt:stocks}}
+      <aside class="theme-panel rp-panel" aria-label="The recipe's settings and data">
+        <div class="rp-settings"></div>
+        <h3><label for="rp-csv">Data</label></h3>
+        <textarea id="rp-csv" class="rp-csv rp-mono" rows="7" spellcheck="false" autocomplete="off"></textarea>
+        <div class="rp-csv-foot"><p class="rp-hint rp-csv-note"></p><button type="button" class="btn btn-ghost small rp-csv-reset">Example data</button></div>
+      </aside>
+    </div>
+    <div class="rp-code-wrap">
+      <div class="rp-code-head">
+        <h2>The doc.ts behind it</h2>
+        <button type="button" class="btn btn-ghost small rp-copy">Copy</button>
       </div>
-      <div class="chart" data-chart="stocks" data-caption></div>
-    </article>
+<pre class="live-code rp-code"><code data-lang="ts" id="rp-code">// Loading the recipe…</code></pre>
+      <p class="fine">Written from the document the chart is playing, and compiled back to it exactly (that's checked for every recipe). Save it as <code>doc.ts</code> and run <code>datars dev doc.ts</code>. <strong>What runs here:</strong> the engine's own recipe sandbox, in your browser — each change is a new document for <code>view.setDocument()</code>, expanded again and morphed to, the way <code>datars dev</code> does it. <strong>What needs the CLI:</strong> type-checking your TypeScript, <code>datars lint</code>, and publishing a bundle, which expands the recipes ahead of time so apps play it without the sandbox. Settings come from the recipe's own description (<code>datars describe std/<span class="rp-name">bar</span></code>); the example is its reference figure's first step.</p>
+    </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section" id="fits">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">One table, every chart that fits it</p>
+      <h2>Nine recipes, one dataset — and each morphs into the next</h2>
+      <p>Every mark carries the key of its row, so a column becomes its bar, its lollipop, its dot, its slice and its tile — and the parliament's seats and the waffle's squares are keyed by row and unit, so a dot splits into its seats, the seats gather into their slice, a tile breaks into squares. No transition code: the recipes and the keys are enough. Paste your own names and numbers: the published chart takes them through <code>view.provideData()</code>, on the light engine every bundle plays on.</p>
+    </header>
+    <div class="fits-grid">
+      <div class="frame fits-frame fits-cq">
+        <div class="chart" data-chart="charts-fits" data-caption data-autoplay="3600" data-phone-ratio="0.95"></div>
+      </div>
+      <div class="fits-side">
+        <h3><label for="fits-csv">Your data</label></h3>
+        <textarea id="fits-csv" class="rp-csv rp-mono" rows="8" spellcheck="false" autocomplete="off">channel,visitors
+Search,38
+Social,21
+Direct,17
+Newsletter,12
+Referral,8
+Ads,4</textarea>
+        <div class="rp-csv-foot"><p class="rp-hint fits-note" aria-live="polite">The example. Edit it, or paste two columns of your own.</p><button type="button" class="btn btn-ghost small fits-reset">Example data</button></div>
+<pre><code data-lang="ts">// In the document, the rows are a slot:
+visits: data.slot("visits", { key: "channel", sample }),
+// on this page, yours go in:
+view.provideData("visits", { channel, visitors });</code></pre>
+        <p class="fine">The waffle and the parliament count percentage points of the total (rounded), so any numbers fit in a hundred squares. <a href="{{src}}/site/figures/charts/fits.ts">Figure source</a></p>
+      </div>
+    </div>
+    {{alt:charts-fits}}
+  </div>
+</section>
+
+<section class="section" id="catalogue">
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">The catalogue</p>
-      <h2>Every recipe, with its parameters and a live example</h2>
-      <p>Each name links to its reference page — generated from the recipe itself, so it's always current: parameters, defaults, the theme tokens it reads, a live example you can step through with its source, and real uses from the examples.</p>
+      <h2>Every recipe, by family</h2>
+      <p>Click one to open it in the playground above (with a modifier key, its reference page: parameters, defaults, the theme tokens it reads, a live example to step through and real uses from the examples — all generated from the recipe itself).</p>
     </header>
     {{std:list}}
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Live</p>
-      <h2>A few of them, playing</h2>
-    </header>
-    <div class="grid">
-      <article class="card">
-        <div class="chart" data-chart="riksdag" data-caption></div>
-        <div class="card-text"><span class="tag">hemicycle · bar</span><h3>349 seats, then the parties</h3><p>One dot per seat on concentric arcs, regrouping into bars. Party colours are data, declared once as key metadata.</p>{{alt:riksdag}}</div>
-      </article>
-      <article class="card">
-        <div class="chart" data-chart="energy"></div>
-        <div class="card-text"><span class="tag">sankey</span><h3>Where the world's energy goes</h3><p>Nodes in columns by depth, ribbons as wide as their flow — from one table of links.</p>{{alt:energy}}</div>
-      </article>
-      <article class="card">
-        <div class="chart" data-chart="warming" data-caption></div>
-        <div class="card-text"><span class="tag">line · area · span · stripes</span><h3>A line and its stripes</h3><p>Every year's point becomes its stripe, coloured on a diverging scale supplied by the theme.</p>{{alt:warming}}</div>
-      </article>
-      <article class="card">
-        <div class="chart" data-chart="inflation"></div>
-        <div class="card-text"><span class="tag">area · annotate</span><h3>Drawn on, with a callout</h3><p>The area draws on from the left as it enters; a callout points at the peak with a connector and a dot.</p>{{alt:inflation}}</div>
-      </article>
-    </div>
   </div>
 </section>
 
@@ -120,3 +121,4 @@ plot({ data: "revenue", x: "quarter", y: "value", color: "region", legend: true,
     </div>
   </div>
 </section>
+<script type="module" src="/features-charts.js"></script>

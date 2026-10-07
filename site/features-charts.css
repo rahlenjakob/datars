@@ -1,0 +1,78 @@
+/* The charts page's own styles (site/pages/features/charts.html: `css:` in its front matter): the
+   recipe playground — the chart stays in view (sticky) while the reader works down the recipe's
+   settings — and the "every chart that fits" pair. */
+.rp-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+.rp-stage { position: sticky; top: 76px; z-index: 2; }
+.rp-frame { container-type: inline-size; }
+/* The slot's phone ratio is the page script's choice for a slot narrower than 600 px, whatever the
+   window: the reserved space follows the slot's own width the same way (nothing moves on mount). */
+@container (max-width: 599.98px) { .rp-view > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.rp-bar { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+.rp-pick { flex: 1; min-width: 0; height: 38px; padding: 0 12px; font: 600 15px var(--font); color: var(--ink); background: var(--chip); border: 1px solid var(--rule); border-radius: 10px; cursor: pointer; }
+.rp-arrow { flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink); cursor: pointer; }
+.rp-arrow:hover { border-color: var(--accent); }
+.rp-arrow svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* Two lines always, so the frame keeps its height from one recipe to the next. */
+.rp-about { margin: 10px 2px 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); min-height: 3em; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.rp-about b { color: var(--ink); font-family: var(--mono); font-size: 13px; }
+.rp-about a { color: var(--accent); white-space: nowrap; }
+.rp-notes { margin: 8px 0 0; padding: 8px 10px 8px 26px; border-radius: 8px; background: color-mix(in srgb, #f5b53d 16%, transparent); color: var(--ink); font-size: 12.5px; line-height: 1.45; max-height: 7.5em; overflow: auto; }
+.rp-notes[hidden] { display: none; }
+.rp-notes li { overflow-wrap: anywhere; }
+
+.rp-panel { padding: 18px 20px 20px; }
+.rp-panel h3 { margin: 16px 0 8px; }
+.rp-settings > :first-child h3 { margin-top: 0; }
+.rp-group + .rp-group, .rp-more { margin-top: 4px; }
+.rp-row { display: grid; gap: 4px; padding: 8px 0; border-top: 1px solid var(--rule); }
+.rp-group h3 + .rp-row { border-top: 0; padding-top: 0; }
+.rp-row > label { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 13px; }
+.rp-row > label code { background: none; padding: 0; font-weight: 600; color: var(--ink); font-size: 13px; }
+.rp-def { font-size: 11.5px; color: var(--muted); font-family: var(--mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.rp-hint { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.rp-row select, .rp-row input[type="text"], .rp-row textarea, .rp-num { width: 100%; box-sizing: border-box; min-width: 0; padding: 7px 9px; font: 14px var(--font); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 8px; }
+.rp-mono, .rp-row input.rp-mono, .rp-row textarea.rp-mono { font: 12.5px/1.5 var(--mono); }
+.rp-row select:focus, .rp-row input:focus, .rp-row textarea:focus, .rp-csv:focus { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 0; border-color: var(--accent); }
+[aria-invalid="true"] { border-color: #e4572e !important; }
+.rp-range { display: grid; grid-template-columns: minmax(0, 1fr) 84px; gap: 10px; align-items: center; }
+.rp-range input[type="range"] { width: 100%; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.rp-num { padding: 5px 7px; font-variant-numeric: tabular-nums; }
+.chips.small { gap: 5px; }
+.chips.small button { font-size: 12px; padding: 4px 9px; border-radius: 8px; font-family: var(--mono); font-weight: 500; }
+.chips.small input[type="color"] { width: 34px; height: 26px; padding: 0 2px; border: 1px solid var(--rule); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.rp-row > label.rp-switch, .rp-switch { display: flex; justify-content: flex-start; gap: 10px; align-items: center; font-size: 13px; cursor: pointer; }
+.rp-switch input { margin: 0; width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.rp-switch code { background: none; padding: 0; font-weight: 600; color: var(--ink); }
+.rp-more { border-top: 1px solid var(--rule); padding-top: 10px; margin-top: 8px; }
+.rp-more summary { cursor: pointer; font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+.rp-more[open] summary { margin-bottom: 6px; }
+.rp-csv { display: block; width: 100%; box-sizing: border-box; resize: vertical; padding: 9px 10px; color: var(--ink); background: var(--chip); border: 1px solid var(--rule); border-radius: 10px; white-space: pre; overflow: auto; tab-size: 4; }
+.rp-csv:disabled { opacity: .55; }
+.rp-csv-foot { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; margin-top: 8px; }
+.rp-csv-foot .btn { flex: none; }
+.rp-csv-foot .rp-hint { min-height: 2.9em; }
+
+.rp-code-wrap { margin-top: 28px; }
+.rp-code-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.rp-code-head h2 { margin: 0; font-size: 1.25rem; }
+.rp-code { max-height: 460px; margin-top: 12px; font-size: 12px; }
+.rp-code-wrap .fine { max-width: 980px; line-height: 1.6; }
+
+.fits-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 28px; align-items: start; }
+.fits-cq { container-type: inline-size; }
+@container (max-width: 599.98px) { .fits-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.fits-side h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.fits-side pre { font-size: 11.5px; margin-top: 14px; }
+
+@media (max-width: 1000px) {
+  .rp-grid, .fits-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  /* On a phone the chart stays in view while the settings scroll under it. */
+  .rp-stage { top: 60px; background: var(--bg); padding: 6px 0 8px; margin: -6px 0 0; }
+  .rp-frame { padding: 10px; }
+  .rp-about { font-size: 12.5px; margin-top: 6px; }
+  .rp-bar { margin-bottom: 6px; }
+}
+@media (max-width: 720px) {
+  .rp-code { max-height: 380px; font-size: 11px; }
+  .rp-notes { max-height: 4.5em; }
+}
