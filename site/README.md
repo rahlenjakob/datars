@@ -25,19 +25,19 @@ the site links there only as "how it works".
 | URL | Page | Source |
 |---|---|---|
 | `/` | Home: the hero, then one section per strength, each with a live chart | `pages/index.html` |
-| `/features/` | The strengths at a glance | `pages/features/index.html` |
+| `/features/` | The twelve strengths, each a card with a small live chart the page drives through the public API (one card plays at a time; the pointer's plays at once) | `pages/features/index.html` + `features-index.js`; figures in `figures/overview/` |
 | `/features/charts/` | Batteries included: the recipe playground (any std recipe's figure on the engine with the recipe sandbox: controls from `datars describe`, editable CSV, the doc.ts behind it), one table drawn by nine recipes that morph into each other (the reader's data via `provideData`), the catalogue as the playground's picker | `pages/features/charts.html` + `features-charts.js` (its doc.ts writer is checked by `features-charts.test.mjs`); figures in `figures/charts/` |
-| `/features/data/` | Data from anywhere: in the bundle, fetched, live, from the app, answered by your code, generated, by range — with two live demos | `pages/features/data.html` |
-| `/features/theming/` | Your brand at runtime: tokens, modes, fonts, locks, checks | `pages/features/theming.html` |
+| `/features/data/` | The data lab (sample or your own CSV/JSON into a data slot with `provideData`, the CLI's profile of each sample), a live source answered by a simulated API through `datarequest`, a transform pipeline, the spending slot | `pages/features/data.html` + `features-data.js`; figures in `figures/data/` |
+| `/features/theming/` | Five fictional brands over one published chart (`setTokens`, eased colours), one colour into a theme and on into the studio, locks a host can't break | `pages/features/theming.html` + `features-theming.js`; figures in `figures/theming/` |
 | `/features/big-data/` | Four million points, point pyramids, streaming archives | `pages/features/big-data.html` |
-| `/features/platforms/` | Web, iOS, Android, desktop, video, PNG/SVG/PDF | `pages/features/platforms.html` |
-| `/features/maps/` | Automatic basemaps, world-to-street flights, no tile server | `pages/features/maps.html` |
+| `/features/platforms/` | One chart on every target, laid over each other (swipe, difference, ΔE heatmap): live web, simulator and desktop captures (`figures/platforms/capture-*.sh`), and the build's PNG/SVG/PDF/MP4 (`{{export:…}}`) | `pages/features/platforms.html` + `features-platforms.js`; captures in `img/platforms-*` |
+| `/features/maps/` | The map playground: fly to places one committed archive covers, layers by signal, basemap styles by token, the bytes and range requests read; projections, the Rio story | `pages/features/maps.html` + `features-maps.js`; figures and the archive in `figures/maps/` |
 | `/features/animation/` | The motion playground (the reader edits a motion rule on the live engine), the vocabulary of moves, scroll scrubbing, reduced motion | `pages/features/animation.html` + `motion.js`; figures in `figures/motion/` |
-| `/features/interaction/` | Signals, intents, linked views, brushes, sliders, explorable views | `pages/features/interaction.html` |
-| `/features/accessibility/` | Semantics, screen readers, keyboard, reduced motion, text alternatives | `pages/features/accessibility.html` |
+| `/features/interaction/` | The interaction lab: linked views (brush, click-to-filter, explore, a dragged limit) with the signals as the engine holds them (`signals`, the `signal` event), the wiring lit as it fires, intents switched off and on | `pages/features/interaction.html` + `features-interaction.js`; figures in `figures/interaction/` |
+| `/features/accessibility/` | One chart as each reader meets it: the screen reader's tree walked on the chart, the keyboard's log, colour-blind and high-contrast views, reduced motion | `pages/features/accessibility.html` + `features-accessibility.js`; figure `figures/accessibility/lab.ts` |
 | `/features/extensibility/` | The recipe workbench: the reader edits the ejected std/bar, a recipe from scratch or a scene's JSON, and the engine's sandbox expands it in the page, morphing to the std chart beside it; eject proved with `datars diff`; the worlds recipe | `pages/features/extensibility.html` + `features-extensibility.js`; figures (and their local recipes) in `figures/extensibility/` |
-| `/features/delivery/` | Charts are content: bundles, tiers, republishing | `pages/features/delivery.html` |
-| `/features/developers/` | CLI, live page, lint/explain/film/profile, MCP, llms.txt | `pages/features/developers.html` |
+| `/features/delivery/` | Republish a chart and watch three embeds follow, with the chunks fetched (Resource Timing); the tiers' chunk lists; a signed-manifest refusal | `pages/features/delivery.html` + `features-delivery.js`; figures in `figures/delivery/` |
+| `/features/developers/` | A bench with lint's real findings fixed live, `explain()` on any mark, real CLI and MCP sessions replayed | `pages/features/developers.html` + `features-developers.js`; figures in `figures/developers/` |
 | `/gallery/` | Every live chart, filterable, and the lab (`#lab=<alias>`): step, scrub, restyle, remix the data and copy an embed for any chart (`gallery.js`, `gallery.css`) | `pages/gallery.html` |
 | `/gallery/documents/` | Every chart's TypeScript, tiers, tokens, films and exports — the lab fetches it on first use | `pages/gallery/documents.html` |
 | `/themes/` | The theme studio: edit every token of a theme (presets, a brand colour, colours and expressions, generated palettes, Google Fonts, sizes, shapes, maps, cards) on ten live charts in light, dark and high contrast, with the theme's checks, and export it as TypeScript, JSON or a runtime layer | `pages/themes.html`, `studio.js` (the editor; a hidden `<datars-view>` resolves the theme per mode), `scripts/site/studio.mjs` (its markup); the charts are `figures/studio/` |
@@ -54,7 +54,8 @@ the site links there only as "how it works".
 
 ## How a page is made
 
-A page is a body with front matter (`title`, `description`, optional `og` — a chart alias whose
+A page is a body with front matter (`title`, `description`, optional `css` — its own stylesheet,
+`site/<file>`, linked in the head — and optional `og` — a chart alias whose
 render becomes the page's social card). The build wraps it in the shared layout (`scripts/site/`:
 head with canonical/OG/Twitter tags, nav, footer), then fills placeholders:
 
