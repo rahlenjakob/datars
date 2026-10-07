@@ -17,8 +17,8 @@ import { highlight } from "./site.js";
 
 const W = 402, H = 812, DPR = 3;
 const section = document.getElementById("same");
-const NAMES = { web: "Web", ios: "iOS", mac: "macOS", png: "PNG", svg: "SVG", mp4: "Video", pdf: "PDF" };
-const SUBS = { web: "live", ios: "Metal", mac: "Metal", png: "CPU reference", svg: "vector", mp4: "H.264" };
+const NAMES = { web: "Web", ios: "iOS", android: "Android", mac: "macOS", png: "PNG", svg: "SVG", mp4: "Video", pdf: "PDF" };
+const SUBS = { web: "live", ios: "Metal", android: "GLES", mac: "Metal", png: "CPU reference", svg: "vector", mp4: "H.264" };
 
 /** The slot's <datars-view> once its engine is running. */
 function whenReady(slot) {
@@ -207,6 +207,7 @@ function platforms() {
     return {
       web: [`<!-- ${NAMES.web}: this page -->`, `<datars-view src="${chartUrl}"></datars-view>`, `view.send("goto:${st}")`],
       ios: [`// ${NAMES.ios}: the SwiftUI sample app`, `DatarsChart(source: .url(chartURL), state: ${step})`],
+      android: [`// ${NAMES.android}: the sample app (Kotlin)`, `chart.load(chartURL)`, step ? `chart.send("next")  // ×${step}: a tap each` : "// the first step, as it opens"],
       mac: [`# ${NAMES.mac}: the desktop viewer, offscreen`, `datars-view ${chartUrl} \\`, `  --screenshot mac.png --state ${step} --dpr 3`],
       png: [`# ${NAMES.png}: the CPU reference`, `datars render everywhere.ts --state ${step} \\`, `  --size 402x812 --dpr 3 --out everywhere.png`],
       svg: [`# ${NAMES.svg}: text stays text`, `datars render everywhere.ts --state ${step} \\`, `  --size 402x812 --out everywhere.svg`],
@@ -218,7 +219,7 @@ function platforms() {
     codeEl.textContent = lines.join("\n");
     highlight(codeEl);
     const r = renderer ? ` Your browser draws the live chart ${renderer === "gpu" ? "on its GPU (WebGPU, or WebGL2 where there's none)" : "with the CPU renderer (no GPU for the page)"}.` : "";
-    facts.textContent = `Left: ${NAMES[S.a]} (${SUBS[S.a]}). Right: ${NAMES[S.b]} (${SUBS[S.b]}). All at 402 × 812, the chart box of the iPhone 16 Pro under its status bar.${r}${S.a === "ios" || S.b === "ios" ? " The bar at the foot of the iOS capture is the system's home indicator, drawn over the app." : ""}`;
+    facts.textContent = `Left: ${NAMES[S.a]} (${SUBS[S.a]}). Right: ${NAMES[S.b]} (${SUBS[S.b]}). All at 402 × 812, the chart box of the iPhone 16 Pro under its status bar (the Android emulator’s display is set to give its app the same).${r}${S.a === "ios" || S.b === "ios" ? " The bar at the foot of the iOS capture is the system's home indicator, drawn over the app." : ""}`;
     tags.a.textContent = `${NAMES[S.a]} · ${SUBS[S.a]}`;
     tags.b.textContent = `${NAMES[S.b]} · ${SUBS[S.b]}`;
   }
