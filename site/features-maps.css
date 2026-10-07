@@ -1,0 +1,68 @@
+/* The maps page's own styles (site/pages/features/maps.html: `css:` in its front matter): the map
+   playground (features-maps.js) — the map stays in view (sticky) while the reader works down the
+   controls — and the showcase cards. */
+.mx-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+/* A chart's phone ratio is the page script's choice for a slot narrower than 600 px; the reserved
+   space follows the slot's own width the same way (as on the animation page), so nothing moves. */
+.mx-cq { container-type: inline-size; }
+@container (max-width: 627.98px) { .card.mx-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+@container (max-width: 599.98px) { .frame.mx-cq > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.mx-stage { position: sticky; top: 76px; z-index: 2; }
+.mx-where { display: flex; align-items: baseline; gap: 10px; margin: 2px 4px 10px; min-height: 1.5em; font-size: 15px; line-height: 1.5; white-space: nowrap; overflow: hidden; }
+.mx-place { overflow: hidden; text-overflow: ellipsis; }
+.mx-kind { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--chip); padding: 2px 9px; border-radius: 999px; }
+.mx-zoom { margin-left: auto; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.mx-meter { margin: 12px 4px 0; }
+.mx-bars { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; align-items: end; height: 38px; border-bottom: 1px solid var(--rule); }
+.mx-bars span { display: block; height: 0; min-height: 0; background: var(--accent); border-radius: 2px 2px 0 0; transition: height .25s ease-out; }
+.mx-axis { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 3px; margin-top: 4px; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.mx-axis span { grid-row: 1; text-align: center; }
+.mx-axis span:first-child { text-align: left; }
+.mx-read { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); font-variant-numeric: tabular-nums; min-height: 3em; }
+.mx-read b { color: var(--ink); }
+.mx-read code { font-size: 12px; word-break: break-all; }
+.mx-file-line:has(.mx-file:empty) { visibility: hidden; }
+.mx-panel h3 { margin-top: 20px; }
+.mx-search input { width: 100%; font: 500 14px var(--font); padding: 9px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); color: var(--ink); }
+.mx-search input:focus { outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 1px; }
+.mx-places { margin-top: 12px; display: grid; gap: 10px; }
+.mx-places[data-empty="Not in this archive"]::after { content: "Not in this archive."; font-size: 13.5px; color: var(--muted); }
+.mx-group[hidden], .mx-places button[hidden] { display: none; }
+.mx-group-name { display: block; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.mx-places .chips button { font-size: 12.5px; padding: 5px 10px; }
+.mx-hint { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.mx-tour { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-top: 12px; }
+.mx-tour .mx-hint { margin: 0; }
+.mx-layers { display: grid; gap: 10px; }
+.mx-layers small { display: block; font-size: 12.5px; color: var(--muted); }
+.mx-styles button { font-size: 12.5px; padding: 6px 10px; }
+.mx-inks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; margin-top: 14px; }
+.mx-inks label { display: grid; justify-items: center; gap: 4px; font-size: 11.5px; color: var(--ink-2); cursor: pointer; }
+.mx-inks input { width: 36px; height: 28px; padding: 0; border: 1px solid var(--rule); border-radius: 8px; background: none; cursor: pointer; }
+.mx-inks input::-webkit-color-swatch-wrapper { padding: 2px; }
+.mx-inks input::-webkit-color-swatch { border: 0; border-radius: 5px; }
+.mx-code { max-height: none; margin-top: 0; }
+.mx-panel .fine { margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.mx-panel .fine a { color: var(--accent); }
+.mx-doc { margin-top: 22px; }
+.mx-doc summary { flex-wrap: wrap; row-gap: 4px; }
+.mx-doc pre { max-height: 520px; }
+.mx-how .output { font-size: 11.5px; }
+.mx-gap { margin-top: 24px; }
+.mx-limits { max-width: 760px; margin-top: -16px; font-size: 14px; line-height: 1.6; }
+.mx-limits b { color: var(--ink-2); }
+.card pre { margin: 4px 0 0; font-size: 11.5px; }
+@media (max-width: 1000px) {
+  .mx-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  /* On a phone the map stays in view while the controls scroll under it. */
+  .mx-stage { top: 60px; background: var(--bg); padding: 6px 0 8px; margin: -6px 0 0; }
+  .mx-stage .frame { padding: 10px; }
+}
+@media (max-width: 720px) {
+  .mx-where { font-size: 14px; margin-bottom: 6px; }
+  .mx-meter { margin-top: 8px; }
+  .mx-bars { height: 26px; }
+  .mx-read { font-size: 12px; min-height: 4.5em; }
+  .mx-inks { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.mx-stage .caption { display: none; }
