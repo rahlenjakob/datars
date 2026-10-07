@@ -2497,7 +2497,15 @@ impl Engine {
 
     fn wheel_inner(&mut self, at: Vec2, delta: f64) -> bool {
         let Some(scene) = self.current_scene() else { return false };
-        let Some((path, resolve::BoundAction::Explore { prefix, fit, zoom })) = self.drag_target(&scene, at) else { return false };
+        // The innermost explorable view under the pointer — a handle or a brush drawn inside it
+        // (a line to drag across a scatter) takes drags, not the wheel.
+        let mut best: Option<(KeyPath, resolve::BoundAction)> = None;
+        for (path, act, inv, area) in self.drag_areas(&scene) {
+            if matches!(act, resolve::BoundAction::Explore { .. }) && area.contains(inv.apply(at)) && best.as_ref().is_none_or(|(p, _)| path.0.len() > p.0.len()) {
+                best = Some((path, act));
+            }
+        }
+        let Some((path, resolve::BoundAction::Explore { prefix, fit, zoom })) = best else { return false };
         let Some((node, xf)) = pick::node_at(&scene, &path) else { return false };
         let datars_scene::NodeKind::View { viewport, camera: Some(cam), .. } = &node.kind else { return false };
         let Some(inv) = xf.inverse() else { return false };

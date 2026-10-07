@@ -323,3 +323,24 @@ fn a_host_knows_which_presses_the_chart_drags() {
     assert!(v.drags_at(Vec2::new(100.0, 100.0)), "a view that pans");
     v.pointer(Pointer::Leave);
 }
+
+#[test]
+fn the_wheel_zooms_a_view_through_a_handle_drawn_in_it() {
+    // A line to drag inside an explorable view takes drags; the wheel over it still zooms the view.
+    let mut e = engine(serde_json::json!({
+        "datars": 1, "size": { "width": 200, "height": 200 },
+        "signals": { "limit": { "type": "num", "default": 50 } },
+        "scene": { "kind": "view", "key": "map", "camera": { "fit": { "bbox": [0, 0, 100, 100] }, "padding": 0, "explore": "cam" },
+            "children": [
+              { "kind": "shape", "key": "land", "geom": { "type": "rect", "x": 0, "y": 0, "w": 100, "h": 100 }, "fill": "$accent" },
+              { "kind": "group", "key": "handle", "scales": { "ly": { "type": "linear", "domain": [100, 0], "range": [0, 100] } },
+                "on": { "drag": { "scrub": "limit", "axis": "y", "scale": "ly" } },
+                "children": [{ "kind": "shape", "key": "hit", "geom": { "type": "rect", "x": 0, "y": 45, "w": 100, "h": 10 }, "fill": "$ink", "pickable": true }] }] }
+    }));
+    assert!(e.wheel(Vec2::new(100.0, 100.0), -300.0), "over the handle");
+    assert!(num(&e, "cam.zoom") > 1.0);
+    // A drag on the handle is still the handle's.
+    e.pointer(Pointer::Down { x: 100.0, y: 100.0 });
+    e.pointer(Pointer::Up { x: 100.0, y: 100.0 });
+    assert!(e.signal("cam.zoom").is_some());
+}
