@@ -19,7 +19,7 @@ const skerry = theme({
     "stroke.line": 2,
     "point.radius": 3.5,
   },
-  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0", categorical: ["$brand", "#e3b04f", "#3fae86"] } },
+  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0", accent: "$brand", categorical: ["$brand", "#e3b04f", "#3fae86"] } },
   locked: ["brand", "accent", "paper", "font.title"],
 });
 

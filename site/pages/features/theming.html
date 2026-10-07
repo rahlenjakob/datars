@@ -108,7 +108,34 @@ view.setTokens({});</code></pre>
         <a class="btn btn-primary ty-go" id="ty-go" href="/themes/">Open #e8590c in the theme studio <span aria-hidden="true">→</span></a>
       </div>
       <div class="frame ty-frame"><div class="chart" data-chart="theming-yours" data-phone-ratio="1.9"></div></div>
-<pre class="live-code ty-code"><code data-lang="ts" id="ty-code">theme({ name: "my-brand", extends: "datars/neutral", tokens: { brand: "#e8590c", accent: "$brand" } })</code></pre>
+<pre class="live-code ty-code"><code data-lang="ts" id="ty-code">import { theme } from "@datars/sdk";
+
+export const mine = theme({
+  name: "my-brand",
+  extends: "datars/neutral",
+  tokens: {
+    brand: "#e8590c",
+    accent: "$brand",
+    categorical: { generate: "categorical", from: "$accent", n: 8 },
+    sequential: { generate: "sequential", from: "$brand", n: 5 },
+    diverging: { generate: "diverging", from: "#209cbe", to: "$brand", n: 7 },
+  },
+  modes: {
+    dark: {
+      sequential: {
+        kind: "sequential",
+        colors: [
+          "#501a02", "#7a3619",
+          "#ae5938", "#eb855e",
+          "#ffb486",
+        ],
+      },
+    },
+    "high-contrast": {
+      accent: "darken($brand, 0.06)",
+    },
+  },
+});</code></pre>
     </div>
     {{alt:theming-yours}}
   </div>
@@ -132,7 +159,8 @@ view.setTokens({});</code></pre>
           <button type="button" data-ask="body" aria-pressed="false"><span><code>font.body</code> in Manrope</span><em></em></button>
           <button type="button" data-ask="lines" aria-pressed="false"><span>Bolder <code>stroke.line</code> and points</span><em></em></button>
         </div>
-<pre class="live-code tl-code"><code data-lang="js" id="tl-code">view.setTokens({});</code></pre>
+<pre class="live-code tl-code"><code data-lang="js" id="tl-code">// The host app's layer, over the bank's house theme:
+view.setTokens({});</code></pre>
         <h3>What the engine said</h3>
         <ul class="tl-said" id="tl-said"><li class="tl-none">Nothing yet — no overrides.</li></ul>
       </div>
@@ -147,7 +175,7 @@ view.setTokens({});</code></pre>
     categorical: ["$brand", "#d9a441", "#3c9a78"],
     "font.title": font.file("Fraunces", "fonts/Fraunces-Bold.ttf", { weight: 700 }),
   },
-  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0" } },
+  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0", accent: "$brand" } },
   locked: ["brand", "accent", "paper", "font.title"],
 });</code></pre>
       </div>
@@ -215,7 +243,7 @@ chart.setDarkMode(true)</code></pre>
     <header class="section-head">
       <p class="eyebrow">Checked</p>
       <h2>Every theme gets a specimen board and its checks</h2>
-      <p>Themes declare checks — WCAG contrast of text on its background, palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia, ramps that only get darker — and <code>datars lint</code> runs them on the resolved theme in every mode. <code>datars theme brand.json --specimen out.png</code> draws the standard charts, palettes and inks in all three modes side by side. This is the built-in theme's board, rendered when this site was built:</p>
+      <p>Themes declare checks — WCAG contrast of text on its background, palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia, ramps that only get darker (or lighter) — and <code>datars lint</code> runs them on the resolved theme in every mode. <code>datars theme brand.json --specimen out.png</code> draws the standard charts, palettes and inks in all three modes side by side. This is the built-in theme's board, rendered when this site was built:</p>
     </header>
     <div class="table-wrap tb-specimen"><img class="export-img" src="/exports/specimen.png" alt="The datars/neutral theme's specimen board: bars, lines, stacked bars, a donut, a scatter, and the categorical, sequential and diverging palettes and inks, in light, dark and high-contrast mode side by side." width="3024" height="640" loading="lazy"></div>
   </div>
@@ -231,7 +259,7 @@ chart.setDarkMode(true)</code></pre>
       <li><b>Colour changes snap in the engine.</b> A new token layer re-inks the next frame at once; type and shape changes morph. The easing you see on this page and in the theme studio is the page's own: it hands the chart a few dozen in-between colours with <code>setTokens()</code>, one per frame.</li>
       <li><b>The <code>motion.*</code> tokens aren't read.</b> The built-in theme declares <code>motion.duration</code>, <code>motion.easing</code> and <code>motion.stagger</code>, but transitions take their timing from the document's motion rules (<a href="/features/animation/">animation</a>), not from the theme.</li>
       <li><b>Android has no token overrides.</b> The Android view switches light and dark; <code>setTokens</code> is on the web and in DatarsKit for iOS and macOS.</li>
-      <li><b>Generated palettes cost a search.</b> A categorical palette generated from a colour is the costliest thing a theme resolves; a page that changes it on every input (as this one does) should pass the colours once they're made, as the theme studio does.</li>
+      <li><b>Generated palettes cost a search.</b> A categorical palette generated from a colour is the costliest thing a theme resolves — about 30 ms on a laptop, four times that on a slow phone. A page that changes the colour often should generate each palette once and pass the chart its colours: this page and the theme studio do, and while you drag a colour this page shows the last palette led by the new colour until you stop.</li>
     </ul>
   </div>
 </section>
