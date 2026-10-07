@@ -28,6 +28,7 @@
 .dx-profile[hidden] { display: none; }
 .dx-own { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); }
 .dx-doc { margin-top: 22px; }
+.dx-doc summary { flex-wrap: wrap; row-gap: 4px; }
 .dx-doc pre { max-height: 480px; }
 .dx-live-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
 .dx-api .mp-ranges { margin-top: 0; }
