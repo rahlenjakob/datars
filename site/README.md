@@ -38,7 +38,8 @@ the site links there only as "how it works".
 | `/features/extensibility/` | Recipes in TypeScript, custom scenes, eject | `pages/features/extensibility.html` |
 | `/features/delivery/` | Charts are content: bundles, tiers, republishing | `pages/features/delivery.html` |
 | `/features/developers/` | CLI, live page, lint/explain/film/profile, MCP, llms.txt | `pages/features/developers.html` |
-| `/gallery/` | Every live chart, with its document | `pages/gallery.html` |
+| `/gallery/` | Every live chart, filterable, and the lab (`#lab=<alias>`): step, scrub, restyle, remix the data and copy an embed for any chart (`gallery.js`, `gallery.css`) | `pages/gallery.html` |
+| `/gallery/documents/` | Every chart's TypeScript, tiers, tokens, films and exports — the lab fetches it on first use | `pages/gallery/documents.html` |
 | `/themes/` | The theme studio: edit every token of a theme (presets, a brand colour, colours and expressions, generated palettes, Google Fonts, sizes, shapes, maps, cards) on ten live charts in light, dark and high contrast, with the theme's checks, and export it as TypeScript, JSON or a runtime layer | `pages/themes.html`, `studio.js` (the editor; a hidden `<datars-view>` resolves the theme per mode), `scripts/site/studio.mjs` (its markup); the charts are `figures/studio/` |
 | `/articles/` | Ten data stories in one house style, every chart live (`scripts/build-articles.mjs`) | `articles/` |
 | `/performance/` | Measured numbers, the method, the tools | `pages/performance.html` + `perf/*.json` |
