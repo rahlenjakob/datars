@@ -161,7 +161,7 @@ chart.addEventListener("state", (e) => {
 
 ### Keyboard
 
-A chart is focusable. <kbd>→</kbd> or <kbd>Space</kbd> steps forward, <kbd>←</kbd> back, <kbd>Esc</kbd> leaves a chapter, <kbd>Shift</kbd>+<kbd>D</kbd> toggles the stats panel. Interactive marks and engine-drawn sliders are reachable as buttons and range inputs in the accessibility mirror.
+A chart is focusable. With the chart itself focused, <kbd>→</kbd> or <kbd>Space</kbd> steps forward and <kbd>←</kbd> back; <kbd>Esc</kbd> leaves a chapter, <kbd>Shift</kbd>+<kbd>D</kbd> toggles the stats panel. <kbd>Tab</kbd> goes on into the accessibility mirror: clickable marks as buttons (<kbd>Enter</kbd> or <kbd>Space</kbd>), engine-drawn sliders and scrubbers as range inputs (the arrow keys), dropdowns as selects — the mark or control a focused item stands for is outlined on the chart.
 
 ## Stories on the page
 
