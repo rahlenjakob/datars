@@ -1,16 +1,18 @@
 ---
 title: datars — one chart engine for every screen
-description: An engine for charts, maps and data stories that runs natively on the web, in iOS and Android apps, on the desktop, in video and in print. Write the chart once in TypeScript; every screen gets the same pixels and motion, and you update it like an article — no deploy, no app release.
+description: No chart library runs on every screen — D3 is web-only, Swift Charts is Apple-only, and video and print mean redrawing by hand. datars is one engine that plays the same chart on the web, in iOS and Android apps, on the desktop, in video and in print. Write it once in TypeScript; update it like an article.
 og: worlds
+css: home.css
 ---
 <section class="hero">
   <div class="wrap hero-grid">
     <div class="hero-copy">
       <p class="eyebrow">Source available · Rust + TypeScript</p>
       <h1>One chart.<br> <span class="grad nowrap">Every screen.</span></h1>
-      <p class="lede">datars is an engine for charts, maps and data stories that runs natively on the web, in iOS and Android apps, on the desktop, in video and in print. Write the chart once in TypeScript: every screen gets the same pixels, the same line breaks and the same motion — and you update it like an article, with no deploy and no app release.</p>
+      <p class="lede">datars is one engine for charts, maps and data stories that runs natively on the web, in iOS and Android apps, on the desktop, in video and in print. Write the chart once in TypeScript: every screen gets the same pixels, the same line breaks and the same motion — and you update it like an article, with no deploy and no app release.</p>
       <div class="cta">
         <a class="btn btn-primary" href="/docs/getting-started/">Get started <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost on-dark" href="#touch">Try it on this page</a>
         <a class="btn btn-ghost on-dark" href="/why/">Why datars</a>
       </div>
       <dl class="stats">
@@ -28,7 +30,7 @@ og: worlds
           <button type="button" data-state="spiral">Spiral</button>
           <button type="button" data-state="blocks">Blocks</button>
         </div>
-        <p>Every country on a spinning globe lifts off as a planet the size of its population, falls into a golden spiral and packs into blocks — one custom recipe, keyed by country, so each coastline becomes its planet. It plays by itself; pick a layout to take over.</p>
+        <p>Every country on a spinning globe lifts off as a planet the size of its population, falls into a golden spiral and packs into blocks — <a href="/features/extensibility/">one custom recipe of 67 lines</a>, keyed by country, so each coastline becomes its planet. It plays by itself; pick a layout to take over.</p>
       </figcaption>
       {{alt:worlds}}
     </figure>
@@ -39,8 +41,8 @@ og: worlds
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Why it exists</p>
-      <h2>Today, every screen gets its own copy of the chart</h2>
-      <p>Web chart libraries don't run in native apps, app chart libraries don't run on the web, and neither makes your video or your print page. So a chart that matters is built again for every screen, by different people with different tools, and the copies drift apart. With datars it's one document, and every host plays it.</p>
+      <h2>No chart library runs on every screen</h2>
+      <p>D3 draws in a browser. Swift Charts draws on Apple's platforms. Android has no charts built in, and a video or a printed page means redrawing the chart by hand in After Effects or Illustrator. So a chart that matters is built once per screen, by different people with different tools — and the copies drift apart. datars is the one that runs on all of them.</p>
     </header>
     <figure class="why-fig">
       <div class="frame"><div class="chart" data-chart="why-builds" data-min="300" data-phone-ratio="1.45" data-autoplay="6000" data-caption></div></div>
@@ -50,46 +52,284 @@ og: worlds
   </div>
 </section>
 
-<section class="section" id="platforms">
+<section class="section ev" id="everywhere">
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Every platform</p>
-      <h2>One engine in every host, one line to embed</h2>
-      <p>Not a web view, not a screenshot: the same Rust engine runs natively in each host — shaping the text, laying out, animating and drawing — so the chart in your app is the chart on your site, frame for frame. Every example produces identical pixel hashes on macOS, in wasm, on the iOS simulator and on Android.</p>
+      <h2>One document, drawn by every target</h2>
+      <p>Not a web view, not a screenshot: one Rust engine runs natively in each host — shaping the text, laying out, animating, drawing. Here is one chart in one 402 × 812 box on every target. Step it: the web one morphs live on this page, and beside it is what the iOS app, the desktop viewer and the CLI drew at that step.</p>
     </header>
-    <div class="split">
-      <div>
-        <ul class="platforms" style="grid-template-columns: minmax(0, 1fr)">
-          <li>
-            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 8h18"/></svg>Web</h3>
-<pre><code data-lang="html">&lt;script type="module" src="/runtime/datars.js"&gt;&lt;/script&gt;
-&lt;datars-view src="https://charts.example.com/c/worlds"&gt;&lt;/datars-view&gt;</code></pre>
-          </li>
-          <li>
-            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M10.5 18.5h3"/></svg>iOS &amp; macOS — DatarsKit, SwiftUI</h3>
-<pre><code data-lang="swift">DatarsChart(source: .url(URL(string: "https://charts.example.com/c/worlds")!),
-            state: step)   // the story follows your SwiftUI state</code></pre>
-          </li>
-          <li>
-            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.4"/><path d="M6.5 6h11M6.5 18h11"/></svg>Android — Kotlin view</h3>
-<pre><code data-lang="kotlin">val chart = DatarsView(context)
-chart.load("https://charts.example.com/c/worlds")</code></pre>
-          </li>
-          <li>
-            <h3><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9.5v5l4-2.5z"/></svg>Video, PNG, SVG, PDF</h3>
-<pre><code data-lang="sh">datars video worlds.ts --size 360x640 --dpr 3   # 1080×1920 MP4 + captions
-datars render worlds.ts --out worlds.pdf         # vector PDF, searchable text</code></pre>
-          </li>
-        </ul>
-        <a class="more" href="/features/platforms/">Platforms in depth <span aria-hidden="true">→</span></a>
+    <div class="ev-bar">
+      <div class="pills small" id="platforms-everywhere-pills" role="group" aria-label="Step, on every target">
+        <button type="button" data-step="0" data-state="bars" aria-pressed="true">Bars</button>
+        <button type="button" data-step="1" data-state="donut" aria-pressed="false">Donut</button>
+        <button type="button" data-step="2" data-state="treemap" aria-pressed="false">Treemap</button>
+        <button type="button" data-step="3" data-state="waffle" aria-pressed="false">Waffle</button>
       </div>
-      <div class="video-row" style="justify-content:center">
-        <figure class="v916">
-          {{film:worlds-9x16}}
-          <figcaption>The globe at the top of this page as a 1080×1920 video, rendered by <code>datars video</code> when this site was built — the phone layout, not a crop — with captions from the story's narration ({{filmsize:worlds-9x16}}).</figcaption>
-        </figure>
+      <p class="ev-status" aria-live="polite">The same step on six targets.</p>
+    </div>
+    <div class="ev-row" data-own-look="ready" role="list">
+      <figure class="ev-dev ev-web" role="listitem">
+        <div class="ev-frame"><span class="ev-chrome" aria-hidden="true"><i></i><i></i><i></i><span>datars.dev</span></span>
+          <div class="ev-screen"><div class="ev-box"><div class="chart" data-chart="platforms-everywhere" data-mode="light" data-min="100" data-label="The chart, drawn live by the web runtime"></div></div></div>
+        </div>
+        <figcaption><b>Web</b><span>live, on this page · <span class="ev-renderer">on the GPU</span></span></figcaption>
+      </figure>
+      <figure class="ev-dev ev-ios" role="listitem">
+        <div class="ev-frame"><span class="ev-island" aria-hidden="true"></span>
+          <div class="ev-screen"><div class="ev-box ev-shots" data-srcs="/img/home-ios-0.webp /img/home-ios-1.webp /img/home-ios-2.webp /img/home-ios-3.webp"><img src="/img/home-ios-0.webp" width="402" height="812" alt="The chart as the iOS sample app drew it" loading="lazy" decoding="async"></div></div>
+        </div>
+        <figcaption><b>iOS</b><span>Metal · the sample app, iPhone 16 Pro simulator</span></figcaption>
+      </figure>
+      <figure class="ev-dev ev-mac" role="listitem">
+        <div class="ev-frame"><span class="ev-chrome" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div class="ev-screen"><div class="ev-box ev-shots" data-srcs="/img/home-mac-0.webp /img/home-mac-1.webp /img/home-mac-2.webp /img/home-mac-3.webp"><img src="/img/home-mac-0.webp" width="402" height="812" alt="The chart as the macOS desktop viewer drew it" loading="lazy" decoding="async"></div></div>
+        </div>
+        <figcaption><b>macOS</b><span>Metal · the desktop viewer</span></figcaption>
+      </figure>
+      <figure class="ev-dev ev-png" role="listitem">
+        <div class="ev-frame">
+          <div class="ev-screen"><div class="ev-box ev-shots" data-srcs="{{export:platforms-everywhere|0|402x812|1|png}} {{export:platforms-everywhere|1|402x812|1|png}} {{export:platforms-everywhere|2|402x812|1|png}} {{export:platforms-everywhere|3|402x812|1|png}}"><img src="{{export:platforms-everywhere|0|402x812|1|png}}" width="402" height="812" alt="The chart as datars render drew it, on the CPU" loading="lazy" decoding="async"></div></div>
+        </div>
+        <figcaption><b>PNG · video</b><span>CPU reference · <code>datars render</code>, <code>datars video</code></span></figcaption>
+      </figure>
+      <figure class="ev-dev ev-svg" role="listitem">
+        <div class="ev-frame">
+          <div class="ev-screen"><div class="ev-box ev-shots" data-srcs="{{export:platforms-everywhere|0|402x812|1|svg}} {{export:platforms-everywhere|1|402x812|1|svg}} {{export:platforms-everywhere|2|402x812|1|svg}} {{export:platforms-everywhere|3|402x812|1|svg}}"><img src="{{export:platforms-everywhere|0|402x812|1|svg}}" width="402" height="812" alt="The chart as an SVG export" loading="lazy" decoding="async"></div></div>
+        </div>
+        <figcaption><b>SVG · PDF</b><span>vector, text as text · for print</span></figcaption>
+      </figure>
+      <figure class="ev-dev ev-android" role="listitem">
+        <div class="ev-frame"><span class="ev-island" aria-hidden="true"></span>
+          <div class="ev-screen"><div class="ev-box ev-none"><p><b>Android</b>Vulkan or OpenGL ES. The sample app is verified on an emulator by <code>test-android-sample.sh</code>; it isn't captured for this page yet.</p></div></div>
+        </div>
+        <figcaption><b>Android</b><span>emulator-verified · capture to come</span></figcaption>
+      </figure>
+    </div>
+    <div class="ev-foot">
+      <p class="fine">The captures are scaled to fit; the iOS one is the screen under the status bar, its home indicator drawn by the system. No phone app has run on a physical device yet. Every example's frames also hash to identical pixels on macOS, in wasm, on the iOS simulator and on an Android emulator.</p>
+      <a class="more" href="/features/platforms/">Lay any two over each other, and measure the difference <span aria-hidden="true">→</span></a>
+    </div>
+    {{alt:platforms-everywhere}}
+  </div>
+</section>
+
+<section class="section tc" id="touch">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Touch it</p>
+      <h2>Five gestures, on the real engine</h2>
+      <p>Each is a published chart this page drives through <code>&lt;datars-view&gt;</code>'s public API, and what the chart reports is printed beside it as you go. In an iOS or Android app the gestures are the same: the engine handles them, the host only forwards the pointer.</p>
+    </header>
+    <div class="tc-tabs" role="tablist" aria-label="Gestures">
+      <button type="button" role="tab" id="tc-tab-drag" aria-controls="tc-drag" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18"/><circle cx="14" cy="12" r="3.2"/></svg><b>Drag</b><span>Interaction</span></button>
+      <button type="button" role="tab" id="tc-tab-tap" aria-controls="tc-tap" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 11a1.5 1.5 0 0 1 3 0v3.5a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.5L4 14.4a1.5 1.5 0 0 1 2.4-1.8L9 15V11"/></svg><b>Tap</b><span>Animation</span></button>
+      <button type="button" role="tab" id="tc-tab-zoom" aria-controls="tc-zoom" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5 5M10.5 8v5M8 10.5h5"/></svg><b>Zoom</b><span>Big data</span></button>
+      <button type="button" role="tab" id="tc-tab-fly" aria-controls="tc-fly" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3 6.5v13L9 17l6 2.5 6-2.5v-13L15 6.5 9 4z"/><path d="M9 4v13M15 6.5v13"/></svg><b>Fly</b><span>Maps</span></button>
+      <button type="button" role="tab" id="tc-tab-listen" aria-controls="tc-listen" aria-selected="false" tabindex="-1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg><b>Listen</b><span>Accessibility</span></button>
+    </div>
+    <div class="tc-panels">
+      <div class="tc-panel" id="tc-drag" role="tabpanel" aria-labelledby="tc-tab-drag" data-tc="drag">
+        <div class="tc-stage">
+          <div class="chart" data-chart="home-daylight" data-ratio="0.6" data-phone-ratio="1.2" data-min="320"></div>
+          <div class="tc-bar"><span class="tc-hint">Drag the slider above the bars, or focus it and use the arrow keys.</span></div>
+        </div>
+        <div class="tc-text">
+          <h3>Drag through the year</h3>
+          <p>The slider is drawn by the engine, not the page. Each bar's length is computed from it — the sunrise equation over each place's latitude, in the document's table — and the bars re-rank by key as you drag: Longyearbyen's midnight sun becomes polar night.</p>
+<pre class="live-code tc-live"><code data-lang="js" data-hl id="tc-drag-live">view.signals.day   // 172</code></pre>
+          <a class="more" href="/features/interaction/">Interaction in depth <span aria-hidden="true">→</span></a>
+          {{alt:home-daylight}}
+        </div>
+      </div>
+      <div class="tc-panel" id="tc-tap" role="tabpanel" aria-labelledby="tc-tab-tap" data-tc="tap" hidden>
+        <div class="tc-stage">
+          <div class="chart" data-chart="renewables" data-steps="" data-ratio="0.6" data-phone-ratio="1.2" data-min="320"></div>
+          <div class="tc-bar"><button type="button" class="btn btn-ghost small" data-tc-next>Next step <span aria-hidden="true">→</span></button><span class="tc-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span></div>
+        </div>
+        <div class="tc-text">
+          <h3>Tap the chart</h3>
+          <p>Each tap sends the story its next step. The camera flies to Europe, then to the Nordics, and each country's shape morphs into its bar, because both are keyed by the country's ISO code. There is no animation code: a story is a list of states.</p>
+<pre class="live-code tc-live"><code data-lang="js" data-hl id="tc-tap-live">view.send("next")   // tap the chart</code></pre>
+          <p class="tc-said" id="tc-tap-said" aria-live="polite"><b>Renewables</b> — Share of energy use from renewable sources.</p>
+          <a class="more" href="/features/animation/">Animation in depth <span aria-hidden="true">→</span></a>
+          {{alt:renewables}}
+        </div>
+      </div>
+      <div class="tc-panel" id="tc-zoom" role="tabpanel" aria-labelledby="tc-tab-zoom" data-tc="zoom" hidden>
+        <div class="tc-stage">
+          <div class="chart" data-chart="galaxy" data-ratio="0.6" data-phone-ratio="1.2" data-min="320"></div>
+          <div class="tc-bar">
+            <div class="pills small" id="galaxy-pills" role="group" aria-label="Tour">
+              <button type="button" data-state="galaxy" aria-pressed="true">Galaxy</button>
+              <button type="button" data-state="arm">Arm</button>
+              <button type="button" data-state="bar">Bar</button>
+              <button type="button" data-state="cluster">Cluster</button>
+              <button type="button" data-state="local">Close up</button>
+            </div>
+          </div>
+        </div>
+        <div class="tc-text">
+          <h3>Zoom into four million stars</h3>
+          <p>Scroll, pinch or drag. The rows are indexed once into a pyramid of tiles, and each frame draws only what the camera shows, read by byte range from one static file.</p>
+          <dl class="tc-stats">
+            <div><dt id="galaxy-drawn">—</dt><dd>stars drawn now</dd></div>
+            <div><dt id="galaxy-bytes">—</dt><dd>fetched of {{archive:galaxy}}</dd></div>
+            <div><dt id="galaxy-fps">—</dt><dd>frames a second</dd></div>
+          </dl>
+          <p class="tc-said" id="galaxy-text" aria-hidden="true">From <code>view.stats</code>, a few times a second.</p>
+          <a class="more" href="/features/big-data/">Big data in depth <span aria-hidden="true">→</span></a>
+          {{alt:galaxy}}
+        </div>
+      </div>
+      <div class="tc-panel" id="tc-fly" role="tabpanel" aria-labelledby="tc-tab-fly" data-tc="fly" hidden>
+        <div class="tc-stage">
+          <div class="chart" data-chart="rio" data-caption data-ratio="0.6" data-phone-ratio="1.2" data-min="320"></div>
+        </div>
+        <div class="tc-text">
+          <h3>Fly from the globe to a street</h3>
+          <p>One camera, four stops: the world, Brazil, Rio de Janeiro, Copacabana. The basemap was cut automatically from OpenStreetMap and Natural Earth for exactly these views — {{archive:rio}} in one static file, read by range. No tile server, no API key.</p>
+<pre class="live-code tc-live"><code data-lang="js" data-hl id="tc-fly-live">view.send("goto:brazil")   // pick a stop</code></pre>
+          <p class="tc-said" id="tc-fly-said" aria-live="polite"><b>One camera</b> — The whole world, from a basemap nobody had to make: Natural Earth at this zoom.</p>
+          <a class="more" href="/features/maps/">Maps in depth <span aria-hidden="true">→</span></a>
+          {{alt:rio}}
+        </div>
+      </div>
+      <div class="tc-panel" id="tc-listen" role="tabpanel" aria-labelledby="tc-tab-listen" data-tc="listen" hidden>
+        <div class="tc-stage">
+          <div class="chart" data-chart="votes" data-steps="" data-ratio="0.6" data-phone-ratio="1.2" data-min="320"></div>
+          <span class="tc-ring" aria-hidden="true" hidden></span>
+          <div class="tc-bar"><button type="button" class="btn btn-ghost small" data-tc-walk="-1"><span aria-hidden="true">←</span> Previous</button><button type="button" class="btn btn-ghost small" data-tc-walk="1">Next <span aria-hidden="true">→</span></button><span class="tc-hint">or point at a bar</span></div>
+        </div>
+        <div class="tc-text">
+          <h3>Hear what a screen reader hears</h3>
+          <p>Every mark carries its meaning — a role, a label, a value, a place in the reading order — so a screen reader is told what the chart says, not that there is a picture. Walk it the way VoiceOver would, or point at a bar:</p>
+          <p class="tc-voice" id="tc-voice" aria-live="polite"><span>“Vote share by party, Sweden 2022”</span><small>the chart’s name</small></p>
+<pre class="live-code tc-live"><code data-lang="js" data-hl id="tc-listen-live">view.status.semantics   // the tree a screen reader reads</code></pre>
+          <a class="more" href="/features/accessibility/">Accessibility in depth <span aria-hidden="true">→</span></a>
+          {{alt:votes}}
+        </div>
       </div>
     </div>
+  </div>
+</section>
+
+<section class="section wr" id="write">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Write it once</p>
+      <h2>A chart is a few lines of TypeScript</h2>
+      <p>Change a number, rename a region or pick another recipe: the chart beside the code is a published chart, playing your edit as you type. Every mark keeps its key, so an edit is a morph, not a redraw. Then the same document goes everywhere, one line per host.</p>
+    </header>
+    <div class="wr-grid">
+      <div class="wr-out"><div class="frame"><div class="chart" data-chart="home-code" data-min="240" data-phone-ratio="0.62"></div></div></div>
+      <div class="wr-code">
+        <div class="wr-head">
+          <span class="wr-file">sales/doc.ts</span>
+          <div class="seg wr-recipes" role="group" aria-label="Recipe">
+            <button type="button" data-recipe="bar" aria-pressed="true">bar</button>
+            <button type="button" data-recipe="pie" aria-pressed="false">pie</button>
+            <button type="button" data-recipe="treemap" aria-pressed="false">treemap</button>
+            <button type="button" data-recipe="waffle" aria-pressed="false">waffle</button>
+          </div>
+        </div>
+<pre class="wr-pre"><code data-lang="ts" data-hl><span class="tk-k">import</span> { doc, data } <span class="tk-k">from</span> <span class="tk-s">"@datars/sdk"</span>;
+<span class="tk-k">import</span> { <span id="wr-import">plot, bar</span> } <span class="tk-k">from</span> <span class="tk-s">"@datars/std"</span>;
+
+<span class="tk-k">export</span> <span class="tk-k">default</span> <span class="tk-f">doc</span>({
+  <span class="tk-p">title</span>: <span class="tk-s">"Sales by region"</span>,
+  <span class="tk-p">data</span>: { <span class="tk-p">sales</span>: data.<span class="tk-f">values</span>({
+    <span class="tk-p">region</span>: [<span class="tk-s">"<input class="wr-in wr-name" value="North" aria-label="First region's name" spellcheck="false" autocomplete="off" style="--n:5">"</span>, <span class="tk-s">"<input class="wr-in wr-name" value="South" aria-label="Second region's name" spellcheck="false" autocomplete="off" style="--n:5">"</span>, <span class="tk-s">"<input class="wr-in wr-name" value="East" aria-label="Third region's name" spellcheck="false" autocomplete="off" style="--n:4">"</span>, <span class="tk-s">"<input class="wr-in wr-name" value="West" aria-label="Fourth region's name" spellcheck="false" autocomplete="off" style="--n:4">"</span>],
+    <span class="tk-p">sales</span>:  [<input class="wr-in wr-num" value="120" inputmode="decimal" aria-label="First region's sales" spellcheck="false" autocomplete="off" style="--n:3">, <input class="wr-in wr-num" value="98" inputmode="decimal" aria-label="Second region's sales" spellcheck="false" autocomplete="off" style="--n:2">, <input class="wr-in wr-num" value="143" inputmode="decimal" aria-label="Third region's sales" spellcheck="false" autocomplete="off" style="--n:3">, <input class="wr-in wr-num" value="87" inputmode="decimal" aria-label="Fourth region's sales" spellcheck="false" autocomplete="off" style="--n:2">],
+  }, { <span class="tk-p">key</span>: <span class="tk-s">"region"</span> }) },
+  <span class="tk-p">scene</span>: <span id="wr-scene"><span class="tk-f">plot</span>({ <span class="tk-p">data</span>: <span class="tk-s">"sales"</span>, <span class="tk-p">x</span>: <span class="tk-s">"region"</span>, <span class="tk-p">y</span>: <span class="tk-s">"sales"</span>,
+    <span class="tk-p">children</span>: [<span class="tk-f">bar</span>({ <span class="tk-p">labels</span>: <span class="tk-k">true</span> })] }),</span>
+});</code></pre>
+        <p class="wr-ran"><span>What the page ran</span><code id="wr-ran">// edit a number, a name or the recipe</code></p>
+        <p class="fine">The code is the chart's document as you'd write it. On this page its rows are a <a href="/features/data/">data slot</a> the page fills with <code>provideData</code>, as an app hands in a user's own rows, and the four recipes are all in it, picked by a signal, so it can morph between them.</p>
+      </div>
+      <div class="wr-embed">
+        <ul class="wr-hosts" aria-label="The same chart, embedded">
+          <li><b>Web</b><code>&lt;datars-view src="https://charts.example.com/c/sales"&gt;&lt;/datars-view&gt;</code></li>
+          <li><b>SwiftUI</b><code>DatarsChart(source: .url(salesURL))</code></li>
+          <li><b>Android</b><code>DatarsView(context).load("https://charts.example.com/c/sales")</code></li>
+          <li><b>Video</b><code>datars video sales/doc.ts --size 360x640 --dpr 3</code></li>
+          <li><b>Print</b><code>datars render sales/doc.ts --out sales.pdf</code></li>
+        </ul>
+        <a class="more" href="/docs/getting-started/">Your first chart, in four commands <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+    {{alt:home-code}}
+  </div>
+</section>
+
+<section class="section themes" id="make-it-yours">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Make it yours</p>
+      <h2>Wear your brand — on every chart at once</h2>
+      <p>A look is theme tokens — type, corners, strokes, paper, data colours, maps, cards — set at runtime, even on charts you didn't publish. Pick one: every chart on this site wears it as you go, on every page you open (the articles keep their newsroom's). For every token in every mode, with contrast checks, open the <a href="/themes/">theme studio</a>.</p>
+    </header>
+    <div class="theme-grid">
+      <div class="frame look-stage">
+        <div class="chart" data-chart="brand"></div>
+        {{alt:brand}}
+      </div>
+      <aside class="theme-panel look-editor" aria-label="Make it yours">
+        <h3>Preset</h3>
+        <div class="swatches" role="group" aria-label="Preset">{{look:presets}}</div>
+        <h3>Accent</h3>
+        <div class="dots" role="group" aria-label="Accent">{{look:accents}}</div>
+        <h3>Mode</h3>
+        <div class="seg" role="group" aria-label="Mode">
+          <button type="button" data-look-mode="light" aria-pressed="true">Light</button>
+          <button type="button" data-look-mode="dark" aria-pressed="false">Dark</button>
+        </div>
+        <details class="look-more">
+          <summary>Palette, type, corners and lines</summary>
+          <h3>Palette</h3>
+          <div class="chips" role="group" aria-label="Palette">
+            <button type="button" data-look-palette="preset" aria-pressed="true">Preset's</button>
+            <button type="button" data-look-palette="safe" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#0072b2 0 20%,#e69f00 20% 40%,#009e73 40% 60%,#cc79a7 60% 80%,#56b4e9 80%)"></span>Colour-blind safe</button>
+            <button type="button" data-look-palette="warm" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#e8590c 0 20%,#c2185b 20% 40%,#f2a541 40% 60%,#8d6e63 60% 80%,#6a3fb5 80%)"></span>Warm</button>
+            <button type="button" data-look-palette="cool" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#0f766e 0 20%,#4269d0 20% 40%,#6cb8d0 40% 60%,#8497a4 60% 80%,#a6cf7d 80%)"></span>Cool</button>
+            <button type="button" data-look-palette="shades" aria-pressed="false"><span class="pal shades"></span>Shades of the accent</button>
+          </div>
+          <h3>Type</h3>
+          <div class="chips" role="group" aria-label="Type">
+            <button type="button" data-look-type="" aria-pressed="true">Preset's</button>
+            <button type="button" data-look-type="inter" aria-pressed="false" style="font-family:Inter,var(--font)">Inter</button>
+            <button type="button" data-look-type="newsreader" aria-pressed="false" style="font-family:Georgia,serif">Newsreader</button>
+            <button type="button" data-look-type="manrope" aria-pressed="false">Manrope</button>
+            <button type="button" data-look-type="mono" aria-pressed="false" style="font-family:ui-monospace,Menlo,monospace">Space Mono</button>
+          </div>
+          <div class="look-ranges">
+            <label for="look-corners"><span>Corners</span><output for="look-corners">preset</output></label>
+            <input type="range" id="look-corners" data-look-range="corners" min="0" max="12" step="1" value="0">
+            <label for="look-lines"><span>Lines</span><output for="look-lines">preset</output></label>
+            <input type="range" id="look-lines" data-look-range="lines" min="1" max="4" step="0.2" value="2">
+          </div>
+        </details>
+        <div class="look-foot"><span class="fine" data-look-status>The site's own look.</span><button type="button" class="btn btn-ghost small" data-look-reset disabled>Reset</button></div>
+        <details class="look-code">
+          <summary>What the page ran</summary>
+<pre class="live-code"><code data-lang="js" id="look-code">view.setTokens({});</code></pre>
+        </details>
+        <a class="btn btn-primary small look-studio" href="/themes/">Build a whole theme in the studio <span aria-hidden="true">→</span></a>
+        <p class="fine">Every token, any Google font, palettes generated from your brand colour, contrast and colour-blindness checks, and the theme as JSON or TypeScript. Neon is a dark-first preset: it keeps its night palette in light mode. <a href="/features/theming/">How theming works →</a></p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="included">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">In the box</p>
+      <h2>Everything a chart needs, from one document</h2>
+      <p>Layout, text, motion, interaction, accessibility, delivery — each with a live page of its own. Or see <a href="/features/">all twelve at a glance</a>, playing on one page.</p>
+    </header>
+    {{features:grid}}
   </div>
 </section>
 
@@ -175,307 +415,6 @@ datars render worlds.ts --out worlds.pdf         # vector PDF, searchable text</
   </div>
 </section>
 
-<section class="section" id="interactive">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Interactive</p>
-      <h2>Not a movie: every chart answers back</h2>
-      <p>Hover for a tooltip, click to filter, drag to brush a range, pull a slider, pan and zoom — declared in the document as signals and intents, drawn and handled by the engine. Views link without glue code, and the same interactions work with a mouse, a finger, a keyboard or a screen reader — the engine does the handling, so a host app only forwards pointer events. Try them:</p>
-    </header>
-    <article class="card wide">
-      <div class="card-text"><span class="tag">Click a bar</span><h3>Linked views</h3><p>Click a region: the trend beside it filters to that region, and its lines morph as series come and go. Click it again to clear. One key-set signal, no event handlers.</p>{{alt:dashboard}}</div>
-      <div class="chart" data-chart="dashboard"></div>
-    </article>
-    <div class="grid">
-      <article class="card">
-        <div class="chart" data-chart="prices"></div>
-        <div class="card-text"><span class="tag">Drag across the lower chart</span><h3>Brush and zoom</h3><p>Brush a stretch of the year below; the detail above zooms to it and the mean updates. The brush is a signal like any other.</p>{{alt:prices}}</div>
-      </article>
-      <article class="card">
-        <div class="chart" data-chart="budget"></div>
-        <div class="card-text"><span class="tag">Drag the slider</span><h3>An explorable in one document</h3><p>The slider is drawn by the engine — on the web, in apps and in video alike — and every bar reads it in an expression.</p>{{alt:budget}}</div>
-      </article>
-    </div>
-    <p><a class="more" href="/features/interaction/">How interaction works <span aria-hidden="true">→</span></a></p>
-  </div>
-</section>
-
-<section class="section story" id="stories">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Animation included</p>
-      <h2>Stories that steer themselves</h2>
-      <p>Scroll. The page tells the chart which step it's on; the engine flies the camera and morphs every country into its bar. No animation code — a story is a list of states, and every change between them animates by key.</p>
-    </header>
-    <div class="story-grid">
-      <div class="story-steps">
-        <div class="rstep" data-state="world"><span class="num">1</span><h3>A world of renewables</h3><p>A choropleth over the built-in countries atlas, shipped as a compact topology and cached by hash across every chart that uses it.</p></div>
-        <div class="rstep" data-state="europe"><span class="num">2</span><h3>Fly to Europe</h3><p>The camera fits the countries with data. Setting a signal is all a step does: <code>set: { focus: europe }</code>.</p></div>
-        <div class="rstep" data-state="nordics"><span class="num">3</span><h3>The Nordics lead</h3><p>Zoom again. Every frame of the flight is a pure function of the plan and the time — the same on a phone, in a video export, in a test.</p></div>
-        <div class="rstep" data-state="ranked"><span class="num">4</span><h3>Regions become bars</h3><p>Each country's region morphs into its bar, because both are keyed by the ISO code. That is the whole trick.</p></div>
-      </div>
-      <div class="story-stick">
-        <div class="frame">
-          <div class="chart" data-chart="renewables" data-steps=".rstep"></div>
-        </div>
-        {{alt:renewables}}
-        <details class="code">
-          <summary><span>The document</span><span class="size">{{size:renewables}} incl. the world atlas</span></summary>
-<pre><code data-lang="ts">export default doc({
-  data: { world: data.atlas("countries"), renew: data.values(rows, { key: "id" }) },
-  signals: { focus: signal.keyset(), shape: signal.str("map") },
-  motion: motion({ select: { role: "region" }, matcher: "by-key" }),
-  scene: group({ children: [
-    view({ camera: { fit: { keys: "=focus" } }, when: e('shape == "map"'),
-      children: [map({ source: "world", data: "renew", key: "id", value: "share" })] }),
-    plot({ data: "nordic", x: "share", y: "name", children: [bar({ labels: true })] },
-      { when: e('shape == "bars"') }),
-  ] }),
-  program: story({ steps: [
-    step("world",   { set: { focus: [] } }),
-    step("europe",  { set: { focus: europe } }),
-    step("nordics", { set: { focus: nordics } }),
-    step("ranked",  { set: { shape: "bars" } }),
-  ] }),
-});</code></pre>
-        </details>
-      </div>
-    </div>
-    <p><a class="more" href="/features/animation/">How motion works <span aria-hidden="true">→</span></a></p>
-  </div>
-</section>
-
-<section class="section" id="maps">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Maps, no tile server</p>
-      <h2>From the globe to a street corner, in one camera</h2>
-      <p>Maps are part of the engine: countries are keyed shapes like bars, the basemap is a node in the scene, and the camera flies from space to a street in one move. Write <code>data.tiles.auto()</code> and the publish step cuts a basemap from OpenStreetMap and Natural Earth to exactly the places your story visits. No tile server, no API key, no per-view bill.</p>
-    </header>
-    <article class="card wide">
-      <div class="card-text">
-        <span class="tag">Automatic basemap · {{archive:rio}}</span>
-        <h3>World → Rio de Janeiro → Copacabana</h3>
-        <p>The basemap for this flight was made automatically for its own cameras: streets, water, parks, buildings and names, read by HTTP range requests from one static file. Step through it with the buttons.</p>
-        <a class="more" href="/features/maps/">Maps in depth <span aria-hidden="true">→</span></a>
-        {{alt:rio}}
-      </div>
-      <div class="chart" data-chart="rio" data-caption></div>
-    </article>
-  </div>
-</section>
-
-<section class="section space" id="big-data">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Big data, 60 fps</p>
-      <h2>Four million stars. {{size:galaxy}} to start.</h2>
-      <p>A synthetic barred spiral: every dot is one star of four million, and you can zoom from the whole galaxy down to a single one. The engine indexes the rows once into a pyramid of tiles; each frame draws only what the camera shows — a sample that keeps the galaxy's density from afar, every star up close. Camera tours run at 59–60 fps in Chrome.</p>
-    </header>
-    <figure class="space-stage">
-      <div class="chart" data-chart="galaxy"></div>
-      <figcaption class="space-bar">
-        <div class="pills" id="galaxy-pills" role="group" aria-label="Tour">
-          <button type="button" data-state="galaxy" aria-pressed="true">Galaxy</button>
-          <button type="button" data-state="arm">Spiral arm</button>
-          <button type="button" data-state="bar">The bar</button>
-          <button type="button" data-state="cluster">A cluster</button>
-          <button type="button" data-state="local">One neighbourhood</button>
-        </div>
-        <dl class="space-stats">
-          <div><dt id="galaxy-drawn">—</dt><dd>stars drawn now</dd></div>
-          <div><dt id="galaxy-bytes">—</dt><dd>fetched of {{archive:galaxy}}</dd></div>
-          <div><dt id="galaxy-fps">—</dt><dd>frames a second</dd></div>
-        </dl>
-      </figcaption>
-      <p class="space-narration" id="galaxy-text" aria-hidden="true">Drag to pan, scroll or pinch to zoom, hover a star.</p>
-      {{alt:galaxy}}
-    </figure>
-    <div class="space-notes">
-      <div>
-        <h3>Indexed once</h3>
-        <p>The rows go into a quadtree whose levels are seeded samples of the data. Panning and zooming never re-read a row: tiles come and go, and a tile's stars are drawn from its cache.</p>
-      </div>
-      <div>
-        <h3>Only what you see</h3>
-        <p>The publish step ships the pyramid as an archive the page reads by byte range, from any static host. The first view needs a few hundred kilobytes; each zoom fetches the tiles it shows, and nothing else.</p>
-      </div>
-      <div>
-        <h3>Sampled, never guessed</h3>
-        <p>Every dot is a real row. A far-away view draws a uniform share of the stars — dense stays dense, sparse stays sparse — and the deeper levels fade in as you zoom until every one is there.</p>
-      </div>
-    </div>
-    <p><a class="more" href="/features/big-data/" style="color:#9fb6ff">How big data stays fast <span aria-hidden="true">→</span></a> &nbsp; <a class="more" href="/performance/" style="color:#9fb6ff">Measured numbers <span aria-hidden="true">→</span></a></p>
-  </div>
-</section>
-
-<section class="section" id="charts">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">Batteries included</p>
-      <h2>{{count:recipes}} charts, maps and guides, ready to use</h2>
-      <p>Bars, lines, areas, scatters, pies and donuts, treemaps, waffles, funnels, waterfalls, sankeys, beeswarms, calendars, parliaments, choropleths, basemaps, point clouds, cards and sliders — the standard library covers the charts newsrooms and dashboards actually ship. Each is a recipe with typed parameters, sensible defaults and its own motion — and because every mark keeps its key, any of them can turn into any other.</p>
-      <ul class="bullets">
-        <li><b>Axes, legends and labels that fit.</b> The engine measures text with the chart's own fonts; labels that would collide or be cut off at the edge are caught by <code>datars lint</code>.</li>
-        <li><b>Themed, not hard-coded.</b> Every recipe draws with theme tokens, so your brand and dark mode apply to all of them.</li>
-        <li><b>Yours to change.</b> <code>datars eject std/treemap</code> copies the recipe into your project as TypeScript.</li>
-      </ul>
-      <a class="more" href="/features/charts/">The whole catalogue <span aria-hidden="true">→</span></a>
-    </div>
-    <article class="card">
-      <div class="chart" data-chart="shapes" data-caption></div>
-      <div class="card-text">
-        <span class="tag">bar · treemap · waffle · dots</span>
-        <p>Four standard recipes over one dataset. Step through: rectangles become tiles, tiles break into a hundred squares, squares become dots — and back.</p>
-        {{alt:shapes}}
-      </div>
-    </article>
-  </div>
-</section>
-
-<section class="section themes" id="make-it-yours">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Make it yours</p>
-      <h2>Every chart on this site, in your look</h2>
-      <p>A look is theme tokens — type, corners, strokes, paper, data colours, maps, cards — and a page or app sets them at runtime, on charts it didn't publish. Pick a preset, or your own accent, palette and type: every chart on this site restyles as you go (colours re-ink at the next frame, type and shapes morph in), and keeps your look on every page you open. Articles keep theirs. For the whole thing — every token, in every mode, checked — open the <a href="/themes/">theme studio</a>.</p>
-    </header>
-    <div class="theme-grid">
-      <div class="frame look-stage">
-        <div class="chart" data-chart="brand"></div>
-        {{alt:brand}}
-      </div>
-      <aside class="theme-panel look-editor" aria-label="Make it yours">
-        <h3>Preset</h3>
-        <div class="swatches" role="group" aria-label="Preset">{{look:presets}}</div>
-        <h3>Accent</h3>
-        <div class="dots" role="group" aria-label="Accent">{{look:accents}}</div>
-        <h3>Palette</h3>
-        <div class="chips" role="group" aria-label="Palette">
-          <button type="button" data-look-palette="preset" aria-pressed="true">Preset's</button>
-          <button type="button" data-look-palette="safe" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#0072b2 0 20%,#e69f00 20% 40%,#009e73 40% 60%,#cc79a7 60% 80%,#56b4e9 80%)"></span>Colour-blind safe</button>
-          <button type="button" data-look-palette="warm" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#e8590c 0 20%,#c2185b 20% 40%,#f2a541 40% 60%,#8d6e63 60% 80%,#6a3fb5 80%)"></span>Warm</button>
-          <button type="button" data-look-palette="cool" aria-pressed="false"><span class="pal" style="--s:linear-gradient(90deg,#0f766e 0 20%,#4269d0 20% 40%,#6cb8d0 40% 60%,#8497a4 60% 80%,#a6cf7d 80%)"></span>Cool</button>
-          <button type="button" data-look-palette="shades" aria-pressed="false"><span class="pal shades"></span>Shades of the accent</button>
-        </div>
-        <h3>Type</h3>
-        <div class="chips" role="group" aria-label="Type">
-          <button type="button" data-look-type="" aria-pressed="true">Preset's</button>
-          <button type="button" data-look-type="inter" aria-pressed="false" style="font-family:Inter,var(--font)">Inter</button>
-          <button type="button" data-look-type="newsreader" aria-pressed="false" style="font-family:Georgia,serif">Newsreader</button>
-          <button type="button" data-look-type="manrope" aria-pressed="false">Manrope</button>
-          <button type="button" data-look-type="mono" aria-pressed="false" style="font-family:ui-monospace,Menlo,monospace">Space Mono</button>
-        </div>
-        <div class="look-ranges">
-          <label for="look-corners"><span>Corners</span><output for="look-corners">preset</output></label>
-          <input type="range" id="look-corners" data-look-range="corners" min="0" max="12" step="1" value="0">
-          <label for="look-lines"><span>Lines</span><output for="look-lines">preset</output></label>
-          <input type="range" id="look-lines" data-look-range="lines" min="1" max="4" step="0.2" value="2">
-        </div>
-        <h3>Mode</h3>
-        <div class="seg" role="group" aria-label="Mode">
-          <button type="button" data-look-mode="light" aria-pressed="true">Light</button>
-          <button type="button" data-look-mode="dark" aria-pressed="false">Dark</button>
-        </div>
-        <div class="look-foot"><span class="fine" data-look-status>The site's own look.</span><button type="button" class="btn btn-ghost small" data-look-reset disabled>Reset</button></div>
-        <details class="look-code">
-          <summary>What the page ran</summary>
-<pre class="live-code"><code data-lang="js" id="look-code">view.setTokens({});</code></pre>
-        </details>
-        <a class="btn btn-primary small look-studio" href="/themes/">Build a whole theme in the studio <span aria-hidden="true">→</span></a>
-        <p class="fine">Every token, any Google font, palettes generated from your brand colour, contrast and colour-blindness checks, and the theme as JSON or TypeScript. Neon is a dark-first preset: it keeps its night palette in light mode. <a href="/features/theming/">How theming works →</a></p>
-      </aside>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="content">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Charts are content</p>
-      <h2>Publish charts like articles, not like app releases</h2>
-      <p>A chart is published as a manifest and immutable chunks — to any bucket, CDN or, like this site, GitHub Pages. Sites and apps install the runtime once; republishing a chart updates every embed without redeploying the site or shipping an app update. Each runtime picks the smallest variant it can play.</p>
-    </header>
-    <ol class="tiers">
-      <li><b>T0</b><span>SVG poster + accessible text. Shows before any script runs; works in email and RSS.</span></li>
-      <li><b>T1</b><span>Baked scenes per state, for playback-only runtimes.</span></li>
-      <li><b>T2</b><span>Recipes pre-expanded, data by hash. What this site plays.</span></li>
-      <li><b>T3</b><span>The source document, for runtimes with the recipe sandbox.</span></li>
-    </ol>
-<pre><code data-lang="sh">datars publish chart.ts --alias election --to site/
-# site/c/election       ← the live manifest: embeds follow it
-# site/chunks/b3_…      ← content-addressed, immutable, cached forever</code></pre>
-    <p class="fine">The charts on this site weigh {{size:riksdag}} (the Riksdag hemicycle) to {{size:brand}} (the brand playground with its five brands' fonts), gzipped, after a {{runtime}} runtime that's cached once. <a href="/features/delivery/">Delivery in depth →</a></p>
-  </div>
-</section>
-
-<section class="section" id="accessible">
-  <div class="wrap split flip">
-    <div>
-      <p class="eyebrow">Accessible</p>
-      <h2>Every mark knows what it means</h2>
-      <p>Semantics — role, label, value, reading order — are part of every mark, so the runtime can tell a screen reader what the chart <em>says</em>, not that there is a picture: <em>“SD: 73”</em>, not <em>“rect”</em>. On the web that's an ARIA mirror with live narration for story steps; in apps it's VoiceOver and TalkBack; engine-drawn sliders become native range controls.</p>
-      <ul class="bullets">
-        <li><b>Keyboard</b> access to interactive marks, in reading order.</li>
-        <li><b>Reduced motion</b> honoured on every platform: transitions become short crossfades.</li>
-        <li><b>A text alternative ships in every bundle</b> — before any script runs — with an SVG poster.</li>
-        <li><b>Checked</b>: <code>datars lint</code> flags interactive marks without a label, colliding labels and the theme's failed contrast checks.</li>
-      </ul>
-      <a class="more" href="/features/accessibility/">Accessibility in depth <span aria-hidden="true">→</span></a>
-    </div>
-    <div>
-      <article class="card">
-        <div class="chart" data-chart="riksdag"></div>
-        <div class="card-text">
-          <p class="hint">What a screen reader gets from this chart's second step — the output of <code>datars semantics</code>, captured when this page was built:</p>
-          {{run:semantics examples/riksdag/doc.json --state 1|14}}
-          {{alt:riksdag}}
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="custom">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">Extendable</p>
-      <h2>The globe at the top of this page is sixty-seven lines of TypeScript</h2>
-      <p>No chart library ships a globe whose countries become planets. In datars it's one custom recipe — typed parameters and an <code>expand</code> function returning keyed shapes whose positions are expressions over each row — written with the same public API as the {{count:recipes}} standard recipes. Because every country keeps its key, coastlines morph into planets for free; the flights between layouts are motion rules.</p>
-<pre><code data-lang="ts">motion: motion(
-  { duration: 2.2, easing: "cubic-in-out", matcher: "by-path" },
-  { when: { from: "globe", to: "orbits" }, select: { role: "datum" },
-    route: route.spiral(0.35), choreo: choreo.ripple(0.55) },
-  { when: { from: "orbits", to: "spiral" }, select: { role: "datum" },
-    route: route.arc(0.3), choreo: choreo.stagger("value", 0.5) },
-  { when: { from: "spiral", to: "blocks" }, select: { role: "datum" },
-    choreo: choreo.wave(0.5, 0) },
-),</code></pre>
-      <p class="fine">Custom scenes get everything the built-in charts get: motion, themes, accessibility, every platform. Or start from a standard recipe: <code>datars eject std/bar</code>.</p>
-      <a class="more" href="/features/extensibility/">Write your own recipes <span aria-hidden="true">→</span></a>
-    </div>
-    <div class="code-scroll">{{code:examples/worlds/recipes/worlds.ts}}</div>
-  </div>
-</section>
-
-<section class="section" id="developers">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">For developers and agents</p>
-      <h2>Tools that answer “why does it look like that?”</h2>
-      <p>Documents are TypeScript, so your editor type-checks them. <code>datars dev</code> opens a live page that morphs each edit in, previews phone widths and dark mode, and explains any mark you click. <code>check</code> reports what the engine couldn't do; <code>lint</code> catches colliding labels, low contrast and unstable keys; <code>explain</code> traces any element back to its recipe, data row and expression values; <code>film</code> draws a transition as a filmstrip; <code>profile</code> times every frame. The same tools are an MCP server, so a coding agent can build a chart and check its own work.</p>
-      <a class="more" href="/features/developers/">The toolchain <span aria-hidden="true">→</span></a>
-    </div>
-    <div>
-      <figure class="shot"><img class="thumb thumb-light" src="/img/dev-explain.png" alt="The datars dev page: a bar chart, its states, and the Explain panel with the recipes, data row and expression values behind the clicked bar" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-explain-dark.png" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"></figure>
-<pre><code data-lang="sh">datars new mychart --template story   # a working document
-datars dev mychart/doc.ts             # live page, morphs on save
-datars lint mychart/doc.ts            # chart checks, with fixes
-datars film mychart/doc.ts --from 0 --to 1</code></pre>
-    </div>
-  </div>
-</section>
-
 <section class="band" id="showcase">
   <div class="wrap">
     <header class="section-head">
@@ -513,52 +452,30 @@ datars film mychart/doc.ts --from 0 --to 1</code></pre>
   </div>
 </section>
 
-<section class="section" id="included">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">In the box</p>
-      <h2>Everything that's included</h2>
-    </header>
-    {{features:grid}}
-  </div>
-</section>
-
 <section class="section start" id="start">
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Get started</p>
       <h2>From a template to a published chart in four commands</h2>
+      <p>datars isn't on npm or crates.io yet: you build the CLI from the repository, and <a href="/docs/getting-started/">the guide</a> walks you through it — about fifteen minutes, most of it the first build.</p>
     </header>
-    <div class="steps">
-      <div class="step-card">
-        <h3><span>1</span> Write a document</h3>
-<pre><code data-lang="ts">import { doc, data, group } from "@datars/sdk";
-import { plot, bar } from "@datars/std";
-
-export default doc({
-  title: "Sales by region", size: [720, 420],
-  data: { sales: data.values(
-    { region: ["N", "S", "E", "W"], sales: [120, 98, 143, 87] },
-    { key: "region" }) },
-  scene: group({ children: [
-    plot({ data: "sales", x: "region", y: "sales",
-      children: [bar({ labels: true })] }),
-  ] }),
-});</code></pre>
-      </div>
-      <div class="step-card">
-        <h3><span>2</span> Preview, lint, explain</h3>
-<pre><code data-lang="sh">datars new mychart --template story
-datars dev mychart/doc.ts      # live page, morphs on save
-datars lint mychart/doc.ts     # chart checks, with fixes</code></pre>
-        <h3><span>3</span> Publish anywhere static</h3>
-<pre><code data-lang="sh">datars publish mychart/doc.ts --alias sales --to site/
-# site/c/sales + site/chunks/…  → any bucket, CDN or Pages</code></pre>
-        <h3><span>4</span> Embed</h3>
-<pre><code data-lang="html">&lt;script type="module" src="runtime/datars.js"&gt;&lt;/script&gt;
-&lt;datars-view src="c/sales"&gt;&lt;/datars-view&gt;</code></pre>
-      </div>
-    </div>
+    <ol class="st-steps">
+      <li><h3><span>1</span> Start from a template</h3>
+<pre><code data-lang="sh">datars new sales --template story</code></pre>
+        <p>A complete, working <code>sales/doc.ts</code>.</p></li>
+      <li><h3><span>2</span> Preview, check, explain</h3>
+<pre><code data-lang="sh">datars dev sales/doc.ts
+datars lint sales/doc.ts</code></pre>
+        <p>A live page that morphs each save in; chart checks, with fixes.</p></li>
+      <li><h3><span>3</span> Publish anywhere static</h3>
+<pre><code data-lang="sh">datars publish sales/doc.ts \
+  --alias sales --to site/</code></pre>
+        <p>A manifest and immutable chunks, for any bucket, CDN or Pages.</p></li>
+      <li><h3><span>4</span> Embed</h3>
+<pre><code data-lang="html">&lt;datars-view src="c/sales"&gt;
+&lt;/datars-view&gt;</code></pre>
+        <p>Or <code>DatarsChart</code> in SwiftUI, <code>DatarsView</code> on Android.</p></li>
+    </ol>
   </div>
 </section>
 
@@ -573,3 +490,5 @@ datars lint mychart/doc.ts     # chart checks, with fixes</code></pre>
     </div>
   </div></div>
 </section>
+
+<script type="module" src="/home.js"></script>
