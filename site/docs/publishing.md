@@ -207,7 +207,18 @@ Each font's licence, as its own name table states it, is recorded in the manifes
 
 ## Signed charts
 
-The runtimes can verify ed25519-signed manifests and refuse charts from publishers they don't trust (`<datars-view publishers="ed25519:…">`). `datars publish` doesn't sign bundles yet, so leave `publishers` unset for charts you publish with the CLI.
+A page can play only charts you signed. Make a key once, sign as you publish, and name the key in the embed:
+
+```sh
+datars keygen --out newsroom.key          # prints the public key: ed25519:…
+datars publish chart.ts --alias votes --to site/ --sign newsroom.key
+```
+
+```html
+<datars-view src="/c/votes" publishers="ed25519:…"></datars-view>
+```
+
+The manifest carries the publisher and an ed25519 signature over everything in it, chunk hashes included, so no chunk can be swapped either. A chart that isn't signed, is signed by another key, or changed after signing is refused before any of it shows (not even its poster); the element fires an `error` event with `detail.refused` and says so in the chart's box. In CI, `DATARS_SIGNING_KEY` (the key's 64 hex digits) does what `--sign` does. Keep the key file out of version control: `keygen` writes it readable by you alone and never overwrites one.
 
 ## Next
 

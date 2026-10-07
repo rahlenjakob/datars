@@ -102,7 +102,7 @@ Mounting charts as they come near the viewport keeps a long article light: each 
 | `reduced-motion` | `reduce`, `no-preference` | Reduced motion for this chart: `reduce` always (short crossfades, no autoplay), `no-preference` never — for a reader who asked for reduced motion and then opted in to see the full motion here. Without it the chart follows the reader's `prefers-reduced-motion`, live. |
 | `no-script` | — | Refuse bundles that need the recipe sandbox (T3); the chart plays a pre-expanded variant or its poster. |
 | `allow-script` | — | Allow the sandbox even if `no-script` is also set. |
-| `publishers` | keys | Space-separated `ed25519:…` keys; only manifests signed by one of them play. (The CLI doesn't sign bundles yet.) |
+| `publishers` | keys | Space-separated `ed25519:…` keys; only manifests signed by one of them play (`datars keygen`, then `datars publish --sign`). Anything else is refused before any of it shows — not even its poster — with an `error` event (`detail.refused`) and a short note in the chart's box. |
 | `cpu` | — | Draw with the CPU renderer instead of WebGPU (the renderer used anyway where WebGPU is missing). |
 | `perf` | — | Show the frame profiler panel (also: `?datars-perf` in the page URL, or Shift+D on a focused chart). |
 | `engine` | URL | Load a specific engine build instead of the one the element picks. |

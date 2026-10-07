@@ -52,7 +52,8 @@ usage: datars <command> <doc.json|doc.ts> [options]
   render    <doc> [--state N|name] [--size WxH] [--dpr 2] [--mode dark] [--out f.png|f.svg|f.pdf]   render a state (CPU reference, or vector)
   film      <doc> --from A --to B [--frames 8] [--out prefix]                   filmstrip + motion trails of a transition
   video     <doc> [--fps 30] [--hold 2.5] [--dpr 1] [--size WxH] [--out f.mp4]    the program as a film (ffmpeg) + WebVTT captions
-  publish   <doc> [--alias name] [--to dir]                                     static delivery layout: c/<alias> + chunks/ (any static host)
+  publish   <doc> [--alias name] [--to dir] [--sign key]                        static delivery layout: c/<alias> + chunks/ (any static host); --sign: signed manifest
+  keygen    [--out file]                                                       an ed25519 signing key for --sign (prints its public key, for <datars-view publishers>)
   basemap   <doc> [--build]                                                     an automatic basemap (tiles \"auto\"): views, tiles per zoom, data to fetch
   serve     [dir] [--port 8787]                                                 serve a delivery dir + the web runtime, with an index page
   replay    <session.json> [--frames 8] [--out f.png]                            replay a recorded host session exactly, as a filmstrip
@@ -75,7 +76,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   check     <doc>                                                               diagnostics (incl. fonts with no source)
   fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
   semantics <doc> [--state N]                                                   the accessibility tree
-  bundle    <doc> [--out f.datars]                                              publish: document → bundle (T0–T3 variants)
+  bundle    <doc> [--out f.datars] [--sign key]                                 publish: document → bundle (T0–T3 variants)
   bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays
   test      [filter] [--update] [--samples 64] [--no-pixels]                    visual + motion tests over examples/
   theme     <theme.json> [--mode light|dark|high-contrast]                      resolve and validate a theme
@@ -626,6 +627,9 @@ fn run(a: Args) -> Result<(), String> {
         }
         return Ok(());
     }
+    if a.cmd == "keygen" {
+        return keygen(a.flags.get("out").map(String::as_str).unwrap_or("datars-signing.key"), a.flags.contains_key("json"));
+    }
     if a.cmd == "serve" {
         let dir = a.pos.first().map(PathBuf::from).unwrap_or_else(|| repo_root().join("out/site"));
         let port = a.flags.get("port").cloned().unwrap_or_else(|| "8787".into());
@@ -882,16 +886,20 @@ fn run(a: Args) -> Result<(), String> {
             let out_stem = Path::new(&out).file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| stem.clone());
             let shipped = ship_basemaps(path, &source, &|src, _| format!("{out_stem}.{src}.pmtiles"))?;
             let f = fonts();
-            let (bundle, report) = datars_build::build_with(&shipped.json, &datars_build::Options::default(), &|r| shipped.fetch(r, doc_dir(path), &f))?;
+            let (mut bundle, report) = datars_build::build_with(&shipped.json, &datars_build::Options::default(), &|r| shipped.fetch(r, doc_dir(path), &f))?;
+            let signer = sign_bundle(&mut bundle, &a.flags)?;
             std::fs::write(&out, datars_bundle::to_single_file(&bundle)).map_err(|e| e.to_string())?;
             for (url, file) in &shipped.files {
                 let to = Path::new(&out).parent().unwrap_or(Path::new(".")).join(url);
                 std::fs::copy(file, &to).map_err(|e| format!("{}: {e}", to.display()))?;
             }
             if json {
-                println!("{}", serde_json::json!({ "out": out, "bytes": report.bytes_by_tier, "gzip": report.gzip_by_tier, "chunks": report.chunks, "decisions": report.decisions }));
+                println!("{}", serde_json::json!({ "out": out, "bytes": report.bytes_by_tier, "gzip": report.gzip_by_tier, "chunks": report.chunks, "decisions": report.decisions, "publisher": signer }));
             } else {
                 println!("{out}");
+                if let Some(p) = &signer {
+                    println!("  signed by {p}");
+                }
                 for (t, b) in &report.bytes_by_tier {
                     println!("  {t}: {b} bytes, {} gzipped", report.gzip_by_tier.get(t).copied().unwrap_or(0));
                 }
@@ -913,7 +921,8 @@ fn run(a: Args) -> Result<(), String> {
             // so republishing never breaks a page that has the old one open.
             let shipped = ship_basemaps(path, &source, &|src, hash| format!("../tiles/{src}.{hash}.pmtiles"))?;
             let f = fonts();
-            let (bundle, report) = datars_build::build_with(&shipped.json, &opts, &|r| shipped.fetch(r, doc_dir(path), &f))?;
+            let (mut bundle, report) = datars_build::build_with(&shipped.json, &opts, &|r| shipped.fetch(r, doc_dir(path), &f))?;
+            let signer = sign_bundle(&mut bundle, &a.flags)?;
             let (written, present) = serve::publish(&bundle, &dir, &alias)?;
             let mut copied = serve::copy_referenced(&source, doc_dir(path), &dir)?;
             for (url, file) in &shipped.files {
@@ -926,9 +935,12 @@ fn run(a: Args) -> Result<(), String> {
                 copied.push(rel.to_string());
             }
             if json {
-                println!("{}", serde_json::json!({ "alias": alias, "dir": dir, "written": written, "present": present, "copied": copied, "gzip": report.gzip_by_tier }));
+                println!("{}", serde_json::json!({ "alias": alias, "dir": dir, "written": written, "present": present, "copied": copied, "gzip": report.gzip_by_tier, "publisher": signer }));
             } else {
                 println!("{}/c/{alias}  ({written} chunks written, {present} already there)", dir.display());
+                if let Some(p) = &signer {
+                    println!("  signed by {p}");
+                }
                 for c in &copied {
                     println!("  + {c} (fetched by URL at runtime)");
                 }
@@ -937,6 +949,55 @@ fn run(a: Args) -> Result<(), String> {
         other => return Err(format!("unknown command `{other}` (see `datars help`)")),
     }
     Ok(())
+}
+
+/// `datars keygen`: a new ed25519 signing key, written as hex to `out` (never over an existing file;
+/// owner-only on Unix). The public key it prints is what a page names in `<datars-view publishers>`.
+fn keygen(out: &str, json: bool) -> Result<(), String> {
+    if Path::new(out).exists() {
+        return Err(format!("{out} exists: a signing key is never overwritten (choose another --out)"));
+    }
+    let mut secret = [0u8; 32];
+    getrandom::getrandom(&mut secret).map_err(|e| format!("no randomness from the OS: {e}"))?;
+    let text: String = secret.iter().map(|b| format!("{b:02x}")).collect();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        use std::io::Write;
+        let mut f = std::fs::OpenOptions::new().write(true).create_new(true).mode(0o600).open(out).map_err(|e| format!("{out}: {e}"))?;
+        writeln!(f, "{text}").map_err(|e| format!("{out}: {e}"))?;
+    }
+    #[cfg(not(unix))]
+    std::fs::write(out, format!("{text}\n")).map_err(|e| format!("{out}: {e}"))?;
+    let public = datars_bundle::public_key_for(&secret);
+    if json {
+        println!("{}", serde_json::json!({ "key": out, "publisher": public }));
+    } else {
+        println!("{out}  (secret: keep it out of version control)\n{public}\n\nSign with `datars publish doc.ts --sign {out}`; pages that only play your charts:\n  <datars-view src=\"…\" publishers=\"{public}\"></datars-view>");
+    }
+    Ok(())
+}
+
+/// `--sign <key file>` (or `DATARS_SIGNING_KEY`, the key's hex, for CI): sign the bundle's manifest.
+/// Returns the publisher id it's signed with.
+fn sign_bundle(bundle: &mut datars_bundle::Bundle, flags: &BTreeMap<String, String>) -> Result<Option<String>, String> {
+    let hex = match flags.get("sign") {
+        Some(file) => std::fs::read_to_string(file).map_err(|e| format!("--sign {file}: {e}"))?,
+        None => match std::env::var("DATARS_SIGNING_KEY") {
+            Ok(k) if !k.trim().is_empty() => k,
+            _ => return Ok(None),
+        },
+    };
+    let hex = hex.trim();
+    if hex.len() != 64 || !hex.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return Err("a signing key is 64 hex digits (see `datars keygen`)".into());
+    }
+    let mut secret = [0u8; 32];
+    for (i, b) in secret.iter_mut().enumerate() {
+        *b = u8::from_str_radix(&hex[2 * i..2 * i + 2], 16).map_err(|e| e.to_string())?;
+    }
+    bundle.manifest.sign(&secret);
+    Ok(bundle.manifest.publisher.clone())
 }
 
 fn main() -> ExitCode {

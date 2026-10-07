@@ -874,6 +874,7 @@ dependencies = [
  "datars-test",
  "datars-theme",
  "flate2",
+ "getrandom 0.2.17",
  "serde_json",
 ]
 

@@ -49,6 +49,8 @@ libm = "0.2.16"
 serde = { version = "1", features = ["derive", "rc"] }
 schemars = "1"
 serde_json = { version = "1", features = ["float_roundtrip"] }
+# OS randomness for the CLI's signing keys (`datars keygen`); never in engine crates.
+getrandom = "0.2"
 png = "0.17"
 harfrust = "0.5"
 skrifa = "0.40"

@@ -30,7 +30,8 @@ usage: datars <command> <doc.json|doc.ts> [options]
   render    <doc> [--state N|name] [--size WxH] [--dpr 2] [--mode dark] [--out f.png|f.svg|f.pdf]   render a state (CPU reference, or vector)
   film      <doc> --from A --to B [--frames 8] [--out prefix]                   filmstrip + motion trails of a transition
   video     <doc> [--fps 30] [--hold 2.5] [--dpr 1] [--size WxH] [--out f.mp4]    the program as a film (ffmpeg) + WebVTT captions
-  publish   <doc> [--alias name] [--to dir]                                     static delivery layout: c/<alias> + chunks/ (any static host)
+  publish   <doc> [--alias name] [--to dir] [--sign key]                        static delivery layout: c/<alias> + chunks/ (any static host); --sign: signed manifest
+  keygen    [--out file]                                                       an ed25519 signing key for --sign (prints its public key, for <datars-view publishers>)
   basemap   <doc> [--build]                                                     an automatic basemap (tiles "auto"): views, tiles per zoom, data to fetch
   serve     [dir] [--port 8787]                                                 serve a delivery dir + the web runtime, with an index page
   replay    <session.json> [--frames 8] [--out f.png]                            replay a recorded host session exactly, as a filmstrip
@@ -53,7 +54,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   check     <doc>                                                               diagnostics (incl. fonts with no source)
   fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
   semantics <doc> [--state N]                                                   the accessibility tree
-  bundle    <doc> [--out f.datars]                                              publish: document → bundle (T0–T3 variants)
+  bundle    <doc> [--out f.datars] [--sign key]                                 publish: document → bundle (T0–T3 variants)
   bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays
   test      [filter] [--update] [--samples 64] [--no-pixels]                    visual + motion tests over examples/
   theme     <theme.json> [--mode light|dark|high-contrast]                      resolve and validate a theme
