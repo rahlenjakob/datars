@@ -432,11 +432,14 @@ copyFileSync(join(dist, "datars.js"), join(out, "runtime/datars.js"));
 for (const f of readdirSync(join(dist, "wasm"))) {
   if (/^(datars_core|datars_host_web|wasi_shim)/.test(f)) copyFileSync(join(dist, "wasm", f), join(out, "runtime/wasm", f));
 }
-// The built-in atlas, for documents a page builds in the browser (bundles carry their own geometry):
-// the charts page's playground fetches it for the map recipes.
-if (existsSync(join(dist, "atlas"))) {
-  mkdirSync(join(out, "runtime/atlas"), { recursive: true });
-  for (const f of readdirSync(join(dist, "atlas"))) copyFileSync(join(dist, "atlas", f), join(out, "runtime/atlas", f));
+// The built-in atlas and default fonts, for documents a page builds in the browser (bundles carry
+// their own geometry and font subsets): `datars:atlas/…` and `datars:fonts/…` resolve next to the
+// runtime. Without the fonts, the theme studio's resolver, the extensibility workbench and the
+// developers bench asked for Inter and got 404s.
+for (const dir of ["atlas", "fonts"]) {
+  if (!existsSync(join(dist, dir))) continue;
+  mkdirSync(join(out, "runtime", dir), { recursive: true });
+  for (const f of readdirSync(join(dist, dir))) copyFileSync(join(dist, dir, f), join(out, "runtime", dir, f));
 }
 const runtimeGz = gzipSync(readFileSync(join(dist, "wasm/datars_core_bg.wasm")), { level: 9 }).length + gzipSync(readFileSync(join(dist, "datars.js")), { level: 9 }).length;
 const runtime = `${(runtimeGz / 1048576).toFixed(1)} MB`;
