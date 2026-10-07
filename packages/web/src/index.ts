@@ -1555,6 +1555,14 @@ export class DatarsView extends ElementBase {
     // no tree to come — the mirror is built now from what a click acts on; after that it keeps the
     // last tree until the next replaces it, rather than dropping every mark for a moment.
     if (s.semantics || this.describedGen < 0 || !this.view.semantics) this.fillMirror(s, s.semantics ?? s.actions ?? []);
+    else {
+      // The buttons say the state now (a label that follows it: "…, in the coalition"), before
+      // the rest of the tree catches up.
+      for (const a of s.actions ?? []) {
+        const b = [...this.mirror.querySelectorAll<HTMLButtonElement>("button[data-path]")].find((x) => x.dataset.path === a.path);
+        if (b && b.textContent !== a.label) b.textContent = a.label;
+      }
+    }
     if (s.semantics) this.describedGen = this.chromeGen;
     this.live.textContent = n?.text ?? "";
   }

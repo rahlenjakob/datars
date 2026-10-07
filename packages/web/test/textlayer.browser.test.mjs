@@ -25,7 +25,7 @@ const skip = !playwright ? "set DATARS_PLAYWRIGHT to a Playwright module" : !exi
  * an explorable view with a place name. */
 const doc = {
   datars: 1, size: { width: 600, height: 400 },
-  signals: { picked: { type: "str", default: "nothing" } },
+  signals: { picked: { type: "str", default: "nothing" }, lit: { type: "bool", default: false } },
   scene: { kind: "group", key: "root", layout: { type: "rows" }, children: [
     { kind: "group", key: "head", size: { h: 120 }, semantics: { role: "group", label: "" }, children: [
       { kind: "text", key: "title", text: "Selectable chart title", at: [20, 36], style: { size: 22, weight: 700 }, semantics: { role: "title", label: "Selectable chart title" } },
@@ -33,7 +33,9 @@ const doc = {
       { kind: "shape", key: "bar", geom: { type: "rect", x: 300, y: 20, w: 200, h: 80 }, fill: "$accent", pickable: true,
         semantics: { role: "datum", label: "Bar A: 42" }, on: { activate: { set: "picked", value: "A" } } },
       { kind: "text", key: "barlabel", text: "Label on the bar", at: [400, 60], style: { size: 14, align: "middle", baseline: "middle", ink: "#ffffff" } },
-      { kind: "text", key: "picked", text: "=`Picked: ${picked}`", at: [300, 116], style: { size: 12 } }] },
+      { kind: "text", key: "picked", text: "=`Picked: ${picked}`", at: [300, 116], style: { size: 12 } },
+      { kind: "shape", key: "switch", geom: { type: "rect", x: 520, y: 20, w: 60, h: 30 }, fill: "$muted", pickable: true,
+        semantics: { role: "control", label: "=lit ? \"Light: on\" : \"Light: off\"" }, on: { activate: { set: "lit", value: "=!lit" } } }] },
     { kind: "view", key: "map", size: { h: 280 }, camera: { fit: { bbox: [0, 0, 600, 280] }, padding: 0, explore: "cam" }, children: [
       { kind: "shape", key: "land", geom: { type: "rect", x: 0, y: 0, w: 600, h: 280 }, fill: "$grid" },
       { kind: "text", key: "town", text: "Borlänge", at: [300, 140], style: { size: 14, align: "middle", baseline: "middle" } }] }] },
@@ -213,6 +215,12 @@ test("the mirror reads every labelled mark, not only what a click acts on", { sk
     assert.match(tree, /button "Bar A: 42"/, tree);
     const unnamed = await p.evaluate(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll("ul.sr li")].filter((li) => li.textContent.trim() === "group:").length);
     assert.equal(unnamed, 0, "a group with no name says nothing");
+    // A button whose label follows the state says the new state at once, not when the tree
+    // catches up after the transition.
+    await p.locator("datars-view ul.sr button", { hasText: "Light: off" }).focus();
+    await p.keyboard.press("Enter");
+    await p.waitForTimeout(60);
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.textContent), "Light: on");
     // A press rebuilds the mirror: the whole tree is back once the chart settles.
     await p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" }).focus();
     await p.keyboard.press("Enter");
