@@ -1,0 +1,33 @@
+/* The features overview (site/pages/features/index.html: `css:` in its front matter): twelve cards,
+   each a live chart the page plays one at a time (features-index.js), its name, its claim and the
+   call the page just made. */
+.fx-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.fx-card { position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: border-color .2s; }
+.fx-card:hover, .fx-card:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+.fx-card.playing { border-color: color-mix(in srgb, var(--accent) 35%, var(--rule)); }
+/* The chart's box is reserved before it mounts (site.css, from the document's aspect); the card's
+   own chart drives itself, so the overlay card and arrows stay hidden. */
+.fx-stage { padding: 12px 12px 0; }
+.fx-stage .chart { padding: 0; }
+.fx-stage datars-view::part(card), .fx-stage datars-view::part(controls) { display: none; }
+.fx-text { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 18px; flex: 1; }
+.fx-text h2 { font-size: 1.12rem; letter-spacing: -0.01em; margin: 0; }
+.fx-text h2 a { display: inline-flex; align-items: center; gap: 9px; color: var(--ink); text-decoration: none; }
+/* The whole text block is the link (not the chart: the reader can hover and touch it). */
+.fx-text h2 a::after { content: ""; position: absolute; inset: 0; }
+.fx-text h2 a:focus-visible { outline: none; }
+.fx-text:has(a:focus-visible) { outline: 2px solid var(--accent); outline-offset: -4px; border-radius: 0 0 var(--radius) var(--radius); }
+.fx-text h2 svg { width: 22px; height: 22px; flex: none; fill: none; stroke: var(--accent); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.fx-text h2 span::after { content: " →"; color: var(--muted); font-weight: 500; transition: color .15s; }
+.fx-card:hover .fx-text h2 span::after { color: var(--accent); }
+.fx-text p { margin: 0; color: var(--ink-2); font-size: 14.5px; line-height: 1.45; }
+/* What the page just asked the chart to do: one line, its height fixed. */
+.fx-live { margin-top: auto !important; padding-top: 6px; height: 1.9em; overflow: hidden; }
+.fx-live code { display: block; font-size: 11.5px; line-height: 1.9em; padding: 0 8px; border-radius: 6px; background: var(--chip); color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fx-note { margin: 22px 0 0; font-size: 13.5px; color: var(--muted); max-width: 760px; }
+@media (max-width: 1060px) { .fx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .fx-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .fx-stage { padding: 8px 8px 0; }
+  .fx-text { padding: 10px 16px 16px; }
+}
