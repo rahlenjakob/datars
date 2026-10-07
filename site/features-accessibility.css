@@ -1,0 +1,64 @@
+/* The accessibility page's own styles (site/pages/features/accessibility.html: `css:` in its front
+   matter). The lab: the chart beside the panel that shows what each reader gets from it. */
+.al-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+.al-stage { position: sticky; top: 76px; z-index: 2; }
+.al-cq { container-type: inline-size; }
+@container (max-width: 599.98px) { .frame.al-cq .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.al-view { position: relative; overflow: hidden; border-radius: 8px; }
+.al-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* The item being read, outlined where it's drawn. */
+.al-reading { position: absolute; pointer-events: none; border-radius: 5px; outline: 2.5px solid var(--accent); outline-offset: 3px; box-shadow: 0 0 0 9999px color-mix(in srgb, var(--bg) 18%, transparent); transition: left .18s ease-out, top .18s ease-out, width .18s ease-out, height .18s ease-out; }
+.al-reading[hidden] { display: none; }
+@media (prefers-reduced-motion: reduce) { .al-reading { transition: none; } }
+
+.al-tabs { margin-bottom: 18px; }
+.al-tabs button { font-size: 13px; padding: 8px 4px; white-space: nowrap; }
+.al-pane[hidden] { display: none; }
+.al-name { margin: 0 0 12px; font-size: 14px; color: var(--ink-2); }
+.al-name q { color: var(--ink); font-weight: 600; }
+.al-walk { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.al-walk .btn { padding: 6px 12px; font-size: 13px; }
+.al-pos { flex: 1; text-align: center; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.al-tree { position: relative; list-style: none; margin: 0; padding: 4px; height: 300px; overflow-y: auto; border: 1px solid var(--rule); border-radius: 10px; background: var(--bg); overscroll-behavior: contain; }
+.al-tree li { padding-left: calc(var(--depth, 0) * 14px); }
+.al-item { display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left; font: 13px/1.35 var(--font); color: var(--ink); background: none; border: 0; border-radius: 6px; padding: 4px 6px; cursor: pointer; }
+.al-item:hover { background: var(--chip); }
+.al-item[aria-current="true"] { background: color-mix(in srgb, var(--accent) 16%, transparent); box-shadow: inset 2px 0 0 var(--accent); }
+.al-role { flex: none; min-width: 52px; font: 600 10.5px/1.6 var(--mono); text-transform: lowercase; color: var(--muted); }
+.al-role.al-act { color: var(--accent); }
+.al-label { min-width: 0; overflow-wrap: anywhere; }
+.al-said, .al-keylog { list-style: none; margin: 0; padding: 0; font-size: 13px; line-height: 1.45; }
+.al-said { min-height: 4.6em; }
+.al-said li { padding: 5px 0 5px 12px; border-left: 2px solid var(--accent); margin-bottom: 6px; color: var(--ink-2); }
+.al-said li:not(:first-child) { opacity: .55; border-left-color: var(--rule); }
+.al-quiet { color: var(--muted) !important; border-left-color: var(--rule) !important; opacity: 1 !important; }
+.al-keys-how { margin: 0 0 6px; padding-left: 20px; font-size: 14px; line-height: 1.55; color: var(--ink-2); display: grid; gap: 6px; }
+.al-keylog { height: 190px; overflow: hidden; }
+.al-keylog li { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--rule); }
+.al-keylog li.al-quiet { border-bottom: 0; }
+.al-keylog kbd { flex: none; min-width: 58px; text-align: center; }
+kbd { display: inline-block; font: 600 11.5px/1.5 var(--mono); padding: 0 6px; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 5px; background: var(--surface); color: var(--ink); }
+.al-note { margin: 10px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.al-switch { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; cursor: pointer; }
+.al-switch input { margin: 2px 0 0; width: 16px; height: 16px; accent-color: var(--accent); flex: none; }
+.al-cvd button { font-size: 12.5px; padding: 6px 10px; }
+.al-panel pre { max-height: none; margin-top: 10px; }
+
+.al-alt { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.al-alt h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 12px; }
+.al-alt details.alt { margin-top: 0; }
+.al-gaps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 28px; }
+.al-gaps li { padding: 14px 18px; border: 1px solid var(--rule); border-radius: 12px; background: var(--surface); color: var(--ink-2); font-size: 15px; }
+.al-gaps b { display: block; color: var(--ink); margin-bottom: 4px; }
+
+@media (max-width: 1000px) {
+  .al-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .al-stage { position: static; }
+  .al-stage .frame { padding: 10px; }
+  .al-alt, .al-gaps { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .al-panel { padding: 16px 14px; }
+  .al-tabs button { font-size: 11.5px; padding: 7px 2px; }
+  .al-tree { height: 260px; }
+}

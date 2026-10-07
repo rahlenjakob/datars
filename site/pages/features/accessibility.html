@@ -1,28 +1,111 @@
 ---
 title: Accessible charts on every platform · datars
-description: Every datars mark has semantics, so screen readers get the data — an ARIA mirror on the web, VoiceOver on iOS, TalkBack on Android — with keyboard access, reduced motion and a text alternative in every bundle.
-og: votes
+description: Experience a datars chart the way a screen reader, a keyboard, colour-blind eyes, high contrast and reduced motion meet it — live. Every mark has semantics, so assistive technology gets the data, on the web, iOS and Android, with a text alternative in every bundle.
+og: accessibility-lab
+css: features-accessibility.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Accessible</p>
     <h1>A chart a screen reader can read, not a picture it can't</h1>
-    <p class="lede-2">Semantics are part of every mark in datars: a role, a label, a value, a reading order. The standard recipes fill them in — <em>“Sweden Democrats: 20.5”</em>, not <em>“rect”</em> — and each platform's runtime turns them into what its assistive technology expects. Accessibility isn't a layer added at the end; it's in the document, the bundle and every host.</p>
+    <p class="lede-2">Every mark in datars carries semantics — a role, a label, a value, a reading order — and the standard recipes fill them in: <em>“Moderates: 68 seats”</em>, not <em>“rect”</em>. Each platform's runtime hands them to its assistive technology. Below is one chart, and what each kind of reader gets from it: the list a screen reader walks, the buttons a keyboard reaches, the colours as other eyes see them, high contrast, and less motion.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
-  <div class="wrap split">
-    <figure class="fig">
-      <div class="frame"><div class="chart" data-chart="votes" data-caption></div></div>
-      <figcaption>Every bar and slice here is announced with its party and value; step changes are announced as narration.</figcaption>
-      {{alt:votes}}
-    </figure>
-    <div>
-      <p class="eyebrow">What a screen reader gets</p>
-      <h2>The accessibility tree, from the document</h2>
-      <p>This is the tree the runtimes build for the chart beside it, printed by <code>datars semantics</code> when this page was built:</p>
-      {{run:semantics examples/votes/doc.json|18}}
+<section class="section al" id="lab" style="padding-top:8px">
+  <div class="wrap">
+    <div class="al-grid">
+      <div class="al-stage">
+        <div class="frame al-cq al-frame">
+          <div class="al-view">
+            <div class="chart" data-chart="accessibility-lab" data-caption data-min="300" data-phone-ratio="1.55"></div>
+            <div class="al-reading" hidden aria-hidden="true"></div>
+          </div>
+        </div>
+        <svg class="al-filters" aria-hidden="true" focusable="false" width="0" height="0">
+          <!-- Machado, Oliveira & Fernandes (2009), severity 1, in linear RGB: the matrices the engine's own palette checks use (datars-color). -->
+          <filter id="al-protanopia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.152286 1.052583 -0.204868 0 0  0.114503 0.786281 0.099216 0 0  -0.003882 -0.048116 1.051998 0 0  0 0 0 1 0"/></filter>
+          <filter id="al-deuteranopia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.367322 0.860646 -0.227968 0 0  0.280085 0.672501 0.047413 0 0  -0.011820 0.042940 0.968881 0 0  0 0 0 1 0"/></filter>
+          <filter id="al-tritanopia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1.255528 -0.076749 -0.178779 0 0  -0.078411 0.930809 0.147602 0 0  0.004733 0.691367 0.303900 0 0  0 0 0 1 0"/></filter>
+          <filter id="al-achromatopsia" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0.2126 0.7152 0.0722 0 0  0 0 0 1 0"/></filter>
+        </svg>
+      </div>
+      <aside class="theme-panel al-panel" aria-label="The chart, as each reader meets it">
+        <div class="seg al-tabs" role="tablist" aria-label="Reader">
+          <button type="button" role="tab" id="al-tab-sr" aria-controls="al-sr" aria-selected="true" aria-pressed="true">Screen reader</button>
+          <button type="button" role="tab" id="al-tab-kb" aria-controls="al-kb" aria-selected="false" aria-pressed="false" tabindex="-1">Keyboard</button>
+          <button type="button" role="tab" id="al-tab-vi" aria-controls="al-vi" aria-selected="false" aria-pressed="false" tabindex="-1">Vision</button>
+          <button type="button" role="tab" id="al-tab-mo" aria-controls="al-mo" aria-selected="false" aria-pressed="false" tabindex="-1">Motion</button>
+        </div>
+
+        <div class="al-pane" id="al-sr" role="tabpanel" aria-labelledby="al-tab-sr">
+          <p class="al-name">Announced as <b>figure</b>, <q class="al-figname">…</q></p>
+          <div class="al-walk">
+            <button type="button" class="btn btn-ghost small" data-walk="-1" aria-label="Previous item">← Previous</button>
+            <span class="al-pos" aria-live="polite">Item – of –</span>
+            <button type="button" class="btn btn-ghost small" data-walk="1" aria-label="Next item">Next →</button>
+          </div>
+          <ol class="al-tree" aria-label="The chart's list, as a screen reader walks it"></ol>
+          <h3>The live region said</h3>
+          <ol class="al-said" aria-label="Announcements"><li class="al-quiet">Nothing yet: step the story under the chart.</li></ol>
+          <p class="fine">The list is the chart's own semantics (<code>chart.status.semantics</code>) — what the element keeps, hidden, for screen readers: every labelled mark as text, each clickable one as a button. Pick an item to see its box on the chart. The live region speaks each step's narration, politely.</p>
+        </div>
+
+        <div class="al-pane" id="al-kb" role="tabpanel" aria-labelledby="al-tab-kb" hidden>
+          <ol class="al-keys-how">
+            <li><kbd>Tab</kbd> to the chart: <kbd>→</kbd> <kbd>←</kbd> or <kbd>Space</kbd> step the story.</li>
+            <li><kbd>Tab</kbd> again: you're on the parties' buttons — the chart outlines the bar each stands for. <kbd>Enter</kbd> adds the party to the coalition, again takes it out.</li>
+            <li><kbd>Shift</kbd>+<kbd>Tab</kbd> goes back. Nothing here needs a mouse.</li>
+          </ol>
+          <h3>Keys pressed in the chart</h3>
+          <ol class="al-keylog" aria-label="Keys and what they did"><li class="al-quiet">Tab into the chart and press keys.</li></ol>
+          <p class="fine">Read from the page: the keys from <code>keydown</code> on the element, what they did from its <code>signal</code> and <code>state</code> events.</p>
+        </div>
+
+        <div class="al-pane" id="al-vi" role="tabpanel" aria-labelledby="al-tab-vi" hidden>
+          <h3>Colour vision</h3>
+          <div class="chips al-cvd" role="group" aria-label="Simulate colour vision">
+            <button type="button" data-cvd="" aria-pressed="true">Typical</button>
+            <button type="button" data-cvd="protanopia" aria-pressed="false">Protanopia</button>
+            <button type="button" data-cvd="deuteranopia" aria-pressed="false">Deuteranopia</button>
+            <button type="button" data-cvd="tritanopia" aria-pressed="false">Tritanopia</button>
+            <button type="button" data-cvd="achromatopsia" aria-pressed="false">No colour</button>
+          </div>
+          <p class="al-note">A simulation over the drawn chart — the same matrices the engine's palette checks use. These are the parties' own colours, set by the document: under deuteranopia the Social Democrats' red and the Centre's green move closer. Every bar is named on its axis and carries its value, so nothing hangs on colour alone.</p>
+          <h3>Contrast</h3>
+          <label class="al-switch"><input type="checkbox" data-hc><span>High contrast — the theme's own mode, <code>mode="high-contrast"</code></span></label>
+          <p class="al-note">Text and rules go full strength; the colours that come from the document's keys stay theirs. The page or app turns it on — the web element doesn't follow the system's <code>prefers-contrast</code> by itself yet.</p>
+        </div>
+
+        <div class="al-pane" id="al-mo" role="tabpanel" aria-labelledby="al-tab-mo" hidden>
+          <label class="al-switch"><input type="checkbox" data-rm><span>Play it as a reader who asked for less motion</span></label>
+          <p class="al-note al-rm-system" hidden>Your device asks for reduced motion: the chart already plays it. Untick to see the full motion.</p>
+          <div class="al-walk"><button type="button" class="btn btn-ghost small" data-play>Play the steps</button></div>
+          <p class="al-note">With reduced motion every change is a short crossfade instead of bars growing and receding, and autoplay and clocks stay still. It's the reader's system setting by default — <code>prefers-reduced-motion</code>, iOS Reduce Motion, Android's Remove animations — and a page can decide per chart:</p>
+<pre class="live-code"><code data-lang="html" id="al-rm-code">&lt;datars-view src="c/riksdag"&gt;&lt;/datars-view&gt;</code></pre>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Text alternatives</p>
+      <h2>The words come before the pixels</h2>
+      <p>Every published chart carries its text — title, description, each step's narration and data — in its bundle, available before any script runs: this site prints it under every chart as a “Text description”, crawlable and selectable. The tree a runtime builds is printed by <code>datars semantics</code>, here for the chart above, at build time.</p>
+    </header>
+    <div class="al-alt">
+      <div>
+        <h3>In the bundle</h3>
+        {{alt:accessibility-lab}}
+        <p class="fine">Open it: the same words a reader without the chart gets, step by step.</p>
+      </div>
+      <div>
+        <h3><code>datars semantics</code></h3>
+        {{run:semantics site/figures/accessibility/lab.ts|22}}
+      </div>
     </div>
   </div>
 </section>
@@ -34,7 +117,7 @@ og: votes
       <h2>The native way, everywhere</h2>
     </header>
     <ul class="platforms">
-      <li><h3>Web</h3><p>A parallel, hidden DOM tree with ARIA roles and labels in reading order; a live region that announces each story step's narration; buttons for interactive marks; engine-drawn sliders offered as native <code>&lt;input type="range"&gt;</code>; real links over the elements that link somewhere.</p></li>
+      <li><h3>Web</h3><p>A hidden list kept in step with the chart, in reading order: every labelled mark as text, clickable marks as buttons, engine-drawn sliders as native range inputs and dropdowns as native selects, real links over linked text; a polite live region that announces each step's narration. A keyboard's place in the list is outlined on the chart.</p></li>
       <li><h3>iOS and macOS</h3><p>VoiceOver elements with per-item frames, so explore-by-touch finds each bar where it is drawn; activatable marks; engine-drawn sliders as adjustable elements; macOS accessibility children.</p></li>
       <li><h3>Android</h3><p>TalkBack reads the chart through an accessibility node provider: virtual nodes with screen bounds, clickable marks, adjustable sliders. The node tree has been checked on the emulator; it hasn't yet been driven by TalkBack itself.</p></li>
       <li><h3>Desktop</h3><p>The same tree through AccessKit, for VoiceOver, Narrator/NVDA and Orca, with interactive marks as buttons and sliders adjustable — unit-tested, not yet exercised with a real screen reader.</p></li>
@@ -51,12 +134,12 @@ og: votes
       <h2>Beyond screen readers</h2>
     </header>
     <div class="cards3">
-      <article><h3>Keyboard</h3><p>Charts are focusable; arrow keys step stories; interactive marks are reachable in reading order and activate with Enter.</p></article>
-      <article><h3>Reduced motion</h3><p>The platform's setting — <code>prefers-reduced-motion</code>, iOS Reduce Motion, Android's “Remove animations” — turns transitions into short crossfades and pauses autoplay.</p></article>
-      <article><h3>Intents, not mouse events</h3><p>Documents bind <em>inspect</em> and <em>activate</em>, not hover and click: inspect is hover with a mouse, a tap on touch, focus with a keyboard; activate is a click, a tap, Enter or a double-tap with VoiceOver or TalkBack.</p></article>
-      <article><h3>A text alternative in every bundle</h3><p>Every published chart carries accessible text — its title, description and each state's narration and data — and an SVG poster, available before any script runs. Every chart on this site shows it under a “Text description” toggle.</p></article>
-      <article><h3>High contrast</h3><p>Themes have a high-contrast mode alongside light and dark; brands keep their type and shapes while the reader's colours take over.</p></article>
-      <article><h3>Colour you can tell apart</h3><p>Themes are checked for WCAG contrast of text on its background and for palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia.</p></article>
+      <article><h3>Intents, not mouse events</h3><p>Documents bind <em>inspect</em> and <em>activate</em>, not hover and click: activate is a click, a tap, <kbd>Enter</kbd> on the mark's button, or a double-tap with VoiceOver or TalkBack. <a href="/features/interaction/#inputs">Every input, intent by intent →</a></p></article>
+      <article><h3>Touch that doesn't trap</h3><p>On a phone a finger that lands on a brush, a pannable map or a slider drags it; anywhere else it scrolls the page, so a chart the width of the screen never holds the reader.</p></article>
+      <article><h3>Reduced motion, per chart</h3><p>The system setting by default; <code>reduced-motion="reduce"</code> or <code>"no-preference"</code> when the page knows better — an opt-in “show me the motion” button, a side-by-side comparison.</p></article>
+      <article><h3>Colour you can tell apart</h3><p>Themes are checked for WCAG contrast of text on its background, and generated palettes for colours that stay distinct under simulated protanopia, deuteranopia and tritanopia. <a href="/themes/">The theme studio shows the checks →</a></p></article>
+      <article><h3>Text that is text</h3><p>Titles, labels and annotations lie over the canvas as real text: selectable, findable with <kbd>Ctrl</kbd>+<kbd>F</kbd>, enlarged with the page.</p></article>
+      <article><h3>Data, not just a picture</h3><p>Every published bundle carries an SVG poster with titles and roles, and its accessible text — the chart is understandable before the runtime loads, and where it never does.</p></article>
     </div>
   </div>
 </section>
@@ -71,12 +154,24 @@ og: votes
     </div>
     <div>
       {{run:lint examples/votes/doc.json|8}}
-      <figure class="fig" style="margin-top:18px">
-        <div class="frame"><div class="chart" data-chart="budget"></div></div>
-        <figcaption>The slider is drawn by the engine — identical on the web, in apps and in video — and offered to assistive technology as a native range control.</figcaption>
-        {{alt:budget}}
-      </figure>
     </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Plainly</p>
+      <h2>What isn't there yet</h2>
+    </header>
+    <ul class="al-gaps">
+      <li><b>Brushes and pannable views have no keyboard path of their own.</b> Give the same signal a control (a std <code>range</code> or <code>slider</code>, which keyboards reach as native inputs), or set it from the page.</li>
+      <li><b>The live region speaks a step's narration, not the result of a click.</b> The button says it instead: its label follows the state (<q>Moderates: 68 seats, in the coalition</q>), and the coalition's total is a labelled item in the list.</li>
+      <li><b>No tooltip on keyboard focus.</b> A focused button reads the same label a tooltip would show, and the mark is outlined; the drawn tooltip is for the pointer.</li>
+      <li><b>High contrast is the page's choice.</b> The web element doesn't pick it from <code>prefers-contrast</code> or forced colours by itself yet.</li>
+      <li><b>Long lists stop at 500 marks</b> on the web — a map of thousands of counties is in the text description, not read out mark by mark.</li>
+      <li><b>Android and desktop</b> trees are tested, but not yet with TalkBack, NVDA or Orca driving them.</li>
+    </ul>
   </div>
 </section>
 
@@ -94,3 +189,4 @@ og: votes
     </div>
   </div>
 </section>
+<script type="module" src="/features-accessibility.js"></script>
