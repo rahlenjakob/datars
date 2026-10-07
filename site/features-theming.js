@@ -449,24 +449,41 @@ function simulated(r, kind) {
   }
   return out;
 }
-async function applyYours({ animate = false } = {}) {
+/** Categorical palettes the engine generated, by colour and mode. Generating one is the costliest
+ * thing a theme resolves (a search for the most distinct colours: ~30 ms on a laptop, four times
+ * that on a phone), so the chart is handed each one's colours once they're made, as the theme
+ * studio does — and, while a colour is being dragged, the last palette led by the new colour. */
+const generated = new Map();
+const genKey = () => `${hex}|${yMode}`;
+function chartLayer(t, { drag = false } = {}) {
+  const L = yLayer(t, yMode);
+  const cat = generated.get(genKey());
+  if (cat) L.tokens.categorical = cat;
+  else if (drag && lastResolved?.categorical) L.tokens.categorical = [yMode === "light" ? hex : readable(hex, lastResolved.paper ?? "#111318", 3, 1), ...lastResolved.categorical.slice(1)];
+  return L;
+}
+function framePaper(r) { if (isHex(r?.paper)) $(".ty-frame").style.setProperty("--paper", r.paper); }
+async function applyYours({ animate = false, drag = false } = {}) {
   const run = ++yRun;
   const t = brandTheme(hex);
   yoursCode(t);
   if (!yoursView) return;
-  const L = yLayer(t, yMode);
+  const L = chartLayer(t, { drag });
+  let r;
   if (cvd) {
     // Resolve the real layer, then show its colours as the reader with the deficiency sees them.
     yoursView.setAttribute("mode", L.viewMode);
     put(yoursView, L.tokens);
-    const r = resolvedOf(yoursView);
-    if (r) { lastResolved = r; put(yoursView, { ...L.tokens, ...simulated(r, cvd) }); readout(r); }
-    return;
+    r = resolvedOf(yoursView);
+    if (r) put(yoursView, { ...L.tokens, ...simulated(r, cvd) });
+  } else {
+    ({ to: r } = await restyle(yoursView, L, { animate, onFrame: framePaper }));
+    if (run !== yRun) return;
   }
-  const { to } = await restyle(yoursView, L, { animate, onFrame: (r) => isHex(r.paper) && $(".ty-frame").style.setProperty("--paper", r.paper) });
-  if (run !== yRun || !to) return;
-  lastResolved = to;
-  readout(to);
+  if (!r) return;
+  if (!drag && Array.isArray(r.categorical)) generated.set(genKey(), r.categorical.slice());
+  lastResolved = r;
+  readout(r);
 }
 function readout(r) {
   swatches($("#ty-cat"), (r.categorical ?? []).slice(0, 8).map((c) => simulate(c, cvd)));
@@ -474,11 +491,14 @@ function readout(r) {
   swatches($("#ty-div"), (r.diverging ?? []).map((c) => simulate(c, cvd)));
   checks(r);
 }
-let yFrame = 0;
-/** Many inputs a frame while a colour is dragged: one apply per frame. */
+let yFrame = 0, settle = 0;
+/** Many inputs a frame while a colour is dragged: one apply per frame, without generating a
+ * palette; the palette is generated once the colour rests. */
 function soon() {
+  clearTimeout(settle);
+  settle = setTimeout(() => applyYours(), 220);
   if (yFrame) return;
-  yFrame = requestAnimationFrame(() => { yFrame = 0; applyYours(); });
+  yFrame = requestAnimationFrame(() => { yFrame = 0; applyYours({ drag: true }); });
 }
 function setHex(v, { animate = false } = {}) {
   if (!/^#[0-9a-f]{6}$/i.test(v)) return;
@@ -486,7 +506,7 @@ function setHex(v, { animate = false } = {}) {
   $("#ty-color").value = hex;
   if (document.activeElement !== $("#ty-hex")) $("#ty-hex").value = hex;
   $$("[data-hex]", yours).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.hex === hex)));
-  if (animate) applyYours({ animate: true });
+  if (animate) { clearTimeout(settle); applyYours({ animate: true }); }
   else soon();
 }
 $("#ty-color").addEventListener("input", (e) => setHex(e.target.value));
@@ -499,7 +519,7 @@ yours.addEventListener("click", (e) => {
     cvd = c.dataset.cvd;
     $$("[data-cvd]", yours).forEach((x) => x.setAttribute("aria-pressed", String(x === c)));
     if (!yoursView || !lastResolved) return;
-    const L = yLayer(brandTheme(hex), yMode);
+    const L = chartLayer(brandTheme(hex));
     put(yoursView, cvd ? { ...L.tokens, ...simulated(lastResolved, cvd) } : L.tokens);
     readout(lastResolved);
   }
@@ -511,7 +531,15 @@ yoursSlot.addEventListener("chartmount", (e) => {
   const L = yLayer(brandTheme(hex), yMode);
   yoursView.setAttribute("mode", L.viewMode);
   yoursView.setTokens(L.tokens);
-  const ready = () => (yoursView.dataset.renderer ? applyYours() : setTimeout(ready, 120));
+  // Once it's drawing, read what it resolved (its palette generated once, at its start).
+  const ready = () => {
+    const r = yoursView.dataset.renderer && resolvedOf(yoursView);
+    if (!r) return void setTimeout(ready, 120);
+    if (Array.isArray(r.categorical)) generated.set(genKey(), r.categorical.slice());
+    lastResolved = r;
+    framePaper(r);
+    readout(r);
+  };
   ready();
 });
 $$("[data-hex]", yours).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.hex === hex)));

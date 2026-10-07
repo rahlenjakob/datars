@@ -40,11 +40,12 @@ css: features-theming.css
           <button type="button" data-view="runtime" aria-pressed="true">At runtime</button>
           <button type="button" data-view="compiled" aria-pressed="false">Compiled in</button>
         </div>
-<pre class="live-code tb-code"><code data-lang="js" id="tb-code">// The published chart, as it is: the built-in theme.
+<pre class="live-code tb-code"><code data-lang="js" id="tb-code">// datars over the published chart:
+// nothing republished, nothing rebuilt.
 const view = document.querySelector("datars-view");
 view.setAttribute("mode", "light");
 view.setTokens({});</code></pre>
-        <p class="fine tb-note" id="tb-note">What this page runs: a host app's token layer over the published chart, which knows nothing of the brand. Nothing is republished; the chart re-inks and, when type or shapes change, re-lays itself out and morphs there.</p>
+        <p class="fine tb-note" id="tb-note">What this page runs: a host app's token layer over the published chart, which knows nothing of the brand. The chart re-inks; when type or shapes change it re-lays itself out and morphs there.</p>
         <dl class="tb-facts">
           <div><dt>Published once</dt><dd>{{size:theming-brands}}</dd></div>
           <div><dt>Tokens this brand sets</dt><dd id="tb-count">0</dd></div>
@@ -92,28 +93,22 @@ view.setTokens({});</code></pre>
         </div>
         <h3>What the engine made</h3>
         <div class="ty-pals" aria-label="Generated palettes">
-          <div class="ty-pal"><span>Categorical</span><span class="ty-sw" id="ty-cat"></span></div>
-          <div class="ty-pal"><span>Sequential</span><span class="ty-sw ty-ramp" id="ty-seq"></span></div>
-          <div class="ty-pal"><span>Diverging</span><span class="ty-sw ty-ramp" id="ty-div"></span></div>
+          <div class="ty-pal"><span>Categorical</span><span class="ty-sw" id="ty-cat" data-colors="#e8590c,#4f6bee,#50d9ef,#8f4478,#fab72a,#ae80aa,#ba0d01,#86b990"><i title="#e8590c" style="background:#e8590c"></i><i title="#4f6bee" style="background:#4f6bee"></i><i title="#50d9ef" style="background:#50d9ef"></i><i title="#8f4478" style="background:#8f4478"></i><i title="#fab72a" style="background:#fab72a"></i><i title="#ae80aa" style="background:#ae80aa"></i><i title="#ba0d01" style="background:#ba0d01"></i><i title="#86b990" style="background:#86b990"></i></span></div>
+          <div class="ty-pal"><span>Sequential</span><span class="ty-sw ty-ramp" id="ty-seq" data-colors="#feeee8,#e6b29e,#ca7655,#a93500,#840000"><i title="#feeee8" style="background:#feeee8"></i><i title="#e6b29e" style="background:#e6b29e"></i><i title="#ca7655" style="background:#ca7655"></i><i title="#a93500" style="background:#a93500"></i><i title="#840000" style="background:#840000"></i></span></div>
+          <div class="ty-pal"><span>Diverging</span><span class="ty-sw ty-ramp" id="ty-div" data-colors="#004368,#187c98,#87b8c9,#f2f2f2,#dd9e85,#b54c1e,#840000"><i title="#004368" style="background:#004368"></i><i title="#187c98" style="background:#187c98"></i><i title="#87b8c9" style="background:#87b8c9"></i><i title="#f2f2f2" style="background:#f2f2f2"></i><i title="#dd9e85" style="background:#dd9e85"></i><i title="#b54c1e" style="background:#b54c1e"></i><i title="#840000" style="background:#840000"></i></span></div>
         </div>
         <h3>Checks</h3>
-        <ul class="ty-checks" id="ty-checks">
-          <li><span>Text on the accent</span><b>—</b></li>
-          <li><span>Accent on the paper</span><b>—</b></li>
-          <li><span>Palette, closest pair</span><b>—</b></li>
-        </ul>
+        <ul class="ty-checks" id="ty-checks"><li class="ok" title="at least 4.5 : 1"><span>Text on the accent</span><b>5.3 : 1 ✓</b></li><li class="ok" title="at least 3 : 1"><span>Accent on the paper</span><b>3.6 : 1 ✓</b></li><li class="ok" title="The smallest colour difference between the first eight colours (ΔE in OKLab ×100), also under simulated colour-vision deficiencies; the built-in theme asks for 8."><span>Palette, closest pair <small>(everyone 13 · deutan 11 · protan 12 · tritan 12)</small></span><b>ΔE 10.8 ✓</b></li></ul>
         <div class="seg ty-cvd" role="group" aria-label="See the chart as">
           <button type="button" data-cvd="" aria-pressed="true">Normal</button>
           <button type="button" data-cvd="deuteranopia" aria-pressed="false" title="Deuteranopia: no green cones">Deutan</button>
           <button type="button" data-cvd="protanopia" aria-pressed="false" title="Protanopia: no red cones">Protan</button>
           <button type="button" data-cvd="tritanopia" aria-pressed="false" title="Tritanopia: no blue cones">Tritan</button>
         </div>
-        <a class="btn btn-primary ty-go" id="ty-go" href="/themes/">Open it in the theme studio <span aria-hidden="true">→</span></a>
+        <a class="btn btn-primary ty-go" id="ty-go" href="/themes/">Open #e8590c in the theme studio <span aria-hidden="true">→</span></a>
       </div>
-      <div class="ty-stage">
-        <div class="frame ty-frame"><div class="chart" data-chart="theming-yours" data-phone-ratio="1.9"></div></div>
+      <div class="frame ty-frame"><div class="chart" data-chart="theming-yours" data-phone-ratio="1.9"></div></div>
 <pre class="live-code ty-code"><code data-lang="ts" id="ty-code">theme({ name: "my-brand", extends: "datars/neutral", tokens: { brand: "#e8590c", accent: "$brand" } })</code></pre>
-      </div>
     </div>
     {{alt:theming-yours}}
   </div>
@@ -127,25 +122,7 @@ view.setTokens({});</code></pre>
       <p>A theme can lock tokens so no later layer can change them: not the document, not the app that embeds it. This chart wears a fictional bank's house theme, which locks its brand colour, its paper and its title face. You're the host app: try to change them. The engine ignores what's locked and says so.</p>
     </header>
     <div class="tl-grid">
-      <div class="tl-main">
-        <div class="frame tl-frame"><div class="chart" data-chart="theming-locked" data-phone-ratio="0.95"></div></div>
-<div class="tl-theme">
-<pre><code data-lang="ts">export const skerry = theme({
-  name: "skerry-bank",
-  extends: "datars/neutral",
-  tokens: {
-    brand: "#1f3a5f",
-    accent: "$brand",
-    paper: "#f7f5ef",
-    categorical: ["$brand", "#d9a441", "#3c9a78"],
-    "font.title": font.file("Fraunces", "fonts/Fraunces-Bold.ttf", { weight: 700 }),
-  },
-  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0" } },
-  locked: ["brand", "accent", "paper", "font.title"],
-});</code></pre>
-        </div>
-      </div>
-      <div class="tl-side">
+      <div class="frame tl-frame"><div class="chart" data-chart="theming-locked" data-phone-ratio="0.95"></div></div>
       <div class="theme-panel tl-panel">
         <h3>The host app asks for</h3>
         <div class="tl-asks" role="group" aria-label="Host overrides">
@@ -159,8 +136,22 @@ view.setTokens({});</code></pre>
         <h3>What the engine said</h3>
         <ul class="tl-said" id="tl-said"><li class="tl-none">Nothing yet — no overrides.</li></ul>
       </div>
-        <p class="tl-layers">The layers, in order: <code>datars/neutral</code> → each theme that extends it → the document's own <code>tokens</code> → the host's <code>setTokens()</code>. A token locked by one layer can't be changed by any later one. The theme's own modes may still refine what it locks: the host is always free to ask for dark mode, and the bank's own dark block decides what its brand colour and paper become there. <a href="{{src}}/site/figures/theming/locked.ts">Figure source</a></p>
+      <div class="tl-theme">
+<pre><code data-lang="ts">export const skerry = theme({
+  name: "skerry-bank",
+  extends: "datars/neutral",
+  tokens: {
+    brand: "#1f3a5f",
+    accent: "$brand",
+    paper: "#f7f5ef",
+    categorical: ["$brand", "#d9a441", "#3c9a78"],
+    "font.title": font.file("Fraunces", "fonts/Fraunces-Bold.ttf", { weight: 700 }),
+  },
+  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0" } },
+  locked: ["brand", "accent", "paper", "font.title"],
+});</code></pre>
       </div>
+        <p class="tl-layers">The layers, in order: <code>datars/neutral</code> → each theme that extends it → the document's own <code>tokens</code> → the host's <code>setTokens()</code>. A token locked by one layer can't be changed by any later one. The theme's own modes may still refine what it locks: the host is always free to ask for dark mode, and the bank's own dark block decides what its brand colour and paper become there. <a href="{{src}}/site/figures/theming/locked.ts">Figure source</a></p>
     </div>
     {{alt:theming-locked}}
   </div>
@@ -179,7 +170,7 @@ view.setTokens({});</code></pre>
       </ul>
     </div>
     <figure class="fig">
-      <div class="frame"><div class="chart" data-chart="serif"></div></div>
+      <div class="frame tb-serif"><div class="chart" data-chart="serif"></div></div>
       <figcaption><b>A newsroom look in Newsreader</b> — the theme's font tokens point at font files in the project; the bundle carries subsets ({{size:serif}} in all).</figcaption>
       {{alt:serif}}
     </figure>

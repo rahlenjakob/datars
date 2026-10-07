@@ -5,9 +5,11 @@
 .fx-card { position: relative; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; transition: border-color .2s; }
 .fx-card:hover, .fx-card:focus-within { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
 .fx-card.playing { border-color: color-mix(in srgb, var(--accent) 35%, var(--rule)); }
-/* The chart's box is reserved before it mounts (site.css, from the document's aspect); the card's
-   own chart drives itself, so the overlay card and arrows stay hidden. */
-.fx-stage { padding: 12px 12px 0; }
+/* The stage holds its height before and after the chart mounts: a view's height is rounded to a
+   pixel, and on a phone, where the cards stack, those fractions would add up into a shift. Every
+   figure is 420 × 260. The page drives the charts, so their overlay card and arrows stay hidden. */
+.fx-card { container-type: inline-size; }
+.fx-stage { box-sizing: border-box; padding: 12px 12px 0; height: calc(12px + (100cqw - 24px) * 0.619048 + 1px); overflow: hidden; }
 .fx-stage .chart { padding: 0; }
 .fx-stage datars-view::part(card), .fx-stage datars-view::part(controls) { display: none; }
 .fx-text { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px 20px 18px; flex: 1; }
@@ -28,6 +30,6 @@
 @media (max-width: 1060px) { .fx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) {
   .fx-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-  .fx-stage { padding: 8px 8px 0; }
+  .fx-stage { padding: 8px 8px 0; height: calc(8px + (100cqw - 16px) * 0.619048 + 1px); }
   .fx-text { padding: 10px 16px 16px; }
 }

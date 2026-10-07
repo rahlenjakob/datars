@@ -138,7 +138,7 @@ const ACTS = {
       requestAnimationFrame(step);
     },
   },
-  "big-data": story((s) => `view.send("goto:${s}") // 60,000 rows, 9,000 drawn`),
+  "big-data": story((s) => `view.send("goto:${s}") // of 60,000 rows`),
   platforms: story((s) => `view.send("goto:${s}") // same document, re-laid out`),
   maps: story((s) => `view.send("goto:${s}") // the camera flies`),
   animation: story((s) => `view.send("goto:${s}") // keyed (party, seat)`),

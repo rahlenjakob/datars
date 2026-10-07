@@ -63,7 +63,7 @@ export default doc({
         group({ key: "bottom", layout: { type: "columns", gap: 26 }, children: [lines(), { ...donut(), size: { w: "32%" } }] }),
       ] }),
       group({ key: "panels", when: e("box.w < 600"), layout: { type: "rows", gap: 16 }, children: [
-        { ...card(), size: { h: "17%" } }, { ...bars(), size: { h: "29%" } }, { ...lines(), size: { h: "29%" } }, donut(),
+        { ...card(), size: { h: "15%" } }, { ...bars(), size: { h: "27%" } }, { ...lines(), size: { h: "27%" } }, donut(),
       ] }),
     ],
   }),
