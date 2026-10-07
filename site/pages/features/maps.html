@@ -33,7 +33,44 @@ css: features-maps.css
         <div class="mx-search">
           <input type="search" id="mx-q" placeholder="Search the places this basemap covers" autocomplete="off" spellcheck="false" aria-describedby="mx-q-note">
         </div>
-        <div class="mx-places" role="group" aria-label="Places"></div>
+        <div class="mx-places" role="group" aria-label="Places">
+          <div class="mx-group" data-kind="street">
+            <span class="mx-group-name">Street corners</span>
+            <div class="chips">
+              <button type="button" data-place="gamla-stan" title="Gamla stan, Stockholm" aria-pressed="false">Gamla stan</button>
+              <button type="button" data-place="copacabana" title="Copacabana, Rio de Janeiro" aria-pressed="false">Copacabana</button>
+            </div>
+          </div>
+          <div class="mx-group" data-kind="city">
+            <span class="mx-group-name">Cities</span>
+            <div class="chips">
+              <button type="button" data-place="stockholm" aria-pressed="false">Stockholm</button>
+              <button type="button" data-place="copenhagen" aria-pressed="false">Copenhagen</button>
+              <button type="button" data-place="lisbon" aria-pressed="false">Lisbon</button>
+              <button type="button" data-place="rio" aria-pressed="false">Rio de Janeiro</button>
+            </div>
+          </div>
+          <div class="mx-group" data-kind="country">
+            <span class="mx-group-name">Countries</span>
+            <div class="chips">
+              <button type="button" data-place="iceland" aria-pressed="false">Iceland</button>
+              <button type="button" data-place="sweden" aria-pressed="false">Sweden</button>
+              <button type="button" data-place="denmark" aria-pressed="false">Denmark</button>
+              <button type="button" data-place="portugal" aria-pressed="false">Portugal</button>
+              <button type="button" data-place="kenya" aria-pressed="false">Kenya</button>
+              <button type="button" data-place="india" aria-pressed="false">India</button>
+              <button type="button" data-place="japan" aria-pressed="false">Japan</button>
+              <button type="button" data-place="new-zealand" aria-pressed="false">New Zealand</button>
+              <button type="button" data-place="usa" aria-pressed="false">United States</button>
+              <button type="button" data-place="brazil" aria-pressed="false">Brazil</button>
+            </div>
+          </div>
+          <div class="mx-group" data-kind="world">
+            <div class="chips">
+              <button type="button" data-place="world" aria-pressed="true">The world</button>
+            </div>
+          </div>
+        </div>
         <p class="mx-hint" id="mx-q-note">The archive was cut for these views and the flights between them; anywhere else, the map shows the nearest coarser tiles, enlarged. A new place is one more state in the document — the next build cuts it in.</p>
         <div class="mx-tour">
           <button type="button" class="btn btn-ghost small" id="mx-tour">Fly the tour</button>
@@ -104,7 +141,7 @@ css: features-maps.css
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Maps are scenes</p>
-      <h2>Projections, layers and globes — and everything keyed</h2>
+      <h2>Projections, layers, stories — and everything keyed</h2>
       <p>Regions, symbols and dots carry the keys of their rows, so a change of projection, layer or chart type is a transition the engine plans, not a redraw. Each of these is a small document; step through them.</p>
     </header>
 
@@ -118,34 +155,21 @@ css: features-maps.css
         <p class="hint"><a href="{{src}}/site/figures/maps/projections.ts">Figure source</a> · <a href="/docs/maps/#projections">All projections</a></p>
         {{alt:maps-projections}}
       </div>
-      <div class="chart" data-chart="maps-projections" data-caption data-autoplay="3800" data-phone-ratio="0.62"></div>
+      <div class="chart" data-chart="maps-projections" data-caption data-phone-ratio="0.62"></div>
     </article>
 
-    <div class="grid">
-      <article class="card mx-cq">
-        <div class="chart" data-chart="maps-layers" data-caption data-autoplay="4200" data-phone-ratio="0.95"></div>
-        <div class="card-text">
-          <span class="tag">Layers · keyed</span>
-          <h3>One table, four maps</h3>
-          <p>A choropleth, proportional symbols, dot density and bars from the same rows. The dots are keyed by country and dot number, so each circle breaks into its own dots; the countries then lift off the map into their bars.</p>
+    <article class="card wide mx-cq mx-gap">
+      <div class="card-text">
+        <span class="tag">Layers · keyed</span>
+        <h3>One table, four maps</h3>
+        <p>A choropleth, proportional symbols, dot density and bars from the same rows. The dots are keyed by country and dot number, so each circle breaks into its own dots; the countries then lift off the map into their bars.</p>
 <pre><code data-lang="ts">symbols({ source: "world", data: "pop", key: "id", value: "people" })
 dotDensity({ source: "world", data: "pop", key: "id", value: "people", per: 2 })</code></pre>
-          {{alt:maps-layers}}
-        </div>
-      </article>
-      <article class="card mx-cq">
-        <div class="chart" data-chart="maps-globe" data-min="260" data-phone-ratio="0.93"></div>
-        <div class="card-text">
-          <span class="tag">Clocks · great circles</span>
-          <h3>A globe that turns by itself</h3>
-          <p>The projection’s centre is an expression over a clock signal, so countries, routes and hubs turn together. Routes are great circles, cut at the horizon. The clock stops off screen and for readers who asked for less motion.</p>
-<pre><code data-lang="ts">signals: { spin: signal.clock(6) },   // 6° a second
-coord: { type: "geo", projection: "orthographic",
-  center: [e("20 - spin"), 18], fit: { sphere: true } },</code></pre>
-          {{alt:maps-globe}}
-        </div>
-      </article>
-    </div>
+        <p class="hint"><a href="{{src}}/site/figures/maps/layers.ts">Figure source</a> · <a href="/docs/maps/#layers-on-a-map">Layers on a map</a></p>
+        {{alt:maps-layers}}
+      </div>
+      <div class="chart" data-chart="maps-layers" data-caption data-autoplay="4200" data-phone-ratio="0.95"></div>
+    </article>
 
     <article class="card wide mx-cq mx-gap">
       <div class="card-text">

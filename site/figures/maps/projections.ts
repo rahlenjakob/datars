@@ -2,7 +2,7 @@
 // the countries are keyed by ISO code, so when the state changes every country morphs from one
 // projection into the next instead of the map being redrawn.
 // NOTE: urban shares are rounded World Bank figures (2022), approximate.
-import { doc, data, e, group, motion, story, step, signal } from "@datars/sdk";
+import { doc, data, e, geom, group, motion, repeat, shape, story, step, signal } from "@datars/sdk";
 import { map } from "@datars/std";
 
 const urban: [string, number][] = [
@@ -37,6 +37,11 @@ export default doc({
     layout: { type: "stack", padding: [8, 8, 8, 8] },
     children: PROJECTIONS.map(([id]) => map({
       source: "world", data: "urban", key: "id", value: "share", projection: id, format: ".0f", stroke: false,
+      // Only the countries with data morph (keyed regions). The rest of the world is neutral land
+      // underneath, in a group keyed by projection, so it crossfades instead: sixty outlines
+      // re-shaped a frame instead of two hundred and forty, which keeps a phone at frame rate.
+      backdrop: false,
+      base: [group({ key: `land-${id}`, children: [repeat("world", shape(geom.feature("world", e("d.id")), { fill: "$map.no-data", semantics: { role: "decoration" } }))] })],
       label: e("d.share == null ? d.name : `${d.name}: ${d.share}% live in towns and cities`"),
       ...(id === "mercator" ? { fit: { bbox: [-180, -58, 180, 83] } } : {}),
       ...(id === "orthographic" ? { fit: { sphere: true } } : {}),

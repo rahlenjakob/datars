@@ -29,8 +29,6 @@ const PLACES = [
   ["copacabana", "Copacabana, Rio de Janeiro", "street", [-43.198, -22.99, -43.152, -22.944]],
 ];
 const KINDS = { street: "Street corner", city: "City", country: "Country", world: "World" };
-const ORDER = ["street", "city", "country", "world"];
-const GROUPS = { street: "Street corners", city: "Cities", country: "Countries", world: "" };
 const TOUR = ["brazil", "rio", "copacabana", "world"];
 /** The layer signals and their defaults (the document's). */
 const LAYERS = { streets: true, labels: true, symbols: true, flows: false, choropleth: false };
@@ -90,31 +88,8 @@ function playground(section) {
   let pending = null; // a place picked before the chart was running
   let tour = null; // the tour's timer, while it runs
 
-  // ---- places ----
-  const buttons = new Map();
-  for (const kind of ORDER) {
-    const group = document.createElement("div");
-    group.className = "mx-group";
-    group.dataset.kind = kind;
-    const h = document.createElement("span");
-    h.className = "mx-group-name";
-    h.textContent = GROUPS[kind];
-    if (h.textContent) group.appendChild(h);
-    const chips = document.createElement("div");
-    chips.className = "chips";
-    for (const [id, name, k] of PLACES.filter((p) => p[2] === kind)) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.dataset.place = id;
-      b.textContent = name.replace(/, (Stockholm|Rio de Janeiro)$/, "");
-      if (b.textContent !== name) b.title = name;
-      b.setAttribute("aria-pressed", String(id === at));
-      chips.appendChild(b);
-      buttons.set(id, b);
-    }
-    group.appendChild(chips);
-    list.appendChild(group);
-  }
+  // ---- places (their buttons are in the page: nothing moves when this script arrives) ----
+  const buttons = new Map([...list.querySelectorAll("button[data-place]")].map((b) => [b.dataset.place, b]));
   list.addEventListener("click", (e) => {
     const b = e.target.closest("button[data-place]");
     if (!b) return;
