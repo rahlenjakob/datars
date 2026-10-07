@@ -20,68 +20,132 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&l
 const cap = (s) => s.replace(/^./, (c) => c.toUpperCase());
 const norm = (s) => String(s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
-// ---- the wall: search, kinds, features ---------------------------------------------------------
+// ---- the wall: search, what to show, families, features -----------------------------------------
+// Two kinds of card share the wall: a chart type (a std recipe's reference figure, `.g-type`, written
+// by the build's {{std:cards}}) and a story (a site chart). A family matches a chart type of that
+// family, or a story that uses one; a feature only stories carry.
 
 const cards = $$(".g-card");
 const groups = $$(".g-group");
-const recipes = $(".g-recipes");
-const minis = recipes ? $$(".std-mini", recipes) : [];
+const secs = $$(".g-sec");
 const query = $("#g-q");
-const filter = { kind: "", tags: new Set() };
+const filter = { show: "", family: "", tags: new Set() };
 const hay = new Map(cards.map((c) => [c, norm([c.id, c.dataset.words, c.dataset.tags, c.querySelector(".g-text")?.textContent].join(" "))]));
+const isType = (c) => c.classList.contains("g-type");
+const TOTAL = { types: cards.filter(isType).length, stories: cards.filter((c) => !isType(c)).length };
 
 function applyFilter() {
   const words = norm(query?.value).split(/\s+/).filter(Boolean);
-  let n = 0;
+  const n = { types: 0, stories: 0 };
   for (const c of cards) {
+    const kind = isType(c) ? "types" : "stories";
     const tags = (c.dataset.tags ?? "").split(" ");
-    const ok = (!filter.kind || c.dataset.kind === filter.kind) && [...filter.tags].every((t) => tags.includes(t)) && words.every((w) => hay.get(c).includes(w));
+    const ok = (!filter.show || filter.show === kind)
+      && (!filter.family || (c.dataset.families ?? "").split(" ").includes(filter.family))
+      && [...filter.tags].every((t) => tags.includes(t))
+      && words.every((w) => hay.get(c).includes(w));
     if (c.hidden === ok) c.hidden = !ok;
-    if (ok) n++;
+    if (ok) n[kind]++;
   }
-  for (const g of groups) if (g !== recipes) g.hidden = !g.querySelector(".g-card:not([hidden])");
-  // The recipes answer a search too (by name), when no kind or feature narrows the charts.
-  let r = 0;
-  if (recipes) {
-    const open = !filter.kind && !filter.tags.size;
-    for (const m of minis) {
-      const ok = open && words.every((w) => norm(`${m.textContent} ${m.title}`).includes(w));
-      m.hidden = !ok;
-      if (ok) r++;
-    }
-    for (const sg of $$(".std-group", recipes)) sg.hidden = !sg.querySelector(".std-mini:not([hidden])");
-    recipes.hidden = r === 0;
-  }
+  for (const g of groups) g.hidden = !g.querySelector(".g-card:not([hidden])");
+  for (const sec of secs) sec.hidden = !sec.querySelector(".g-card:not([hidden])");
   const count = $("#g-count");
-  const all = n === cards.length && !words.length;
-  if (count) count.innerHTML = all ? `<b>${n}</b> charts` : `<b>${n}</b> of ${cards.length} charts${words.length && r ? ` · <b>${r}</b> recipe${r === 1 ? "" : "s"}` : ""}`;
-  $("#g-none").hidden = n + r > 0;
+  const part = (k, one, many) => {
+    const label = n[k] === 1 && TOTAL[k] === 1 ? one : many;
+    return n[k] === TOTAL[k] ? `<b>${n[k]}</b> ${label}` : `<b>${n[k]}</b> of ${TOTAL[k]} ${many}`;
+  };
+  if (count) count.innerHTML = [filter.show !== "stories" && part("types", "chart type", "chart types"), filter.show !== "types" && part("stories", "story", "stories")].filter(Boolean).join(" · ");
+  $("#g-none").hidden = n.types + n.stories > 0;
 }
 let typing = 0;
 query?.addEventListener("input", () => { clearTimeout(typing); typing = setTimeout(applyFilter, 90); });
+/** After a choice in the bar, the wall starts at its top (the bar stays where it is). */
+function toWall() {
+  const bar = $("#g-bar");
+  const body = $("#g-body");
+  if (!bar || !body) return;
+  const top = body.getBoundingClientRect().top + scrollY - (getComputedStyle(bar).position === "sticky" ? bar.offsetHeight + 60 : 0);
+  if (scrollY > top) scrollTo({ top, behavior: "instant" });
+}
 $("#g-bar")?.addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (!b) return;
-  if ("kind" in b.dataset) {
-    filter.kind = b.dataset.kind;
-    for (const k of $$("[data-kind]", $("#g-bar"))) k.setAttribute("aria-pressed", String(k === b));
+  const bar = $("#g-bar");
+  if ("show" in b.dataset) {
+    filter.show = b.dataset.show;
+    for (const k of $$("[data-show]", bar)) k.setAttribute("aria-pressed", String(k === b));
+  } else if ("family" in b.dataset) {
+    filter.family = b.dataset.family;
+    for (const k of $$("[data-family]", bar)) k.setAttribute("aria-pressed", String(k === b));
   } else if (b.dataset.tag) {
     const on = !filter.tags.has(b.dataset.tag);
     on ? filter.tags.add(b.dataset.tag) : filter.tags.delete(b.dataset.tag);
     b.setAttribute("aria-pressed", String(on));
   } else return;
   applyFilter();
+  toWall();
 });
 document.addEventListener("click", (e) => {
   if (!e.target.closest("[data-g-clear]")) return;
-  filter.kind = "";
+  filter.show = filter.family = "";
   filter.tags.clear();
   if (query) query.value = "";
-  for (const b of $$("#g-bar button")) b.setAttribute("aria-pressed", String(b.dataset.kind === ""));
+  for (const b of $$("#g-bar button")) b.setAttribute("aria-pressed", String(b.dataset.show === "" || b.dataset.family === ""));
   applyFilter();
 });
 // A search typed before this script ran (or restored by the browser on Back).
 if (query?.value) applyFilter();
+
+// ---- far away, a chart lets go -------------------------------------------------------------------
+// A hundred-odd live charts on one page: a chart a few screens away gives its engine back (taken off
+// the page, the element frees its scene, GPU device and WebGL context) and starts again, on the step
+// it was on, when the reader comes back near. Its slot keeps the chart's height meanwhile, so the
+// page doesn't move. (site.js mounts each slot the first time it comes near.)
+const lab = $("#lab");
+const parked = new WeakMap();
+/** Park a chart that's far away: when the page is idle (freeing an engine mid-scroll would cost the
+ * reader frames), and only if it's still far then. */
+const away = new Set();
+let parking = 0;
+const idle = globalThis.requestIdleCallback ?? ((f) => setTimeout(f, 200));
+function parkAway() {
+  parking = 0;
+  for (const slot of away) {
+    const view = slot.querySelector(":scope > datars-view");
+    if (!view) continue;
+    // The slot's content box, as tall as the chart (it's a content box once the chart is gone).
+    const cs = getComputedStyle(slot);
+    const h = slot.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    if (slot.offsetParent && h > 0) slot.style.height = `${h}px`;
+    const state = view.status?.state;
+    if (state) view.setAttribute("state", state);
+    parked.set(slot, view);
+    view.remove();
+  }
+  away.clear();
+}
+const far = new IntersectionObserver((entries) => {
+  if (lab?.open) return; // the wall is skipped while the lab is open: nothing is really far
+  for (const e of entries) {
+    const slot = e.target;
+    if (!e.isIntersecting) {
+      if (slot.querySelector(":scope > datars-view")) away.add(slot);
+      continue;
+    }
+    away.delete(slot);
+    if (!slot.querySelector(":scope > datars-view") && parked.has(slot)) {
+      const v = parked.get(slot);
+      parked.delete(slot);
+      slot.append(v);
+      slot.style.height = "";
+    }
+  }
+  if (away.size && !parking) parking = idle(parkAway, { timeout: 3000 });
+}, { rootMargin: "300% 0px" });
+for (const c of cards) {
+  const slot = c.querySelector(".chart[data-src]");
+  if (slot) far.observe(slot);
+}
 
 // ---- what the lab knows about each chart ------------------------------------------------------
 
@@ -93,6 +157,8 @@ const charts = cards.map((card) => {
     card,
     slot,
     title: card.querySelector("h3")?.textContent ?? card.id,
+    // A chart type: its recipe's name (the alias is lower-cased: `std-arcdiagram` is `arcDiagram`).
+    recipe: card.classList.contains("g-type") ? card.querySelector("h3 code")?.textContent ?? null : null,
     kicker: card.querySelector(".g-kicker")?.textContent ?? "",
     states: $$(".caption .pills button[data-state]", card).map((b) => b.dataset.state),
   };
@@ -123,13 +189,25 @@ function documents() {
   docsPage ??= fetch(DOCS_URL).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`${r.status}`)))).then((t) => new DOMParser().parseFromString(t, "text/html")).catch((e) => { docsPage = null; throw e; });
   return docsPage;
 }
-/** A part of the documents page, adopted here: its links and media resolved against that page. */
-function adopt(el) {
+/** A chart type's reference page (/docs/std/<recipe>/): its figure's TypeScript and the theme
+ * tokens the recipe reads — fetched for the one chart type the lab shows. */
+const refPages = new Map();
+const refUrl = (name) => new URL(`docs/std/${name}/`, SITE);
+function reference(name) {
+  if (!refPages.has(name)) {
+    refPages.set(name, fetch(refUrl(name)).then((r) => (r.ok ? r.text() : Promise.reject(new Error(`${r.status}`)))).then((t) => new DOMParser().parseFromString(t, "text/html")).catch((e) => { refPages.delete(name); throw e; }));
+  }
+  return refPages.get(name);
+}
+/** What the lab reads about a chart lives on the documents page (stories) or its reference page. */
+const aboutPage = (c) => (c.recipe ? reference(c.recipe) : documents());
+/** A part of another page, adopted here: its links and media resolved against that page. */
+function adopt(el, base = DOCS_URL) {
   const node = document.importNode(el, true);
   for (const a of $$("[href], [src], [poster]", node)) {
     for (const k of ["href", "src", "poster"]) {
       const v = a.getAttribute(k);
-      if (v && !/^(#|[a-z]+:)/i.test(v)) a.setAttribute(k, new URL(v, DOCS_URL).href);
+      if (v && !/^(#|[a-z]+:)/i.test(v)) a.setAttribute(k, new URL(v, base).href);
     }
   }
   return node;
@@ -151,7 +229,6 @@ const IOS_BEHAVIOUR = {
 
 // ---- the lab ------------------------------------------------------------------------------------
 
-const lab = $("#lab");
 const stage = $("#lab-stage");
 const frame = $("#lab-frame");
 const pills = $("#lab-pills");
@@ -435,7 +512,8 @@ const warm = (e) => {
   const b = e.target.closest?.("[data-lab]");
   if (!b) return;
   sourceOf(b.dataset.lab).catch(() => {});
-  documents().catch(() => {});
+  const c = byAlias.get(b.dataset.lab);
+  if (c) aboutPage(c).catch(() => {});
 };
 document.addEventListener("pointerover", warm, { passive: true });
 document.addEventListener("focusin", warm);
@@ -1043,15 +1121,25 @@ async function codeUI() {
     return;
   }
   const alias = S.c.alias;
+  const recipe = S.c.recipe;
   note.innerHTML = NOTES.doc;
   let page;
   try {
-    page = await documents();
+    page = await aboutPage(S.c);
   } catch {
-    codeEl.textContent = "// The documents page couldn't be read.";
+    codeEl.textContent = `// ${recipe ? "The reference page" : "The documents page"} couldn't be read.`;
     return;
   }
   if (S?.c.alias !== alias || L.lang !== "doc") return;
+  if (recipe) {
+    // The reference page shows the figure's document in full, under "Example".
+    const pre = $("#example", page)?.nextElementSibling;
+    const src = $("#example ~ .src-note a", page);
+    note.innerHTML = `The figure's document, in full: <a href="${esc(src ? new URL(src.getAttribute("href"), refUrl(recipe)).href : "#")}">${esc(src?.textContent ?? `${recipe}.ts`)}</a>. The recipe itself: <a href="${refUrl(recipe).href}">its reference</a>, or edit it in the <a href="${new URL(`features/charts/#play=${recipe}`, SITE).href}">playground</a>.`;
+    codeEl.dataset.lang = "ts";
+    codeEl.innerHTML = pre?.querySelector("code")?.innerHTML ?? "";
+    return;
+  }
   const files = $$(`#doc-${alias} .g-doc-file`, page);
   if (!files.length) { codeEl.textContent = ""; return; }
   L.file = Math.min(L.file, files.length - 1);
@@ -1136,7 +1224,9 @@ async function factsUI() {
   const alias = c.alias;
   const alt = c.card.querySelector("details.alt");
   const recipesUsed = recipesOf(S.src?.doc);
+  const recipe = c.recipe;
   const parts = [
+    recipe ? `<p class="lab-ref"><a class="btn btn-ghost small" href="${refUrl(recipe).href}"><code>${esc(recipe)}</code> reference</a> <a class="btn btn-ghost small" href="${new URL(`features/charts/#play=${recipe}`, SITE).href}">Edit it in the playground</a></p>` : "",
     `<h3>What a reader downloads</h3><div data-part="tiers"><p class="fine">Measuring…</p></div><p class="fine">The runtime (one download for every chart on a page) plays the smallest variant it can — pre-expanded (T2) where there is one. A reader without it still gets T0: the poster and the text.</p>`,
     `<h3>Where else it runs</h3><ul class="lab-facts-list">${evidence(alias)}</ul><div data-part="film"></div>`,
     recipesUsed.length ? `<h3>Recipes it uses</h3><div class="lab-recipes">${recipesUsed.map((r) => {
@@ -1152,6 +1242,7 @@ async function factsUI() {
     a.open = true;
     box.querySelector('[data-part="alt"]').append(a);
   }
+  if (recipe) return recipeFacts(box, c);
   let page;
   try {
     page = await documents();
@@ -1177,6 +1268,38 @@ async function factsUI() {
   }
   const exp = doc && $(".g-doc-exports", doc);
   if (exp) box.querySelector('[data-part="film"]').before(adopt(exp));
+}
+
+/** A chart type's facts: its tiers from its manifest (each variant's chunks, as published, before
+ * the server compresses them) and its tokens from its reference page. */
+async function recipeFacts(box, c) {
+  const kb = (n) => (n < 1024 ? `${n} B` : `${(n / 1024).toFixed(n < 10240 ? 1 : 0)} KB`);
+  const NAMES = { T0: "poster + text", T1: "baked scenes", T2: "pre-expanded", T3: "source" };
+  try {
+    const { manifest, url } = S.src ?? (await sourceOf(c.alias));
+    const bytes = Object.fromEntries(manifest.chunks.map((k) => [k.hash, k.lazy ? 0 : k.bytes ?? 0]));
+    const base = new URL(url.replace(/\/c\/[^/]+$/, "/chunks/"));
+    const rows = await Promise.all(manifest.variants.map(async (v) => {
+      const entry = await (await fetch(new URL(v.entry.replace(":", "_"), base))).json();
+      return [v.tier, (entry.chunks ?? []).reduce((n, h) => n + (bytes[h] ?? 0), 0)];
+    }));
+    if (S?.c !== c) return;
+    rows.sort((a, b) => a[0].localeCompare(b[0]));
+    const max = Math.max(...rows.map((r) => r[1]));
+    box.querySelector('[data-part="tiers"]').innerHTML = `<div class="hv">${rows.map(([t, n]) => `<div class="hv-row"><span class="hv-tier"><b>${t}</b> ${NAMES[t] ?? ""}</span><span class="hv-track" style="width:${((100 * n) / max).toFixed(1)}%"><i class="hv-doc" style="flex:1"></i></span><span class="hv-size">${kb(n)}</span></div>`).join("")}</div><p class="fine">Uncompressed, as the manifest lists each variant's chunks; a server's gzip makes them smaller.</p>`;
+  } catch {
+    box.querySelector('[data-part="tiers"]').innerHTML = `<p class="fine">The chart's manifest couldn't be read.</p>`;
+  }
+  try {
+    const page = await reference(c.recipe);
+    if (S?.c !== c) return;
+    const p = $("#tokens", page)?.nextElementSibling;
+    const at = box.querySelector('[data-part="tokens"]');
+    if (p && at) {
+      const codes = $$("code", p).map((x) => x.textContent);
+      at.innerHTML = codes.length ? `<p class="tile-tokens">${codes.map((t) => `<code>${esc(t)}</code>`).join("")}</p>` : `<p class="fine">None: the recipe draws only what its parameters say.</p>`;
+    }
+  } catch { /* the tokens stay unsaid */ }
 }
 
 // ---- deep links ----
