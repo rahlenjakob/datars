@@ -1,44 +1,134 @@
 ---
 title: Built for developers and coding agents · datars
-description: TypeScript documents, a live page that morphs each edit in, check, lint, explain, film and profile, an MCP server for coding agents, llms.txt, a JSON Schema and deterministic goldens.
+description: A datars chart explains itself — click any mark for its data row and every expression's value — lints itself with fixes, and is checked, filmed and profiled from the command line or by a coding agent over MCP.
 og: votes
+css: features-developers.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">For developers and agents</p>
     <h1>Tools that answer “why does it look like that?”</h1>
-    <p class="lede-2">A datars chart is a TypeScript document, so your editor type-checks it and your agent can write it. Everything that makes it look the way it does is inspectable from the command line — which recipe drew an element, which data row, which expression values — and the same tools are an MCP server. Nothing needs a GPU or a browser: renders are deterministic, so they can be tested like code.</p>
+    <p class="lede-2">A datars chart is a TypeScript document, so your editor type-checks it and your agent can write it. Everything that makes it look the way it does can be asked: which data row an element came from, every expression and its value, what's wrong with it and how to fix it. Below is a chart with three deliberate mistakes, running live. Lint it, fix it, then click any mark and ask it why.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
-  <div class="wrap split">
+<section class="section dv" id="bench" style="padding-top:8px">
+  <div class="wrap">
+    <div class="dv-grid">
+      <div class="dv-stage">
+        <div class="frame dv-frame">
+          <div class="dv-slot" data-src="/play/developers-bench-000.json" data-label="The twelve most populous countries: the bench">
+            <img class="dv-poster dv-wide thumb-light" src="{{export:developers-bench-000|0|640x420|1|svg|light}}" alt="" width="640" height="420">
+            <img class="dv-poster dv-wide thumb-dark" src="{{export:developers-bench-000|0|640x420|1|svg|dark}}" alt="" width="640" height="420">
+            <img class="dv-poster dv-narrow thumb-light" src="{{export:developers-bench-000|0|332x415|1|svg|light}}" alt="" width="332" height="415">
+            <img class="dv-poster dv-narrow thumb-dark" src="{{export:developers-bench-000|0|332x415|1|svg|dark}}" alt="" width="332" height="415">
+          </div>
+          <div class="pills small dv-steps" role="group" aria-label="Steps"><button type="button" data-state="ranked" aria-pressed="true">Ranked</button><button type="button" data-state="a–z" aria-pressed="false">A–z</button></div>
+          <div class="dv-hover" aria-hidden="true" hidden></div>
+          <div class="dv-pin" aria-hidden="true" hidden></div>
+        </div>
+        <p class="dv-status" aria-live="polite">Three problems. Step to “A–z”: the bars don't move, they melt into their neighbours.</p>
+      </div>
+      <aside class="theme-panel dv-panel" aria-label="The bench">
+        <div class="seg dv-tabs" role="tablist" aria-label="Tool">
+          <button type="button" role="tab" data-tab="lint" aria-selected="true" aria-pressed="true">Lint and fix</button>
+          <button type="button" role="tab" data-tab="explain" aria-selected="false" aria-pressed="false">Explain a mark</button>
+        </div>
+        <div class="dv-tab" data-tab="lint">
+          <h3>Fixes</h3>
+          <ul class="dv-fixes">
+            <li><label class="dv-switch"><input type="checkbox" data-fix="key"><span><b>Key the rows</b> <code>identity/row-keys</code><small>Without a key, rows are matched by position: re-sorting turns India's bar into Bangladesh's. With <code>key: "name"</code> each bar travels to its new place.</small></span></label></li>
+            <li><label class="dv-switch"><input type="checkbox" data-fix="colour"><span><b>Colour by continent</b> <code>encoding/too-many-colours</code><small>Twelve colours for twelve bars say nothing and can't be told apart. Five continents can.</small></span></label></li>
+            <li><label class="dv-switch"><input type="checkbox" data-fix="credit"><span><b>End the credit at the edge</b> <code>legibility/offscreen</code><small>The source line starts where it should end, and runs off the canvas.</small></span></label></li>
+          </ul>
+          <h3>What lint says now</h3>
+          <div class="dv-lintout"></div>
+          <h3>The document</h3>
+<pre class="live-code dv-code"><code data-lang="ts" id="dv-code">countries: data.values({ name, continent, people }),</code></pre>
+          <p class="fine">Each fix is applied to the running chart with <code>view.setDocument(doc)</code>, and the chart morphs to it. The lint output is <code>datars lint</code>'s own, run on each of the eight combinations when this page was built (<a href="{{src}}/site/figures/developers/_bench.ts">the document</a>).</p>
+        </div>
+        <div class="dv-tab" data-tab="explain" hidden>
+          <p class="dv-hint">Click any mark on the chart — a bar, a label, a tick, the title. The page asks the running chart <code>view.hitTest(x, y)</code> for what's under the pointer and <code>view.explain(path)</code> for why it looks as it does.</p>
+          <div class="dv-explain"></div>
+        </div>
+      </aside>
+    </div>
+    <template class="dv-lint" data-v="000">{{run:lint site/figures/developers/bench-000.ts|80}}</template>
+<template class="dv-lint" data-v="001">{{run:lint site/figures/developers/bench-001.ts|80}}</template>
+<template class="dv-lint" data-v="010">{{run:lint site/figures/developers/bench-010.ts|80}}</template>
+<template class="dv-lint" data-v="011">{{run:lint site/figures/developers/bench-011.ts|80}}</template>
+<template class="dv-lint" data-v="100">{{run:lint site/figures/developers/bench-100.ts|80}}</template>
+<template class="dv-lint" data-v="101">{{run:lint site/figures/developers/bench-101.ts|80}}</template>
+<template class="dv-lint" data-v="110">{{run:lint site/figures/developers/bench-110.ts|80}}</template>
+<template class="dv-lint" data-v="111">{{run:lint site/figures/developers/bench-111.ts|80}}</template>
+    {{alt:developers-bench-111}}
+  </div>
+</section>
+
+<section class="section dv-term-section" id="terminal">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">The same, from the terminal</p>
+      <h2>A session on that chart, as it ran</h2>
+      <p>Every command below ran on the bench's documents when this page was built; what you see is what it printed. No GPU or browser needed — renders are deterministic, so charts are tested like code.</p>
+    </header>
+    <div class="dv-term">
+      <div class="dv-cmds" role="group" aria-label="Command"><button type="button" data-cmd="check" aria-pressed="true"><b>Check it</b><span>datars check</span></button><button type="button" data-cmd="lint" aria-pressed="false"><b>Lint it</b><span>datars lint</span></button><button type="button" data-cmd="explain" aria-pressed="false"><b>Explain a mark</b><span>datars explain</span></button><button type="button" data-cmd="diff" aria-pressed="false"><b>Diff two states</b><span>datars diff</span></button><button type="button" data-cmd="semantics" aria-pressed="false"><b>Read it aloud</b><span>datars semantics</span></button><button type="button" data-cmd="profile" aria-pressed="false"><b>Profile it</b><span>datars profile</span></button><button type="button" data-cmd="describe" aria-pressed="false"><b>Look up a recipe</b><span>datars describe</span></button></div>
+      <div class="dv-window">
+        <div class="dv-bar" aria-hidden="true"><i></i><i></i><i></i><span>datars — zsh</span><button type="button" class="dv-replay">Replay</button></div>
+        <pre class="output dv-screen" tabindex="0" aria-live="off"><code></code></pre>
+        <p class="dv-what"></p>
+      </div>
+    </div>
+    <template class="dv-run" data-cmd="check" data-what="Diagnostics: unknown fields, bad expressions, fonts with no source.">{{run:check site/figures/developers/bench-000.ts|60}}</template>
+<template class="dv-run" data-cmd="lint" data-what="The chart checks: identity, encoding, legibility, accessibility, theme.">{{run:lint site/figures/developers/bench-000.ts|60}}</template>
+<template class="dv-run" data-cmd="explain" data-what="From an element back to its recipes, data row and every expression's value.">{{run:explain site/figures/developers/bench-111.ts --key '("India",)'|60}}</template>
+<template class="dv-run" data-cmd="diff" data-what="What a step changes, element by element.">{{run:diff site/figures/developers/bench-111.ts --states 0,1|60}}</template>
+<template class="dv-run" data-cmd="semantics" data-what="The accessibility tree a screen reader gets.">{{run:semantics site/figures/developers/bench-111.ts|60}}</template>
+<template class="dv-run" data-cmd="profile" data-what="Every state cold and warm, every transition stepped at 60 fps.">{{run:profile site/figures/developers/bench-111.ts --cpu|60}}</template>
+<template class="dv-run" data-cmd="describe" data-what="Parameters, defaults and theme tokens, from the recipe itself.">{{run:describe std/bar|60}}</template>
+    <p class="fine">Every command takes <code>--json</code>; images go to files named in the output; <code>--data name=file</code> renders a chart with someone's own rows. <a href="/docs/cli/">The CLI reference →</a></p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap split dv-dev">
     <div>
-      <p class="eyebrow">The loop</p>
-      <h2>Write, look, check, publish</h2>
+      <p class="eyebrow">The live page</p>
+      <h2><code>datars dev</code>: all of it, on every save</h2>
+      <p>A page with the chart, its states, its diagnostics and lint findings, rebuilt when the document or a local recipe changes — and it morphs from what's on screen to the new version, so you see what your edit changed. Click a mark and it explains it; switch to a phone width or dark mode from the toolbar; open Profile for what each frame and transition costs.</p>
 <pre><code data-lang="sh">datars new mychart --template story   # chart | story | explorable | map
 datars dev mychart/doc.ts             # live page: every save morphs in
-datars check mychart/doc.ts           # diagnostics
-datars lint mychart/doc.ts            # chart checks, with fixes
-datars render mychart/doc.ts --state 1          # a PNG from the CPU reference
-datars film mychart/doc.ts --from 0 --to 1      # a transition as a filmstrip
-datars profile mychart/doc.ts         # every transition, frame by frame
 datars publish mychart/doc.ts --alias sales --to site/</code></pre>
-      <p><code>datars dev</code> opens a page with the chart, its states, its diagnostics and its lint findings, rebuilds when the document or a local recipe changes, and morphs from what's on screen to the new version — so you see what your edit changed. Click a mark and it explains it; switch to a phone width or dark mode from the toolbar; open Profile to see what each frame and transition costs.</p>
     </div>
     <div>
-      <p class="eyebrow">Explain</p>
-      <h2>From a pixel back to its data row</h2>
-      <p>Point <code>explain</code> at a key and it prints the element as drawn, the recipes it came from, its data row, and every expression with its value — real output, captured when this page was built:</p>
-      {{run:explain examples/votes/doc.json --key '("SD",)'|14}}
+    <figure class="shot"><img class="thumb thumb-light" src="/img/dev-explain.png" alt="The datars dev page: a bar chart with its states under it, and the Explain panel listing the recipes, data row and expression values behind the clicked bar" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-explain-dark.png" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"><figcaption>The live page: the chart, its states, and — for the bar you clicked — the recipes that made it, its data row and every expression's value.</figcaption></figure>
     </div>
   </div>
 </section>
 
-<section class="section" style="padding-top:0">
+<section class="section" id="agents">
   <div class="wrap">
-    <figure class="shot"><img class="thumb thumb-light" src="/img/dev-explain.png" alt="The datars dev page: a bar chart with its states under it, and the Explain panel listing the recipes, data row and expression values behind the clicked bar" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-explain-dark.png" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"><figcaption>The live page: the chart, its states, and — for the bar you clicked — the recipes that made it, its data row and every expression's value.</figcaption></figure>
-    <div class="shot-pair"><figure class="shot"><img class="thumb" src="/img/dev-problems.png" alt="The Problems panel with a lint warning about a data source without keys, and its fix" width="1280" height="760" loading="lazy"><figcaption>Problems: diagnostics and lint findings, each with a fix.</figcaption></figure><figure class="shot"><img class="thumb thumb-light" src="/img/dev-profile.webp" alt="The Profile panel: live frame times, and the transitions played with their drops and stalls" width="1280" height="760" loading="lazy"><img class="thumb thumb-dark" src="/img/dev-profile-dark.webp" alt="" aria-hidden="true" width="1280" height="760" loading="lazy"><figcaption>Profile: frames live, each transition scored, and the engine's own profile — re-run on every save.</figcaption></figure></div>
+    <header class="section-head">
+      <p class="eyebrow">For coding agents</p>
+      <h2>The same tools over MCP, the whole API on one page</h2>
+      <p><code>datars-mcp</code> speaks the Model Context Protocol over stdio. An agent can profile a data file, write a document, check it, render its states and look at the images, film its transitions, lint it and publish it — the loop a person uses, with structured results. <a href="/llms.txt">llms.txt</a> gives it the whole API on one page; the document format has a <a href="/schema/ir-1.json">JSON Schema</a>.</p>
+    </header>
+    <div class="dv-agents">
+      <div>
+        <h3>A recorded session</h3>
+        <p>An agent's first three calls on the bench: start the session, list the tools, lint the flawed chart — <code>datars-mcp</code>'s replies as it sent them (long replies cut; <a href="{{src}}/site/figures/developers/record-mcp.mjs">the recorder</a>).</p>
+        {{code:site/figures/developers/mcp-session.txt}}
+      </div>
+      <div>
+        <h3><code>llms.txt</code></h3>
+        <p>Generated from the sources by <code>datars docs</code> (a test fails when it's stale): the SDK, every recipe's parameters, the CLI.</p>
+        {{code:llms.txt#L1-28}}
+        <h3 class="dv-tools-h">{{count:mcp}} tools</h3>
+        {{mcp:tools}}
+      </div>
+    </div>
+    <p><a class="more" href="/docs/agents/">Agents and MCP <span aria-hidden="true">→</span></a></p>
   </div>
 </section>
 
@@ -61,18 +151,6 @@ datars publish mychart/doc.ts --alias sales --to site/</code></pre>
 </section>
 
 <section class="section">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">For coding agents</p>
-      <h2>An MCP server with the same tools</h2>
-      <p><code>datars-mcp</code> speaks the Model Context Protocol over stdio. An agent can profile a data file, write a document, check it, render its states and look at the images, film its transitions, lint it and publish it — the loop a person uses, with structured results. <a href="/llms.txt">llms.txt</a> gives it the whole API on one page; the document format has a <a href="/schema/ir-1.json">JSON Schema</a>.</p>
-      <a class="more" href="/docs/agents/">Agents and MCP <span aria-hidden="true">→</span></a>
-    </div>
-    <div>{{mcp:tools}}</div>
-  </div>
-</section>
-
-<section class="section">
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Fits your stack</p>
@@ -83,17 +161,6 @@ datars publish mychart/doc.ts --alias sales --to site/</code></pre>
       <article><h3>React, Vite and Next.js</h3><p>React apps get a script-free path: a component, a Vite plugin and a Next.js config helper, with project templates. <a href="/docs/react/">The guide →</a></p></article>
       <article><h3>Tested like code</h3><p><code>datars test</code> snapshots every example state and 64 frames of every transition, and checks motion invariants. Renders are deterministic, so a golden is a hash, and the same goldens check wasm, iOS and Android.</p></article>
     </div>
-  </div>
-</section>
-
-<section class="section">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">The reference, in the terminal</p>
-      <h2><code>datars describe</code></h2>
-      <p>Every recipe's parameters, defaults and theme tokens, from the recipe itself — the same source as the <a href="/docs/std/">chart reference</a> and the MCP <code>describe_recipes</code> tool.</p>
-    </div>
-    <div>{{run:describe std/bar|22}}</div>
   </div>
 </section>
 
@@ -111,3 +178,4 @@ datars publish mychart/doc.ts --alias sales --to site/</code></pre>
     </div>
   </div>
 </section>
+<script type="module" src="/features-developers.js"></script>

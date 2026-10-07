@@ -1,0 +1,98 @@
+/* The developers page's own styles (site/pages/features/developers.html: `css:` in its front
+   matter): the bench (a live chart and its lint, fixes and explain panel) and the terminal. The
+   panel and the terminal have fixed heights, so what they print never moves the page. */
+.dv-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
+.dv-stage { position: sticky; top: 76px; min-width: 0; }
+.dv-frame { position: relative; }
+.dv-frame datars-view { cursor: crosshair; }
+.dv-hover, .dv-pin { position: absolute; pointer-events: none; border-radius: 3px; z-index: 2; }
+.dv-hover[hidden], .dv-pin[hidden] { display: none; }
+.dv-hover { outline: 1.5px dashed var(--accent); outline-offset: 2px; }
+.dv-pin { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dv-status { margin: 10px 2px 0; min-height: 3em; font-size: 14px; color: var(--ink-2); }
+.dv-panel { display: flex; flex-direction: column; height: min(780px, calc(100svh - 110px)); padding: 18px; }
+.dv-tabs { flex: none; margin-bottom: 14px; }
+.dv-tab { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding-right: 4px; }
+.dv-tab[hidden] { display: none; }
+.dv-tab h3 { margin-top: 16px; }
+.dv-tab h3:first-child { margin-top: 2px; }
+.dv-fixes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.dv-switch { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; font-size: 14px; line-height: 1.45; }
+.dv-switch input { flex: none; width: 17px; height: 17px; margin: 2px 0 0; accent-color: var(--accent); }
+.dv-switch code { font-size: 11.5px; }
+.dv-switch small { display: block; margin-top: 2px; font-size: 13px; color: var(--muted); }
+.dv-lintout pre { margin: 0; font-size: 11.5px; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 5.5em; }
+.dv-code { max-height: none; margin: 0; font-size: 11.5px; }
+.dv-tab .fine { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+.dv-tab .fine a { color: var(--accent); }
+.dv-hint { margin: 0 0 6px; font-size: 14px; color: var(--ink-2); }
+.dv-path { margin: 0; font-size: 12px; overflow-wrap: anywhere; }
+.dv-path code { background: none; padding: 0; color: var(--ink-2); }
+.dv-node { margin: 8px 0 0; font-size: 11.5px; white-space: pre-wrap; overflow-wrap: anywhere; padding: 10px 12px; }
+.dv-small { margin: 0; font-size: 13px; color: var(--ink-2); }
+.dv-row, .dv-values { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+.dv-row caption { text-align: left; font-size: 12px; color: var(--muted); padding-bottom: 4px; font-family: var(--mono); }
+.dv-row th, .dv-values th { text-align: left; font-weight: 600; color: var(--ink-2); padding: 4px 10px 4px 0; vertical-align: top; white-space: nowrap; font-family: var(--mono); font-size: 11.5px; }
+.dv-row td, .dv-values td { padding: 4px 0; border-top: 1px solid var(--rule); overflow-wrap: anywhere; }
+.dv-row th, .dv-values th { border-top: 1px solid var(--rule); }
+.dv-values code { font-size: 11px; }
+.dv-expr { background: none; padding: 0; color: var(--ink-2); }
+.dv-arrow { color: var(--muted); }
+.dv-val { color: var(--accent); }
+.dv-hits { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.dv-hits button { width: 100%; text-align: left; font: 500 12.5px var(--font); padding: 5px 8px; border: 1px solid var(--rule); border-radius: 7px; background: var(--surface); color: var(--ink-2); cursor: pointer; }
+.dv-hits button[aria-current="true"] { border-color: var(--accent); color: var(--ink); }
+
+.dv-term { display: grid; grid-template-columns: minmax(0, 260px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.dv-cmds { display: grid; gap: 6px; }
+.dv-cmds button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; text-align: left; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--surface); color: var(--ink); cursor: pointer; font: 600 14px var(--font); }
+.dv-cmds button span { font: 500 12px var(--mono); color: var(--muted); }
+.dv-cmds button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.dv-window { min-width: 0; border-radius: 12px; overflow: hidden; border: 1px solid #1d2436; background: #0a0d15; }
+.dv-bar { display: flex; align-items: center; gap: 7px; padding: 9px 12px; background: #141925; color: #8b93a7; font: 500 12px var(--font); }
+.dv-bar i { width: 11px; height: 11px; border-radius: 50%; background: #2a3142; }
+.dv-bar span { flex: 1; text-align: center; }
+.dv-replay { font: 600 12px var(--font); color: #c7cfdd; background: #222a3a; border: 0; border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+.dv-screen { margin: 0; border: 0; border-radius: 0; height: 430px; overflow: auto; font-size: 12px; line-height: 1.55; white-space: pre; }
+.dv-what { margin: 0; padding: 10px 14px; border-top: 1px solid #1d2436; color: #a3acbd; font-size: 13px; min-height: 2.6em; }
+.dv-term-section .fine { margin-top: 16px; font-size: 13.5px; color: var(--muted); }
+.dv-term-section .fine a { color: var(--accent); }
+
+.dv-dev .shot { margin: 0; }
+.dv-agents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px; align-items: start; }
+.dv-agents h3 { font-size: 1.1rem; margin: 0 0 8px; }
+.dv-agents p { color: var(--ink-2); font-size: 15px; }
+.dv-agents pre { font-size: 11.5px; max-height: 460px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.dv-agents .dv-tools-h { margin-top: 26px; }
+.dv-agents .table-wrap { max-height: 420px; overflow: auto; }
+
+@media (max-width: 1000px) {
+  .dv-grid { grid-template-columns: minmax(0, 1fr); }
+  .dv-stage { position: static; }
+  .dv-panel { height: 640px; }
+  .dv-agents { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .dv-term { grid-template-columns: minmax(0, 1fr); }
+  .dv-cmds { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dv-cmds button { padding: 7px 10px; font-size: 13px; }
+  .dv-screen { height: 380px; font-size: 11px; }
+  .dv-panel { height: 600px; padding: 14px; }
+}
+/* The bench's own slot: its box reserved by aspect ratio (a phone-shaped one under 600 px), its
+   poster under it until the live chart has drawn. */
+.dv-frame { container-type: inline-size; }
+.dv-slot { position: relative; aspect-ratio: 640 / 420; }
+.dv-slot { contain: size; overflow: hidden; border-radius: 6px; }
+.dv-slot datars-view { position: absolute; left: 0; top: 0; width: 100%; z-index: 1; display: block; }
+.dv-poster { position: absolute; inset: 0; width: 100%; height: 100%; }
+.dv-live .dv-poster { visibility: hidden; }
+.dv-narrow { display: none !important; }
+@container (max-width: 625.98px) {
+  .dv-slot { aspect-ratio: 332 / 415; }
+  .dv-wide { display: none !important; }
+  .dv-narrow.thumb-light { display: block !important; }
+  :root[data-theme="dark"] .dv-narrow.thumb-light { display: none !important; }
+  :root[data-theme="dark"] .dv-narrow.thumb-dark { display: block !important; }
+}
+.dv-steps { margin: 10px 2px 0; }
