@@ -364,8 +364,9 @@ function readable(accent, paper) {
 }
 const alike = (a, b) => rgb(a).reduce((d, v, i) => d + Math.abs(v - rgb(b)[i]), 0) < 90;
 
-/** The tokens the reader's look sets for a chart in `mode`. */
-function lookTokens(mode) {
+/** The tokens the reader's look sets for a chart in `mode` (exported for page scripts: the gallery's
+ * lab dresses its chart in it). */
+export function lookTokens(mode) {
   if (look.custom) return { ...(look.custom.modes?.[mode]?.tokens ?? {}) };
   const b = BRANDS[look.preset] ?? BRANDS.default;
   const colours = mode === "high-contrast" ? null : (mode === "dark" ? b.dark : b.light ?? b.dark);
