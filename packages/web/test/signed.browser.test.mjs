@@ -66,7 +66,7 @@ ${["signed", "unsigned", "foreign"].map((a) => `<datars-view id="${a}" src="/c/$
       assert.equal(state[id].renderer, null, `${id}: never drawn`);
       assert.equal(state[id].failed, "refused", id);
       assert.equal(state[id].poster, 0, `${id}: nothing from the bundle shows, not even its poster`);
-      assert.match(state[id].note ?? "", /isn't signed by a publisher this page trusts/);
+      assert.match(state[id].note ?? "", /couldn't be verified as signed by a publisher this page trusts/);
     }
     const errors = await p.evaluate(() => window.errors);
     assert.deepEqual(errors.map(([id, refused]) => [id, refused]).sort(), [["foreign", true], ["unsigned", true]]);

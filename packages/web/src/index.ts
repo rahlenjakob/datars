@@ -807,7 +807,7 @@ export class DatarsView extends ElementBase {
       note.className = "fail";
       note.setAttribute("part", "error");
       note.setAttribute("role", "note");
-      note.textContent = refused ? "Not shown: this chart isn't signed by a publisher this page trusts." : "This chart couldn't be shown.";
+      note.textContent = refused ? "Not shown: this chart couldn't be verified as signed by a publisher this page trusts." : "This chart couldn't be shown.";
       this.stage.querySelector(".fail")?.remove();
       this.stage.appendChild(note);
       this.dataset.failed = refused ? "refused" : "error";
