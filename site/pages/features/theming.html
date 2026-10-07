@@ -1,92 +1,168 @@
 ---
-title: Themed to your brand — at runtime · datars
-description: Brand tokens, fonts that travel with the chart, light, dark and high contrast, locks and contrast checks — applied at runtime, even to charts you already published, on the web and in apps.
-og: brand
+title: Your brand, at runtime — one chart, any look · datars
+description: Lay a brand over a published datars chart at runtime — colours, palettes, faces, sizes, corners and strokes, in light, dark and high contrast — or compile it in as a theme. Locks keep what an organisation fixes; checks catch palettes colour-blind readers can't tell apart.
+og: theming-brands
+css: features-theming.css
 ---
 <section class="page-head">
   <div class="wrap">
-    <p class="eyebrow">Themed to your brand</p>
-    <h1>Your brand, the reader's mode — applied at runtime</h1>
-    <p class="lede-2">In datars a colour in a chart is not a colour: it's an <em>ink</em> — <code>$accent</code>, <code>$categorical[3]</code>, <code>$ink@0.4</code> — resolved against the active theme every frame. So a brand, dark mode or high contrast restyles every chart, including ones published months ago, without republishing. Type, sizes, corners and strokes are tokens too, and the fonts travel inside the chart.</p>
+    <p class="eyebrow">Your brand</p>
+    <h1>One published chart. Any brand, laid over it at runtime.</h1>
+    <p class="lede-2">In datars a colour in a chart isn't a colour: it's an <em>ink</em> — <code>$accent</code>, <code>$categorical[2]</code>, <code>$card-line</code> — resolved against the theme when each frame is drawn. Faces, text sizes, corners, strokes and the gaps between bars are tokens too. So the app that shows a chart decides its look, even for a chart published months ago by someone else. The chart below was published once and knows none of these brands.</p>
   </div>
 </section>
 
-<section class="section themes" style="padding-top:12px">
+<section class="section tb" id="brands" style="padding-top:8px" data-own-look>
   <div class="wrap">
-    <div class="theme-grid">
-      <div class="frame">
-        <div class="chart" data-chart="brand"></div>
-      </div>
-      <aside class="theme-panel" aria-label="Theme controls">
-        <h3>Mode</h3>
-        <div class="seg" role="group" aria-label="Mode">
-          <button type="button" data-slot-mode="light" data-for="brand" aria-pressed="true">Light</button>
-          <button type="button" data-slot-mode="dark" data-for="brand" aria-pressed="false">Dark</button>
-          <button type="button" data-slot-mode="high-contrast" data-for="brand" aria-pressed="false">High contrast</button>
+    <div class="tb-grid">
+      <div class="tb-stage">
+        <div class="tb-brands" role="group" aria-label="Brand">
+          <button type="button" data-brand="datars" aria-pressed="true"><span class="tb-dots" aria-hidden="true"><i style="background:#4269d0"></i><i style="background:#efb118"></i><i style="background:#ff725c"></i></span><b>datars</b><small>Inter · built in</small></button>
+          <button type="button" data-brand="larkspur" aria-pressed="false"><span class="tb-dots" aria-hidden="true"><i style="background:#0f766e"></i><i style="background:#6cb8d0"></i><i style="background:#e8a33d"></i></span><b>Larkspur Health</b><small>Manrope · soft</small></button>
+          <button type="button" data-brand="quill" aria-pressed="false"><span class="tb-dots" aria-hidden="true"><i style="background:#b3261e"></i><i style="background:#1d3f6e"></i><i style="background:#c9922e"></i></span><b>The Daily Quill</b><small>Newsreader · print</small></button>
+          <button type="button" data-brand="neonfall" aria-pressed="false"><span class="tb-dots" aria-hidden="true"><i style="background:#ff2bd6"></i><i style="background:#22e5ff"></i><i style="background:#a3ff3d"></i></span><b>Neonfall</b><small>Space Mono · night</small></button>
+          <button type="button" data-brand="emberly" aria-pressed="false"><span class="tb-dots" aria-hidden="true"><i style="background:#e8590c"></i><i style="background:#7a3e1d"></i><i style="background:#e9b44c"></i></span><b>Emberly Roasters</b><small>Fraunces · warm</small></button>
         </div>
-        <h3>Brand</h3>
-        <div class="swatches" role="group" aria-label="Brand">{{look:presets}}</div>
-        <h3>Accent</h3>
-        <div class="dots" role="group" aria-label="Accent">{{look:accents}}</div>
-        <h3>What the page ran</h3>
-<pre class="live-code"><code data-lang="js" id="look-code">view.setTokens({});</code></pre>
-        <a class="btn btn-primary small look-studio" href="/themes/">Build your own in the theme studio <span aria-hidden="true">→</span></a>
-        <p class="fine">One published chart, five brands, three modes: the page only calls <code>setTokens()</code> and sets <code>mode</code>. Colours re-ink the next frame; new type and shapes morph in. The chart ships the brands' faces ({{size:brand}} with all five brands' fonts). High contrast keeps each brand's type and shapes but uses the reader's colours. The brand and accent you pick are this site's look: every chart you open here wears them — palette, type and corners too, on the <a href="/#make-it-yours">home page</a>.</p>
+        <div class="frame tb-frame">
+          <div class="chart" data-chart="theming-brands" data-phone-ratio="2.25"></div>
+        </div>
+        <div class="tb-bar">
+          <div class="seg tb-modes" role="group" aria-label="Mode">
+            <button type="button" data-mode="light" aria-pressed="true">Light</button>
+            <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+            <button type="button" data-mode="high-contrast" aria-pressed="false">High contrast</button>
+          </div>
+          <p class="tb-status" id="tb-status" aria-live="polite">Pick a brand: the page calls <code>setTokens()</code> on this one chart.</p>
+        </div>
+      </div>
+      <aside class="theme-panel tb-panel" aria-label="The code behind the look">
+        <div class="seg tb-tabs" role="group" aria-label="Show the look as">
+          <button type="button" data-view="runtime" aria-pressed="true">At runtime</button>
+          <button type="button" data-view="compiled" aria-pressed="false">Compiled in</button>
+        </div>
+<pre class="live-code tb-code"><code data-lang="js" id="tb-code">// The published chart, as it is: the built-in theme.
+const view = document.querySelector("datars-view");
+view.setAttribute("mode", "light");
+view.setTokens({});</code></pre>
+        <p class="fine tb-note" id="tb-note">What this page runs: a host app's token layer over the published chart, which knows nothing of the brand. Nothing is republished; the chart re-inks and, when type or shapes change, re-lays itself out and morphs there.</p>
+        <dl class="tb-facts">
+          <div><dt>Published once</dt><dd>{{size:theming-brands}}</dd></div>
+          <div><dt>Tokens this brand sets</dt><dd id="tb-count">0</dd></div>
+          <div><dt>Last <code>setTokens()</code></dt><dd id="tb-ms">—</dd></div>
+        </dl>
       </aside>
     </div>
-    {{alt:brand}}
+    {{alt:theming-brands}}
   </div>
 </section>
 
-<section class="section">
+<section class="section tb-why">
   <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">How it works</p>
-      <h2>A theme is a small file of typed tokens</h2>
-      <p>Set a few, derive the rest. The built-in theme derives gridlines, muted text, rules, surfaces and the ink on your accent from <code>ink</code>, <code>paper</code> and <code>accent</code>, so a brand that sets three colours gets a coherent theme — and dark mode only has to change the surfaces.</p>
-    </header>
-    <div class="cards2">
-      <article>
-<pre><code data-lang="ts">import { theme, font } from "@datars/sdk";
-
-export const acme = theme({
-  name: "acme",
-  extends: "datars/neutral",
-  tokens: {
-    brand: "#b3261e",
-    accent: "$brand",
-    paper: "#fbf8f1",
-    grid: "mix($ink, $paper, 0.9)",
-    "font.title": font.google("Source Serif 4", { weight: 700 }),
-    "font.body": font.file("Brand Sans", "fonts/BrandSans-Regular.ttf"),
-    "radius.bar": 2,
-  },
-  modes: { dark: { paper: "#15130f", ink: "#f2efe6" } },
-  locked: ["brand", "accent", "font.title"],
-});</code></pre>
-      </article>
-      <article>
-        <h3>Colour expressions</h3>
-        <p><code>mix(a, b, t)</code> in OKLab, <code>alpha</code>, <code>lighten</code>/<code>darken</code> in OKLCH, <code>saturate</code>, <code>oklch()</code>, <code>on(bg)</code> — black or white, whichever reads better — and references to other tokens and palette entries.</p>
-        <h3 style="margin-top:18px">Palettes</h3>
-        <p>Categorical, sequential and diverging palettes are tokens: a list, or generated from your brand colour. Data colours stay data — a party's colour is declared on its key, and the theme fills in the rest.</p>
-        <h3 style="margin-top:18px">Modes and dark-first brands</h3>
-        <p>Light, dark and high contrast live in one theme. A brand that is dark everywhere — a magazine with a black page — declares <code>scheme: "dark"</code> and keeps its night palette in light mode.</p>
-        <h3 style="margin-top:18px">Locks</h3>
-        <p>A layer can lock tokens so no later layer — a document, a host app — can change them. Overrides of locked tokens are ignored and reported.</p>
-      </article>
+    <div class="cards3">
+      <article><h3>Inks, resolved late</h3><p>A scene stores <code>$accent</code>, not <code>#4269d0</code>. Colours bind when a frame is drawn, so a new brand or a dark mode re-inks the next frame — nothing is laid out again.</p></article>
+      <article><h3>Type and shapes re-lay out</h3><p>Faces, text sizes, corners, strokes and band gaps are read when a scene resolves. Change one and the engine resolves the chart again and morphs to it, like any other change: titles reflow, bars widen, points grow.</p></article>
+      <article><h3>Three colours, a whole theme</h3><p>The built-in theme derives its greys, gridlines, surfaces, card inks and the ink on your accent from <code>paper</code>, <code>ink</code> and <code>accent</code> with colour expressions — so a brand that sets those three gets a coherent chart in every mode.</p></article>
     </div>
   </div>
 </section>
 
-<section class="section">
+<section class="section tb-yours" id="yours" data-own-look>
   <div class="wrap">
     <header class="section-head">
-      <p class="eyebrow">Checked</p>
-      <h2>Every theme gets a specimen board and a contrast check</h2>
-      <p><code>datars theme brand.json --specimen out.png</code> draws the standard charts, palettes, ramps and inks in all three modes side by side. Themes declare checks — WCAG contrast of text on its background, palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia, monotone sequential ramps — evaluated by <code>datars lint</code>. This is the built-in theme's board, rendered when this site was built:</p>
+      <p class="eyebrow">Make it yours in ten seconds</p>
+      <h2>One colour in. Palettes, ramps and checks out.</h2>
+      <p>Pick your brand colour. The engine generates a categorical palette around it — colours as far apart as it can find, for colour-blind readers too — a sequential ramp and a diverging one, and the page checks them as <code>datars lint</code> would. Then take it to the theme studio and keep going.</p>
     </header>
-    <div class="table-wrap" style="border-radius:14px"><img class="export-img" src="/exports/specimen.png" alt="The datars/neutral theme's specimen board: bars, lines, stacked bars, a donut, a scatter, and the categorical, sequential and diverging palettes and inks, in light, dark and high-contrast mode side by side." width="3024" height="640" loading="lazy" style="min-width:900px;border:0;border-radius:0"></div>
+    <div class="ty-grid">
+      <div class="theme-panel ty-panel">
+        <h3>Your brand colour</h3>
+        <div class="ty-pick">
+          <input type="color" id="ty-color" value="#e8590c" aria-label="Brand colour">
+          <input type="text" id="ty-hex" value="#e8590c" spellcheck="false" autocomplete="off" autocapitalize="off" maxlength="7" aria-label="Brand colour as hex">
+        </div>
+        <div class="ty-suggest" role="group" aria-label="Try a colour">
+          <button type="button" data-hex="#e8590c" style="--c:#e8590c" aria-label="#e8590c"></button>
+          <button type="button" data-hex="#0f766e" style="--c:#0f766e" aria-label="#0f766e"></button>
+          <button type="button" data-hex="#6a3fb5" style="--c:#6a3fb5" aria-label="#6a3fb5"></button>
+          <button type="button" data-hex="#c2185b" style="--c:#c2185b" aria-label="#c2185b"></button>
+          <button type="button" data-hex="#1f3a5f" style="--c:#1f3a5f" aria-label="#1f3a5f"></button>
+          <button type="button" data-hex="#2f8f5b" style="--c:#2f8f5b" aria-label="#2f8f5b"></button>
+          <button type="button" data-hex="#d4a017" style="--c:#d4a017" aria-label="#d4a017"></button>
+          <button type="button" data-hex="#4269d0" style="--c:#4269d0" aria-label="#4269d0"></button>
+        </div>
+        <h3>What the engine made</h3>
+        <div class="ty-pals" aria-label="Generated palettes">
+          <div class="ty-pal"><span>Categorical</span><span class="ty-sw" id="ty-cat"></span></div>
+          <div class="ty-pal"><span>Sequential</span><span class="ty-sw ty-ramp" id="ty-seq"></span></div>
+          <div class="ty-pal"><span>Diverging</span><span class="ty-sw ty-ramp" id="ty-div"></span></div>
+        </div>
+        <h3>Checks</h3>
+        <ul class="ty-checks" id="ty-checks">
+          <li><span>Text on the accent</span><b>—</b></li>
+          <li><span>Accent on the paper</span><b>—</b></li>
+          <li><span>Palette, closest pair</span><b>—</b></li>
+        </ul>
+        <div class="seg ty-cvd" role="group" aria-label="See the chart as">
+          <button type="button" data-cvd="" aria-pressed="true">Normal</button>
+          <button type="button" data-cvd="deuteranopia" aria-pressed="false" title="Deuteranopia: no green cones">Deutan</button>
+          <button type="button" data-cvd="protanopia" aria-pressed="false" title="Protanopia: no red cones">Protan</button>
+          <button type="button" data-cvd="tritanopia" aria-pressed="false" title="Tritanopia: no blue cones">Tritan</button>
+        </div>
+        <a class="btn btn-primary ty-go" id="ty-go" href="/themes/">Open it in the theme studio <span aria-hidden="true">→</span></a>
+      </div>
+      <div class="ty-stage">
+        <div class="frame ty-frame"><div class="chart" data-chart="theming-yours" data-phone-ratio="1.9"></div></div>
+<pre class="live-code ty-code"><code data-lang="ts" id="ty-code">theme({ name: "my-brand", extends: "datars/neutral", tokens: { brand: "#e8590c", accent: "$brand" } })</code></pre>
+      </div>
+    </div>
+    {{alt:theming-yours}}
+  </div>
+</section>
+
+<section class="section tb-locks" id="locks" data-own-look>
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Locks</p>
+      <h2>Let teams restyle everything — except what's fixed</h2>
+      <p>A theme can lock tokens so no later layer can change them: not the document, not the app that embeds it. This chart wears a fictional bank's house theme, which locks its brand colour, its paper and its title face. You're the host app: try to change them. The engine ignores what's locked and says so.</p>
+    </header>
+    <div class="tl-grid">
+      <div class="tl-main">
+        <div class="frame tl-frame"><div class="chart" data-chart="theming-locked" data-phone-ratio="0.95"></div></div>
+<div class="tl-theme">
+<pre><code data-lang="ts">export const skerry = theme({
+  name: "skerry-bank",
+  extends: "datars/neutral",
+  tokens: {
+    brand: "#1f3a5f",
+    accent: "$brand",
+    paper: "#f7f5ef",
+    categorical: ["$brand", "#d9a441", "#3c9a78"],
+    "font.title": font.file("Fraunces", "fonts/Fraunces-Bold.ttf", { weight: 700 }),
+  },
+  modes: { dark: { paper: "#0f1724", ink: "#e8e4da", brand: "#8fb3e0" } },
+  locked: ["brand", "accent", "paper", "font.title"],
+});</code></pre>
+        </div>
+      </div>
+      <div class="tl-side">
+      <div class="theme-panel tl-panel">
+        <h3>The host app asks for</h3>
+        <div class="tl-asks" role="group" aria-label="Host overrides">
+          <button type="button" data-ask="brand" aria-pressed="false"><span><code>brand</code> in the app's orange</span><em></em></button>
+          <button type="button" data-ask="paper" aria-pressed="false"><span><code>paper</code> in plain white</span><em></em></button>
+          <button type="button" data-ask="title" aria-pressed="false"><span><code>font.title</code> in Space Mono</span><em></em></button>
+          <button type="button" data-ask="body" aria-pressed="false"><span><code>font.body</code> in Manrope</span><em></em></button>
+          <button type="button" data-ask="lines" aria-pressed="false"><span>Bolder <code>stroke.line</code> and points</span><em></em></button>
+        </div>
+<pre class="live-code tl-code"><code data-lang="js" id="tl-code">view.setTokens({});</code></pre>
+        <h3>What the engine said</h3>
+        <ul class="tl-said" id="tl-said"><li class="tl-none">Nothing yet — no overrides.</li></ul>
+      </div>
+        <p class="tl-layers">The layers, in order: <code>datars/neutral</code> → each theme that extends it → the document's own <code>tokens</code> → the host's <code>setTokens()</code>. A token locked by one layer can't be changed by any later one. The theme's own modes may still refine what it locks: the host is always free to ask for dark mode, and the bank's own dark block decides what its brand colour and paper become there. <a href="{{src}}/site/figures/theming/locked.ts">Figure source</a></p>
+      </div>
+    </div>
+    {{alt:theming-locked}}
   </div>
 </section>
 
@@ -95,10 +171,11 @@ export const acme = theme({
     <div>
       <p class="eyebrow">Fonts travel with the chart</p>
       <h2>Your typeface, identical on every platform</h2>
-      <p>Font tokens say where each face comes from — a file in your project, a URL, or a Google Fonts family — and the publish step downloads it once, subsets it to the characters the chart can show and ships it in the bundle, with its licence recorded. No runtime ever calls a font CDN, and no system font is used, so line breaks and label placement are the same in the browser, the iOS app, the Android app and the video.</p>
+      <p>A compiled theme's font tokens say where each face comes from — a file in your project, a URL, or a Google Fonts family. The publish step downloads it once, subsets it to the characters the chart can show and ships it in the bundle, with its licence recorded. No runtime calls a font CDN and no system font is used, so line breaks and label placement are the same in the browser, the iOS app, the Android app and the video.</p>
       <ul class="bullets">
+        <li><b>At runtime</b>, a font token can name a face on your server; the chart asks the page for it (a <code>datarequest</code> one cache can answer for every chart) and waits up to 1.5 s for it before its first frame rather than opening in a fallback.</li>
         <li><b>Other scripts</b> — Hebrew, Arabic, CJK — come from document fonts that join every label's fallback chain, with right-to-left ordering.</li>
-        <li><b><code>datars fonts doc.ts</code></b> lists every token, its source, the face drawn and its licence; <code>check</code> reports a family with no source instead of silently falling back.</li>
+        <li><b><code>datars fonts doc.ts</code></b> lists every font token, the face drawn, its source and its licence.</li>
       </ul>
     </div>
     <figure class="fig">
@@ -112,9 +189,9 @@ export const acme = theme({
 <section class="section">
   <div class="wrap">
     <header class="section-head">
-      <p class="eyebrow">At runtime, in every host</p>
-      <h2>The app decides the look of the charts it downloads</h2>
-      <p>Hosts pass their own token layer and the reader's mode to charts they didn't build. Token overrides honour the theme's locks.</p>
+      <p class="eyebrow">Compiled in, or laid on at runtime</p>
+      <h2>Two ways in, the same tokens</h2>
+      <p>Put a theme in the document and it ships with the chart: <code>datars lint</code> checks it, its faces are subset into the bundle, every platform plays it. Or leave the chart alone and let each app lay its own look over it — with the reader's mode.</p>
     </header>
     <div class="cards3">
       <article>
@@ -122,6 +199,7 @@ export const acme = theme({
 <pre><code data-lang="js">const view = document.querySelector("datars-view");
 view.setAttribute("mode", "dark");
 view.setTokens({ accent: "#0f766e", "radius.bar": 6 });</code></pre>
+        <p class="fine">Or <code>&lt;DatarsView tokens={…} mode="dark" /&gt;</code> in React. Without a <code>mode</code>, the chart follows the reader's <code>prefers-color-scheme</code>.</p>
       </article>
       <article>
         <h3>iOS and macOS</h3>
@@ -135,7 +213,7 @@ chart.engine.setTokens(["accent": "#0f766e"])</code></pre>
 <pre><code data-lang="kotlin">val chart = DatarsView(context)
 chart.load(url)
 chart.setDarkMode(true)</code></pre>
-        <p class="fine">The Android view follows light and dark today; token overrides are on the web and in DatarsKit.</p>
+        <p class="fine">The Android view follows light and dark today; token overrides are on the web and in DatarsKit only.</p>
       </article>
     </div>
   </div>
@@ -143,10 +221,36 @@ chart.setDarkMode(true)</code></pre>
 
 <section class="section">
   <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Checked</p>
+      <h2>Every theme gets a specimen board and its checks</h2>
+      <p>Themes declare checks — WCAG contrast of text on its background, palettes that stay distinct under simulated deuteranopia, protanopia and tritanopia, ramps that only get darker — and <code>datars lint</code> runs them on the resolved theme in every mode. <code>datars theme brand.json --specimen out.png</code> draws the standard charts, palettes and inks in all three modes side by side. This is the built-in theme's board, rendered when this site was built:</p>
+    </header>
+    <div class="table-wrap tb-specimen"><img class="export-img" src="/exports/specimen.png" alt="The datars/neutral theme's specimen board: bars, lines, stacked bars, a donut, a scatter, and the categorical, sequential and diverging palettes and inks, in light, dark and high-contrast mode side by side." width="3024" height="640" loading="lazy"></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Limits, plainly</p>
+      <h2>What theming doesn't do yet</h2>
+    </header>
+    <ul class="tb-limits">
+      <li><b>Colour changes snap in the engine.</b> A new token layer re-inks the next frame at once; type and shape changes morph. The easing you see on this page and in the theme studio is the page's own: it hands the chart a few dozen in-between colours with <code>setTokens()</code>, one per frame.</li>
+      <li><b>The <code>motion.*</code> tokens aren't read.</b> The built-in theme declares <code>motion.duration</code>, <code>motion.easing</code> and <code>motion.stagger</code>, but transitions take their timing from the document's motion rules (<a href="/features/animation/">animation</a>), not from the theme.</li>
+      <li><b>Android has no token overrides.</b> The Android view switches light and dark; <code>setTokens</code> is on the web and in DatarsKit for iOS and macOS.</li>
+      <li><b>Generated palettes cost a search.</b> A categorical palette generated from a colour is the costliest thing a theme resolves; a page that changes it on every input (as this one does) should pass the colours once they're made, as the theme studio does.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
     <div class="next">
       <div>
-        <h2>Make a theme</h2>
-        <p>Build one in the theme studio, on ten live charts — or read the whole reference: tokens, modes, fonts, locks and checks.</p>
+        <h2>Build the whole theme</h2>
+        <p>Every token on ten live charts in light, dark and high contrast, with the checks — then export it as TypeScript, JSON or a runtime layer.</p>
       </div>
       <div class="cta">
         <a class="btn btn-primary" href="/themes/">Theme studio <span aria-hidden="true">→</span></a>
@@ -156,3 +260,5 @@ chart.setDarkMode(true)</code></pre>
     </div>
   </div>
 </section>
+
+<script type="module" src="/features-theming.js"></script>
