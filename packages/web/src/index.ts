@@ -259,6 +259,7 @@ canvas { transition: opacity .22s ease-out; }
 @media (prefers-reduced-motion: reduce) { :host(:not([reduced-motion="no-preference"])) canvas { transition: none; } }
 :host([reduced-motion="reduce"]) canvas, :host([reduced-motion=""]) canvas { transition: none; }
 .poster svg { width: 100%; height: 100%; }
+.fail { position: absolute; inset: 0; margin: 0; display: grid; place-items: center; padding: 16px; text-align: center; font-size: 13px; line-height: 1.4; color: var(--muted, #6b6b6b); }
 .poster[hidden], canvas[hidden] { display: none; }
 /* Native pickers over engine-drawn selects on touch screens: invisible, but a tap opens the
    platform's own list (16 px keeps iOS from zooming the page to the control). */
@@ -788,8 +789,37 @@ export class DatarsView extends ElementBase {
     return r;
   }
 
+  /** Start, and say so when it fails: an `error` event (`detail.message`) and a short note in the
+   * chart's box — never a silent blank or an unhandled rejection. A manifest refused by `publishers`
+   * is one: the page asked for charts it can trust, and this one isn't signed by a key it named. */
   private async start() {
+    const gen = this.generation + 1;
+    try {
+      await this.startChart();
+    } catch (e) {
+      if (gen !== this.generation || !this.isConnected) return; // a newer start, or off the page
+      const message = e instanceof Error ? e.message : String(e);
+      const refused = /signature|publisher|unsigned/i.test(message);
+      this.poster.replaceChildren();
+      clearTimeout(this.posterTimer);
+      this.posterTimer = 0;
+      const note = document.createElement("p");
+      note.className = "fail";
+      note.setAttribute("part", "error");
+      note.setAttribute("role", "note");
+      note.textContent = refused ? "Not shown: this chart isn't signed by a publisher this page trusts." : "This chart couldn't be shown.";
+      this.stage.querySelector(".fail")?.remove();
+      this.stage.appendChild(note);
+      this.dataset.failed = refused ? "refused" : "error";
+      this.dispatchEvent(new CustomEvent("error", { detail: { message, refused } }));
+      if (!refused) console.warn("datars:", message);
+    }
+  }
+
+  private async startChart() {
     const gen = ++this.generation;
+    this.stage.querySelector(".fail")?.remove();
+    delete this.dataset.failed;
     this.startedAt = performance.now();
     this.engineWasHere = engineOnPage;
     this.startLog = perfRequested(this) ? { src: this.getAttribute("src") ?? this.getAttribute("doc") ?? "", phases: [] } : null;
@@ -812,8 +842,9 @@ export class DatarsView extends ElementBase {
       try {
         const m = JSON.parse(new TextDecoder().decode(manifest));
         full = !coreSuffices(m);
-        // The poster downloads alongside the engine (not after it).
-        void this.fetchPoster(m, this.base.replace(/[?#].*$/, "").replace(/\/c\/[^/]+$/, "").replace(/\/manifest\.json$/, ""), live);
+        // The poster downloads alongside the engine (not after it) — unless the page only trusts
+        // signed charts: then nothing from the bundle shows before the engine has checked it.
+        if (!publishers.length) void this.fetchPoster(m, this.base.replace(/[?#].*$/, "").replace(/\/c\/[^/]+$/, "").replace(/\/manifest\.json$/, ""), live);
       } catch { full = true; }
     }
     const kind = full && allowScript ? "full" : this.hasAttribute("cpu") || (await webgpuWorks) ? "core" : "core-gl";
