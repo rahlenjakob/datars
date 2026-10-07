@@ -2481,6 +2481,13 @@ impl Engine {
         self.drag = Some(d);
     }
 
+    /// Whether a press at `at` (root coordinates) starts a drag the chart takes — a brush, a pan,
+    /// a slider's thumb. Touch hosts keep such a touch for the chart (a page would otherwise
+    /// scroll with it and cancel the drag a few pixels in) and let every other touch scroll.
+    pub fn drags_at(&self, at: Vec2) -> bool {
+        self.current_scene().is_some_and(|scene| self.drag_target(&scene, at).is_some())
+    }
+
     /// Zoom an explorable view around the pointer. Returns whether a view took the wheel (hosts
     /// let the page scroll otherwise).
     pub fn wheel(&mut self, at: Vec2, delta: f64) -> bool {

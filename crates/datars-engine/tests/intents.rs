@@ -304,3 +304,22 @@ fn hosts_read_every_signal_as_they_would_set_it() {
     e.set_signal_json("picked", &s["picked"]);
     assert_eq!(e.signal_values()["picked"], serde_json::json!(["b"]));
 }
+
+#[test]
+fn a_host_knows_which_presses_the_chart_drags() {
+    // Touch hosts keep these touches from scrolling the page; every other touch scrolls.
+    let mut e = engine(serde_json::json!({
+        "datars": 1, "size": { "width": 200, "height": 200 },
+        "scene": { "kind": "group", "key": "root", "children": [
+            { "kind": "group", "key": "area", "scales": { "x": { "type": "linear", "domain": [0, 100], "range": [0, 200] } },
+              "on": { "brush": { "brush": "sel" } },
+              "children": [{ "kind": "shape", "key": "bg", "geom": { "type": "rect", "x": 0, "y": 0, "w": 200, "h": 100 }, "fill": "$surface" }] },
+            { "kind": "shape", "key": "below", "geom": { "type": "rect", "x": 0, "y": 120, "w": 200, "h": 80 }, "fill": "$accent",
+              "semantics": { "role": "datum", "label": "a mark" }, "on": { "activate": { "set": "k", "value": 1 } } }] }
+    }));
+    assert!(e.drags_at(Vec2::new(50.0, 50.0)), "the brushable area");
+    assert!(!e.drags_at(Vec2::new(50.0, 160.0)), "a mark that's only clicked: the page may scroll from it");
+    let mut v = engine(explorable());
+    assert!(v.drags_at(Vec2::new(100.0, 100.0)), "a view that pans");
+    v.pointer(Pointer::Leave);
+}

@@ -418,10 +418,30 @@ export class DatarsView extends ElementBase {
       this.tip.hidden = true;
       this.kick();
     };
-    this.canvas.addEventListener("pointermove", (e) => this.pointer("move", e));
-    this.canvas.addEventListener("pointerdown", (e) => { this.canvas.setPointerCapture(e.pointerId); this.press(e, false); this.pointer("down", e); });
+    // Touch: a finger that lands where the chart drags (a brush, a pan, a slider's thumb) is the
+    // chart's — the page doesn't scroll with it, which would cancel the drag a few pixels in.
+    // Every other touch scrolls the page as usual. Two fingers on an explorable view pinch-zoom.
+    this.stage.addEventListener("touchstart", (e) => {
+      if (!this.view?.drags_at) return;
+      const r = this.canvas.getBoundingClientRect();
+      const t = e.changedTouches[0];
+      if (t && this.view.drags_at(t.clientX - r.left, t.clientY - r.top)) e.preventDefault();
+    }, { passive: false });
+    const cancel = (e: PointerEvent) => {
+      this.touches.delete(e.pointerId);
+      if (!this.touches.size) this.pinch = 0;
+      // The browser took the gesture (a scroll, a system gesture): the chart's drag ends here.
+      this.view?.pointer("leave", 0, 0);
+      this.tip.hidden = true;
+      this.kick();
+      this.noteSignals();
+    };
+    this.canvas.addEventListener("pointercancel", cancel);
+    texts.addEventListener("pointercancel", cancel);
+    this.canvas.addEventListener("pointermove", (e) => { if (!this.pinched(e, "move")) this.pointer("move", e); });
+    this.canvas.addEventListener("pointerdown", (e) => { this.canvas.setPointerCapture(e.pointerId); if (this.pinched(e, "down")) return; this.press(e, false); this.pointer("down", e); });
     this.canvas.addEventListener("wheel", wheel, { passive: false });
-    this.canvas.addEventListener("pointerup", (e) => this.pointer(this.tapped(e) ? "tap" : "up", e));
+    this.canvas.addEventListener("pointerup", (e) => { if (!this.pinched(e, "up")) this.pointer(this.tapped(e) ? "tap" : "up", e); });
     this.canvas.addEventListener("pointerleave", leave);
     // Text over the canvas is the chart too: hovering it reaches the marks underneath (tooltips),
     // a click on it is a click on the chart. A press that moves is the reader selecting text: no
@@ -974,6 +994,48 @@ export class DatarsView extends ElementBase {
     this.canvas.height = Math.round(h * dpr);
     this.view?.resize(w, h, dpr);
     this.renderGen = renderGen;
+  }
+
+  /** Fingers on the canvas (touch pointers), and the distance between two of them while they
+   * pinch (0 when not pinching: until every finger has lifted, one left behind doesn't pan). */
+  private touches = new Map<number, [number, number]>();
+  private pinch = 0;
+
+  /** Two fingers on an explorable view: their spread zooms it around their midpoint, as a wheel
+   * would. Returns whether the pointer event was the pinch's (the chart doesn't see it as a press,
+   * a drag or a tap). */
+  private pinched(e: PointerEvent, kind: "down" | "move" | "up"): boolean {
+    if (e.pointerType !== "touch" || !this.view) return false;
+    const r = this.canvas.getBoundingClientRect();
+    const p: [number, number] = [e.clientX - r.left, e.clientY - r.top];
+    if (kind === "up") {
+      this.touches.delete(e.pointerId);
+      const was = this.pinch > 0;
+      if (!this.touches.size) this.pinch = 0;
+      if (was) this.pressAt = null;
+      return was;
+    }
+    if (kind === "down") this.touches.set(e.pointerId, p);
+    else if (this.touches.has(e.pointerId)) this.touches.set(e.pointerId, p);
+    if (this.touches.size < 2) return this.pinch > 0;
+    const [a, b] = [...this.touches.values()];
+    const spread = Math.hypot(a[0] - b[0], a[1] - b[1]);
+    const mid: [number, number] = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    if (!this.pinch) {
+      // Only over a view that pans (else two fingers are the page's: its own zoom, a scroll).
+      if (!this.view.drags_at?.(mid[0], mid[1])) return false;
+      this.view.pointer("leave", 0, 0); // the first finger's pan ends here
+      this.pinch = spread || 1;
+      this.textLayer.hide();
+      return true;
+    }
+    if (spread > 0 && this.view.wheel(mid[0], mid[1], -Math.log(spread / this.pinch) / 0.0015)) {
+      this.tip.hidden = true;
+      this.kick();
+      this.noteSignals();
+    }
+    this.pinch = spread || this.pinch;
+    return true;
   }
 
   /** Where the last press went down, to tell a click from a drag. */

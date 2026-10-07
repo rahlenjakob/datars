@@ -244,6 +244,11 @@ mod web {
         pub fn cursor(&self) -> String {
             self.core.engine.cursor().css().into()
         }
+        /// Whether a press at (x, y) starts a drag the chart takes (a brush, a pan, a slider):
+        /// the page keeps such a touch from scrolling ([`datars_engine::Engine::drags_at`]).
+        pub fn drags_at(&self, x: f64, y: f64) -> bool {
+            self.core.engine.drags_at(datars_math::Vec2::new(x, y))
+        }
         /// Wheel/pinch zoom; true if an explorable view took it (then the page shouldn't scroll).
         pub fn wheel(&mut self, x: f64, y: f64, delta: f64) -> bool {
             self.core.wheel(x, y, delta)
