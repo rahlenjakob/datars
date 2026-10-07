@@ -235,9 +235,9 @@ function answerFonts(view) {
   view.addEventListener("datarequest", (e) => {
     const { name, url } = e.detail;
     if (!name.startsWith("font:")) return;
-    const path = new URL(url, location.href).pathname;
-    const m = path.match(/\/fonts\/([^/]+)$/);
-    if (!m || !path.startsWith("/fonts/")) return;
+    const u = new URL(url, location.href);
+    const m = u.origin === location.origin && u.pathname.match(/\/fonts\/([^/]+\.(?:ttf|otf|woff2?))$/);
+    if (!m) return;
     e.preventDefault();
     e.detail.respond(fetch(new URL(`fonts/${m[1]}`, SITE)).then((r) => r.arrayBuffer()).then((b) => new Uint8Array(b)));
   });
@@ -1141,7 +1141,7 @@ async function factsUI() {
     `<h3>Where else it runs</h3><ul class="lab-facts-list">${evidence(alias)}</ul><div data-part="film"></div>`,
     recipesUsed.length ? `<h3>Recipes it uses</h3><div class="lab-recipes">${recipesUsed.map((r) => {
       const std = r.match(/^@datars\/std\/(.+)$/);
-      return std ? `<a href="${new URL(`docs/std/${std[1]}/`, SITE).href}">${esc(std[1])}</a>` : `<a href="#" aria-disabled="true" onclick="return false">${esc(r)}</a>`;
+      return std ? `<a href="${new URL(`docs/std/${std[1]}/`, SITE).href}">${esc(std[1])}</a>` : `<span title="The document's own recipe">${esc(r)}</span>`;
     }).join("")}</div>` : "",
     `<h3>Theme tokens it reads</h3><div data-part="tokens"></div>`,
     alt ? `<h3>Its text description</h3><div data-part="alt"></div>` : "",

@@ -178,7 +178,7 @@ dialog.lab::backdrop { background: var(--bg); }
 .lab-facts-list b { color: var(--ink); font-weight: 600; }
 .lab-facts-list a { color: var(--accent); }
 .lab-recipes { display: flex; flex-wrap: wrap; gap: 5px; }
-.lab-recipes a { font: 600 12px var(--mono); padding: 3px 9px; border-radius: 999px; background: var(--chip); color: var(--ink); text-decoration: none; }
+.lab-recipes a, .lab-recipes span { font: 600 12px var(--mono); padding: 3px 9px; border-radius: 999px; background: var(--chip); color: var(--ink); text-decoration: none; }
 .lab-recipes a:hover { color: var(--accent); }
 .lab-body .hv-row { grid-template-columns: 120px minmax(0, 1fr) 54px; font-size: 12.5px; gap: 8px; }
 .lab-body .hv-track { height: 16px; }
