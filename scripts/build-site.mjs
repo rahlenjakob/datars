@@ -112,9 +112,10 @@ if (existsSync(figuresDir)) {
   }
 }
 // Documents a page rebuilds in the browser (the animation page's playground swaps in the reader's
-// motion rule with `setDocument`): published as a bundle like any chart, and also as the document
-// itself, at `/play/<alias>.json`.
-for (const alias of ["motion-playground"]) if (CHARTS[alias]) CHARTS[alias].raw = true;
+// motion rule with `setDocument`; the charts page's recipe playground edits any std figure, the
+// extensibility page's workbench its own): published as a bundle like any chart, and also as the
+// document itself, at `/play/<alias>.json`.
+for (const alias of Object.keys(CHARTS)) if (alias === "motion-playground" || /^(std|charts|extensibility)-/.test(alias)) CHARTS[alias].raw = true;
 const showcase = Object.keys(CHARTS).filter((a) => !CHARTS[a].figure);
 
 if (!existsSync(cli)) {
@@ -410,6 +411,10 @@ copyFileSync(join(root, "docs/reference/ir.schema.json"), join(out, "schema/ir-1
 
 const std = JSON.parse(execFileSync(cli, ["describe", "--json"], { maxBuffer: 1 << 26 }).toString());
 const recipeCount = Object.keys(std).length;
+// Every recipe's parameters, defaults and docs, and the catalogue's families, for the pages that
+// build documents in the browser (the charts page's recipe playground makes its controls from them).
+mkdirSync(join(out, "play"), { recursive: true });
+writeFileSync(join(out, "play", "std.json"), JSON.stringify({ groups: STD_GROUPS, recipes: std }));
 const help = execFileSync(cli, ["help"]).toString();
 /** The MCP server's tools, from its source (the same list `tools/list` answers). */
 const mcpTools = [...readFileSync(join(root, "crates/datars-mcp/src/main.rs"), "utf8").matchAll(/\{ "name": "(\w+)", "description": "((?:[^"\\]|\\.)*)"/g)].map((m) => [m[1], m[2].replace(/\\"/g, '"')]);
