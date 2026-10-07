@@ -1,92 +1,437 @@
 ---
-title: Batteries included — 88 ready-made charts to play with · datars
-description: The datars standard library — bars to sankeys, maps to cards, 88 recipes — in a playground that runs the real engine: pick any recipe, change its settings, paste your own data, and copy the doc.ts behind the chart.
+title: Batteries included — 88 chart types in 12 families · datars
+description: The datars standard library — 88 recipes in 12 families, from bars to sankeys, maps to cards — each family shown live on one dataset, morphing between its members; and the primitives every recipe is built from, open to you too.
 og: charts-fits
 css: features-charts.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Batteries included</p>
-    <h1>{{count:recipes}} recipes, from bars to sankeys, maps to cards</h1>
-    <p class="lede-2">The standard library covers what newsrooms, analysts and product dashboards publish — comparisons, parts of a whole, change over time, distributions, flows, networks, finance, maps — and what goes around them: axes, legends, titles, callouts, cards and controls. Every recipe draws in your theme, morphs by key, reads out to screen readers and plays on every platform. Try any of them below, on the real engine, with your own data.</p>
+    <h1>{{count:recipes}} chart types in 12 families — and the primitives they're made of</h1>
+    <p class="lede-2">The standard library covers what newsrooms, analysts and product teams publish: comparisons, parts of a whole, distributions, flows, networks, finance, maps, dashboards — and what goes around them: titles, legends, cards and controls. Every recipe draws in your theme, morphs by key, reads out to screen readers and plays on every platform. Below, each family plays live on one dataset, turning from one member into the next.</p>
+    <nav class="fam-index" aria-label="Families">
+      <ul>
+<li><a href="#frames"><span>Frames and layout</span><b>7</b></a></li>
+<li><a href="#marks"><span>Marks</span><b>11</b></a></li>
+<li><a href="#comparisons"><span>Comparisons</span><b>6</b></a></li>
+<li><a href="#kpis"><span>KPIs and planning</span><b>6</b></a></li>
+<li><a href="#tables"><span>Tables and profiles</span><b>2</b></a></li>
+<li><a href="#parts"><span>Parts of a whole and flows</span><b>8</b></a></li>
+<li><a href="#networks"><span>Networks and hierarchies</span><b>8</b></a></li>
+<li><a href="#distributions"><span>Distributions and time</span><b>11</b></a></li>
+<li><a href="#finance"><span>Finance</span><b>8</b></a></li>
+<li><a href="#maps"><span>Maps</span><b>9</b></a></li>
+<li><a href="#bigdata"><span>Big data</span><b>5</b></a></li>
+<li><a href="#controls"><span>Controls</span><b>7</b></a></li>
+      </ul>
+      <p class="fam-index-more">Every recipe as a card, with filters: <a href="/gallery/">see them all in the gallery <span aria-hidden="true">→</span></a></p>
+    </nav>
   </div>
 </section>
 
-<section class="section rp" id="recipe-playground" style="padding-top:8px">
-  <div class="wrap">
-    <div class="rp-grid">
-      <div class="rp-stage">
-        <div class="frame rp-frame">
-          <div class="rp-bar">
-            <button type="button" class="rp-prev rp-arrow" aria-label="Previous recipe" title="Previous recipe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 8.5 12l6 6"/></svg></button>
-            <select id="rp-recipe" class="rp-pick" data-start="bar" aria-label="Recipe"><option value="bar">bar</option></select>
-            <button type="button" class="rp-next rp-arrow" aria-label="Next recipe" title="Next recipe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 6 6 6-6 6"/></svg></button>
-          </div>
-          <div class="rp-view" data-own-look>
-            <div class="chart" data-chart="std-pareto" data-ratio="0.56" data-min="220" data-phone-ratio="0.66" data-label="The recipe playground's chart"></div>
-          </div>
-          <p class="rp-about"><b>bar()</b> Bars from a category field on a band scale to a value on a linear scale (vertical or horizontal, decided by which axis is the band).</p>
-          <ul class="rp-notes" aria-live="polite" hidden></ul>
-        </div>
-      </div>
-      <aside class="theme-panel rp-panel" aria-label="The recipe's settings and data">
-        <div class="rp-settings"></div>
-        <h3><label for="rp-csv">Data</label></h3>
-        <textarea id="rp-csv" class="rp-csv rp-mono" rows="7" spellcheck="false" autocomplete="off"></textarea>
-        <div class="rp-csv-foot"><p class="rp-hint rp-csv-note"></p><button type="button" class="btn btn-ghost small rp-csv-reset">Example data</button></div>
-      </aside>
+<section class="fam" id="frames" data-family="Frames and layout" aria-labelledby="frames-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>7</b> recipes · family 1 of 12</p>
+      <h2 id="frames-h">Frames and layout</h2>
+      <p>A plot sets up the scales, axes and gridlines from the columns you name; marks go inside it. Titles, legends, cards and small multiples are recipes too — so a chart's furniture follows your theme and moves with it.</p>
+      <ul class="fam-members" aria-label="The frames and layout recipes, each linking to its reference">
+<li><a href="/docs/std/plot/" data-recipe="plot" title="A cartesian frame: x/y (and colour) scales from data, axes and gridlines sized by the engine, a title, and marks as children."><code>plot</code></a></li>
+<li><a href="/docs/std/facet/" data-recipe="facet" title="Small multiples: the given chart once per value of `by`, in a grid; inside, the chart&#x27;s `data` is that group&#x27;s rows (&quot;@group&quot;), on scales shared across panels unless `shared: false`."><code>facet</code></a></li>
+<li><a href="/docs/std/title/" data-recipe="title" title="A title (and optional subtitle and source line), each wrapped to the box: on a phone a long line takes two instead of running off."><code>title</code></a></li>
+<li><a href="/docs/std/card/" data-recipe="card" title="A text card over the chart: an optional kicker and title over wrapped body text, on the theme&#x27;s card surface, anchored to a corner or edge of its box."><code>card</code></a></li>
+<li><a href="/docs/std/legend/" data-recipe="legend" title="A legend for a colour scale: a swatch and a label per entry, flowing in rows (spaced by the labels&#x27; widths, wrapping at the box edge), under an optional title."><code>legend</code></a></li>
+<li><a href="/docs/std/axis/" data-recipe="axis" title="An axis for a scale: tick labels, tick marks and a domain line."><code>axis</code></a></li>
+<li><a href="/docs/std/grid/" data-recipe="grid" title="Gridlines at a scale&#x27;s ticks across the plot area."><code>grid</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> plot · title · legend · grid · facet · card</p>
     </div>
-    <div class="rp-code-wrap">
-      <div class="rp-code-head">
-        <h2>The doc.ts behind it</h2>
-        <button type="button" class="btn btn-ghost small rp-copy">Copy</button>
-      </div>
-<pre class="live-code rp-code"><code data-lang="ts" id="rp-code">// Loading the recipe…</code></pre>
-      <p class="fine">Written from the document the chart is playing, and compiled back to it exactly — <a href="{{src}}/site/features-charts.test.mjs">checked for every recipe's example</a>. Save it as <code>doc.ts</code> and run <code>datars dev doc.ts</code>. <strong>What runs here:</strong> the engine with its recipe sandbox, in your browser — each change is a new document for <code>view.setDocument()</code>, expanded again and morphed to, as <code>datars dev</code> does on save. <strong>What needs the CLI:</strong> compiling TypeScript, <code>datars lint</code>, and publishing a bundle, which expands the recipes ahead of time so readers' devices play it without the sandbox. The settings are the recipe's own description (<code>datars describe std/<span class="rp-name">bar</span></code>); the example is its reference figure's first step.</p>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-frames" data-caption data-autoplay="4200" data-phone-ratio="1.0"></div></div>
     </div>
   </div>
+  <div class="wrap fam-alt">{{alt:charts-frames}}</div>
 </section>
-
-<section class="section" id="fits">
-  <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">One table, every chart that fits it</p>
-      <h2>Nine recipes, one dataset — and each morphs into the next</h2>
-      <p>Every mark carries the key of its row, so a column becomes its bar, its lollipop, its dot, its slice and its tile — and the parliament's seats and the waffle's squares are keyed by row and unit, so a dot splits into its seats, the seats gather into their slice, a tile breaks into squares. No transition code: the recipes and the keys are enough. Paste your own names and numbers: the published chart takes them through <code>view.provideData()</code>, on the light engine every bundle plays on.</p>
-    </header>
-    <div class="fits-grid">
-      <div class="frame fits-frame fits-cq">
-        <div class="chart" data-chart="charts-fits" data-caption data-autoplay="3600" data-phone-ratio="0.95"></div>
-      </div>
-      <div class="fits-side">
-        <h3><label for="fits-csv">Your data</label></h3>
-        <textarea id="fits-csv" class="rp-csv rp-mono" rows="8" spellcheck="false" autocomplete="off">channel,visitors
+<section class="fam" id="marks" data-family="Marks" aria-labelledby="marks-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>11</b> recipes · family 2 of 12</p>
+      <h2 id="marks-h">Marks</h2>
+      <p>The marks that sit in a plot's coordinates. They share their keys — a row's grouped bar, stacked segment, heatmap cell and dot are the same element — so changing the chart type is a morph, not a redraw.</p>
+      <ul class="fam-members" aria-label="The marks recipes, each linking to its reference">
+<li><a href="/docs/std/bar/" data-recipe="bar" title="Bars from a category field on a band scale to a value on a linear scale (vertical or horizontal, decided by which axis is the band)."><code>bar</code></a></li>
+<li><a href="/docs/std/line/" data-recipe="line" title="One line per series (the colour field, or `series`), through x/y."><code>line</code></a></li>
+<li><a href="/docs/std/area/" data-recipe="area" title="Filled areas from a baseline (0, or `y0`) to y — one per series."><code>area</code></a></li>
+<li><a href="/docs/std/point/" data-recipe="point" title="A dot per row (instanced: scales to 10⁵–10⁶ points)."><code>point</code></a></li>
+<li><a href="/docs/std/dot/" data-recipe="dot" title="A dot per category at its value (a dot plot)."><code>dot</code></a></li>
+<li><a href="/docs/std/grouped/" data-recipe="grouped" title="Grouped (dodged) bars: a group per x, a bar per series side by side."><code>grouped</code></a></li>
+<li><a href="/docs/std/stacked/" data-recipe="stacked" title="Stacked bars: a segment per series in each category (offset `expand` for 100 %); horizontal when y is the band axis."><code>stacked</code></a></li>
+<li><a href="/docs/std/cell/" data-recipe="cell" title="Heatmap cells: a rectangle per (x, y) on two band scales, coloured by the colour scale."><code>cell</code></a></li>
+<li><a href="/docs/std/rule/" data-recipe="rule" title="A reference line at a value on the x or y scale (a target, an average, &#x27;today&#x27;)."><code>rule</code></a></li>
+<li><a href="/docs/std/span/" data-recipe="span" title="A shaded band between two values on the x or y scale (a recession, a target range)."><code>span</code></a></li>
+<li><a href="/docs/std/annotate/" data-recipe="annotate" title="A callout: text offset from a point (in plot coordinates via scales, or px), with a connector and a dot."><code>annotate</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> grouped · stacked · cell · dot · line · area · bar · span · rule · annotate</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-marks" data-caption data-autoplay="4200" data-phone-ratio="1.0"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-marks}}</div>
+</section>
+<section class="fam" id="comparisons" data-family="Comparisons" aria-labelledby="comparisons-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>6</b> recipes · family 3 of 12</p>
+      <h2 id="comparisons-h">Comparisons</h2>
+      <p>Before and after, ranks and gaps — the charts that answer “what changed?”. One election's two results, seven parties, six ways.</p>
+      <ul class="fam-members" aria-label="The comparisons recipes, each linking to its reference">
+<li><a href="/docs/std/slope/" data-recipe="slope" title="A slope chart: each series&#x27; first and last value (two years, before and after) joined by a line, named at both ends — labels pushed apart so none overlap, the plot leaving them room."><code>slope</code></a></li>
+<li><a href="/docs/std/dumbbell/" data-recipe="dumbbell" title="Two values per category joined by a bar: a dot per row (coloured by the plot&#x27;s colour field — the year, the group), a connector from each category&#x27;s lowest to highest."><code>dumbbell</code></a></li>
+<li><a href="/docs/std/bump/" data-recipe="bump" title="A bump chart: each series&#x27; rank at every time, 1 at the top, joined by lines and named at both ends."><code>bump</code></a></li>
+<li><a href="/docs/std/lollipop/" data-recipe="lollipop" title="A lollipop per category: a thin stem from zero to the value, a dot at its end — a bar chart with less ink, for many categories or values far from zero."><code>lollipop</code></a></li>
+<li><a href="/docs/std/pyramid/" data-recipe="pyramid" title="A population pyramid: a band per group (age, youngest at the bottom), one side&#x27;s bars growing left and the other&#x27;s right from a column of group names, both on one scale so the sides compare."><code>pyramid</code></a></li>
+<li><a href="/docs/std/marimekko/" data-recipe="marimekko" title="A marimekko (mosaic): a column per category as wide as its share of the total, split into segments as tall as each series&#x27; share within it — so every area is that pair&#x27;s share of everything."><code>marimekko</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> dumbbell · slope · bump · pyramid · marimekko · lollipop</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-comparisons" data-caption data-autoplay="4200" data-phone-ratio="1.1"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-comparisons}}</div>
+</section>
+<section class="fam" id="kpis" data-family="KPIs and planning" aria-labelledby="kpis-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>6</b> recipes · family 4 of 12</p>
+      <h2 id="kpis-h">KPIs and planning</h2>
+      <p>The numbers a dashboard opens with — key figures with their trend, targets, dials, goals — and the plans and histories around them.</p>
+      <ul class="fam-members" aria-label="The kpis and planning recipes, each linking to its reference">
+<li><a href="/docs/std/kpi/" data-recipe="kpi" title="A key figure: its label, the value as a big number (counting when it changes), its change against a comparison — an arrow and the delta in `$positive` or `$negative` by whether the change is good (`better`) — and, from a table, a sparkline of how it got there."><code>kpi</code></a></li>
+<li><a href="/docs/std/bullet/" data-recipe="bullet" title="Bullet graphs: per row the actual value as a bar over qualitative bands (poor, fair, good — darkest first) with the target as a tick across it, each on its own scale with its own ticks (or one scale for all with `shared`)."><code>bullet</code></a></li>
+<li><a href="/docs/std/gauge/" data-recipe="gauge" title="A dial: an arc from `min` to `max` filled up to the value — or, with `bands`, coloured ranges and a needle — with the value in the middle, the ends labelled and the label under it."><code>gauge</code></a></li>
+<li><a href="/docs/std/progress/" data-recipe="progress" title="Progress toward a goal: a bar (label and share above it) or a ring (the share in the middle), filled to value ÷ goal — past the goal it stays full and the share says how far past."><code>progress</code></a></li>
+<li><a href="/docs/std/gantt/" data-recipe="gantt" title="A plan: one row per task, a bar from its start to its end on a time axis, tasks under their group&#x27;s heading (with a thin bar spanning the group), milestones as diamonds, how far each task has got as a solid part of its bar, and a line at today."><code>gantt</code></a></li>
+<li><a href="/docs/std/timeline/" data-recipe="timeline" title="Events on a time axis: a dot per event and its date and label on a stem, packed into as few lanes above and below the line as keep every label clear of the others (an engine op, so it re-packs for a phone); labels that still don&#x27;t fit the height are left to the dot&#x27;s tooltip."><code>timeline</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> kpi · bullet · gauge · progress · gantt · timeline</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-kpis" data-caption data-autoplay="4200" data-phone-ratio="1.35"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-kpis}}</div>
+</section>
+<section class="fam" id="tables" data-family="Tables and profiles" aria-labelledby="tables-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>2</b> recipes · family 5 of 12</p>
+      <h2 id="tables-h">Tables and profiles</h2>
+      <p>Many values per thing. A table drawn by the engine — bars, coloured cells and sparklines in its rows, sorted by a tap on a header — and radar profiles.</p>
+      <ul class="fam-members" aria-label="The tables and profiles recipes, each linking to its reference">
+<li><a href="/docs/std/dataTable/" data-recipe="dataTable" title="A data table drawn by the engine: column headers, text left and numbers right-aligned in their formats, optional inline bars, sparklines or coloured cells per column, striped rows, sorted by a column — or by whichever header the reader clicks or taps, a second click reversing it (`sortable`)."><code>dataTable</code></a></li>
+<li><a href="/docs/std/radar/" data-recipe="radar" title="A radar (spider) chart: one spoke per dimension, in the order they first appear, and each series a closed shape through its values, on one radial scale from zero with rings at even steps."><code>radar</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> dataTable · radar</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-tables" data-caption data-autoplay="4200" data-phone-ratio="1.05"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-tables}}</div>
+</section>
+<section class="fam" id="parts" data-family="Parts of a whole and flows" aria-labelledby="parts-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>8</b> recipes · family 6 of 12</p>
+      <h2 id="parts-h">Parts of a whole and flows</h2>
+      <p>Shares, units and running totals. One table of six channels drawn ten ways, each morphing into the next: a dot splits into its seats, the seats gather into their slice, a tile breaks into squares.</p>
+      <ul class="fam-members" aria-label="The parts of a whole and flows recipes, each linking to its reference">
+<li><a href="/docs/std/pie/" data-recipe="pie" title="Parts of a whole as slices (set `inner` &gt; 0 for a donut)."><code>pie</code></a></li>
+<li><a href="/docs/std/treemap/" data-recipe="treemap" title="A squarified treemap: area ∝ value, one rectangle per category, labels where they fit."><code>treemap</code></a></li>
+<li><a href="/docs/std/waffle/" data-recipe="waffle" title="One square per unit (e.g."><code>waffle</code></a></li>
+<li><a href="/docs/std/hemicycle/" data-recipe="hemicycle" title="A parliament: one dot per seat on concentric arcs, grouped by party left to right."><code>hemicycle</code></a></li>
+<li><a href="/docs/std/funnel/" data-recipe="funnel" title="A funnel: stage names in a measured column, centred bars in stage order joined by tapering connectors, each labelled with the conversion from the stage before."><code>funnel</code></a></li>
+<li><a href="/docs/std/waterfall/" data-recipe="waterfall" title="A waterfall/bridge: each change floats from the running total; rows marked as totals (a boolean field, or keys starting with &#x27;=&#x27;) are bars from zero."><code>waterfall</code></a></li>
+<li><a href="/docs/std/pareto/" data-recipe="pareto" title="The running share of the total, from the largest category down, as a line with points on the plot&#x27;s right axis (`right: { domain: [0, 1], format: &#x27;.0%&#x27; }`) — over bars sorted descending, a Pareto chart."><code>pareto</code></a></li>
+<li><a href="/docs/std/sankey/" data-recipe="sankey" title="Flows between nodes: nodes in columns by depth, ribbons as wide as their flow."><code>sankey</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> pie · treemap · waffle · hemicycle · pareto (and bar, lollipop, dot)</p>
+        <details class="fam-yours" id="fits">
+          <summary>Draw your own numbers this way</summary>
+          <textarea id="fits-csv" class="fam-csv" rows="7" spellcheck="false" autocomplete="off" aria-label="Your data: names, then numbers">channel,visitors
 Search,38
 Social,21
 Direct,17
 Newsletter,12
 Referral,8
 Ads,4</textarea>
-        <div class="rp-csv-foot"><p class="rp-hint fits-note" aria-live="polite">The example. Edit it, or paste two columns of your own.</p><button type="button" class="btn btn-ghost small fits-reset">Example data</button></div>
-<pre><code data-lang="ts">// In the document, the rows are a slot:
-visits: data.slot("visits", { key: "channel", sample }),
-// on this page, yours go in:
-view.provideData("visits", { channel, visitors });</code></pre>
-        <p class="fine">The waffle and the parliament count percentage points of the total (rounded), so any numbers fit in a hundred squares. <a href="{{src}}/site/figures/charts/fits.ts">Figure source</a></p>
-      </div>
+          <div class="fam-csv-foot"><p class="fam-note fits-note" aria-live="polite">The example. Paste two columns — names, then numbers — from a spreadsheet or a CSV.</p><button type="button" class="btn btn-ghost small fits-reset">Example</button></div>
+          <p class="fam-fine">Your rows go into the published chart with <code>view.provideData("visits", …)</code> — no recipe code runs. They're checked first (2–24 rows, each name once, no negative numbers); anything else is refused and the chart keeps what it shows. The waffle and the parliament count percentage points of the total.</p>
+        </details>
     </div>
-    {{alt:charts-fits}}
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-fits" data-caption data-autoplay="4200" data-phone-ratio="0.95"></div></div>
+    </div>
   </div>
+  <div class="wrap fam-alt">{{alt:charts-fits}}</div>
+</section>
+<section class="fam" id="networks" data-family="Networks and hierarchies" aria-labelledby="networks-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>8</b> recipes · family 7 of 12</p>
+      <h2 id="networks-h">Networks and hierarchies</h2>
+      <p>Who belongs to what, and who is linked to whom. One small institute — its reporting lines and its co-authors — eight ways, each person keyed by name throughout.</p>
+      <ul class="fam-members" aria-label="The networks and hierarchies recipes, each linking to its reference">
+<li><a href="/docs/std/network/" data-recipe="network" title="A node-link diagram laid out by a deterministic force simulation — seeded starts, a fixed number of steps, computed once per data and size, never per frame: links pull, nodes repel, never overlap and stay inside the box."><code>network</code></a></li>
+<li><a href="/docs/std/arcDiagram/" data-recipe="arcDiagram" title="Nodes on a line and each link as an arc above it, as tall as it is long."><code>arcDiagram</code></a></li>
+<li><a href="/docs/std/chord/" data-recipe="chord" title="A chord diagram: groups around a circle, each as long as the flows touching it, and a ribbon per flow between its two groups, as wide as the flow at both ends."><code>chord</code></a></li>
+<li><a href="/docs/std/matrix/" data-recipe="matrix" title="An adjacency matrix: a row and a column per node, a cell where two are linked — shaded by weight, coloured where both ends share a colour."><code>matrix</code></a></li>
+<li><a href="/docs/std/tree/" data-recipe="tree" title="A tidy tree (Reingold–Tilford) of a parent-child table: parents centred over their children, subtrees packed as close as they go, identical subtrees drawn alike."><code>tree</code></a></li>
+<li><a href="/docs/std/dendrogram/" data-recipe="dendrogram" title="A dendrogram (cluster layout) of a parent-child table: every leaf on one line, each parent centred over its children at its height, joined by elbows."><code>dendrogram</code></a></li>
+<li><a href="/docs/std/sunburst/" data-recipe="sunburst" title="A sunburst: a hierarchy as rings, the root in the middle and each node an arc spanning its share of its parent."><code>sunburst</code></a></li>
+<li><a href="/docs/std/icicle/" data-recipe="icicle" title="An icicle: a hierarchy as bands, the root first and each node spanning its share of its parent, its name and value inside where they fit."><code>icicle</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> tree · dendrogram · icicle · sunburst · network · arcDiagram · matrix · chord</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-networks" data-caption data-autoplay="4200" data-phone-ratio="1.0"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-networks}}</div>
+</section>
+<section class="fam" id="distributions" data-family="Distributions and time" aria-labelledby="distributions-h">
+  <div class="wrap fam-grid fam-two">
+    <div class="fam-text">
+      <p class="fam-count"><b>11</b> recipes · family 8 of 12</p>
+      <h2 id="distributions-h">Distributions and time</h2>
+      <p>How values spread — every row, binned, summarised or smoothed — and time as the axis: calendars, layers, stripes and paths.</p>
+      <ul class="fam-members" aria-label="The distributions and time recipes, each linking to its reference">
+<li><a href="/docs/std/histogram/" data-recipe="histogram" title="A histogram: the rows of `x` counted into bins of equal width (about `bins` of them at a round width, or exactly `step` wide), a bar per bin from its start to its end."><code>histogram</code></a></li>
+<li><a href="/docs/std/boxplot/" data-recipe="boxplot" title="A box plot per category: the box spans the middle half (first to third quartile) with a line at the median; whiskers reach the furthest values within 1.5 × the box&#x27;s height (`whisker`) of it, and values beyond are drawn as outliers."><code>boxplot</code></a></li>
+<li><a href="/docs/std/violin/" data-recipe="violin" title="A violin per category: the values&#x27; kernel density (Gaussian, Silverman&#x27;s bandwidth unless given) mirrored around the category&#x27;s centre, over the range of the data — its shape shows where values bunch, where a box plot shows five numbers."><code>violin</code></a></li>
+<li><a href="/docs/std/ridgeline/" data-recipe="ridgeline" title="Ridgelines: a kernel density curve per category (a row of the plot&#x27;s band y axis) over a shared value axis, rising from the row&#x27;s baseline into the rows above — many distributions (months, years, groups) compared in little space."><code>ridgeline</code></a></li>
+<li><a href="/docs/std/errorBars/" data-recipe="errorBars" title="Error bars: each row&#x27;s interval as a line with caps — from `lo` to `hi` columns, or the value ± `error` — around a dot at the value (a poll&#x27;s margin, a confidence interval)."><code>errorBars</code></a></li>
+<li><a href="/docs/std/swarm/" data-recipe="swarm" title="A beeswarm: every row a dot along one value axis, packed so none overlap (windowed neighbour search; 20k dots in about a second)."><code>swarm</code></a></li>
+<li><a href="/docs/std/stackedArea/" data-recipe="stackedArea" title="Stacked areas: each series a layer on the ones below it, through x — totals and their parts over time."><code>stackedArea</code></a></li>
+<li><a href="/docs/std/connectedScatter/" data-recipe="connectedScatter" title="A connected scatter plot: points at (x, y) joined in the order of a third field (usually time), an arrow at the end — how two measures moved together."><code>connectedScatter</code></a></li>
+<li><a href="/docs/std/stripes/" data-recipe="stripes" title="Colour stripes: one full-height band per ordered value, on a diverging scale around `mid`."><code>stripes</code></a></li>
+<li><a href="/docs/std/calendar/" data-recipe="calendar" title="A calendar heatmap: a week-column × weekday-row grid per year, coloured by value."><code>calendar</code></a></li>
+<li><a href="/docs/std/track/" data-recipe="track" title="A path over time (a storm, a flight): drawn up to `until` (a data-time signal) with a moving head."><code>track</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figures:</span> swarm · boxplot · violin · ridgeline · histogram · errorBars; then calendar · stackedArea · stripes · connectedScatter</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-distributions" data-caption data-autoplay="4200" data-phone-ratio="1.0"></div></div>
+      <div class="fam-chart"><div class="chart" data-chart="charts-time" data-caption data-autoplay="4200" data-phone-ratio="1.0"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-distributions}}{{alt:charts-time}}</div>
+</section>
+<section class="fam" id="finance" data-family="Finance" aria-labelledby="finance-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>8</b> recipes · family 9 of 12</p>
+      <h2 id="finance-h">Finance</h2>
+      <p>Prices on trading days — no weekend gaps — with volume in its own pane, indicators computed over the whole history, performance rebased, drawdowns and watchlists.</p>
+      <ul class="fam-members" aria-label="The finance recipes, each linking to its reference">
+<li><a href="/docs/std/candlestick/" data-recipe="candlestick" title="Candlesticks: per row a wick from low to high and a body from open to close, in `$up` when the close is at or above the open and `$down` below."><code>candlestick</code></a></li>
+<li><a href="/docs/std/ohlc/" data-recipe="ohlc" title="OHLC bars: per row a vertical line from low to high with the open ticked to the left and the close to the right, in `$up`/`$down` by direction (or ink)."><code>ohlc</code></a></li>
+<li><a href="/docs/std/volume/" data-recipe="volume" title="Volume bars under a price chart: in a plot, they go to a pane below the price area that shares its x axis and has its own value axis (the plot&#x27;s `lower` pane, made for them when not given), coloured like their day&#x27;s candle."><code>volume</code></a></li>
+<li><a href="/docs/std/movingAverage/" data-recipe="movingAverage" title="A moving average of the plot&#x27;s `y` (a closing price) as a line: simple (the mean of the last `window` rows) or exponential (span `window`)."><code>movingAverage</code></a></li>
+<li><a href="/docs/std/bollinger/" data-recipe="bollinger" title="Bollinger bands: the moving average of `y` over `window` rows with a shaded band `k` standard deviations (population σ) above and below it — where the price is stretched, and how volatile it is."><code>bollinger</code></a></li>
+<li><a href="/docs/std/indexed/" data-recipe="indexed" title="Series rebased to their first visible row — 100 (or 0 %) — so instruments at any price compare as performance: one line per series with a baseline, each labelled at its end with its change."><code>indexed</code></a></li>
+<li><a href="/docs/std/drawdown/" data-recipe="drawdown" title="Drawdown: how far each series sits below its running peak (0 at a new high, −25 % a quarter below it), as an area hanging from zero — the pain chart next to a performance chart."><code>drawdown</code></a></li>
+<li><a href="/docs/std/sparkline/" data-recipe="sparkline" title="A sparkline: a word-sized line of `y` over `x` that fills its box (a table cell, a card) — no axes, the last value marked with a dot, coloured `$up` or `$down` by whether it ended above where it started."><code>sparkline</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> candlestick · volume · ohlc · movingAverage · bollinger · indexed · drawdown · sparkline</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-finance" data-caption data-autoplay="4200" data-phone-ratio="1.0"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-finance}}</div>
+</section>
+<section class="fam" id="maps" data-family="Maps" aria-labelledby="maps-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>9</b> recipes · family 10 of 12</p>
+      <h2 id="maps-h">Maps</h2>
+      <p>Regions, symbols, dots, grid cartograms, points, lines, routes and street-level basemaps in any projection — from a built-in atlas or your own GeoJSON, no tile server.</p>
+      <ul class="fam-members" aria-label="The maps recipes, each linking to its reference">
+<li><a href="/docs/std/map/" data-recipe="map" title="A map: regions of a geo source, coloured by a data table joined on a key (choropleth), with neutral backdrop land, over which children (symbols, points, lines, annotations) draw in the same projection."><code>map</code></a></li>
+<li><a href="/docs/std/tileMap/" data-recipe="tileMap" title="A tile-grid map (a grid cartogram): every state or country the same size — a square or a hexagon — in roughly its place, coloured by value and marked with its abbreviation, so small places count as much as big ones."><code>tileMap</code></a></li>
+<li><a href="/docs/std/basemap/" data-recipe="basemap" title="A basemap from a vector-tile source (our own OSM / Natural Earth archives): sea, land, water, parks, buildings, roads by class, borders and place labels, in the enclosing map&#x27;s projection, styled by the theme&#x27;s map tokens."><code>basemap</code></a></li>
+<li><a href="/docs/std/symbols/" data-recipe="symbols" title="Proportional symbols: a circle per region (or point feature) at its visual centre, area ∝ value — or all one size (`r`) without a value field."><code>symbols</code></a></li>
+<li><a href="/docs/std/dotDensity/" data-recipe="dotDensity" title="Dot density: one dot per `per` units of a region&#x27;s value, scattered evenly inside it (seeded, deterministic)."><code>dotDensity</code></a></li>
+<li><a href="/docs/std/geoPoints/" data-recipe="geoPoints" title="Points at lon/lat (cities, events, stations), in the enclosing map&#x27;s projection, in $map.marker ringed by $map.label-halo so they read on any land."><code>geoPoints</code></a></li>
+<li><a href="/docs/std/geoLines/" data-recipe="geoLines" title="Line features of a geo source (roads, borders, courses, routes) as non-scaling strokes."><code>geoLines</code></a></li>
+<li><a href="/docs/std/route/" data-recipe="route" title="Great-circle routes between two lon/lat points per row."><code>route</code></a></li>
+<li><a href="/docs/std/attribution/" data-recipe="attribution" title="The data credit a map owes (OpenStreetMap&#x27;s licence requires it), in the bottom-right corner of its box, legible and linked to the licence page (hosts make it a real link; SVG/PDF keep it)."><code>attribution</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> map · symbols · dotDensity · tileMap</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-maps" data-caption data-autoplay="4200" data-phone-ratio="0.9"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-maps}}</div>
+</section>
+<section class="fam" id="bigdata" data-family="Big data" aria-labelledby="bigdata-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>5</b> recipes · family 11 of 12</p>
+      <h2 id="bigdata-h">Big data</h2>
+      <p>Millions of rows drawn as what they add up to: binned once in the engine, so a frame draws the bins, not the rows — or every row as a point cloud with level of detail. The rows here are generated on your device from a few expressions.</p>
+      <ul class="fam-members" aria-label="The big data recipes, each linking to its reference">
+<li><a href="/docs/std/hexbin/" data-recipe="hexbin" title="Hexagonal bins: rows of any number counted into hexagons a few px across, each coloured by its count (or an aggregate of a field) — a density map of a million points, drawn as a few thousand hexagons."><code>hexbin</code></a></li>
+<li><a href="/docs/std/heatmap2d/" data-recipe="heatmap2d" title="A 2-D density raster: rows of any number counted into a regular grid of cells over the plot&#x27;s x and y scales in one pass, each cell coloured by its count (or an aggregate of a field)."><code>heatmap2d</code></a></li>
+<li><a href="/docs/std/contours/" data-recipe="contours" title="Density contours: the shape of a crowd of rows — a smoothed density of their points cut into nested levels (by default each holding a further share of the rows: the innermost line encloses the densest fifth), drawn as filled bands or lines."><code>contours</code></a></li>
+<li><a href="/docs/std/manyLines/" data-recipe="manyLines" title="Thousands of time series at once: every series a faint path, so their bulk shows where most of them run, with the ones that matter highlighted in the accent colour and labelled."><code>manyLines</code></a></li>
+<li><a href="/docs/std/cloud/" data-recipe="cloud" title="A point cloud of any size (millions of rows): dots at their own x/y in an explorable view — a density-preserving sample at every zoom, every row up close, a tooltip on each."><code>cloud</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> hexbin · heatmap2d · contours · cloud · manyLines</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="charts-bigdata" data-caption data-autoplay="4200" data-phone-ratio="0.9"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:charts-bigdata}}</div>
+</section>
+<section class="fam" id="controls" data-family="Controls" aria-labelledby="controls-h">
+  <div class="wrap fam-grid">
+    <div class="fam-text">
+      <p class="fam-count"><b>7</b> recipes · family 12 of 12</p>
+      <h2 id="controls-h">Controls</h2>
+      <p>Inputs drawn by the engine that set the signals a chart reads — the same on the web, in apps and in video, and offered to screen readers and keyboards as native controls. Try them: every one below is live.</p>
+      <ul class="fam-members" aria-label="The controls recipes, each linking to its reference">
+<li><a href="/docs/std/slider/" data-recipe="slider" title="A slider for a numeric signal: press or drag to set it (snapped to `step`)."><code>slider</code></a></li>
+<li><a href="/docs/std/range/" data-recipe="range" title="A slider with two thumbs for a range: drag either end to set the `lo` or `hi` signal (snapped to `step`); the thumbs can&#x27;t cross."><code>range</code></a></li>
+<li><a href="/docs/std/segmented/" data-recipe="segmented" title="One of a few options side by side (a segmented control): click one to set the signal to it; the highlight slides to it."><code>segmented</code></a></li>
+<li><a href="/docs/std/select/" data-recipe="select" title="A dropdown for one of many options: click to open the list over the chart, click an option to set the signal to it; a click anywhere else closes it."><code>select</code></a></li>
+<li><a href="/docs/std/toggle/" data-recipe="toggle" title="A switch for a boolean signal: click to flip it."><code>toggle</code></a></li>
+<li><a href="/docs/std/checklist/" data-recipe="checklist" title="Checkboxes for a key set: click an option to add it to the signal or take it out (series to show, regions to compare)."><code>checklist</code></a></li>
+<li><a href="/docs/std/button/" data-recipe="button" title="A button: click to fire a program event (`next`, `prev`, `back`, `goto:&lt;state&gt;`) or set a signal to a value (a reset, a preset)."><code>button</code></a></li>
+      </ul>
+      <p class="fam-seen"><span>In the figure:</span> segmented · select · toggle · checklist · range · button</p>
+    </div>
+    <div class="fam-charts">
+      <div class="fam-chart"><div class="chart" data-chart="controls" data-caption data-autoplay="4200"></div></div>
+    </div>
+  </div>
+  <div class="wrap fam-alt">{{alt:controls}}</div>
 </section>
 
-<section class="section" id="catalogue">
+<section class="section prims" id="primitives">
   <div class="wrap">
     <header class="section-head">
-      <p class="eyebrow">The catalogue</p>
-      <h2>Every recipe, by family</h2>
-      <p>Click one to open it in the playground above (with a modifier key, its reference page: parameters, defaults, the theme tokens it reads, a live example to step through and real uses from the examples — all generated from the recipe itself).</p>
+      <p class="eyebrow">Under every recipe</p>
+      <h2>The primitives they're made of — the same ones you get</h2>
+      <p>The engine knows no bar charts. It knows keyed shapes, text, repeats, instances, groups, scales, table operations, signals, views and motion — and the standard library builds all 88 recipes from them with the public SDK, no private hooks. A <code>plot</code> is a recipe that declares scales and draws <code>axis</code> and <code>grid</code> around its marks; a <code>bar</code> is a <code>repeat</code> of keyed rectangles. When no recipe fits, write your own from the same parts, or copy one with <code>datars eject</code>.</p>
     </header>
-    {{std:list}}
+    <div class="prim-grid">
+      <article class="prim">
+        <div class="chart" data-chart="sdk-shape-geoms" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Shapes and geometry</h3>
+          <p>Rectangles, circles, arcs, paths, symbols and map features, each a <code>shape</code> with an ink and a key.</p>
+<pre><code data-lang="ts">shape(geom.rect({ x, y, w, h, r: 4 }), { fill: "$accent" })</code></pre>
+          <a class="prim-link" href="/docs/sdk/nodes/#shapes-and-geometry">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-text-anchors" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Text</h3>
+          <p>Shaped and measured by the engine with the chart's fonts — the same width on every platform — aligned, wrapped, haloed, counting when it's a number.</p>
+<pre><code data-lang="ts">text(e("d.name"), [x, y], { style: { align: "end" } })</code></pre>
+          <a class="prim-link" href="/docs/sdk/nodes/#labels-and-text">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-repeat-forms" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Repeat</h3>
+          <p>A template per row, per group, per tick or per legend entry. The engine evaluates it for every row; a recipe never sees the rows.</p>
+<pre><code data-lang="ts">repeat("sales", shape(geom.circle({ … })))</code></pre>
+          <a class="prim-link" href="/docs/sdk/nodes/#repeats">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-instances-points" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Instances</h3>
+          <p>Thousands to millions of marks in one node and one draw, keyed like any other — how a parliament's seats and a waffle's squares are drawn.</p>
+<pre><code data-lang="ts">instances({ from: "units", x: e("d.x"), y: e("d.y"), r: 4 })</code></pre>
+          <a class="prim-link" href="/docs/sdk/nodes/#thousands-of-marks">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-group-layouts" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Groups and layout</h3>
+          <p>Stacks, rows, columns, grids and flows, sized in px, shares or content — and columns that wrap into rows on a phone.</p>
+<pre><code data-lang="ts">group({ layout: { type: "columns", gap: 12, wrap: 420 } })</code></pre>
+          <a class="prim-link" href="/docs/sdk/options/#layout">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-scales-position" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Scales</h3>
+          <p>Band, point, linear, log, time, colour — declared on a group, read in any expression below it. A plot's axes are drawn from them.</p>
+<pre><code data-lang="ts">scales: { x: { type: "band", domain: { data, field }, range: "width" } }</code></pre>
+          <a class="prim-link" href="/docs/sdk/options/#scales">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-data-stack" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Table operations</h3>
+          <p>Stack, bin, window, pack, treemap, pie, sankey, waffle, parliament — layouts computed in Rust from the rows, not in your code.</p>
+<pre><code data-lang="ts">op.stack({ x: "town", series: "mode", value: "k" })</code></pre>
+          <a class="prim-link" href="/docs/sdk/data/#derived-tables">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-interaction-brush" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Signals and intents</h3>
+          <p>Brushes, picks, drags and controls write signals; anything can read them — a filter, a highlight, a camera.</p>
+<pre><code data-lang="ts">on: { brush: brush("range") }</code></pre>
+          <a class="prim-link" href="/docs/sdk/options/#interaction">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-view-camera" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Views and cameras</h3>
+          <p>Content in its own units, framed by a camera that fits a box, keys or a lon/lat area — and flies between them.</p>
+<pre><code data-lang="ts">view({ camera: { fit: { keys: "=focus" } } })</code></pre>
+          <a class="prim-link" href="/docs/sdk/nodes/#views-and-cameras">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+      <article class="prim">
+        <div class="chart" data-chart="sdk-motion-matchers" data-caption data-phone-ratio="0.8"></div>
+        <div class="prim-text">
+          <h3>Motion</h3>
+          <p>Keys pair marks across states; rules choose easing, routes, staggers and ghosts. Every transition on this page is planned from these.</p>
+<pre><code data-lang="ts">motion({ select: { role: "datum" }, matcher: "by-key" })</code></pre>
+          <a class="prim-link" href="/docs/sdk/motion/#matching">In the SDK reference <span aria-hidden="true">→</span></a>
+        </div>
+      </article>
+    </div>
+    <div class="next prims-next">
+      <div>
+        <h2>Make your own</h2>
+        <p>Eject a recipe and change it, or draw a scene of your own — in your browser, on the real engine.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/features/extensibility/">Extendable <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/docs/sdk/">SDK reference</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -102,7 +447,7 @@ view.provideData("visits", { channel, visitors });</code></pre>
       <article><h3>Themed, never hard-coded</h3><p>Recipes ask for tokens — <code>$accent</code>, <code>$categorical[2]</code>, <code>size.label</code>, <code>radius.bar</code> — not colours. Your brand, dark mode and high contrast apply to all of them, including charts already published. <a href="/features/theming/">Theming →</a></p></article>
       <article><h3>Motion built in</h3><p>Bars grow from their baseline, lines draw on, slices and tiles morph by key, units split out of bars and merge back. Override any of it per state with motion rules. <a href="/features/animation/">Animation →</a></p></article>
       <article><h3>Accessible by default</h3><p>Every data mark carries a role, a label (<em>“Sweden Democrats: 20.5”</em>) and a value, so screen readers and text alternatives describe the data, not a picture. <a href="/features/accessibility/">Accessibility →</a></p></article>
-      <article><h3>Composable and ejectable</h3><p><a href="/docs/std/facet/"><code>facet</code></a> repeats any chart as small multiples; <a href="/docs/std/card/"><code>card</code></a> places narration where it covers the least data. When a recipe doesn't do what you need, <code>datars eject std/bar</code> gives you its source. <a href="/features/extensibility/">Extending →</a></p></article>
+      <article><h3>Described for people and agents</h3><p>Every parameter is typed and documented in the recipe itself: <code>datars describe std/bar</code> prints them, the <a href="/docs/std/">chart reference</a> is generated from them, and a misspelt setting comes back with “did you mean”.</p></article>
     </div>
   </div>
 </section>
