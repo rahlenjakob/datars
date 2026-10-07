@@ -272,6 +272,10 @@ canvas { transition: opacity .22s ease-out; }
 .card:empty { opacity: 0; pointer-events: none; }
 .tip { position: absolute; pointer-events: none; padding: 4px 8px; border-radius: 4px; font-size: 12px; background: var(--ink, #111); color: var(--paper, #fff); white-space: nowrap; }
 .tip[hidden] { display: none; }
+/* Where the keyboard is: the mirror's buttons and sliders are hidden, so the mark or control a
+   focused one stands for is outlined on the chart. */
+.focus { position: absolute; pointer-events: none; border-radius: 4px; outline: 2px solid var(--accent, #4269d0); outline-offset: 2px; }
+.focus[hidden] { display: none; }
 .controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
 .controls[hidden] { display: none; }
 .controls button { font: inherit; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--rule, #999); background: var(--paper, #fff); color: var(--ink, #111); cursor: pointer; }
@@ -356,7 +360,7 @@ export class DatarsView extends ElementBase {
   connectedCallback() {
     this.root.innerHTML = `<style>${CSS}</style>
       <div class="stage" part="stage"><div class="poster" part="poster"></div><canvas hidden part="canvas"></canvas>
-      <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="perf" hidden part="perf"></div></div>
+      <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
       <div class="controls" part="controls" hidden><button data-ev="prev" aria-label="Previous">←</button><button data-ev="next" aria-label="Next">→</button></div>
       <ul class="sr" role="list" aria-label="Chart content"></ul><div class="sr" aria-live="polite"></div>`;
     this.stage = this.root.querySelector(".stage")!;
@@ -370,6 +374,18 @@ export class DatarsView extends ElementBase {
     this.tip = this.root.querySelector(".tip")!;
     this.mirror = this.root.querySelector("ul")!;
     this.live = this.root.querySelector("[aria-live]")!;
+    // A sighted keyboard user sees where the hidden list's focus is: the item's box on the chart.
+    const ring = this.root.querySelector<HTMLDivElement>(".focus")!;
+    this.mirror.addEventListener("focusin", (e) => {
+      const r = (e.target as HTMLElement).dataset?.rect?.split(",").map(Number);
+      if (!r || r.length !== 4 || !(r[2] > 0 && r[3] > 0)) return void (ring.hidden = true);
+      Object.assign(ring.style, { left: `${r[0]}px`, top: `${r[1]}px`, width: `${r[2]}px`, height: `${r[3]}px` });
+      ring.hidden = false;
+    });
+    this.mirror.addEventListener("focusout", (e) => {
+      // Moving to another of the list's items: its own focusin places the ring.
+      if (!this.mirror.contains(e.relatedTarget as Node | null)) ring.hidden = true;
+    });
     this.tabIndex = 0;
     this.setAttribute("role", "figure");
     this.root.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => this.send((b as HTMLElement).dataset.ev!)));
@@ -1566,7 +1582,7 @@ export class DatarsView extends ElementBase {
   /** The hidden list screen readers and keyboards use: engine-drawn controls as native ones,
    * clickable marks as buttons, and every other labelled item (`items`: the semantics tree, or
    * only what a click acts on) as text, indented by depth. */
-  private fillMirror(s: Record<string, any>, items: { role: string; label: string; depth: number; path: string; actionable: boolean }[]) {
+  private fillMirror(s: Record<string, any>, items: { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[] }[]) {
     // Where the keyboard is, read before the mirror is rebuilt: rebuilding mustn't lose it.
     const focused = (this.root.activeElement as HTMLInputElement | null)?.dataset?.signal;
     const focusedPath = (this.root.activeElement as HTMLElement | null)?.dataset?.path;
@@ -1578,6 +1594,7 @@ export class DatarsView extends ElementBase {
         // A select as a real one: its options, the chosen one, the same signal.
         const sel = this.nativeSelect(c);
         sel.setAttribute("aria-label", c.label);
+        if (c.rect) sel.dataset.rect = c.rect.join(",");
         li.appendChild(sel);
         this.mirror.appendChild(li);
         if (c.signal === focused) sel.focus();
@@ -1587,6 +1604,7 @@ export class DatarsView extends ElementBase {
       Object.assign(input, { type: "range", min: String(c.min), max: String(c.max), step: c.step > 0 ? String(c.step) : "any", value: String(c.value) });
       input.setAttribute("aria-label", c.label);
       input.dataset.signal = c.signal;
+      if (c.rect) input.dataset.rect = c.rect.join(",");
       input.addEventListener("input", () => { this.view?.set_signal(c.signal, input.value); this.kick(); this.noteSignals(); });
       input.addEventListener("change", () => this.syncChrome());
       li.appendChild(input);
@@ -1610,6 +1628,7 @@ export class DatarsView extends ElementBase {
         const b = document.createElement("button");
         b.textContent = item.label;
         b.dataset.path = item.path;
+        if (item.rect) b.dataset.rect = item.rect.join(",");
         b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); } });
         li.appendChild(b);
         this.mirror.appendChild(li);

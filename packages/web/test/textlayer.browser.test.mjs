@@ -177,6 +177,17 @@ test("what a click acts on is a button in the semantics mirror: a keyboard press
     await p.waitForFunction(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll(".texts span[data-key]")].some((s) => s.textContent === "Picked: A"), null, { timeout: 10_000 });
     // The mirror is rebuilt after a press: the keyboard stays on the same button.
     assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.textContent), "Bar A: 42");
+    // The list is hidden: where its focus is shows on the chart, round the bar the button stands for.
+    const ring = await p.evaluate(() => {
+      const v = document.querySelector("datars-view");
+      const f = v.shadowRoot.querySelector(".focus");
+      const a = f.getBoundingClientRect(), b = v.getBoundingClientRect();
+      return { hidden: f.hidden, x: a.x - b.x, y: a.y - b.y, w: a.width, h: a.height };
+    });
+    assert.equal(ring.hidden, false);
+    assert.ok(Math.abs(ring.x - 300) < 2 && Math.abs(ring.y - 20) < 2 && Math.abs(ring.w - 200) < 2 && Math.abs(ring.h - 80) < 2, JSON.stringify(ring));
+    await p.keyboard.press("Shift+Tab");
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector(".focus").hidden), true, "gone when the keyboard leaves the list");
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
