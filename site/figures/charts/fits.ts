@@ -1,14 +1,13 @@
-// One table, every chart that fits it: a hundred visitors by the way they came, as columns, bars,
-// lollipops, dots, a parliament, a pie, a donut, a treemap and a waffle. Every mark is keyed by its
-// channel and every unit by (channel, unit i), so each chart morphs into the next: row to row, a
-// row splitting into its units, units gathering into their row. (Units of one recipe don't pair
-// with another recipe's units — the waffle and the parliament crossfade — so they never follow
-// each other here.) The rows are a data
-// slot: the charts page hands in the reader's own with `provideData`, so nothing in the chart names
-// the example's columns (a header would), and the units are percentage points of the total (a
-// reader's thousands would be thousands of squares).
+// One table, every chart that fits it: a hundred visitors by the way they came, as columns, a
+// pareto, bars, lollipops, dots, a parliament, a pie, a donut, a treemap and a waffle. Every mark
+// is keyed by its channel and every unit by (channel, unit i), so each chart morphs into the next:
+// row to row, a row splitting into its units, units gathering into their row. (Units of one recipe
+// don't pair with another recipe's units — the waffle and the parliament crossfade — so they never
+// follow each other here.) The rows are a data slot: the charts page hands in the reader's own with
+// `provideData`, so nothing in the chart names the example's columns (a header would), and the
+// units are percentage points of the total (a reader's thousands would be thousands of squares).
 import { doc, data, e, group, motion, op, story, step } from "@datars/sdk";
-import { plot, bar, lollipop, dot, pie, treemap, waffle, hemicycle, legend } from "@datars/std";
+import { plot, bar, lollipop, dot, pie, treemap, waffle, hemicycle, legend, pareto } from "@datars/std";
 
 const at = (state: string) => ({ key: "chart", when: e(`state == "${state}"`) });
 const xy = { data: "visits", x: "channel", y: "visitors", color: "channel" };
@@ -16,7 +15,7 @@ const yx = { data: "visits", x: "visitors", y: "channel", xType: "linear", yType
 
 export default doc({
   title: "Where a hundred visitors came from",
-  description: "One table of six channels and a hundred visitors, drawn by nine recipes in turn — columns, bars, lollipops, dots, parliament, pie, donut, treemap and waffle — each morphing into the next by key.",
+  description: "One table of six channels and a hundred visitors, drawn by ten recipes in turn — columns, pareto, bars, lollipops, dots, parliament, pie, donut, treemap and waffle — each morphing into the next by key.",
   size: [640, 360],
   data: {
     visits: data.slot("visits", {
@@ -36,6 +35,7 @@ export default doc({
     children: [
       group({ key: "body", children: [
         plot({ ...xy, children: [bar({ labels: true })] }, at("columns")),
+        plot({ ...xy, right: { domain: [0, 1], format: ".0%" }, children: [bar(), pareto()] }, at("pareto")),
         plot({ ...yx, children: [bar({ labels: true })] }, at("bars")),
         plot({ ...yx, children: [lollipop({ labels: true })] }, at("lollipops")),
         plot({ ...yx, children: [dot({ r: 7 })] }, at("dots")),
@@ -51,6 +51,7 @@ export default doc({
   program: story({
     steps: [
       step("columns", { title: "bar()", text: "Columns: the plot's x is a band scale." }),
+      step("pareto", { title: "pareto()", text: "The running share of the total, read on the right axis." }),
       step("bars", { title: "bar(), on its side", text: "Categories on the y axis: long labels read across." }),
       step("lollipops", { title: "lollipop()", text: "Less ink: a stem and a dot." }),
       step("dots", { title: "dot()", text: "Just the dot — values far from zero need no baseline." }),
