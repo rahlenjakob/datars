@@ -379,6 +379,28 @@ for (const [name, alias, size, poster] of [["worlds-9x16", "worlds", "360x640", 
 }
 if (!hasFfmpeg) console.log("no ffmpeg: the platforms page shows film posters without the films");
 
+/** A chart rendered by the CLI for a page to show or offer for download, made once per spec:
+ * `{{export:alias|state|WxH|dpr|png|light}}` (the extension picks PNG, SVG or PDF) → its URL;
+ * `{{export:alias|-|WxH|dpr|mp4|light}}` → the whole program as a film, its WebVTT captions beside
+ * it (no ffmpeg: no film, and an empty URL). `{{exportsize:…}}` (the same spec) → its size. */
+const made = new Map();
+function exported(spec) {
+  if (!made.has(spec)) {
+    const [alias, state, size, dpr = "2", ext = "png", mode = "light"] = spec.split("|").map((x) => x.trim());
+    if (!(alias in CHARTS)) throw new Error(`{{export:${spec}}}: no chart \`${alias}\``);
+    const name = `${alias}-${ext === "mp4" ? "film" : state}-${size}@${dpr}-${mode}.${ext}`;
+    const file = join(out, "exports", name);
+    const common = ["--size", size, "--dpr", dpr, "--mode", mode, "--out", file];
+    if (ext === "mp4") {
+      if (hasFfmpeg) execFileSync(cli, ["video", staged[alias], ...common], { stdio: "ignore", cwd: dirname(staged[alias]) });
+    } else {
+      execFileSync(cli, ["render", staged[alias], "--state", state, ...common], { stdio: "ignore", cwd: dirname(staged[alias]) });
+    }
+    made.set(spec, existsSync(file) ? { url: `/exports/${name}`, bytes: statSync(file).size } : { url: "", bytes: 0 });
+  }
+  return made.get(spec);
+}
+
 // ---- the runtime, fonts, styles ----------------------------------------------------------------
 
 mkdirSync(join(out, "runtime/wasm"), { recursive: true });
@@ -588,6 +610,8 @@ function fill(html, where) {
     })
     .replace(/\{\{film:([a-z0-9x_-]+)\}\}/g, (_, f) => films[f] ? `<video controls playsinline preload="none" poster="/exports/${f}.png" width="${films[f].size.split("x")[0]}" height="${films[f].size.split("x")[1]}"><source src="/exports/${f}.mp4" type="video/mp4"><track kind="captions" src="/exports/${f}.vtt" srclang="en" label="English" default></video>` : `<img src="/exports/${f}.png" alt="A frame of the film" width="${f.includes("9x16") ? 360 : 640}" height="${f.includes("9x16") ? 640 : 360}">`)
     .replace(/\{\{filmsize:([a-z0-9x_-]+)\}\}/g, (_, f) => (films[f] ? mb(films[f].bytes) : "—"))
+    .replace(/\{\{export:([^}]+)\}\}/g, (_, p) => exported(p).url)
+    .replace(/\{\{exportsize:([^}]+)\}\}/g, (_, p) => { const b = exported(p).bytes; return b ? (b < 1048576 ? kb(b) : mb(b)) : "—"; })
     .replace(/\{\{alt:([a-z0-9_-]+)\}\}/g, (_, a) => altText(known(a)))
     .replace(/\{\{code:([^}]+)\}\}/g, (_, p) => code(p))
     .replace(/\{\{run:([^}]+)\}\}/g, (_, p) => run(p))
