@@ -1,17 +1,222 @@
 ---
-title: Extend anything — recipes are TypeScript · datars
-description: Every datars chart is a TypeScript recipe over public primitives. Compose them, eject a standard one and change it, or draw a scene no library ships — with motion, accessibility and every platform included.
-og: worlds
+title: Extendable — recipes are TypeScript, edit one live · datars
+description: Every datars chart is a TypeScript recipe over public primitives. Eject a standard one and change it, write your own, or draw a scene of your own — and watch the real engine expand it in your browser, morphing into the standard chart beside it.
+og: extensibility-isotype
+css: features-extensibility.css
 ---
 <section class="page-head">
   <div class="wrap">
     <p class="eyebrow">Extendable</p>
-    <h1>Extend anything: every chart is a TypeScript recipe</h1>
-    <p class="lede-2">The engine doesn't know what a bar chart is. It knows primitives — keyed shapes, text, instances, tiles, scales, coordinates, cameras — and the standard library builds every chart, axis, legend and basemap from them with the same public API you use. So when the catalogue runs out, there's no wall: open the recipe, change it, or write your own. Whatever you draw still morphs by key, reads out to screen readers, and plays on every platform.</p>
+    <h1>Recipes are code you can open: eject one, or draw your own</h1>
+    <p class="lede-2">The engine doesn't know what a bar chart is. It knows primitives — keyed shapes, text, instances, tiles, scales, coordinates, cameras — and the standard library builds every chart, axis, legend and basemap from them with the same public API you use. When the catalogue runs out there's no wall: copy a recipe and change it, or write one. Whatever you draw still morphs by key, reads out to screen readers and plays on every platform. Below, the engine's own recipe sandbox runs in your browser: edit the code and the chart follows.</p>
   </div>
 </section>
 
-<section class="section" style="padding-top:12px">
+<section class="section xe" id="workbench" style="padding-top:8px">
+  <div class="wrap">
+    <div class="xe-tabs" role="tablist" aria-label="Start from">
+      <button type="button" role="tab" data-tab="eject" aria-selected="true"><b>Eject std/bar</b><span>its source, yours to change</span></button>
+      <button type="button" role="tab" data-tab="isotype" aria-selected="false"><b>Write a recipe</b><span>an isotype, from primitives</span></button>
+      <button type="button" role="tab" data-tab="scene" aria-selected="false"><b>Draw a scene</b><span>plain nodes, no recipe</span></button>
+    </div>
+    <div class="xe-grid">
+      <div class="xe-left">
+        <div class="xe-head"><span class="xe-file">recipes/bar.ts (as JavaScript)</span><button type="button" class="btn btn-ghost small xe-reset">Reset</button></div>
+        <div class="xe-editor">
+          <pre class="xe-gutter" aria-hidden="true"></pre>
+          <div class="xe-code">
+            <pre class="xe-hl" aria-hidden="true"><code data-lang="ts"></code></pre>
+            <textarea class="xe-input" wrap="off" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="recipes/bar.ts: editable"></textarea>
+          </div>
+        </div>
+        <div class="xe-try-row"><span>Try:</span><div class="chips xe-tries" role="group" aria-label="Edits to try"></div></div>
+      </div>
+      <div class="xe-right">
+        <div class="frame xe-frame">
+          <div class="pills small xe-states" id="extensibility-eject-pills" role="group" aria-label="Show">
+            <button type="button" data-state="yours" aria-pressed="true">Your copy</button>
+            <button type="button" data-state="std" aria-pressed="false">std/bar</button>
+          </div>
+          <div class="xe-view" data-own-look>
+            <div class="chart" data-chart="extensibility-eject" data-ratio="0.5625" data-min="220" data-phone-ratio="0.8" data-label="The workbench's chart"></div>
+          </div>
+          <p class="xe-status" data-kind="ok" aria-live="polite">Loading the engine with its recipe sandbox…</p>
+        </div>
+      </div>
+<pre class="live-code xe-doc"><code data-lang="ts" id="xe-doc">// doc.ts</code></pre>
+    </div>
+<script type="text/plain" id="xe-src-eject">
+// recipes/bar.ts as `datars eject std/bar` writes it, minus its type annotations: the JavaScript
+// a document embeds. Unedited, it draws exactly what std/bar draws. Edit it: the engine expands
+// it again as you type, in its sandbox, in this page.
+
+import { e, group, instances, op, recipe, repeat, shape, geom, t, text } from "@datars/sdk";
+
+function affixed(p, value, at, opts) {
+  if (!p.prefix && !p.suffix) return text("", at, { ...opts, number: { value: e(value), format: p.format } });
+  const v = `(${value})`;
+  return text(e(`(${v} < 0 ? "−" : "") + ${JSON.stringify(p.prefix ?? "")} + format(abs(${v}), ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}`), at, opts);
+}
+const colorOr = (color, fallback) => (color ? e(`scale.color(d.${color})`) : fallback);
+const onInkExpr = (fill) => (typeof fill === "string" ? JSON.stringify(`on(${fill})`) : fill && typeof fill === "object" && "expr" in fill ? `"on(" + (${fill.expr}) + ")"` : `"$ink"`);
+const isBand = (t) => t === "band" || t === "point";
+
+export const bar = recipe({
+  id: "@local/bar/bar",
+  doc: "Bars from a category field on a band scale to a value on a linear scale (vertical or horizontal, decided by which axis is the band). Negative values hang below zero.",
+  params: {
+    data: t.table(), x: t.field(), y: t.field(), color: t.field(), xType: t.string("band"), yType: t.string("linear"),
+    fill: t.prop("Fill ink or expression (default: the colour scale, else $mark)."),
+    labels: t.bool(false, "Value labels on the bars (they count when values change)."),
+    format: t.string(",.1~f", "Label number format."),
+    radius: t.number(0, "Corner radius (0: the theme's `radius.bar`)."),
+    selected: t.string(undefined, "A keyset signal: selected bars stay strong, others recede."),
+    label: t.prop("Bar label (tooltip, accessible name): an expression over the row; default `name: value`."),
+    chapter: t.string(undefined, "Clicking a bar enters this program chapter with the bar's category (drill-down)."),
+    prefix: t.string(undefined, "Before each value label's number ('$')."), suffix: t.string(undefined, "After it ('M', ' kr')."),
+  },
+  tokens: ["mark", "ink", "muted", "dim", "size.label", "radius.bar"],
+  expand(p) {
+    const horizontal = isBand(p.yType) && !isBand(p.xType);
+    const fill = p.fill ?? colorOr(p.color, "$mark");
+    const cat = horizontal ? p.y : p.x;
+    const val = horizontal ? p.x : p.y;
+    const opacity = p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(d.${cat}) ? 1 : token("dim")`) : undefined;
+    const g = horizontal
+      ? geom.rect({ x: e(`min(scale.x(0), scale.x(d.${val}))`), y: e(`scale.y(d.${cat})`), w: e(`abs(scale.x(d.${val}) - scale.x(0))`), h: e("scale.y.bandwidth()"), r: p.radius || "$radius.bar" })
+      : geom.rect({ x: e(`scale.x(d.${cat})`), y: e(`min(scale.y(0), scale.y(d.${val}))`), w: e("scale.x.bandwidth()"), h: e(`abs(scale.y(0) - scale.y(d.${val}))`), r: p.radius || "$radius.bar" });
+    // Value labels only where they fit: as wide as the bar (vertical), as tall as the band (horizontal).
+    const text_ = `(${JSON.stringify(p.prefix ?? "")} + format(d.${val}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")})`;
+    const lw = `measure(${text_}, token("size.label"))`;
+    const fits = horizontal
+      ? e('scale.y.bandwidth() >= token("size.label") - 2')
+      : e(`${lw} <= scale.x.bandwidth() + 6`);
+    // Past the bar's end when there's room in the plot area; else just inside the end, in the ink
+    // that reads on the bar — so the longest bar's label never leaves the canvas and the tallest
+    // bar's never runs into the title.
+    const end = horizontal ? `max(scale.x(0), scale.x(d.${val}))` : `min(scale.y(0), scale.y(d.${val}))`;
+    const length = horizontal ? `abs(scale.x(d.${val}) - scale.x(0))` : `abs(scale.y(d.${val}) - scale.y(0))`;
+    const inside = horizontal
+      ? `(${end} + 4 + ${lw} > box.w && ${length} >= ${lw} + 8)`
+      : `(${end} - 4 - token("size.label") < -2 && ${length} >= token("size.label") + 8)`;
+    const ink = e(`${inside} ? ${onInkExpr(fill)} : "$ink-2"`);
+    const label = horizontal
+      ? affixed(p, `d.${val}`, [e(`${inside} ? ${end} - 4 : ${end} + 4`), e(`scale.y(d.${cat}) + scale.y.bandwidth() / 2`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: e(`${inside} ? "end" : "start"`), baseline: "middle" } })
+      : affixed(p, `d.${val}`, [e(`scale.x(d.${cat}) + scale.x.bandwidth() / 2`), e(`${inside} ? ${end} + 4 : ${end} - 4`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) } });
+    return group({
+      key: "marks",
+      semantics: { role: "series", label: `${val} by ${cat}` },
+      children: [
+        // Primary datum shapes are keyed by the datum key directly (a std convention), so a bar
+        // pairs with the same datum's slice, cell or region in another recipe.
+        repeat(p.data, shape(g, {
+          fill,
+          opacity,
+          semantics: { role: "datum", label: p.label ?? e(`\`\${key.name(d.${cat})}: \${format(d.${val}, ${JSON.stringify(p.format)})}\``), value: e(`d.${val}`) },
+          anchors: [{ name: "top", at: horizontal ? [e(`scale.x(d.${val})`), e(`scale.y(d.${cat}) + scale.y.bandwidth()/2`)] : [e(`scale.x(d.${cat}) + scale.x.bandwidth()/2`), e(`scale.y(d.${val})`)] }],
+          on: p.chapter ? { activate: { chapter: p.chapter, key: e(`d.${cat}`) } } : p.selected ? { activate: { toggle: p.selected, value: e(`d.${cat}`) } } : undefined,
+          pickable: true,
+        })),
+        p.labels ? group({ key: "labels", children: [repeat(p.data, label)] }) : null,
+      ],
+    });
+  },
+  // Entering bars grow from their base along the value axis.
+  motion: (p) => [{ select: { role: "datum" }, enter: { scale: 0, origin: isBand(p.yType) && !isBand(p.xType) ? "left" : "bottom" } }],
+});
+</script>
+<script type="text/plain" id="xe-src-isotype">
+// recipes/isotype.ts, minus its one type annotation — the JavaScript a document embeds. A recipe
+// from scratch: a row of dots per category, a dot per unit. The units are keyed (category,
+// unit i) the way std's waffle and hemicycle key theirs, so a category's dots gather into its bar,
+// slice or tile in another chart, and split out of it again.
+import { e, group, instances, op, recipe, repeat, text, t } from "@datars/sdk";
+
+export const isotype = recipe({
+  id: "@local/isotype/isotype",
+  doc: "A row of dots per category, one dot per unit of its value.",
+  params: {
+    data: t.table(),
+    category: t.field("The category column: a row of dots each."),
+    value: t.field("Whole units: a dot each."),
+    size: t.number(12, "Dot diameter (px), smaller when the longest row wouldn't fit."),
+    gap: t.number(3, "Space between dots (px)."),
+  },
+  expand(p, cx) {
+    // One row per unit, keyed (category, unit), with the unit's number in `i`.
+    const units = cx.table("units", p.data, op.units({ value: p.value, as: "i" }));
+    const longest = `table.max(${JSON.stringify(p.data)}, ${JSON.stringify(p.value)})`;
+    // Room for the names on the left and a number after the longest row.
+    const step = `min(${p.size + p.gap}, (box.w - 150) / max(1, ${longest}))`;
+    const y = `scale.row(d.${p.category}) + scale.row.bandwidth() / 2`;
+    return group({
+      key: "isotype",
+      scales: { row: { type: "band", domain: { data: p.data, field: p.category }, range: "height", padding: 0.2 } },
+      children: [
+        repeat(p.data, text(e(`d.${p.category}`), [100, e(y)], {
+          key: e(`"name-" + d.${p.category}`),
+          style: { size: "$size.label", ink: "$ink-2", align: "end", baseline: "middle" },
+        })),
+        // Instanced marks, like std's units: one draw for every dot, however many.
+        instances({
+          key: "dots",
+          from: units,
+          x: e(`112 + (d.i + 0.5) * ${step}`),
+          y: e(y),
+          r: e(`(${step}) * ${p.size / (p.size + p.gap)} / 2`),
+          fill: e(`scale.color(d.${p.category})`),
+          label: e(`d.${p.category}`),
+        }),
+      ],
+    });
+  },
+});
+</script>
+    <div class="xe-where">
+      <article>
+        <h3>What runs in this page</h3>
+        <ul>
+          <li>The engine's QuickJS sandbox, compiled into its WebAssembly: your module is a package of the document (<code>packages: [{ name, source }]</code>, as the CLI embeds it), handed over with <code>view.setDocument()</code>.</li>
+          <li>Expansion, with the engine's deterministic maths and its text measurement; no clock, no randomness, no network.</li>
+          <li>Errors with their line, a misspelt setting with “did you mean”, an endless loop stopped by the sandbox's time budget — try <code>while (true) {}</code>.</li>
+          <li>The morph to the standard chart: your marks pair with its marks by key.</li>
+        </ul>
+      </article>
+      <article>
+        <h3>What needs the CLI</h3>
+        <ul>
+          <li><b>TypeScript.</b> This editor runs the JavaScript a document embeds; in a project you edit <code>recipes/*.ts</code>, and <code>datars dev</code>, <code>check</code> and <code>publish</code> compile it with esbuild (your editor's TypeScript checks the types).</li>
+          <li><code>datars eject std/&lt;recipe&gt;</code>, which writes the standard source into your project.</li>
+          <li><code>datars lint</code>, <code>film</code>, <code>render</code>, and <code>publish</code> — which expands recipes ahead of time, so readers' devices play the chart without running any recipe code.</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Ejecting changes nothing until you do</p>
+      <h2>A copy that draws exactly what the original draws</h2>
+      <p><code>datars eject</code> writes the standard recipe's TypeScript into your project under a local id. The workbench's first tab is that file in a document beside <code>std/bar</code>; <code>datars diff</code> compares the scenes the two states draw, element by element — run by this site's build:</p>
+    </header>
+    <div class="cards2 xe-proof">
+      <article>
+<pre><code data-lang="sh">datars eject std/bar --to recipes   # → recipes/bar.ts
+datars describe std/bar             # its parameters, defaults and tokens</code></pre>
+<pre><code data-lang="ts">// Before: import { bar } from "@datars/std";
+import { bar } from "./recipes/bar";
+// The document embeds your copy when it's built and published.</code></pre>
+      </article>
+      <article>
+        {{run:diff site/figures/extensibility/eject.ts --states yours,std}}
+        <p class="fine">Every element the same. <a href="{{src}}/site/figures/extensibility/eject.ts">The document</a> · <a href="{{src}}/site/figures/extensibility/recipes/bar.ts">recipes/bar.ts</a></p>
+      </article>
+    </div>
+  </div>
+</section>
+<section class="section">
   <div class="wrap">
     <article class="card wide">
       <div class="card-text">
@@ -63,12 +268,11 @@ og: worlds
   <div class="wrap">
     <div class="cards2">
       <article>
-        <h3>Eject and edit</h3>
-<pre><code data-lang="sh">datars eject std/waterfall        # → recipes/waterfall.ts
-datars describe std/waterfall     # its parameters, defaults and tokens</code></pre>
-<pre><code data-lang="ts">// Before: import { waterfall } from "@datars/std";
-import { waterfall } from "./recipes/waterfall";
-// The document embeds your copy when it's built and published.</code></pre>
+        <h3>Keys decide what becomes what</h3>
+        <p>The workbench's charts pair with the standard ones by key alone. The bubbles are keyed by channel, as <code>pie</code> keys its slices, so each becomes its slice. The isotype's dots are keyed <code>(channel, unit i)</code>: the engine sees each bar as the parent of its row's dots and gathers them into it — or splits it back out. One gap, plainly: units don't pair with another recipe's units (dots into a waffle's squares crossfade); they split from and gather into whole rows.</p>
+<pre><code data-lang="ts">// recipes/isotype.ts: a row per unit, keyed (category, unit)
+const units = cx.table("units", p.data, op.units({ value: p.value, as: "i" }));
+instances({ key: "dots", from: units, x: e(`112 + (d.i + 0.5) * ${step}`), … })</code></pre>
       </article>
       <article>
         <h3>Motion comes with it</h3>
@@ -116,3 +320,4 @@ import { waterfall } from "./recipes/waterfall";
     </div>
   </div>
 </section>
+<script type="module" src="/features-extensibility.js"></script>

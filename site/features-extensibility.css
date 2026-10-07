@@ -1,0 +1,67 @@
+/* The extensibility page's own styles (site/pages/features/extensibility.html: `css:` in its front
+   matter): the recipe workbench — a code editor (a textarea over its highlighted copy, with line
+   numbers) beside the live chart and the doc.ts that uses the code. */
+.xe-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+.xe-tabs button { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 11px 14px; text-align: left; font: 14px var(--font); color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; cursor: pointer; }
+.xe-tabs button b { font-weight: 600; color: var(--ink); }
+.xe-tabs button span { font-size: 13px; color: var(--muted); }
+.xe-tabs button[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.xe-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); grid-template-areas: "ed chart" "ed doc"; grid-template-rows: auto 1fr; gap: 14px 24px; align-items: start; }
+.xe-left { grid-area: ed; }
+.xe-right { grid-area: chart; }
+.xe-doc { grid-area: doc; }
+.xe-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 2px 8px; }
+.xe-file { font: 600 13px var(--mono); color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* The editor: one font, one line height and one padding for the gutter, the highlighted copy and
+   the textarea, so the caret sits on the text it edits. */
+.xe-editor { --lh: 19px; display: grid; grid-template-columns: auto minmax(0, 1fr); height: 520px; background: var(--code-bg); border: 1px solid #1d2436; border-radius: 12px; overflow: hidden; font: 12.5px/var(--lh) var(--mono); }
+.xe-gutter { margin: 0; padding: 12px 8px 12px 12px; overflow: hidden; color: #4b5573; text-align: right; background: none; border: 0; border-radius: 0; font: inherit; user-select: none; min-width: 2.2em; }
+.xe-gutter span { display: block; }
+.xe-gutter span.err { color: #ff8a80; background: rgba(255, 90, 80, .16); border-radius: 3px; margin-right: -4px; padding-right: 4px; }
+.xe-code { position: relative; min-width: 0; }
+.xe-hl, .xe-input { position: absolute; inset: 0; margin: 0; padding: 12px 14px 12px 6px; font: inherit; white-space: pre; tab-size: 2; overflow: auto; border: 0; border-radius: 0; }
+.xe-hl { pointer-events: none; overflow: hidden; background: none; color: var(--code-ink); }
+.xe-hl code { font: inherit; }
+.xe-input { resize: none; background: transparent; color: transparent; -webkit-text-fill-color: transparent; caret-color: #fff; outline: none; }
+.xe-input::selection { background: rgba(130, 170, 255, .3); -webkit-text-fill-color: transparent; }
+.xe-editor:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+.xe-try-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+.xe-try-row[hidden] { display: none; }
+.xe-tries button { font-size: 12.5px; padding: 5px 10px; }
+.xe-tries button:disabled { opacity: .45; cursor: default; }
+
+.xe-right { position: sticky; top: 76px; }
+.xe-frame { container-type: inline-size; }
+@container (max-width: 599.98px) { .xe-view > .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+.xe-states { margin: 2px 2px 10px; }
+.xe-status { margin: 10px 2px 0; min-height: 3em; font-size: 13px; line-height: 1.5; color: var(--muted); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.xe-status[data-kind="error"] { color: #d93a2b; }
+:root[data-theme="dark"] .xe-status[data-kind="error"] { color: #ff8a80; }
+.xe-status[data-kind="note"] { color: #a86b00; }
+:root[data-theme="dark"] .xe-status[data-kind="note"] { color: #f5b53d; }
+.xe-doc { margin: 0; max-height: 300px; font-size: 11.5px; min-width: 0; }
+
+.xe-where { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 28px; }
+.xe-where article { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 22px; }
+.xe-where h3 { margin: 0 0 8px; font-size: 1rem; }
+.xe-where ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+.xe-where li + li { margin-top: 6px; }
+.xe-proof pre { font-size: 11.5px; }
+.xe-proof .fine a { color: var(--accent); }
+
+@media (max-width: 1000px) {
+  .xe-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "chart" "ed" "doc"; grid-template-rows: none; gap: 14px; }
+  /* The chart first on a phone, kept in view while the code scrolls under it. */
+  .xe-right { top: 60px; z-index: 2; background: var(--bg); padding: 6px 0 8px; margin: -6px 0 0; }
+  .xe-frame { padding: 10px; }
+  .xe-editor { height: 380px; }
+  .xe-where { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .xe-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .xe-tabs button { padding: 8px 9px; font-size: 13px; }
+  .xe-tabs button span { display: none; }
+  .xe-editor { --lh: 17px; font-size: 11.5px; height: 340px; }
+  .xe-status { font-size: 12px; margin-top: 6px; }
+}
