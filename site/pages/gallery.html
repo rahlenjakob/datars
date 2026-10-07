@@ -1,195 +1,313 @@
 ---
-title: Gallery — every chart live · datars
-description: Every live datars chart on this site — morphing stories, maps from the globe to a street, explorables, linked views, drill-downs, live data, four million points, business and finance charts, brands and scripts — each with its TypeScript document and text description, plus an example of every recipe.
+title: Gallery — every chart live, open any one · datars
+description: Every live datars chart on this site — stories, maps from the globe to a street, explorables, live data, four million points, business charts, brands and scripts. Filter them, then open one in the lab to step and scrub it, switch it to dark or high contrast, dress it in a brand, hand it your own numbers and copy the code for the web, React, iOS or Android.
 og: shapes
+css: gallery.css
 ---
-<section class="page-head">
+<section class="page-head g-head">
   <div class="wrap">
     <p class="eyebrow">Gallery</p>
-    <h1>Every chart here is live</h1>
-    <p class="lede-2">Each is a published bundle played by the same {{runtime}} runtime your pages and apps would use, fetched as static files. Step through, drag, brush, zoom — and open the document behind it. Each one's text description, from its own semantics, is under the chart.</p>
-    <p class="chips" style="margin-top:-12px">
-      <a class="chip" href="#stories">Stories and morphs</a>
-      <a class="chip" href="#maps">Maps</a>
-      <a class="chip" href="#interaction">Interaction</a>
-      <a class="chip" href="#big-data">Big data</a>
-      <a class="chip" href="#business">Business and flows</a>
-      <a class="chip" href="#brands">Brands and type</a>
-      <a class="chip" href="#recipes">Every recipe</a>
-    </p>
+    <h1>{{count:charts}} charts, all live. Take any one apart.</h1>
+    <p class="lede-2">Each is a published bundle played by the same {{runtime}} runtime your pages and apps would use. Open one in the lab: step through it and scrub its transitions, switch it to dark or high contrast, dress it in a brand, hand it your own numbers — and copy the code for the web, React, iOS or Android as you go.</p>
+    <dl class="g-stats">
+      <div><dt>{{count:charts}}</dt><dd>published charts, every one live</dd></div>
+      <div><dt>{{count:recipes}}</dt><dd>recipes in the standard library</dd></div>
+      <div><dt>{{runtime}}</dt><dd>runtime, loaded once for them all</dd></div>
+      <div><dt>{{size:votes}}</dt><dd>a four-step story, all of it</dd></div>
+    </dl>
   </div>
 </section>
 
-<section class="section" id="stories" style="padding-top:24px">
+<div class="g-bar" id="g-bar">
+  <div class="wrap g-bar-in">
+    <label class="g-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="g-q" placeholder="Search charts and recipes" autocomplete="off" spellcheck="false" aria-label="Search the charts and recipes"></label>
+    <div class="g-kinds" role="group" aria-label="Kind of chart">
+      <button type="button" data-kind="" aria-pressed="true">All</button>
+      <button type="button" data-kind="stories" aria-pressed="false">Stories</button>
+      <button type="button" data-kind="maps" aria-pressed="false">Maps</button>
+      <button type="button" data-kind="interaction" aria-pressed="false">Interaction</button>
+      <button type="button" data-kind="big-data" aria-pressed="false">Big data</button>
+      <button type="button" data-kind="boardroom" aria-pressed="false">Business</button>
+      <button type="button" data-kind="brands" aria-pressed="false">Brands &amp; type</button>
+    </div>
+    <div class="g-tags" role="group" aria-label="Features">
+      <button type="button" data-tag="morph" aria-pressed="false">Keyed morphs</button>
+      <button type="button" data-tag="camera" aria-pressed="false">Camera flights</button>
+      <button type="button" data-tag="controls" aria-pressed="false">Controls &amp; brushes</button>
+      <button type="button" data-tag="app-data" aria-pressed="false">App &amp; live data</button>
+      <button type="button" data-tag="by-range" aria-pressed="false">Read by range</button>
+      <button type="button" data-tag="recipe" aria-pressed="false">Custom recipe</button>
+      <button type="button" data-tag="type" aria-pressed="false">Fonts &amp; scripts</button>
+      <button type="button" data-tag="native" aria-pressed="false">On iOS &amp; Android</button>
+    </div>
+    <p class="g-count" id="g-count" aria-live="polite"><b>{{count:charts}}</b> charts</p>
+  </div>
+</div>
+
+<div class="g-body" id="g-body">
+<p class="wrap g-none" id="g-none" hidden>No chart matches. <button type="button" class="linkish" data-g-clear>Show them all</button></p>
+
+<section class="g-group" id="stories" data-group="stories">
   <div class="wrap">
-    <header class="section-head"><h2>Stories and morphs</h2><p>One dataset, many shapes: every mark keeps its key, so each step is a transition, not a cut.</p></header>
-    <div class="grid">
-      <article class="card" id="hero">
+    <header class="g-group-head"><h2>Stories and morphs</h2><p>One dataset, many shapes: every mark keeps its key, so each step is a transition, not a cut.</p></header>
+    <div class="g-grid">
+      <article class="g-card" id="hero" data-kind="stories" data-tags="morph" data-words="electricity world sources bars donut treemap waffle split dark">
         <div class="chart" data-chart="hero" data-caption></div>
-        <div class="card-text"><span class="tag">Keyed morphs</span><h3>World electricity, five shapes</h3><p>Bars, a donut, a treemap, a waffle and a fossil versus low-carbon split — each source keeps its key, so every shape morphs into the next.</p><p class="hint"><a href="{{src}}/site/charts/hero.ts">Document</a> · {{size:hero}}</p>{{alt:hero}}</div>
+        <div class="g-text"><p class="g-kicker">Keyed morphs · dark</p><h3>World electricity, five shapes</h3><p>Bars, a donut, a treemap, a waffle and a fossil versus low-carbon split — each source keeps its key, so every shape morphs into the next.</p>
+        <div class="g-foot"><span class="g-meta">{{size:hero}} · 5 steps</span><button type="button" class="g-open" data-lab="hero">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:hero}}</div>
       </article>
-      <article class="card" id="shapes">
+      <article class="g-card" id="shapes" data-kind="stories" data-tags="morph native" data-words="units split merge bars treemap waffle dots election sweden">
         <div class="chart" data-chart="shapes" data-caption></div>
-        <div class="card-text"><span class="tag">Units split and merge</span><h3>One dataset, many shapes</h3><p>Bars → treemap → waffle → dots. Units split out of bars and merge back; the whole motion spec is one rule.</p><p class="hint"><a href="{{src}}/examples/shapes/doc.ts">Document</a> · {{size:shapes}}</p>{{alt:shapes}}</div>
+        <div class="g-text"><p class="g-kicker">Units split and merge</p><h3>One dataset, many shapes</h3><p>Bars → treemap → waffle → dots. Units split out of bars and merge back; the whole motion spec is one rule.</p>
+        <div class="g-foot"><span class="g-meta">{{size:shapes}} · 4 steps</span><button type="button" class="g-open" data-lab="shapes">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:shapes}}</div>
       </article>
-      <article class="card" id="riksdag">
+      <article class="g-card" id="riksdag" data-kind="stories" data-tags="morph native" data-words="parliament seats hemicycle dots units sweden export png svg pdf">
         <div class="chart" data-chart="riksdag" data-caption></div>
-        <div class="card-text"><span class="tag">Units</span><h3>349 seats, then the parties</h3><p>A hemicycle of one dot per seat that regroups into bars. Party colours are data, declared once as key metadata; the theme supplies everything else.</p><p class="hint"><a href="{{src}}/examples/riksdag/doc.ts">Document</a> · {{size:riksdag}}</p>{{alt:riksdag}}</div>
+        <div class="g-text"><p class="g-kicker">Units</p><h3>349 seats, then the parties</h3><p>A hemicycle of one dot per seat that regroups into bars. Party colours are data, declared once as key metadata; the theme supplies everything else.</p>
+        <div class="g-foot"><span class="g-meta">{{size:riksdag}} · 2 steps</span><button type="button" class="g-open" data-lab="riksdag">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:riksdag}}</div>
       </article>
-      <article class="card" id="votes">
+      <article class="g-card" id="votes" data-kind="stories" data-tags="morph native" data-words="election sweden bars pie donut ranked first">
         <div class="chart" data-chart="votes" data-caption></div>
-        <div class="card-text"><span class="tag">A simple story</span><h3>Vote share, four ways</h3><p>The Swedish election of 2022: each party's bar becomes its slice and back. A good first document to read.</p><p class="hint"><a href="{{src}}/examples/votes/doc.ts">Document</a> · {{size:votes}}</p>{{alt:votes}}</div>
+        <div class="g-text"><p class="g-kicker">A simple story</p><h3>Vote share, four ways</h3><p>The Swedish election of 2022: each party's bar becomes its slice and back. A good first document to read.</p>
+        <div class="g-foot"><span class="g-meta">{{size:votes}} · 4 steps</span><button type="button" class="g-open" data-lab="votes">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:votes}}</div>
       </article>
-      <article class="card" id="warming">
+      <article class="g-card" id="warming" data-kind="stories" data-tags="morph native" data-words="climate temperature line stripes diverging">
         <div class="chart" data-chart="warming" data-caption></div>
-        <div class="card-text"><span class="tag">Line → stripes</span><h3>A warming world, as a line and as stripes</h3><p>Two shapes of one series: every year's point becomes its stripe, coloured on a diverging scale by the theme.</p><p class="hint"><a href="{{src}}/examples/warming/doc.ts">Document</a> · {{size:warming}}</p>{{alt:warming}}</div>
+        <div class="g-text"><p class="g-kicker">Line → stripes</p><h3>A warming world, as a line and as stripes</h3><p>Two shapes of one series: every year's point becomes its stripe, coloured on a diverging scale by the theme.</p>
+        <div class="g-foot"><span class="g-meta">{{size:warming}} · 2 steps</span><button type="button" class="g-open" data-lab="warming">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:warming}}</div>
       </article>
-      <article class="card" id="worlds">
+      <article class="g-card" id="worlds" data-kind="stories" data-tags="morph camera recipe" data-words="globe planets spiral blocks population countries dark film video">
         <div class="chart" data-chart="worlds" data-caption></div>
-        <div class="card-text"><span class="tag">Custom recipe</span><h3>Eight billion, four ways</h3><p>A spinning globe whose countries become planets, a golden spiral and blocks — one custom recipe, motion rules for the flights.</p><p class="hint"><a href="{{src}}/examples/worlds/doc.ts">Document</a> · <a href="{{src}}/examples/worlds/recipes/worlds.ts">Recipe</a> · {{size:worlds}}</p>{{alt:worlds}}</div>
+        <div class="g-text"><p class="g-kicker">Custom recipe · dark</p><h3>Eight billion, four ways</h3><p>A spinning globe whose countries become planets, a golden spiral and blocks — one custom recipe, motion rules for the flights.</p>
+        <div class="g-foot"><span class="g-meta">{{size:worlds}} · 4 steps</span><button type="button" class="g-open" data-lab="worlds">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:worlds}}</div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section" id="maps">
+<section class="g-group" id="maps" data-group="maps">
   <div class="wrap">
-    <header class="section-head"><h2>Maps</h2><p>Projections, atlases and vector tiles in the same engine; basemaps read by range from one static file.</p></header>
-    <article class="card wide" id="rio">
-      <div class="card-text"><span class="tag">Automatic basemap</span><h3>From the world to Copacabana</h3><p>A flight to street level over a basemap made automatically from OpenStreetMap for exactly these views — {{archive:rio}} for the whole story.</p><p class="hint"><a href="{{src}}/examples/rio/doc.ts">Document</a> · {{size:rio}} + tiles on demand</p>{{alt:rio}}</div>
-      <div class="chart" data-chart="rio" data-caption></div>
-    </article>
-    <div class="grid">
-      <article class="card" id="descent">
+    <header class="g-group-head"><h2>Maps</h2><p>Projections, atlases and vector tiles in the same engine; basemaps read by range from one static file.</p></header>
+    <div class="g-grid">
+      <article class="g-card" id="rio" data-kind="maps" data-tags="camera by-range" data-words="brazil rio copacabana basemap openstreetmap street tiles flight">
+        <div class="chart" data-chart="rio" data-caption></div>
+        <div class="g-text"><p class="g-kicker">Automatic basemap</p><h3>From the world to Copacabana</h3><p>A flight to street level over a basemap made automatically from OpenStreetMap for exactly these views — {{archive:rio}} for the whole story.</p>
+        <div class="g-foot"><span class="g-meta">{{size:rio}} + tiles on demand</span><button type="button" class="g-open" data-lab="rio">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:rio}}</div>
+      </article>
+      <article class="g-card" id="descent" data-kind="maps" data-tags="camera by-range native" data-words="stockholm sweden globe vector tiles streets flight film video">
         <div class="chart" data-chart="descent" data-caption></div>
-        <div class="card-text"><span class="tag">Vector tiles · one camera</span><h3>From the globe to Stockholm's streets</h3><p>Our own OpenStreetMap and Natural Earth tiles; the camera flies the van Wijk path and labels fade in flight.</p><p class="hint"><a href="{{src}}/examples/descent/doc.ts">Document</a> · {{size:descent}} + {{archive:descent}} archive by range</p>{{alt:descent}}</div>
+        <div class="g-text"><p class="g-kicker">Vector tiles · one camera</p><h3>From the globe to Stockholm's streets</h3><p>Our own OpenStreetMap and Natural Earth tiles; the camera flies the van Wijk path and labels fade in flight.</p>
+        <div class="g-foot"><span class="g-meta">{{size:descent}} + {{archive:descent}} by range</span><button type="button" class="g-open" data-lab="descent">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:descent}}</div>
       </article>
-      <article class="card" id="renewables">
+      <article class="g-card" id="renewables" data-kind="maps" data-tags="morph camera" data-words="choropleth europe nordics ranking countries atlas map bars">
         <div class="chart" data-chart="renewables" data-caption></div>
-        <div class="card-text"><span class="tag">Map ↔ chart</span><h3>Renewables: the map becomes a ranking</h3><p>A choropleth over the countries atlas; the camera flies to Europe and the Nordics, then each country morphs into its bar.</p><p class="hint"><a href="{{src}}/examples/renewables/doc.ts">Document</a> · {{size:renewables}} incl. the atlas</p>{{alt:renewables}}</div>
+        <div class="g-text"><p class="g-kicker">Map ↔ chart</p><h3>Renewables: the map becomes a ranking</h3><p>A choropleth over the countries atlas; the camera flies to Europe and the Nordics, then each country morphs into its bar.</p>
+        <div class="g-foot"><span class="g-meta">{{size:renewables}} incl. the atlas</span><button type="button" class="g-open" data-lab="renewables">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:renewables}}</div>
       </article>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="interaction">
-  <div class="wrap">
-    <header class="section-head"><h2>Interaction</h2><p>Signals are global, so controls, brushes and selections link views without glue code — and work the same on touch, keyboard and screen readers.</p></header>
-    <div class="grid">
-      <article class="card" id="budget">
-        <div class="chart" data-chart="budget"></div>
-        <div class="card-text"><span class="tag">Explorable</span><h3>Drag the slider. That's the whole app.</h3><p>The slider is drawn by the engine — on the web, in apps and in video alike — and the bars read its signal in an expression. No host code.</p><p class="hint"><a href="{{src}}/examples/budget/doc.ts">Document</a> · {{size:budget}}</p>{{alt:budget}}</div>
-      </article>
-      <article class="card" id="dashboard">
-        <div class="chart" data-chart="dashboard"></div>
-        <div class="card-text"><span class="tag">Linked views</span><h3>Click a region, filter the trend</h3><p>The bars write a key set; the line chart's table filters on it; lines morph as series come and go.</p><p class="hint"><a href="{{src}}/examples/dashboard/doc.ts">Document</a> · {{size:dashboard}}</p>{{alt:dashboard}}</div>
-      </article>
-      <article class="card" id="prices">
-        <div class="chart" data-chart="prices" data-caption></div>
-        <div class="card-text"><span class="tag">Brushing</span><h3>Overview and detail, joined by a brush</h3><p>Drag across the year below; the detail above zooms to your selection and its mean updates. The brush is a signal like any other.</p><p class="hint"><a href="{{src}}/examples/prices/doc.ts">Document</a> · {{size:prices}}</p>{{alt:prices}}</div>
-      </article>
-      <article class="card" id="spending">
-        <div class="chart" data-chart="spending"></div>
-        <div class="card-text"><span class="tag">Data slot</span><h3>Your spending</h3><p>A banking-style chart that ships without data: an app hands in the user's rows on the device. Here it shows its sample.</p><p class="hint"><a href="{{src}}/examples/spending/doc.ts">Document</a> · {{size:spending}} · <a href="/features/data/#app">switch accounts on the data page</a></p>{{alt:spending}}</div>
-      </article>
-      <article class="card" id="controls">
-        <div class="chart" data-chart="controls"></div>
-        <div class="card-text"><span class="tag">Controls</span><h3>Every control, drawn by the engine</h3><p>A segmented choice, a dropdown whose list floats over the chart, a switch, checkboxes for a key set, a two-thumb range and a button — each a std recipe setting a signal the bars read.</p><p class="hint"><a href="{{src}}/site/charts/controls.ts">Document</a> · {{size:controls}}</p>{{alt:controls}}</div>
-      </article>
-      <article class="card" id="drill">
+      <article class="g-card" id="drill" data-kind="maps" data-tags="morph controls" data-words="europe gdp chapters click drill down map ranking history">
         <div class="chart" data-chart="drill"></div>
-        <div class="card-text"><span class="tag">Chapters</span><h3>Click a country to drill in</h3><p>The countries are chapters: click one and the map gives way to where it ranks and how it got there; back returns to Europe. The bars and the map enter the chapter the same way.</p><p class="hint"><a href="{{src}}/site/charts/europe-drill.ts">Document</a> · {{size:drill}}</p>{{alt:drill}}</div>
+        <div class="g-text"><p class="g-kicker">Chapters</p><h3>Click a country to drill in</h3><p>The countries are chapters: click one and the map gives way to where it ranks and how it got there; back returns to Europe.</p>
+        <div class="g-foot"><span class="g-meta">{{size:drill}} · click to drill</span><button type="button" class="g-open" data-lab="drill">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:drill}}</div>
       </article>
-      <article class="card" id="election">
+    </div>
+  </div>
+</section>
+
+<section class="g-group" id="interaction" data-group="interaction">
+  <div class="wrap">
+    <header class="g-group-head"><h2>Interaction</h2><p>Signals are global, so controls, brushes and selections link views without glue code — and work the same on touch, keyboard and screen readers.</p></header>
+    <div class="g-grid">
+      <article class="g-card" id="budget" data-kind="interaction" data-tags="controls native" data-words="slider explorable household budget income signal">
+        <div class="chart" data-chart="budget"></div>
+        <div class="g-text"><p class="g-kicker">Explorable</p><h3>Drag the slider. That's the whole app.</h3><p>The slider is drawn by the engine — on the web, in apps and in video alike — and the bars read its signal in an expression. No host code.</p>
+        <div class="g-foot"><span class="g-meta">{{size:budget}} · drag</span><button type="button" class="g-open" data-lab="budget">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:budget}}</div>
+      </article>
+      <article class="g-card" id="dashboard" data-kind="interaction" data-tags="controls native" data-words="linked views filter click regions trend line bars dashboard">
+        <div class="chart" data-chart="dashboard"></div>
+        <div class="g-text"><p class="g-kicker">Linked views</p><h3>Click a region, filter the trend</h3><p>The bars write a key set; the line chart's table filters on it; lines morph as series come and go.</p>
+        <div class="g-foot"><span class="g-meta">{{size:dashboard}} · click</span><button type="button" class="g-open" data-lab="dashboard">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:dashboard}}</div>
+      </article>
+      <article class="g-card" id="prices" data-kind="interaction" data-tags="controls" data-words="brush overview detail zoom electricity prices year">
+        <div class="chart" data-chart="prices" data-caption></div>
+        <div class="g-text"><p class="g-kicker">Brushing</p><h3>Overview and detail, joined by a brush</h3><p>Drag across the year below; the detail above zooms to your selection and its mean updates. The brush is a signal like any other.</p>
+        <div class="g-foot"><span class="g-meta">{{size:prices}} · brush</span><button type="button" class="g-open" data-lab="prices">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:prices}}</div>
+      </article>
+      <article class="g-card" id="spending" data-kind="interaction" data-tags="app-data native" data-words="banking data slot app user rows sample accounts private">
+        <div class="chart" data-chart="spending"></div>
+        <div class="g-text"><p class="g-kicker">Data slot</p><h3>Your spending</h3><p>A banking-style chart that ships without data: an app hands in the user's rows on the device. Here it shows its sample — the lab hands it two accounts.</p>
+        <div class="g-foot"><span class="g-meta">{{size:spending}} · rows from the app</span><button type="button" class="g-open" data-lab="spending">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:spending}}</div>
+      </article>
+      <article class="g-card" id="controls" data-kind="interaction" data-tags="controls" data-words="segmented dropdown select switch checkboxes range slider button signals">
+        <div class="chart" data-chart="controls"></div>
+        <div class="g-text"><p class="g-kicker">Controls</p><h3>Every control, drawn by the engine</h3><p>A segmented choice, a dropdown whose list floats over the chart, a switch, checkboxes for a key set, a two-thumb range and a button — each a std recipe setting a signal the bars read.</p>
+        <div class="g-foot"><span class="g-meta">{{size:controls}} · six signals</span><button type="button" class="g-open" data-lab="controls">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:controls}}</div>
+      </article>
+      <article class="g-card" id="election" data-kind="interaction" data-tags="app-data native" data-words="live feed election night count refresh ranking">
         <div class="chart" data-chart="election"></div>
-        <div class="card-text"><span class="tag">Live data</span><h3>Election night, re-ranked as it counts</h3><p>A live source fetched every two seconds; each count animates in by key. Here the page answers the chart's requests with the night's snapshots, over and over — <a href="/features/data/#live">how, on the data page</a>.</p><p class="hint"><a href="{{src}}/examples/election/doc.ts">Document</a> · {{size:election}} · simulated counts<span hidden data-feed-for="election" data-feed-source="count" data-src="/data/election/" data-feed-count="10" data-feed-loop></span></p>{{alt:election}}</div>
+        <div class="g-text"><p class="g-kicker">Live data</p><h3>Election night, re-ranked as it counts</h3><p>A live source fetched every two seconds; each count animates in by key. Here the page answers the chart's requests with the night's snapshots, over and over — <a href="/features/data/#live">how, on the data page</a>.<span hidden data-feed-for="election" data-feed-source="count" data-src="/data/election/" data-feed-count="10" data-feed-loop></span></p>
+        <div class="g-foot"><span class="g-meta">{{size:election}} · simulated counts</span><button type="button" class="g-open" data-lab="election">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:election}}</div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section" id="big-data">
+<section class="g-group" id="big-data" data-group="big-data">
   <div class="wrap">
-    <header class="section-head"><h2>Big data</h2><p>Instanced marks and point pyramids: the frame draws what the camera shows.</p></header>
-    <div class="grid">
-      <article class="card" id="galaxy">
+    <header class="g-group-head"><h2>Big data</h2><p>Instanced marks and point pyramids: the frame draws what the camera shows.</p></header>
+    <div class="g-grid">
+      <article class="g-card" id="galaxy" data-kind="big-data" data-tags="camera by-range native" data-words="four million points stars pyramid zoom explore archive dark">
         <div class="chart" data-chart="galaxy" data-caption></div>
-        <div class="card-text"><span class="tag">4,000,000 points</span><h3>A galaxy, star by star</h3><p>Four million generated stars indexed into a pyramid and streamed by byte range; zoom from the whole galaxy to a single star.</p><p class="hint"><a href="{{src}}/examples/galaxy/doc.ts">Document</a> · {{size:galaxy}} + {{archive:galaxy}} archive by range</p>{{alt:galaxy}}</div>
+        <div class="g-text"><p class="g-kicker">4,000,000 points · dark</p><h3>A galaxy, star by star</h3><p>Four million generated stars indexed into a pyramid and streamed by byte range; zoom from the whole galaxy to a single star.</p>
+        <div class="g-foot"><span class="g-meta">{{size:galaxy}} + {{archive:galaxy}} by range</span><button type="button" class="g-open" data-lab="galaxy">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:galaxy}}</div>
       </article>
-      <article class="card" id="scatter">
+      <article class="g-card" id="scatter" data-kind="big-data" data-tags="morph native" data-words="twenty thousand points scatter instanced recolour clusters">
         <div class="chart" data-chart="scatter" data-caption></div>
-        <div class="card-text"><span class="tag">20,000 points</span><h3>Recoloured in one step</h3><p>Instanced points: one draw for every point, the transition planned once, each frame in about a third of a millisecond.</p><p class="hint"><a href="{{src}}/examples/scatter/doc.ts">Document</a> · {{size:scatter}}</p>{{alt:scatter}}</div>
+        <div class="g-text"><p class="g-kicker">20,000 points</p><h3>Recoloured in one step</h3><p>Instanced points: one draw for every point, the transition planned once, each frame in about a third of a millisecond.</p>
+        <div class="g-foot"><span class="g-meta">{{size:scatter}} · 2 steps</span><button type="button" class="g-open" data-lab="scatter">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:scatter}}</div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section" id="business">
+<section class="g-group" id="boardroom" data-group="boardroom">
   <div class="wrap">
-    <header class="section-head"><h2>Business and flows</h2><p>The boardroom staples, each a recipe you can eject and edit.</p></header>
-    <div class="grid">
-      <article class="card" id="business-card">
+    <header class="g-group-head"><h2>Business and flows</h2><p>The boardroom staples, each a recipe you can eject and edit.</p></header>
+    <div class="g-grid">
+      <article class="g-card" id="business" data-kind="boardroom" data-tags="morph native" data-words="waterfall bridge funnel stacked bars revenue quarters">
         <div class="chart" data-chart="business" data-caption></div>
-        <div class="card-text"><span class="tag">Waterfall · funnel · stacked</span><h3>A bridge, a funnel, a stack</h3><p>Three recipes in one story; bars find their next shape.</p><p class="hint"><a href="{{src}}/examples/business/doc.ts">Document</a> · {{size:business}}</p>{{alt:business}}</div>
+        <div class="g-text"><p class="g-kicker">Waterfall · funnel · stacked</p><h3>A bridge, a funnel, a stack</h3><p>Three recipes in one story; bars find their next shape.</p>
+        <div class="g-foot"><span class="g-meta">{{size:business}} · 3 steps</span><button type="button" class="g-open" data-lab="business">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:business}}</div>
       </article>
-      <article class="card" id="energy">
-        <div class="chart" data-chart="energy"></div>
-        <div class="card-text"><span class="tag">Sankey</span><h3>Where the world's energy goes</h3><p>A sankey from one table of links; every ribbon is a keyed row.</p><p class="hint"><a href="{{src}}/site/charts/energy.ts">Document</a> · {{size:energy}}</p>{{alt:energy}}</div>
-      </article>
-      <article class="card" id="inflation">
-        <div class="chart" data-chart="inflation"></div>
-        <div class="card-text"><span class="tag">Area · callout</span><h3>Inflation, drawn on</h3><p>An area that draws on as it enters, with a callout at the peak.</p><p class="hint"><a href="{{src}}/examples/inflation/doc.ts">Document</a> · {{size:inflation}}</p>{{alt:inflation}}</div>
-      </article>
-      <article class="card" id="stocks">
+      <article class="g-card" id="stocks" data-kind="boardroom" data-tags="morph" data-words="finance candlesticks volume moving averages bollinger indexed peers drawdown trading">
         <div class="chart" data-chart="stocks" data-caption></div>
-        <div class="card-text"><span class="tag">Finance</span><h3>Prices, volumes and peers</h3><p>Candlesticks on a trading-day axis with volume below, moving averages and Bollinger bands, then indexed peers and drawdowns — six states of one keyed dataset. Fictional tickers.</p><p class="hint"><a href="{{src}}/examples/stocks/doc.ts">Document</a> · {{size:stocks}}</p>{{alt:stocks}}</div>
+        <div class="g-text"><p class="g-kicker">Finance</p><h3>Prices, volumes and peers</h3><p>Candlesticks on a trading-day axis with volume below, moving averages and Bollinger bands, then indexed peers and drawdowns — six states of one keyed dataset. Fictional tickers.</p>
+        <div class="g-foot"><span class="g-meta">{{size:stocks}} · 6 steps</span><button type="button" class="g-open" data-lab="stocks">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:stocks}}</div>
       </article>
-      <article class="card" id="flows">
+      <article class="g-card" id="energy" data-kind="boardroom" data-tags="" data-words="sankey flows world energy ribbons links">
+        <div class="chart" data-chart="energy"></div>
+        <div class="g-text"><p class="g-kicker">Sankey</p><h3>Where the world's energy goes</h3><p>A sankey from one table of links; every ribbon is a keyed row.</p>
+        <div class="g-foot"><span class="g-meta">{{size:energy}}</span><button type="button" class="g-open" data-lab="energy">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:energy}}</div>
+      </article>
+      <article class="g-card" id="inflation" data-kind="boardroom" data-tags="native" data-words="area callout annotation draw on inflation sweden cpif">
+        <div class="chart" data-chart="inflation"></div>
+        <div class="g-text"><p class="g-kicker">Area · callout</p><h3>Inflation, drawn on</h3><p>An area that draws on as it enters, with a callout at the peak.</p>
+        <div class="g-foot"><span class="g-meta">{{size:inflation}}</span><button type="button" class="g-open" data-lab="inflation">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:inflation}}</div>
+      </article>
+      <article class="g-card" id="flows" data-kind="boardroom" data-tags="native" data-words="sankey energy flows links small table">
         <div class="chart" data-chart="flows"></div>
-        <div class="card-text"><span class="tag">Sankey</span><h3>Energy flows, from a table of links</h3><p>The sankey recipe on a small table: sources on the left, uses on the right, every ribbon a keyed row. Illustrative figures.</p><p class="hint"><a href="{{src}}/examples/flows/doc.ts">Document</a> · {{size:flows}}</p>{{alt:flows}}</div>
+        <div class="g-text"><p class="g-kicker">Sankey</p><h3>Energy flows, from a table of links</h3><p>The sankey recipe on a small table: sources on the left, uses on the right, every ribbon a keyed row. Illustrative figures.</p>
+        <div class="g-foot"><span class="g-meta">{{size:flows}}</span><button type="button" class="g-open" data-lab="flows">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:flows}}</div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section" id="brands">
+<section class="g-group" id="brands" data-group="brands">
   <div class="wrap">
-    <header class="section-head"><h2>Brands and type</h2><p>Themes, fonts and modes — applied at runtime.</p></header>
-    <div class="grid">
-      <article class="card" id="brand">
+    <header class="g-group-head"><h2>Brands and type</h2><p>Themes, fonts and modes — applied at runtime.</p></header>
+    <div class="g-grid">
+      <article class="g-card" id="brand" data-kind="brands" data-tags="type" data-words="themes brands fonts newsprint nordic neon sunset tokens">
         <div class="chart" data-chart="brand"></div>
-        <div class="card-text"><span class="tag">Themes at runtime</span><h3>One chart, five brands</h3><p>Follows this page's light or dark mode; try the brands on the <a href="/features/theming/">theming page</a>.</p><p class="hint"><a href="{{src}}/site/charts/brand.ts">Document</a> · {{size:brand}} with five brands' fonts</p>{{alt:brand}}</div>
+        <div class="g-text"><p class="g-kicker">Themes at runtime</p><h3>One chart, five brands</h3><p>It follows this page's light or dark mode; in the lab, dress it in any of the brands, or the theme you made in the <a href="/themes/">theme studio</a>.</p>
+        <div class="g-foot"><span class="g-meta">{{size:brand}} with five brands' fonts</span><button type="button" class="g-open" data-lab="brand">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:brand}}</div>
       </article>
-      <article class="card" id="serif">
-        <div class="chart" data-chart="serif"></div>
-        <div class="card-text"><span class="tag">Brand fonts</span><h3>A newsroom look in a serif</h3><p>Newsreader from font files in the project, subset into the bundle so every platform draws the same line breaks.</p><p class="hint"><a href="{{src}}/examples/serif/doc.ts">Document</a> · {{size:serif}}</p>{{alt:serif}}</div>
+      <article class="g-card" id="serif" data-kind="brands" data-tags="morph type" data-words="newsroom serif newsreader font rivers kilometres miles">
+        <div class="chart" data-chart="serif" data-caption></div>
+        <div class="g-text"><p class="g-kicker">Brand fonts</p><h3>A newsroom look in a serif</h3><p>Newsreader from font files in the project, subset into the bundle so every platform draws the same line breaks.</p>
+        <div class="g-foot"><span class="g-meta">{{size:serif}} · 2 steps</span><button type="button" class="g-open" data-lab="serif">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:serif}}</div>
       </article>
-      <article class="card" id="hebrew">
+      <article class="g-card" id="hebrew" data-kind="brands" data-tags="type" data-words="hebrew right to left rtl script noto cities">
         <div class="chart" data-chart="hebrew"></div>
-        <div class="card-text"><span class="tag">Other scripts</span><h3>Labels right to left</h3><p>Hebrew city names from a font the document brings (Noto Sans Hebrew, subset into the bundle), ordered and aligned right to left — the same on every platform.</p><p class="hint"><a href="{{src}}/examples/hebrew/doc.ts">Document</a> · {{size:hebrew}}</p>{{alt:hebrew}}</div>
+        <div class="g-text"><p class="g-kicker">Other scripts</p><h3>Labels right to left</h3><p>Hebrew city names from a font the document brings (Noto Sans Hebrew, subset into the bundle), ordered and aligned right to left — the same on every platform.</p>
+        <div class="g-foot"><span class="g-meta">{{size:hebrew}}</span><button type="button" class="g-open" data-lab="hebrew">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div>{{alt:hebrew}}</div>
       </article>
     </div>
   </div>
 </section>
 
-<section class="section" id="recipes">
+<section class="g-group g-recipes" id="recipes" data-group="recipes">
   <div class="wrap">
-    <header class="section-head"><h2>Every recipe, one example each</h2><p>The standard library's {{count:recipes}} recipes, each with a live example of its own in the <a href="/docs/std/">chart reference</a> — its parameters switched step by step, and its source to copy.</p></header>
+    <header class="g-group-head"><h2>Every recipe, one example each</h2><p>The standard library's {{count:recipes}} recipes, each with a live example of its own in the <a href="/docs/std/">chart reference</a> — its parameters switched step by step, and its source to copy.</p></header>
     {{std:list}}
   </div>
 </section>
 
-<section class="section">
+<section class="section g-next">
   <div class="wrap">
     <div class="next">
       <div>
-        <h2>More, in context</h2>
-        <p>Ten articles in one house style, with every chart live and its sources under it.</p>
+        <h2>The documents behind them</h2>
+        <p>Every chart's TypeScript, the theme tokens it reads and what each of its bundle's tiers weighs, on one page.</p>
       </div>
       <div class="cta">
-        <a class="btn btn-primary" href="/articles/">Example articles <span aria-hidden="true">→</span></a>
-        <a class="btn btn-ghost" href="/performance/">Performance</a>
+        <a class="btn btn-primary" href="/gallery/documents/">The documents <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/articles/">Example articles</a>
       </div>
     </div>
   </div>
 </section>
+</div>
+
+<dialog class="lab" id="lab" aria-labelledby="lab-title" data-repo="{{src}}">
+  <div class="lab-shell">
+    <header class="lab-head">
+      <div class="lab-step-charts" role="group" aria-label="Other charts">
+        <button type="button" class="icon-btn" data-lab-go="-1" aria-label="Previous chart" title="Previous chart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg></button>
+        <button type="button" class="icon-btn" data-lab-go="1" aria-label="Next chart" title="Next chart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+      </div>
+      <div class="lab-titles"><p class="lab-kicker" id="lab-kicker"></p><h2 id="lab-title">Chart</h2></div>
+      <span class="lab-pos" id="lab-pos" aria-hidden="true"></span>
+      <button type="button" class="icon-btn lab-close" data-lab-close aria-label="Close the lab" title="Close (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+    </header>
+    <div class="lab-main">
+      <div class="lab-left">
+        <div class="lab-sticky">
+          <div class="lab-frame" id="lab-frame"><div class="lab-stage" id="lab-stage"></div></div>
+          <div class="lab-transport" id="lab-transport">
+            <button type="button" class="lab-play" id="lab-play" aria-label="Play the story" title="Play"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.5 5h3v14h-3zM13.5 5h3v14h-3z"/></svg></button>
+            <input type="range" class="lab-scrub" id="lab-scrub" min="0" max="1000" step="1" value="0" aria-label="Scrub through the story">
+            <span class="lab-at" id="lab-at"></span>
+          </div>
+          <div class="lab-steps"><div class="pills small" id="lab-pills" role="group" aria-label="Steps"></div><p class="lab-say" id="lab-say"></p></div>
+        </div>
+        <div class="lab-look">
+          <div class="seg seg-small" role="group" aria-label="Mode">
+            <button type="button" data-lab-mode="light" aria-pressed="true">Light</button>
+            <button type="button" data-lab-mode="dark" aria-pressed="false">Dark</button>
+            <button type="button" data-lab-mode="high-contrast" aria-pressed="false">High contrast</button>
+          </div>
+          <div class="lab-themes" id="lab-themes" role="group" aria-label="Theme"></div>
+          <label class="lab-switch"><input type="checkbox" id="lab-reduced"> Reduced motion</label>
+        </div>
+      </div>
+      <aside class="lab-panel" aria-label="Remix, code and facts">
+        <div class="lab-tabs" role="tablist" aria-label="Lab">
+          <button type="button" role="tab" id="lt-remix" aria-controls="lp-remix" aria-selected="true">Remix</button>
+          <button type="button" role="tab" id="lt-code" aria-controls="lp-code" aria-selected="false" tabindex="-1">Code</button>
+          <button type="button" role="tab" id="lt-facts" aria-controls="lp-facts" aria-selected="false" tabindex="-1">Facts</button>
+        </div>
+        <div class="lab-body">
+          <section class="lab-tab" role="tabpanel" id="lp-remix" aria-labelledby="lt-remix">
+            <div id="rx-signals"></div>
+            <div id="rx-data"></div>
+          </section>
+          <section class="lab-tab" role="tabpanel" id="lp-code" aria-labelledby="lt-code" hidden>
+            <div class="seg seg-small lab-langs" role="group" aria-label="Code for">
+              <button type="button" data-lang-tab="html" aria-pressed="true">HTML</button>
+              <button type="button" data-lang-tab="react" aria-pressed="false">React</button>
+              <button type="button" data-lang-tab="swift" aria-pressed="false">SwiftUI</button>
+              <button type="button" data-lang-tab="kotlin" aria-pressed="false">Android</button>
+              <button type="button" data-lang-tab="doc" aria-pressed="false">doc.ts</button>
+            </div>
+            <div class="lab-code-bar"><p class="fine lab-code-note" id="lab-code-note"></p><button type="button" class="btn btn-ghost small lab-copy" id="lab-copy">Copy</button></div>
+            <div class="lab-code-wrap"><pre class="lab-code"><code id="lab-code" data-lang="html"></code></pre></div>
+          </section>
+          <section class="lab-tab" role="tabpanel" id="lp-facts" aria-labelledby="lt-facts" hidden>
+            <div id="lab-facts"></div>
+          </section>
+        </div>
+      </aside>
+    </div>
+  </div>
+</dialog>
+<script type="module" src="/gallery.js"></script>

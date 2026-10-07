@@ -1,0 +1,374 @@
+---
+title: The documents behind the gallery · datars
+description: The TypeScript document behind every chart in the datars gallery, the theme tokens each one reads, and what each tier of its published bundle weighs, measured by the build.
+css: gallery.css
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow"><a href="/gallery/">Gallery</a> · documents</p>
+    <h1>The documents behind the gallery</h1>
+    <p class="lede-2">A chart is a TypeScript file: data, a scene of recipes and a program of steps. Here is each gallery chart's, as it was built for this site, with the theme tokens it reads and what each tier of its bundle weighs — the lab in the <a href="/gallery/">gallery</a> shows the same for the chart you open.</p>
+    <nav class="g-doc-toc" aria-label="Charts">
+      <p><b>Stories and morphs</b> <a href="#doc-hero">World electricity, five shapes</a> · <a href="#doc-shapes">One dataset, many shapes</a> · <a href="#doc-riksdag">349 seats, then the parties</a> · <a href="#doc-votes">Vote share, four ways</a> · <a href="#doc-warming">A warming world, as a line and as stripes</a> · <a href="#doc-worlds">Eight billion, four ways</a></p>
+      <p><b>Maps</b> <a href="#doc-rio">From the world to Copacabana</a> · <a href="#doc-descent">From the globe to Stockholm&#x27;s streets</a> · <a href="#doc-renewables">Renewables: the map becomes a ranking</a> · <a href="#doc-drill">Click a country to drill in</a></p>
+      <p><b>Interaction</b> <a href="#doc-budget">Drag the slider. That&#x27;s the whole app.</a> · <a href="#doc-dashboard">Click a region, filter the trend</a> · <a href="#doc-prices">Overview and detail, joined by a brush</a> · <a href="#doc-spending">Your spending</a> · <a href="#doc-controls">Every control, drawn by the engine</a> · <a href="#doc-election">Election night, re-ranked as it counts</a></p>
+      <p><b>Big data</b> <a href="#doc-galaxy">A galaxy, star by star</a> · <a href="#doc-scatter">Recoloured in one step</a></p>
+      <p><b>Business and flows</b> <a href="#doc-business">A bridge, a funnel, a stack</a> · <a href="#doc-stocks">Prices, volumes and peers</a> · <a href="#doc-energy">Where the world&#x27;s energy goes</a> · <a href="#doc-inflation">Inflation, drawn on</a> · <a href="#doc-flows">Energy flows, from a table of links</a></p>
+      <p><b>Brands and type</b> <a href="#doc-brand">One chart, five brands</a> · <a href="#doc-serif">A newsroom look in a serif</a> · <a href="#doc-hebrew">Labels right to left</a></p>
+    </nav>
+  </div>
+</section>
+
+<section class="section g-docs" aria-label="Stories and morphs">
+  <div class="wrap">
+    <h2 class="g-docs-h">Stories and morphs</h2>
+    <article class="g-doc" id="doc-hero" data-alias="hero">
+      <header class="g-doc-head"><h3>World electricity, five shapes</h3><p><a href="/gallery/#lab=hero">Open it in the lab</a> · {{size:hero}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="site/charts/hero.ts">{{code:site/charts/hero.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:hero}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:hero}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-shapes" data-alias="shapes">
+      <header class="g-doc-head"><h3>One dataset, many shapes</h3><p><a href="/gallery/#lab=shapes">Open it in the lab</a> · {{size:shapes}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/shapes/doc.ts">{{code:examples/shapes/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:shapes}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:shapes}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-riksdag" data-alias="riksdag">
+      <header class="g-doc-head"><h3>349 seats, then the parties</h3><p><a href="/gallery/#lab=riksdag">Open it in the lab</a> · {{size:riksdag}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/riksdag/doc.ts">{{code:examples/riksdag/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:riksdag}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:riksdag}}</div>
+          <h4>The same document, exported</h4>
+          <p class="g-doc-exports"><a href="/exports/riksdag.png">PNG</a> · <a href="/exports/riksdag.svg">SVG</a> · <a href="/exports/riksdag.pdf">PDF</a> — drawn by this build with <code>datars render</code>.</p>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-votes" data-alias="votes">
+      <header class="g-doc-head"><h3>Vote share, four ways</h3><p><a href="/gallery/#lab=votes">Open it in the lab</a> · {{size:votes}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/votes/doc.ts">{{code:examples/votes/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:votes}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:votes}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-warming" data-alias="warming">
+      <header class="g-doc-head"><h3>A warming world, as a line and as stripes</h3><p><a href="/gallery/#lab=warming">Open it in the lab</a> · {{size:warming}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/warming/doc.ts">{{code:examples/warming/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:warming}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:warming}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-worlds" data-alias="worlds">
+      <header class="g-doc-head"><h3>Eight billion, four ways</h3><p><a href="/gallery/#lab=worlds">Open it in the lab</a> · {{size:worlds}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/worlds/doc.ts">{{code:examples/worlds/doc.ts}}</div><div class="g-doc-file" data-file="examples/worlds/recipes/worlds.ts">{{code:examples/worlds/recipes/worlds.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:worlds}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:worlds}}</div>
+          <h4>The same document, as a film</h4>
+          <div class="g-doc-film" data-film="worlds-9x16">{{film:worlds-9x16}}</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section g-docs" aria-label="Maps">
+  <div class="wrap">
+    <h2 class="g-docs-h">Maps</h2>
+    <article class="g-doc" id="doc-rio" data-alias="rio">
+      <header class="g-doc-head"><h3>From the world to Copacabana</h3><p><a href="/gallery/#lab=rio">Open it in the lab</a> · {{size:rio}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/rio/doc.ts">{{code:examples/rio/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:rio}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:rio}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-descent" data-alias="descent">
+      <header class="g-doc-head"><h3>From the globe to Stockholm&#x27;s streets</h3><p><a href="/gallery/#lab=descent">Open it in the lab</a> · {{size:descent}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/descent/doc.ts">{{code:examples/descent/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:descent}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:descent}}</div>
+          <h4>The same document, as a film</h4>
+          <div class="g-doc-film" data-film="descent-16x9">{{film:descent-16x9}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-renewables" data-alias="renewables">
+      <header class="g-doc-head"><h3>Renewables: the map becomes a ranking</h3><p><a href="/gallery/#lab=renewables">Open it in the lab</a> · {{size:renewables}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/renewables/doc.ts">{{code:examples/renewables/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:renewables}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:renewables}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-drill" data-alias="drill">
+      <header class="g-doc-head"><h3>Click a country to drill in</h3><p><a href="/gallery/#lab=drill">Open it in the lab</a> · {{size:drill}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="site/charts/europe-drill.ts">{{code:site/charts/europe-drill.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:drill}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:drill}}</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section g-docs" aria-label="Interaction">
+  <div class="wrap">
+    <h2 class="g-docs-h">Interaction</h2>
+    <article class="g-doc" id="doc-budget" data-alias="budget">
+      <header class="g-doc-head"><h3>Drag the slider. That&#x27;s the whole app.</h3><p><a href="/gallery/#lab=budget">Open it in the lab</a> · {{size:budget}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/budget/doc.ts">{{code:examples/budget/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:budget}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:budget}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-dashboard" data-alias="dashboard">
+      <header class="g-doc-head"><h3>Click a region, filter the trend</h3><p><a href="/gallery/#lab=dashboard">Open it in the lab</a> · {{size:dashboard}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/dashboard/doc.ts">{{code:examples/dashboard/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:dashboard}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:dashboard}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-prices" data-alias="prices">
+      <header class="g-doc-head"><h3>Overview and detail, joined by a brush</h3><p><a href="/gallery/#lab=prices">Open it in the lab</a> · {{size:prices}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/prices/doc.ts">{{code:examples/prices/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:prices}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:prices}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-spending" data-alias="spending">
+      <header class="g-doc-head"><h3>Your spending</h3><p><a href="/gallery/#lab=spending">Open it in the lab</a> · {{size:spending}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/spending/doc.ts">{{code:examples/spending/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:spending}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:spending}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-controls" data-alias="controls">
+      <header class="g-doc-head"><h3>Every control, drawn by the engine</h3><p><a href="/gallery/#lab=controls">Open it in the lab</a> · {{size:controls}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="site/charts/controls.ts">{{code:site/charts/controls.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:controls}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:controls}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-election" data-alias="election">
+      <header class="g-doc-head"><h3>Election night, re-ranked as it counts</h3><p><a href="/gallery/#lab=election">Open it in the lab</a> · {{size:election}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/election/doc.ts">{{code:examples/election/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:election}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:election}}</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section g-docs" aria-label="Big data">
+  <div class="wrap">
+    <h2 class="g-docs-h">Big data</h2>
+    <article class="g-doc" id="doc-galaxy" data-alias="galaxy">
+      <header class="g-doc-head"><h3>A galaxy, star by star</h3><p><a href="/gallery/#lab=galaxy">Open it in the lab</a> · {{size:galaxy}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/galaxy/doc.ts">{{code:examples/galaxy/doc.ts}}</div><div class="g-doc-file" data-file="examples/galaxy/galaxy.ts">{{code:examples/galaxy/galaxy.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:galaxy}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:galaxy}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-scatter" data-alias="scatter">
+      <header class="g-doc-head"><h3>Recoloured in one step</h3><p><a href="/gallery/#lab=scatter">Open it in the lab</a> · {{size:scatter}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/scatter/doc.ts">{{code:examples/scatter/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:scatter}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:scatter}}</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section g-docs" aria-label="Business and flows">
+  <div class="wrap">
+    <h2 class="g-docs-h">Business and flows</h2>
+    <article class="g-doc" id="doc-business" data-alias="business">
+      <header class="g-doc-head"><h3>A bridge, a funnel, a stack</h3><p><a href="/gallery/#lab=business">Open it in the lab</a> · {{size:business}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/business/doc.ts">{{code:examples/business/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:business}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:business}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-stocks" data-alias="stocks">
+      <header class="g-doc-head"><h3>Prices, volumes and peers</h3><p><a href="/gallery/#lab=stocks">Open it in the lab</a> · {{size:stocks}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/stocks/doc.ts">{{code:examples/stocks/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:stocks}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:stocks}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-energy" data-alias="energy">
+      <header class="g-doc-head"><h3>Where the world&#x27;s energy goes</h3><p><a href="/gallery/#lab=energy">Open it in the lab</a> · {{size:energy}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="site/charts/energy.ts">{{code:site/charts/energy.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:energy}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:energy}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-inflation" data-alias="inflation">
+      <header class="g-doc-head"><h3>Inflation, drawn on</h3><p><a href="/gallery/#lab=inflation">Open it in the lab</a> · {{size:inflation}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/inflation/doc.ts">{{code:examples/inflation/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:inflation}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:inflation}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-flows" data-alias="flows">
+      <header class="g-doc-head"><h3>Energy flows, from a table of links</h3><p><a href="/gallery/#lab=flows">Open it in the lab</a> · {{size:flows}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/flows/doc.ts">{{code:examples/flows/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:flows}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:flows}}</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="section g-docs" aria-label="Brands and type">
+  <div class="wrap">
+    <h2 class="g-docs-h">Brands and type</h2>
+    <article class="g-doc" id="doc-brand" data-alias="brand">
+      <header class="g-doc-head"><h3>One chart, five brands</h3><p><a href="/gallery/#lab=brand">Open it in the lab</a> · {{size:brand}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="site/charts/brand.ts">{{code:site/charts/brand.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:brand}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:brand}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-serif" data-alias="serif">
+      <header class="g-doc-head"><h3>A newsroom look in a serif</h3><p><a href="/gallery/#lab=serif">Open it in the lab</a> · {{size:serif}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/serif/doc.ts">{{code:examples/serif/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:serif}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:serif}}</div>
+        </div>
+      </div>
+    </article>
+    <article class="g-doc" id="doc-hebrew" data-alias="hebrew">
+      <header class="g-doc-head"><h3>Labels right to left</h3><p><a href="/gallery/#lab=hebrew">Open it in the lab</a> · {{size:hebrew}} for the web runtime</p></header>
+      <div class="g-doc-grid">
+        <div class="g-doc-files"><div class="g-doc-file" data-file="examples/hebrew/doc.ts">{{code:examples/hebrew/doc.ts}}</div></div>
+        <div class="g-doc-side">
+          <h4>What each tier weighs</h4>
+          <div class="g-doc-tiers">{{variants:hebrew}}</div>
+          <h4>Theme tokens it reads</h4>
+          <div class="g-doc-tokens">{{tokens:hebrew}}</div>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
