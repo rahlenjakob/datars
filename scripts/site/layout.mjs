@@ -50,16 +50,19 @@ export function urlOf(file) {
   return "/" + file.replace(/index\.html$/, "").replace(/\.html$/, ".html");
 }
 
-/** Root-absolute `href`/`src` (and `srcset`, `poster`, `data-src`) → relative to the page at `file`. */
+/** Root-absolute `href`/`src` (and `poster`, `data-src`, and each URL in `srcset` and `data-srcs`) →
+ * relative to the page at `file`. */
 export function relativize(html, file, base) {
   const depth = file.split("/").length - 1;
   // `base`: an absolute prefix instead (the 404 page is served at any depth).
   const up = base ?? (depth ? "../".repeat(depth) : "./");
   // Code samples keep their text as written (`<script src="/runtime/datars.js">` in an example).
+  // Lists of URLs (`srcset`, a page script's `data-srcs`): each root-absolute one in it.
+  const list = (v) => v.replace(/(^|[\s,])\/(?!\/)/g, (_, pre) => `${pre}${up}`);
   return html.split(/(<pre[\s\S]*?<\/pre>|<code[\s\S]*?<\/code>)/).map((part, i) => (i % 2 ? part : part.replace(/\b(href|src|poster|data-src|content)="\/(?!\/)([^"]*)"/g, (all, attr, rest) => {
     if (attr === "content") return all; // meta content stays absolute (canonical, og)
     return `${attr}="${up}${rest}"`;
-  }))).join("");
+  }).replace(/\b(srcset|data-srcs)="([^"]*)"/g, (_, attr, v) => `${attr}="${list(v)}"`))).join("");
 }
 
 const THEME_BOOT = `<script>try{var t=localStorage.getItem("datars-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>`;
