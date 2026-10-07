@@ -1045,14 +1045,26 @@ export class DatarsView extends ElementBase {
       this.textLayer.hide();
       return true;
     }
-    if (spread > 0 && this.view.wheel(mid[0], mid[1], -Math.log(spread / this.pinch) / 0.0015)) {
-      this.tip.hidden = true;
-      this.kick();
-      this.noteSignals();
+    // Both fingers move at every step of a pinch: the zoom follows once a frame, not once per
+    // finger's event (each re-lays the view out).
+    if (spread > 0) {
+      this.pinchTo = { spread, mid };
+      this.pinchRaf ||= requestAnimationFrame(() => {
+        this.pinchRaf = 0;
+        const to = this.pinchTo;
+        if (!to || !this.pinch || !this.view) return;
+        if (this.view.wheel(to.mid[0], to.mid[1], -Math.log(to.spread / this.pinch) / 0.0015)) {
+          this.tip.hidden = true;
+          this.kick();
+          this.noteSignals();
+        }
+        this.pinch = to.spread;
+      });
     }
-    this.pinch = spread || this.pinch;
     return true;
   }
+  private pinchTo: { spread: number; mid: [number, number] } | null = null;
+  private pinchRaf = 0;
 
   /** Where the last press went down, to tell a click from a drag. */
   private pressAt: [number, number] | null = null;
