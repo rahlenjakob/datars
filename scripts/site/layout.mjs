@@ -64,7 +64,7 @@ export function relativize(html, file, base) {
 
 const THEME_BOOT = `<script>try{var t=localStorage.getItem("datars-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>`;
 
-function head({ title, description, url, site, ogImage, charts, jsonld, noindex }) {
+function head({ title, description, url, site, ogImage, charts, jsonld, noindex, css = [] }) {
   const abs = site + url;
   return `<!doctype html>
 <html lang="en">
@@ -90,7 +90,7 @@ ${THEME_BOOT}
 <link rel="preload" href="/fonts/Inter-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="preload" href="/fonts/Inter-Bold.ttf" as="font" type="font/ttf" crossorigin>
 <link rel="stylesheet" href="/site.css">
-${charts ? '<link rel="modulepreload" href="/runtime/datars.js">\n<script type="module" src="/runtime/datars.js"></script>\n' : ""}<script type="module" src="/site.js"></script>
+${css.map((f) => `<link rel="stylesheet" href="/${escapeAttr(f)}">\n`).join("")}${charts ? '<link rel="modulepreload" href="/runtime/datars.js">\n<script type="module" src="/runtime/datars.js"></script>\n' : ""}<script type="module" src="/site.js"></script>
 ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script>\n` : ""}</head>`;
 }
 
@@ -166,9 +166,9 @@ function footer(repo, runtime) {
 }
 
 /** A whole page. `body` is the page's own content (already filled in); `file` its output path. */
-export function page({ file, title, description, body, site, repo, runtime, ogImage = "card.png", charts = false, jsonld, noindex }) {
+export function page({ file, title, description, body, site, repo, runtime, ogImage = "card.png", charts = false, jsonld, noindex, css = [] }) {
   const url = urlOf(file);
-  const html = `${head({ title, description, url, site, ogImage, charts, jsonld, noindex })}
+  const html = `${head({ title, description, url, site, ogImage, charts, jsonld, noindex, css })}
 <body>
 ${nav(url, repo)}
 <main id="main">

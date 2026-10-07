@@ -1,0 +1,178 @@
+/* The theme studio's own styles (site/pages/themes.html: `css:` in its front matter). */
+/* ---- theme studio (pages/themes.html, studio.js) ---- */
+/* The editor beside a wall of live charts on a desktop; on a phone or tablet, a tray held at the
+   bottom of the screen while the wall scrolls above it. Every part has its size before the script
+   runs (the build writes the editor), so nothing moves when the charts and values arrive. */
+.studio { --ok: #2f8f5b; --meh: #a86a12; --bad: #c8423b; padding: 4px 0 8px; }
+:root[data-theme="dark"] .studio { --ok: #5cc48a; --meh: #e3a64a; --bad: #f07168; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .studio { --ok: #5cc48a; --meh: #e3a64a; --bad: #f07168; } }
+.studio-head { padding-bottom: 4px; }
+.studio-head h1 { max-width: 14em; }
+.studio-grid { display: grid; grid-template-columns: minmax(0, 1fr) 384px; gap: 24px; align-items: start; }
+.studio-wall { min-width: 0; }
+.wall-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+/* Two lines' room whatever the message, so a longer one never pushes the wall down. */
+.wall-status { flex: 1 1 280px; margin: 0; min-height: 2.9em; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.wall-status code { font-size: .86em; }
+.seg-small button { font-size: 12.5px; padding: 6px 9px; white-space: nowrap; }
+.wall { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.tile { margin: 0; min-width: 0; }
+.tile.wide { grid-column: 1 / -1; }
+/* The frame is the chart's paper (studio.js sets it), so a dark theme has no light rim. */
+.tile .frame { padding: 8px; background: var(--tile-paper, var(--surface)); transition: background-color .45s; }
+.tile .caption { margin: 8px 6px 2px; }
+/* A bundle's poster is drawn in the built-in theme: here the frame's paper (and the shimmer) wait
+   for the chart instead, which opens in the reader's theme. */
+.tile datars-view::part(poster) { visibility: hidden; }
+.tile-tokens { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 2px 0; }
+.tile-tokens code { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--chip); color: var(--muted); }
+/* A chart's token lights up as it changes: these are the charts that read it. */
+.tile-tokens code.hit { animation: tok-hit 1.4s ease-out; }
+@keyframes tok-hit { from { background: color-mix(in srgb, var(--accent) 30%, var(--chip)); color: var(--ink); } }
+@media (prefers-reduced-motion: reduce) { .tile-tokens code.hit { animation-duration: .01s; } }
+.cvd-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
+.sp-resolver { position: absolute; left: -9999px; top: 0; width: 4px; height: 4px; overflow: hidden; }
+
+.studio-panel { position: sticky; top: 72px; display: flex; flex-direction: column; max-height: calc(100vh - 88px); max-height: calc(100dvh - 88px); background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.sp-head { display: flex; align-items: center; gap: 8px; padding: 12px 12px 10px; }
+.sp-head .seg { flex: 1; min-width: 0; }
+.sp-head .seg button { white-space: nowrap; }
+.sp-head .icon-btn { flex: none; width: 34px; height: 34px; }
+.sp-head .icon-btn svg { stroke-linejoin: round; }
+.sp-head .icon-btn:disabled { opacity: .4; cursor: default; }
+.hc-s { display: none; }
+.sp-fold { display: none; }
+.sp-fold svg { transition: transform .2s; }
+.sp-tabs { display: flex; flex-wrap: wrap; gap: 3px; padding: 0 12px 10px; border-bottom: 1px solid var(--rule); }
+.sp-tabs button { display: inline-flex; align-items: center; font: 600 13px var(--font); padding: 6px 9px; border-radius: 8px; border: 0; background: transparent; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.sp-tabs button:hover { color: var(--ink); }
+.sp-tabs button[aria-selected="true"] { background: var(--chip); color: var(--ink); }
+.ck-badge[hidden] { display: none; }
+.ck-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; margin-left: 5px; padding: 0 5px; border-radius: 9px; background: var(--bad); color: #fff; font-size: 11px; line-height: 1; }
+.sp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 14px 16px 20px; -webkit-overflow-scrolling: touch; }
+.sp-body h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 20px 0 8px; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.sp-tab > h3:first-child, .sp-tab > .pal-block:first-child h3 { margin-top: 2px; }
+.sp-body h3 code { font-size: 12.5px; text-transform: none; letter-spacing: 0; color: var(--ink); background: none; padding: 0; }
+.sp-body h3 small { font-size: 12px; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.sp-body .fine { font-size: 12.5px; line-height: 1.5; margin: 10px 0 0; }
+.sp-body .sp-lead { margin: 0 0 4px; }
+.sp-scope { margin: 0 0 12px; padding: 8px 10px; border-radius: 9px; background: color-mix(in srgb, var(--accent) 9%, var(--surface)); border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--rule)); font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+.studio-presets { grid-template-columns: 1fr 1fr; }
+.studio-presets button { font-size: 13.5px; padding: 8px 10px; }
+.brand-row { display: flex; align-items: center; gap: 8px; }
+.brand-row .tok-val { flex: 1 1 auto; width: auto; }
+.brand-row .btn { flex: none; border: 0; cursor: pointer; }
+.brand-paper { margin-top: 10px; }
+.tok-val.wide { width: 100%; }
+.sp-body .fine a { color: var(--accent); }
+.studio-more { margin-top: 16px; }
+.linkish { padding: 0; border: 0; background: none; font: inherit; color: var(--accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+
+/* A token: its swatch (a colour picker under it), its name and what reads it, its value as written,
+   a reset. Inherited values show greyed in the field (its placeholder); set ones in ink. */
+.toks { display: grid; }
+.tok { display: grid; grid-template-columns: 30px minmax(0, 1fr) minmax(0, 148px) 22px; align-items: center; gap: 4px 10px; padding: 7px 0; border-bottom: 1px solid color-mix(in srgb, var(--rule) 65%, transparent); }
+.toks > .tok:last-child { border-bottom: 0; }
+.tok-sw { position: relative; display: block; width: 30px; height: 30px; border-radius: 8px; background: var(--c, transparent); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .14); overflow: hidden; cursor: pointer; flex: none; }
+.tok-sw.big { width: 38px; height: 38px; border-radius: 10px; }
+.tok-sw input, .pal-sw input { position: absolute; inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px); opacity: 0; border: 0; padding: 0; cursor: pointer; }
+.tok-sw:focus-within, .pal-sw:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tok-name { min-width: 0; line-height: 1.25; }
+.tok-name code { display: block; padding: 0; background: none; font-size: 12.5px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.tok-name small { display: block; margin-top: 1px; font-size: 11.5px; color: var(--muted); }
+.tok-val { width: 100%; min-width: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); font: 12.5px/1.3 var(--mono); }
+.tok-val::placeholder { color: var(--muted); opacity: 1; }
+.tok-val:focus { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 0; border-color: var(--accent); }
+.tok.set .tok-val { background: var(--surface); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+.tok.bad .tok-val { border-color: var(--bad); }
+.tok-reset { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer; }
+.tok-reset:hover { background: var(--chip); color: var(--ink); }
+.tok-reset:disabled { visibility: hidden; }
+.tok-reset svg { width: 11px; height: 11px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+.tok-err { grid-column: 2 / -1; margin: 0; font-size: 12px; line-height: 1.4; color: var(--bad); }
+.tok-err:empty { display: none; }
+/* A number: name, value, reset; the slider under them. */
+.tok.num { grid-template-columns: minmax(0, 1fr) auto 22px; }
+.tok.num output { font: 600 12.5px var(--font); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.tok.num.set output { color: var(--accent); }
+.tok.num input[type="range"] { grid-column: 1 / -1; width: 100%; margin: 2px 0 0; accent-color: var(--accent); cursor: pointer; }
+/* A face: name and reset, then the family and weight. */
+.tok.font { grid-template-columns: minmax(0, 1fr) 22px; }
+.font-pick { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) 76px; gap: 6px; }
+.font-pick select { min-width: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--rule); background: var(--bg); color: var(--ink); font: 500 13px var(--font); }
+.tok.font.set .font-pick select { background: var(--surface); border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+.font-search { grid-column: 1 / -1; display: flex; gap: 6px; }
+.font-search input { flex: 1; min-width: 0; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--accent); background: var(--surface); color: var(--ink); font: 13px var(--font); }
+.font-search .btn { border: 1px solid var(--rule); cursor: pointer; }
+
+/* Palettes: the colours (each a picker), presets, how colour-blind readers see the first eight. */
+.pal-block + .pal-block { margin-top: 18px; padding-top: 4px; border-top: 1px solid var(--rule); }
+.pal-strip { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px; margin: 2px 0 10px; }
+.pal-sw { position: relative; display: block; width: 30px; height: 30px; border-radius: 8px; background: var(--c); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .14); overflow: hidden; cursor: pointer; }
+.pal-add { width: 30px; height: 30px; padding: 0; border-radius: 8px; border: 1px dashed color-mix(in srgb, var(--ink) 25%, var(--rule)); background: transparent; color: var(--ink-2); font: 600 16px/1 var(--font); cursor: pointer; }
+.pal-add:hover { border-style: solid; color: var(--ink); }
+.pal-ramp { height: 24px; margin: 2px 0 10px; border-radius: 7px; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); background: var(--chip); }
+.pal-presets { margin-bottom: 4px; }
+.pal-presets button { font-size: 12.5px; padding: 6px 9px; }
+.cvd { display: grid; gap: 5px; margin: 12px 0 0; }
+.cvd-row { display: grid; grid-template-columns: 50px minmax(0, 1fr) 58px; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.cvd-sw { display: block; height: 14px; border-radius: 4px; background: var(--chip); }
+.cvd-row b { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.cvd-row b.pass { color: var(--ink-2); }
+.cvd-row b.warn { color: var(--meh); }
+
+/* Checks: a row per check, a cell per mode. */
+.checks-wrap { margin: 8px 0 4px; }
+.table-wrap table.checks { font-size: 13px; }
+.table-wrap .checks th, .table-wrap .checks td { padding: 8px 8px; vertical-align: middle; }
+.table-wrap .checks thead th { font-size: 11px; letter-spacing: .04em; }
+.checks th[scope="row"] { font-weight: 500; line-height: 1.35; }
+.checks th code { font-size: 12px; white-space: nowrap; }
+.checks th small { display: block; margin-top: 2px; font-size: 11.5px; color: var(--muted); }
+.checks td { text-align: center; }
+.ck { display: inline-block; min-width: 40px; padding: 2px 6px; border-radius: 6px; font: 600 12.5px var(--font); font-variant-numeric: tabular-nums; text-align: center; color: var(--muted); }
+.ck.pass { color: var(--ok); background: color-mix(in srgb, var(--ok) 13%, transparent); }
+.ck.warn { color: var(--meh); background: color-mix(in srgb, var(--meh) 15%, transparent); }
+.ck.fail { color: var(--bad); background: color-mix(in srgb, var(--bad) 14%, transparent); }
+.checks tr:has(th code + code) td { cursor: pointer; }
+.ck-key .ck { min-width: 0; margin-right: 2px; }
+
+/* Export. */
+.export-code { max-height: 360px; margin-top: 10px; font-size: 11.5px; }
+.export-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.export-actions .btn { cursor: pointer; }
+.export-actions .btn-primary { border: 0; }
+.locks { display: grid; gap: 6px; }
+.locks label { display: flex; align-items: baseline; gap: 8px; font-size: 14px; cursor: pointer; }
+.locks input { accent-color: var(--accent); }
+.locks small { color: var(--muted); font-size: 12.5px; }
+
+/* Phones and tablets: the editor is a tray at the bottom of the screen while the wall is on it — a
+   sticky element after the wall, so it leaves with the studio instead of covering the page below. */
+@media (max-width: 1079px) {
+  .studio-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .studio-panel { top: auto; bottom: 10px; z-index: 15; max-height: none; box-shadow: 0 -2px 6px rgba(13, 19, 33, .05), 0 -12px 36px rgba(13, 19, 33, .16); }
+  .sp-body { flex: none; max-height: 30vh; max-height: 30dvh; }
+  .sp-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 8px; }
+  .sp-tabs::-webkit-scrollbar { display: none; }
+  .sp-fold { display: grid; }
+  .studio-panel.folded .sp-tabs, .studio-panel.folded .sp-body { display: none; }
+  .studio-panel.folded .sp-fold svg { transform: rotate(180deg); }
+}
+@media (max-width: 720px) {
+  .wall { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .tile .frame { padding: 6px; }
+  .wall-bar .seg { width: 100%; }
+  .wall-bar .seg button { flex: 1; padding-inline: 4px; }
+  .sp-head { padding: 8px 8px 6px; gap: 6px; }
+  .sp-head .icon-btn { width: 32px; height: 32px; }
+  .sp-head .seg button { padding-block: 6px; }
+  .sp-tabs { padding: 0 8px 6px; }
+  .sp-body { padding: 12px 14px 16px; }
+  .hc-l { display: none; }
+  .hc-s { display: inline; }
+  /* Fields at 16px: Safari on a phone zooms into anything smaller when it's focused. */
+  .tok-val, .font-pick select, .font-search input { font-size: 16px; }
+  .tok { grid-template-columns: 30px minmax(0, 1fr) minmax(0, 132px) 22px; }
+  .font-pick { grid-template-columns: minmax(0, 1fr) 84px; }
+}

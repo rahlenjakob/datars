@@ -393,9 +393,9 @@ for (const f of ["Inter-Regular.ttf", "Inter-SemiBold.ttf", "Inter-Bold.ttf", "I
 // The type a reader can pick in "Make it yours" (site.js): whole faces, fetched only when chosen.
 for (const f of ["Newsreader-Regular.ttf", "Newsreader-SemiBold.ttf", "Newsreader-OFL.txt"]) copyFileSync(join(root, "assets/fonts", f), join(out, "fonts", f));
 for (const f of readdirSync(join(root, "site/fonts"))) copyFileSync(join(root, "site/fonts", f), join(out, "fonts", f));
-// motion.js and studio.js: the animation page's playground and the theme studio (only their pages
-// load them).
-for (const f of ["site.css", "site.js", "motion.js", "studio.js"]) copyFileSync(join(siteDir, f), join(out, f));
+// The site's own scripts and stylesheets: site.js and site.css on every page, and page scripts and
+// stylesheets (motion.js, studio.js, a page's `css:`) where a page asks for them.
+for (const f of readdirSync(siteDir).filter((f) => /\.(js|css)$/.test(f))) copyFileSync(join(siteDir, f), join(out, f));
 // Screenshots and other images the pages (and the README) show.
 if (existsSync(join(siteDir, "img"))) {
   mkdirSync(join(out, "img"), { recursive: true });
@@ -711,9 +711,13 @@ for (const p of pages) {
   const url = urlOf(p.file);
   const crumbs = url.split("/").filter(Boolean);
   const jsonld = url === "/"
-    ? { "@context": "https://schema.org", "@type": "SoftwareSourceCode", name: "datars", description, codeRepository: repo, license: ["https://opensource.org/licenses/MIT", "https://www.apache.org/licenses/LICENSE-2.0"], programmingLanguage: ["Rust", "TypeScript"], url: SITE + "/" }
+    ? { "@context": "https://schema.org", "@type": "SoftwareSourceCode", name: "datars", description, codeRepository: repo, programmingLanguage: ["Rust", "TypeScript"], url: SITE + "/" }
     : { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: "datars", item: SITE + "/" }, ...crumbs.map((c, i) => ({ "@type": "ListItem", position: i + 2, name: i === crumbs.length - 1 ? (p.fm.title ?? c) : c.replace(/-/g, " "), item: `${SITE}/${crumbs.slice(0, i + 1).join("/")}/` }))] };
-  const html = page({ file: p.file, title, description, body, site: SITE, repo, runtime, ogImage: og, charts, jsonld: p.file === "404.html" ? null : jsonld, noindex: p.file === "404.html" });
+  // `css: features-maps.css` in a page's front matter: its own stylesheet (site/<name>), in the head
+  // with site.css, so nothing restyles after the first paint.
+  const css = String(p.fm.css ?? "").split(/\s+/).filter(Boolean);
+  for (const f of css) if (!existsSync(join(siteDir, f))) throw new Error(`${where}: no stylesheet site/${f}`);
+  const html = page({ file: p.file, title, description, body, site: SITE, repo, runtime, ogImage: og, charts, jsonld: p.file === "404.html" ? null : jsonld, noindex: p.file === "404.html", css });
   mkdirSync(dirname(join(out, p.file)), { recursive: true });
   writeFileSync(join(out, p.file), html);
   if (p.file !== "404.html") written.push(url);
