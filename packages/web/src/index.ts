@@ -393,8 +393,11 @@ export class DatarsView extends ElementBase {
       // The host element's own listeners, once: it may be taken off the page and put back.
       this.wired = true;
       this.addEventListener("keydown", (e) => {
-        if (e.key === "ArrowRight" || e.key === " ") { this.send("next"); e.preventDefault(); }
-        if (e.key === "ArrowLeft") { this.send("prev"); e.preventDefault(); }
+        // Arrows and Space step the story when the chart itself has the keyboard — not when one
+        // of its list's controls does: a slider's arrows move its thumb, Space presses a button.
+        const own = e.composedPath()[0] === this;
+        if (own && (e.key === "ArrowRight" || e.key === " ")) { this.send("next"); e.preventDefault(); }
+        if (own && e.key === "ArrowLeft") { this.send("prev"); e.preventDefault(); }
         if (e.key === "Escape") this.send("back");
         if (e.key === "D" && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) this.showStats(!this.profiler?.visible);
       });
