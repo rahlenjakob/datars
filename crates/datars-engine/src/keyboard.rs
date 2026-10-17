@@ -307,7 +307,7 @@ impl Engine {
                 }
             };
             let label = if state.is_empty() { name } else { format!("{name}: {state}") };
-            let item = SemanticItem { role: "control".into(), label, depth: parent.map(|k| items[k].depth + 1).unwrap_or(0), rect: crate::bounds::transform_rect(area, &xf), path: p, actionable: true, value: None, kind: Some(kind.into()), checked: None, missing: false };
+            let item = SemanticItem { role: "control".into(), label, depth: parent.map(|k| items[k].depth + 1).unwrap_or(0), rect: crate::bounds::transform_rect(area, &xf), path: p, actionable: true, kind: Some(kind.into()), ..Default::default() };
             let at = parent.map(|k| k + 1).unwrap_or(items.len());
             items.insert(at, item);
         }

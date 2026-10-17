@@ -52,7 +52,7 @@ function releaseGl(canvas: HTMLCanvasElement | undefined) {
 }
 
 /** A semantics item as the runtime gives it (`status().semantics`, `chrome().actions`). */
-interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio" | "brush" | "pan"; checked?: boolean; missing?: boolean }
+interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio" | "brush" | "pan"; checked?: boolean; missing?: boolean; index?: number; total?: number }
 
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
@@ -377,9 +377,10 @@ export class DatarsView extends ElementBase {
   connectedCallback() {
     this.root.innerHTML = `<style>${CSS}</style>
       <div class="stage" part="stage"><div class="poster" part="poster"></div><canvas hidden part="canvas" aria-hidden="true"></canvas>
-      <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
+      <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card" aria-hidden="true"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
+      <div class="sr mirror"></div>
       <div class="controls" part="controls" hidden><button data-ev="prev" aria-label="Previous">←</button><button data-ev="next" aria-label="Next">→</button></div>
-      <div class="sr mirror"></div><div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
+      <div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
     this.stage = this.root.querySelector(".stage")!;
     // The height the page asked for, from the first frame the element is on the page: laid out a
     // frame later, the chart would grow into its space and push the page down.
@@ -1765,6 +1766,9 @@ export class DatarsView extends ElementBase {
     // Without the semantics tree (thousands of items on a big map): not needed here.
     const s = this.view.chrome?.() ?? this.view.status();
     if (s.phrases) this.phrases = s.phrases;
+    // The chart's words are in the document's language (WCAG 3.1.2): its content, its
+    // announcements and its buttons say so to a screen reader's voice and a braille table.
+    if (s.locale) for (const el of [this.mirror, this.live, this.root.querySelector<HTMLElement>(".controls")]) if (el && el.lang !== s.locale) el.lang = s.locale;
     const t = s.tokens?.tokens ?? {};
     for (const k of ["ink", "paper", "muted", "rule", "surface", "surface-ink", "accent"]) if (t[k]) this.style.setProperty(`--${k}`, t[k]);
     const n = s.narration;
@@ -1872,7 +1876,12 @@ export class DatarsView extends ElementBase {
    * and each run of data marks as a table (name, value), its rows reachable with the arrow keys
    * and outlined on the chart as the keyboard moves; clickable marks are buttons. The chart's
    * name goes on the element itself (`aria-label`), its summary first inside it. */
+  /** The first data mark the mirror lists (its page), and what it was last built from. */
+  private mirrorFrom = 0;
+  private lastMirror: [Record<string, any>, MirrorItem[]] | null = null;
+
   private fillMirror(s: Record<string, any>, items: MirrorItem[]) {
+    this.lastMirror = [s, items];
     // Built aside, then merged into the mirror on the page (`morph`): the elements that stay what
     // they were (a switch whose state flipped, a slider whose value moved) are the same elements,
     // so a screen reader on one stays there. (Rebuilt from scratch, VoiceOver in Safari lost its
@@ -1979,6 +1988,24 @@ export class DatarsView extends ElementBase {
     // order by every screen reader. (Not `aria-description`: VoiceOver with Chrome files that
     // under "more content", unread, and readers that do say it would say it twice.)
     if (typeof s.summary === "string") this.summary = s.summary;
+    // Then the step's narration (the card over the chart is for the eye; this is its text in the
+    // reading order: after what the chart shows, before its content and the story's buttons).
+    const n = s.narration;
+    if (n && (n.title || n.text) && !s.narrationDrawn) {
+      const at = this.mirror.firstChild;
+      if (n.title) {
+        const h = document.createElement("h3");
+        h.className = "narration";
+        h.textContent = n.title;
+        this.mirror.insertBefore(h, at);
+      }
+      if (n.text) {
+        const p = document.createElement("p");
+        p.className = "narration";
+        p.textContent = n.text;
+        this.mirror.insertBefore(p, at);
+      }
+    }
     if (this.summary) {
       const p = document.createElement("p");
       p.className = "summary";
@@ -1995,7 +2022,8 @@ export class DatarsView extends ElementBase {
       (stack.length ? stack[stack.length - 1].kids : top).push(node);
       stack.push(node);
     }
-    let listed = 0, left = 0;
+    // Marks past the mirror's page (`MIRROR_MAX`, from `mirrorFrom`) are a button away, not gone.
+    let seen = 0, left = 0, before = 0;
     const isData = (i: MirrorItem) => i.role === "datum" || i.role === "region" || (i.actionable && i.role !== "control");
     const descend = (n: N, role: string): string[] => n.kids.flatMap((k) => (k.item.role === role ? [k.item.label] : descend(k, role))).filter((l) => l && l.trim());
     /** Labels as one line: all of a few, the ends of many. */
@@ -2013,8 +2041,9 @@ export class DatarsView extends ElementBase {
         const { role, label } = n.item;
         if (missing.includes(n)) continue;
         if (isData(n.item)) {
-          if (listed >= DatarsView.MIRROR_MAX && !n.item.actionable) { left++; continue; }
-          listed++;
+          const k = n.item.actionable ? -1 : seen++;
+          if (k >= 0 && k < this.mirrorFrom) { before++; continue; }
+          if (k >= this.mirrorFrom + DatarsView.MIRROR_MAX) { left++; continue; }
           run.push(n.item);
           continue;
         }
@@ -2080,11 +2109,23 @@ export class DatarsView extends ElementBase {
       }
     };
     render(top, this.mirror, "", name);
-    if (left) {
-      const p = document.createElement("p");
-      p.textContent = this.ph("more", { n: left });
-      this.mirror.appendChild(p);
-    }
+    // The pages of a mirror with more marks than it lists at once.
+    const page = (from: number, key: string) => {
+      const b = document.createElement("button");
+      const to = Math.min(from + DatarsView.MIRROR_MAX, seen);
+      const n = (v: number) => v.toLocaleString(this.mirror.lang || undefined);
+      b.textContent = this.ph(key, { from: n(from + 1), to: n(to), total: n(seen) });
+      b.dataset.ev = `rows:${from}`;
+      b.addEventListener("click", () => {
+        this.mirrorFrom = from;
+        if (this.lastMirror) this.fillMirror(this.lastMirror[0], this.lastMirror[1]);
+        this.live.textContent = this.ph("rows-shown", { from: n(from + 1), to: n(to), total: n(seen) }) + ".";
+        queueMicrotask(() => this.mirror.querySelector<HTMLElement>("[data-nav]")?.focus());
+      });
+      this.mirror.appendChild(b);
+    };
+    if (left) page(this.mirrorFrom + DatarsView.MIRROR_MAX, "rows-next");
+    if (before) page(Math.max(0, this.mirrorFrom - DatarsView.MIRROR_MAX), "rows-previous");
     // One stop for the keyboard among the data: where it was, else the first; arrows move on.
     const stops = [...this.mirror.querySelectorAll<HTMLElement>("[data-nav]")];
     const current = stops.find((x) => x.dataset.item === focusedItem && focusedItem) ?? stops[0];
@@ -2174,6 +2215,9 @@ export class DatarsView extends ElementBase {
       counts.push(1);
     }
     const table = document.createElement("table");
+    // A long run listed a page at a time: the rows numbered of the whole ("row 201 of 365").
+    const total = run.find((i) => i.total !== undefined)?.total;
+    if (total !== undefined) table.setAttribute("aria-rowcount", String(total));
     const cap = document.createElement("caption");
     cap.textContent = caption || this.ph("data");
     table.appendChild(cap);
@@ -2187,6 +2231,7 @@ export class DatarsView extends ElementBase {
     const body = document.createElement("tbody");
     run.forEach((item, k) => {
       const tr = document.createElement("tr");
+      if (item.index !== undefined) tr.setAttribute("aria-rowindex", String(item.index + 1));
       const th = document.createElement("th");
       th.scope = "row";
       const [label, value] = counts[k] > 1 ? [item.label, `× ${counts[k]}`] : twoColumns ? pairs[k] : [item.label, ""];

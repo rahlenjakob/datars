@@ -190,7 +190,7 @@ pub struct Control {
 }
 
 /// One item of the accessible description.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SemanticItem {
     pub role: String,
     pub label: String,
@@ -210,6 +210,23 @@ pub struct SemanticItem {
     /// A mark that says it has a value but has none (a map's region without data): hosts read
     /// these as one ("38 regions without data"), not one by one, and don't offer them as buttons.
     pub missing: bool,
+    /// One of a long run of marks listed a page at a time (a line's points): its place in the run
+    /// (from 0) and how many the run has — hosts number the rows ("row 201 of 365").
+    pub index: Option<usize>,
+    pub total: Option<usize>,
+}
+
+/// How many marks of one run (an instances node's) the semantics list at once: the rest are a
+/// page away (`…#rows=<from>`, `Engine::activate`), so a reader can reach every one.
+pub const ROWS_PER_PAGE: usize = MAX_INSTANCE_ITEMS;
+
+/// What a semantics walk lists: marks left to list, sets of marks already listed (by what they
+/// say), and the page each long run is on.
+struct Listing {
+    left: usize,
+    seen: BTreeSet<LabelsKey>,
+    pages: BTreeMap<String, usize>,
+    locale: String,
 }
 
 /// Where a keyed point is on screen this frame (for host overlays).
@@ -426,6 +443,8 @@ pub struct Engine {
     key_brush: Option<keyboard::KeyBrush>,
     /// What the last interaction changed, in words, until a host takes it.
     announcement: Option<String>,
+    /// The page each long run of marks is on in the semantics (`ROWS_PER_PAGE`), by its node.
+    row_pages: BTreeMap<String, usize>,
     /// The element under the pointer that `hover()` asked about (the innermost), if any.
     hovered: Option<KeyPath>,
     /// What the pointer over the chart should look like, as the last pointer input left it.
@@ -558,6 +577,7 @@ impl Engine {
             drag: None,
             key_brush: None,
             announcement: None,
+            row_pages: BTreeMap::new(),
             hovered: None,
             cursor: Cursor::Default,
             recording: None,
@@ -2799,7 +2819,7 @@ impl Engine {
         let scene = self.scene();
         let mut out = Vec::new();
         #[allow(clippy::too_many_arguments)]
-        fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut (usize, BTreeSet<LabelsKey>)) {
+        fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut Listing) {
             // What can't be seen isn't read out (a layer faded out over another).
             let acc = pick::seen(n, acc);
             if acc <= pick::INVISIBLE {
@@ -2814,7 +2834,7 @@ impl Engine {
                 }
                 // Pinned content (a map callout) where it's drawn, at screen size.
                 let rect = if n.common.pin { bounds::drawn_bounds(n, parent) } else { bounds::transform_rect(bounds::node_bounds(n), &parent) };
-                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked, missing: s.value.is_some_and(|v| !v.is_finite()) });
+                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked, missing: s.value.is_some_and(|v| !v.is_finite()), ..Default::default() });
                 d += 1;
             }
             let inner = match &n.kind {
@@ -2827,19 +2847,37 @@ impl Engine {
             if let datars_scene::NodeKind::Instances(i) = &n.kind {
                 // (Marks that say what other marks already said — an area under its line, the
                 // same points — are read once.)
-                if let Some(ls) = i.labels.as_ref().filter(|ls| budget.1.insert(labels_key(ls))) {
-                    for (k, l) in ls.iter().enumerate().filter(|(k, _)| acc * i.opacity_at(*k) > pick::INVISIBLE) {
-                        if budget.0 == 0 {
+                if let Some(ls) = i.labels.as_ref().filter(|ls| budget.seen.insert(labels_key(ls))) {
+                    let shown: Vec<usize> = (0..ls.len()).filter(|k| acc * i.opacity_at(*k) > pick::INVISIBLE).collect();
+                    let total = shown.len();
+                    // A page of them (the one the reader is on), and the way to the rest.
+                    let node = format!("{here}");
+                    let from = budget.pages.get(&node).copied().unwrap_or(0).min(total.saturating_sub(1));
+                    let mut listed = 0;
+                    for (at, &k) in shown.iter().enumerate().skip(from) {
+                        if budget.left == 0 || listed == ROWS_PER_PAGE {
                             break;
                         }
-                        budget.0 -= 1;
-                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None, kind: None, checked: None, missing: false });
+                        budget.left -= 1;
+                        listed += 1;
+                        out.push(SemanticItem { role: "datum".into(), label: ls[k].clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), index: Some(at), total: Some(total), ..Default::default() });
+                    }
+                    let page = |from: usize, key: &str| {
+                        let to = (from + ROWS_PER_PAGE).min(total);
+                        let n = |v: usize| datars_text::format::number(v as f64, ",.0f", &budget.locale);
+                        SemanticItem { role: "control".into(), label: phrases::phrase(&budget.locale, key, &[("from", &n(from + 1)), ("to", &n(to)), ("total", &n(total))]), depth: d, path: format!("{node}#rows={from}"), actionable: true, ..Default::default() }
+                    };
+                    if listed > 0 && from + listed < total {
+                        out.push(page(from + listed, "rows-next"));
+                    }
+                    if from > 0 {
+                        out.push(page(from.saturating_sub(ROWS_PER_PAGE), "rows-previous"));
                     }
                 }
             }
         }
         // Actionable only: no instance's label (they have no intents of their own) is ever made.
-        let mut budget = (if only_actionable { 0 } else { MAX_INSTANCE_ITEMS }, BTreeSet::new());
+        let mut budget = Listing { left: if only_actionable { 0 } else { MAX_INSTANCE_ITEMS }, seen: BTreeSet::new(), pages: self.row_pages.clone(), locale: self.doc.locale.clone() };
         walk(&scene.root, &KeyPath::default(), 0, datars_math::Affine::IDENTITY, 1.0, &actionable, &mut out, &mut budget);
         // What a pointer drags (a brush, a pannable view), for the keyboard (`Engine::key`).
         if draggable {
@@ -2960,10 +2998,32 @@ impl Engine {
         walk(&scene.root, 1.0, &mut BTreeSet::new())
     }
 
+    /// List the run of marks at `node` from its `from`-th (a page of `ROWS_PER_PAGE`), and say
+    /// which: "Rows 201 to 365 of 365".
+    fn show_rows(&mut self, node: &str, from: usize) -> bool {
+        self.row_pages.insert(node.to_string(), from);
+        let items = self.semantic_items();
+        let rows: Vec<&SemanticItem> = items.iter().filter(|i| i.index.is_some()).collect();
+        if let (Some(first), Some(last)) = (rows.iter().find(|i| i.index == Some(from)), rows.iter().rev().find(|i| i.index.is_some_and(|k| k >= from))) {
+            let loc = self.doc.locale.clone();
+            let n = |v: usize| datars_text::format::number(v as f64, ",.0f", &loc);
+            self.announcement = Some(format!("{}.", phrases::phrase(&loc, "rows-shown", &[("from", &n(first.index.unwrap_or(0) + 1)), ("to", &n(last.index.unwrap_or(0) + 1)), ("total", &n(first.total.unwrap_or(0)))])));
+        }
+        true
+    }
+
     /// Run the `activate` intent of the node at `path` (as `SemanticItem::path` spells it) — the
     /// keyboard and screen-reader route to click interactions. Returns whether one ran.
     pub fn activate(&mut self, path: &str) -> bool {
         self.rec(session::Input::Activate { path: path.to_string() });
+        // A story's own buttons in a host's reading order (`event:next`, `event:prev`).
+        if let Some(ev) = path.strip_prefix("event:") {
+            return self.event_inner(ev);
+        }
+        // A page of a long run of marks (`…#rows=200`): the reading order lists those next.
+        if let Some((node, from)) = path.rsplit_once("#rows=") {
+            return self.show_rows(node, from.parse().unwrap_or(0));
+        }
         let Some(resolved) = self.shown.clone() else { return false };
         let Some(a) = resolved.actions.iter().find(|(p, a)| format!("{p}") == path && a.contains_key("activate")).and_then(|(_, a)| a.get("activate").cloned()) else { return false };
         self.reported(Some(path.to_string()), |e| e.run_action(&a));

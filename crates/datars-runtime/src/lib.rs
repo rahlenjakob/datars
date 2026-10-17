@@ -210,11 +210,7 @@ impl Core {
         if self.tier == Some(datars_bundle::Tier::T0) {
             return Vec::new();
         }
-        let items = self.engine.semantic_items();
-        let name = self.engine.accessible_name();
-        let summary = self.engine.accessible_summary();
-        let locale = self.engine.doc().locale.clone();
-        readout::readout_in(&locale, &name, &summary, &items)
+        readout::of_engine(&mut self.engine)
     }
 
     /// What a native accessibility bridge needs at once: [`Core::status_brief`] (state, narration,
@@ -246,6 +242,8 @@ impl Core {
             // The words a host says around the chart's own (captions, step announcements), in
             // the document's language.
             "phrases": datars_engine::phrases::all(&self.engine.doc().locale),
+            // The document's language: hosts mark the chart's text with it (`lang`).
+            "locale": self.engine.doc().locale,
             "contentHeight": self.engine.content_height(),
             "state": self.engine.state(),
             "index": self.engine.state_index(),
@@ -273,6 +271,11 @@ fn semantic_json(s: datars_engine::SemanticItem) -> serde_json::Value {
     }
     if s.missing {
         v["missing"] = serde_json::json!(true);
+    }
+    // One of a long run listed a page at a time: its row and the run's length.
+    if let (Some(i), Some(n)) = (s.index, s.total) {
+        v["index"] = serde_json::json!(i);
+        v["total"] = serde_json::json!(n);
     }
     if let Some(k) = &s.kind {
         v["kind"] = serde_json::json!(k);
