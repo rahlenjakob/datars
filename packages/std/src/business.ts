@@ -92,7 +92,11 @@ export const kpi = recipe<KpiParams>({
     const said = `${q(p.label ? `${p.label}: ` : "")} + ${valueText}` + (hasDelta ? ` + (${c} == null || ${change} == null ? "" : ", " + ${word} + (${diff} != 0 ? ${amount} : "") + ${q(p.compareLabel ? ` ${p.compareLabel}` : "")})` : "");
     // The number's size: given, or from the box (smaller when a sparkline shares it).
     const spark = !!(p.spark && rows && p.x);
-    const S = p.size ? String(p.size) : `clamp(min(box.h * ${spark ? 0.26 : 0.36}, box.w * 0.17), 22, 60)`;
+    // (In a tile too short for the label and a 22 px number — a phone's stacked tiles, a reader's
+    // big label — the number takes what the label leaves, down to a size still bigger than the
+    // label's, rather than running out of the tile.)
+    const labelH = p.label ? '(token("size.body") * 1.25 + 4)' : "0";
+    const S = p.size ? String(p.size) : `clamp(min(box.h * ${spark ? 0.26 : 0.36}, box.w * 0.17), max(token("size.body") * 1.3, min(22, (box.h - ${labelH}) / 1.2)), 60)`;
     const center = p.align === "center";
     // The value line: prefix, the counting number, suffix — measured, so they sit side by side.
     const vs = "(box.h / 1.2)";
@@ -121,10 +125,14 @@ export const kpi = recipe<KpiParams>({
     const dx0 = center ? `((box.w - 13 - ${dw} - ${p.compareLabel ? `(${under} ? 0 : 5 + ${lw})` : "0"}) / 2)` : "0";
     const mid = `(${under} ? ${body} * 0.75 : box.h / 2)`;
     const tri = `${diff} >= 0 ? \`M \${${dx0}} \${${mid} + 4} L \${${dx0} + 4.5} \${${mid} - 4} L \${${dx0} + 9} \${${mid} + 4} Z\` : \`M \${${dx0}} \${${mid} - 4} L \${${dx0} + 9} \${${mid} - 4} L \${${dx0} + 4.5} \${${mid} + 4} Z\``;
+    // The change only where it fits under the number (a tile too short leaves it out — the
+    // number's accessible label still says it — rather than drawing it past the tile).
+    const deltaH = `(${body} * (${under} ? 2.75 : 1.5))`;
+    const deltaFits = `(box.h + 1 >= ${labelH} + ${S} * 1.2 + 4 + ${deltaH})`;
     const deltaRow = hasDelta ? group({
       key: "delta-row",
-      size: { h: e(`${body} * (${under} ? 2.75 : 1.5)`) },
-      when: e(`${c} != null && ${change} != null`),
+      size: { h: e(`${deltaFits} ? ${deltaH} : 0`) },
+      when: e(`${c} != null && ${change} != null && box.h > 0`),
       children: [
         shape(geom.path(e(tri)), { key: "arrow", when: e(`${diff} != 0`), fill: e(ink), semantics: { role: "decoration" } }),
         // Keyed by its format: the change counts from one value to the next, but a change of
