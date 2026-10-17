@@ -2,7 +2,7 @@
 
 use crate::env::str_of;
 use crate::resolve::{Cx, Resolver};
-use datars_data::scale::{Colors, DomainOptions, LabelHint, Outputs, ScaleKind, TimeInterval};
+use datars_data::scale::{Colors, DomainOptions, LabelHint, Outputs, ScaleKind, TimeInterval, TimeUnit};
 use datars_data::{Column, Scale, Value as DValue};
 use datars_expr::Value;
 use datars_ir::{Prop, ScaleDecl};
@@ -37,11 +37,16 @@ pub(crate) fn from_d(v: &DValue) -> Value {
 }
 
 impl EngineScale {
+    /// A time scale over millisecond timestamps (not dates).
+    fn millis(&self) -> bool {
+        matches!(self.scale, Scale::Time { unit: TimeUnit::Millis, .. })
+    }
     pub fn map_value(&self, v: &Value) -> Value {
         if self.scale.is_color() {
             return Value::Str(Arc::from(self.scale.map_ink(to_d(v)).to_string().as_str()));
         }
         let dv = match (v, self.time) {
+            (Value::Num(n), true) if self.millis() => DValue::Num(*n),
             (Value::Num(n), true) => DValue::Date(n.round() as i32),
             // An ISO date written in a document (`span({ from: "2024-03-01" })`) is a date too.
             (Value::Str(s), true) => datars_data::date::parse_date(s).map_or_else(|| to_d(v), DValue::Date),
@@ -75,6 +80,11 @@ impl EngineScale {
     /// a number with at most two decimals (grouped from 10,000), a category as itself.
     pub fn label(&self, v: &Value, locale: &str) -> String {
         match (self.time, v) {
+            (true, Value::Num(n)) if self.millis() => {
+                let spec = format!("{} {}", datars_text::locale::get(locale).day_month, datars_text::format::time_spec(locale, false));
+                let pm = if datars_text::locale::get(locale).tag == "en-US" { " %p" } else { "" };
+                datars_text::format::datetime(*n, &format!("{spec}{pm}"), locale)
+            }
             (true, Value::Num(n)) => datars_text::format::date(*n as i64, "%-d %b %Y", locale),
             (false, Value::Num(n)) => {
                 let spec = if n.abs() >= 10_000.0 { ",.2~f" } else { ".2~f" };
@@ -105,6 +115,24 @@ impl EngineScale {
                 };
                 let label = match t.label_hint {
                     LabelHint::Number { decimals } | LabelHint::Log { decimals, .. } => datars_text::format::number(t.value.as_f64().unwrap_or(f64::NAN), &format!("{grouping}.{decimals}f"), locale),
+                    // Timestamps: the time of day, and the date where a day begins.
+                    LabelHint::Time { interval, boundary, .. } if self.millis() && matches!(interval, TimeInterval::Hour | TimeInterval::Minute | TimeInterval::Second | TimeInterval::Millisecond) => {
+                        let ms = t.value.as_f64().unwrap_or(0.0);
+                        let spec = if matches!(boundary, TimeInterval::Hour | TimeInterval::Minute | TimeInterval::Second | TimeInterval::Millisecond) {
+                            datars_text::format::time_spec(locale, matches!(boundary, TimeInterval::Hour))
+                        } else {
+                            datars_text::locale::get(locale).day_month
+                        };
+                        datars_text::format::datetime(ms, spec, locale)
+                    }
+                    LabelHint::Time { interval, boundary, .. } if self.millis() => {
+                        let spec = match (interval, boundary) {
+                            (TimeInterval::Year, _) | (_, TimeInterval::Year) => "%Y",
+                            (TimeInterval::Quarter | TimeInterval::Month, _) => "%b",
+                            _ => datars_text::locale::get(locale).day_month,
+                        };
+                        datars_text::format::datetime(t.value.as_f64().unwrap_or(0.0), spec, locale)
+                    }
                     LabelHint::Time { interval, boundary, .. } => {
                         let spec = match (interval, boundary) {
                             (TimeInterval::Year, _) | (_, TimeInterval::Year) => "%Y",
@@ -247,8 +275,9 @@ fn build(r: &Resolver, d: &ScaleDecl, cx: &Cx, boxes: Option<&BTreeMap<String, R
     let len = (rng[1] - rng[0]).abs();
     let nice = if d.nice { Some(((len / 64.0).round() as usize).clamp(2, 10)) } else { None };
     let ty = if is_date && matches!(d.ty.as_str(), "linear" | "time") { "time" } else { d.ty.as_str() };
-    // An explicit domain is exact: no zero, no nice rounding.
-    let explicit = d.domain.is_array();
+    // An explicit domain is exact: no zero, no nice rounding — a list, or a domain from data marked
+    // `exact` (a trading session's 09:30–16:00, read from a table, stays 09:30–16:00).
+    let explicit = d.domain.is_array() || d.domain.get("exact").and_then(|x| x.as_bool()) == Some(true);
     let nice = if explicit { None } else { nice };
     let opts = DomainOptions { zero: d.zero && !explicit, nice, palette: palette_name(&d.range) };
     let colors = || -> Colors {
@@ -267,7 +296,16 @@ fn build(r: &Resolver, d: &ScaleDecl, cx: &Cx, boxes: Option<&BTreeMap<String, R
                 _ => ScaleKind::Linear,
             };
             let col = if is_date { col } else { Column::Num(col.to_f64()) };
-            let s = Scale::from_data_with(&col, kind, &opts);
+            let s = if matches!(kind, ScaleKind::Time) && !is_date && is_millis(&col) {
+                // Timestamps: ticks on hours and minutes (a trading day), not on days.
+                let ms = Scale::time_ms(datars_data::scale::domain::extent(&col).unwrap_or([0.0, 1.0]), [0.0, 1.0]);
+                match opts.nice {
+                    Some(n) => ms.nice(n),
+                    None => ms,
+                }
+            } else {
+                Scale::from_data_with(&col, kind, &opts)
+            };
             // `pow`: the linear scale's domain (zero, nice) through `|x|^exponent`. An exponent of
             // 0 would collapse every value onto one: linear instead, and say so.
             let exponent = d.exponent.filter(|_| ty == "pow");
@@ -337,6 +375,13 @@ fn build(r: &Resolver, d: &ScaleDecl, cx: &Cx, boxes: Option<&BTreeMap<String, R
     // Dates one per band are time too (trading days without gaps): expressions hand dates over as
     // numbers, and labels write them as dates.
     Ok(EngineScale { scale, time: ty == "time" || (is_date && matches!(ty, "band" | "point")) })
+}
+
+/// Numbers on a time scale are days since 1970 (what dates are in expressions) — unless they are
+/// far too large to be days: then they are millisecond timestamps (UTC), as `Date.now()` and most
+/// APIs write them. 10¹⁰ days is 27 million years; 10¹⁰ ms is April 1970, so nothing is ambiguous.
+fn is_millis(c: &Column) -> bool {
+    c.to_f64().iter().any(|x| x.is_finite() && x.abs() >= 1e10)
 }
 
 fn extent(c: &Column) -> [f64; 2] {

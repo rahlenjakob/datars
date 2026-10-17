@@ -97,6 +97,14 @@ impl<'a> ResolveEnv<'a> {
 
     fn aggregate(&self, table: &Table, rows: Option<&[usize]>, op: &str, field: &str) -> Value {
         let Some(Column::Num(v)) = table.column(field) else {
+            // Text and dates: the first or last value is still a value (a label to show, the day
+            // a series ends); the other aggregates are numbers' alone.
+            if let (Some(c), "first" | "last") = (table.column(field), op) {
+                let mut idx: Vec<usize> = rows.map(|r| r.to_vec()).unwrap_or_else(|| (0..table.len()).collect());
+                idx.retain(|&i| i < c.len() && !c.is_null(i));
+                let at = if op == "first" { idx.first() } else { idx.last() };
+                return at.map(|&i| crate::scales::from_d(&c.get(i))).unwrap_or(Value::Null);
+            }
             return if op == "count" { Value::Num(rows.map(|r| r.len()).unwrap_or(table.len()) as f64) } else { Value::Null };
         };
         let vals: Vec<f64> = match rows {

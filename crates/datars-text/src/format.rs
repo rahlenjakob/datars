@@ -25,7 +25,26 @@ pub fn number(v: f64, spec: &str, locale: &str) -> String {
 /// padding modifiers `-` (none), `_` (space) and `0` (zero), e.g. `%-d`. `%q` is the quarter
 /// (1–4); `%V`/`%G` are the ISO week and week-based year. Time directives read midnight.
 pub fn date(days_since_epoch: i64, spec: &str, locale: &str) -> String {
-    format_date(days_since_epoch, spec, locale::get(locale))
+    format_date(days_since_epoch, 0, spec, locale::get(locale))
+}
+
+/// A UTC timestamp in milliseconds, formatted like [`date`] plus the time of day: `%H` (00–23),
+/// `%I` (01–12), `%M`, `%S`, `%L` (milliseconds) and `%p` (`AM`/`PM`).
+pub fn datetime(ms: f64, spec: &str, locale: &str) -> String {
+    let ms = if ms.is_finite() { ms.round() as i64 } else { 0 };
+    let days = ms.div_euclid(86_400_000);
+    format_date(days, ms - days * 86_400_000, spec, locale::get(locale))
+}
+
+/// How a locale writes a time of day on an axis or in a label: American English on a 12-hour
+/// clock (`2 PM`, `2:30`), everyone else on a 24-hour one (`14:00`). `whole_hour`: the time is on
+/// the hour (the AM/PM marks the hours; the half hours between read without it).
+pub fn time_spec(locale: &str, whole_hour: bool) -> &'static str {
+    match (locale::get(locale).tag, whole_hour) {
+        ("en-US", true) => "%-I %p",
+        ("en-US", false) => "%-I:%M",
+        _ => "%H:%M",
+    }
 }
 
 /// A parsed d3-format specifier.
@@ -564,8 +583,10 @@ fn pad(v: i64, width: usize, pad: Option<char>) -> String {
     }
 }
 
-fn format_date(days: i64, spec: &str, loc: &Locale) -> String {
+/// `days` since 1970-01-01, and `ms` into that day (0 for a date).
+fn format_date(days: i64, ms: i64, spec: &str, loc: &Locale) -> String {
     let days = days.clamp(-(1 << 40), 1 << 40);
+    let (hour, minute, second, milli) = (ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000);
     let (y, m, d) = civil_from_days(days);
     let weekday = (days + 4).rem_euclid(7); // 0 = Sunday (1970-01-01 was a Thursday)
     let doy0 = days - days_from_civil(y, 1, 1); // 0-based day of year
@@ -609,7 +630,12 @@ fn format_date(days: i64, spec: &str, loc: &Locale) -> String {
             'W' => pad((doy0 + 7 - (weekday + 6) % 7) / 7, 2, p('0')),
             'V' => pad(iso_week(days).1, 2, p('0')),
             'G' => pad(iso_week(days).0, 4, p('0')),
-            'H' | 'M' | 'S' => pad(0, 2, p('0')),
+            'H' => pad(hour, 2, p('0')),
+            'I' => pad(if hour % 12 == 0 { 12 } else { hour % 12 }, 2, p('0')),
+            'M' => pad(minute, 2, p('0')),
+            'S' => pad(second, 2, p('0')),
+            'L' => pad(milli, 3, p('0')),
+            'p' => (if hour < 12 { "AM" } else { "PM" }).to_string(),
             '%' => "%".to_string(),
             other => {
                 out.push('%');
@@ -634,6 +660,31 @@ fn iso_week(days: i64) -> (i64, i64) {
     let (ty, _, _) = civil_from_days(thursday);
     let week = (thursday - days_from_civil(ty, 1, 1)) / 7 + 1;
     (ty, week)
+}
+
+#[cfg(test)]
+mod time_tests {
+    use super::*;
+
+    #[test]
+    fn timestamps_format_with_the_time_of_day() {
+        // 2026-10-16 14:05:09.250 UTC
+        let t = 1_792_159_509_250.0;
+        assert_eq!(datetime(t, "%Y-%m-%d %H:%M:%S.%L", "en"), "2026-10-16 14:05:09.250");
+        assert_eq!(datetime(t, "%-I:%M %p", "en-US"), "2:05 PM");
+        assert_eq!(datetime(1_792_108_800_000.0, "%-I %p", "en-US"), "12 AM", "midnight on a 12-hour clock");
+        assert_eq!(datetime(1_792_108_800_000.0 + 12.0 * 3_600_000.0, "%-I %p", "en-US"), "12 PM");
+        assert_eq!(date(20_742, "%H:%M", "en"), "00:00", "a date has no time of day");
+        assert_eq!(datetime(-1.0, "%Y-%m-%d %H:%M", "en"), "1969-12-31 23:59", "before 1970");
+    }
+
+    #[test]
+    fn clocks_by_locale() {
+        assert_eq!(time_spec("en-US", true), "%-I %p");
+        assert_eq!(time_spec("en-US", false), "%-I:%M");
+        assert_eq!(time_spec("sv", true), "%H:%M");
+        assert_eq!(time_spec("en-GB", false), "%H:%M");
+    }
 }
 
 #[cfg(test)]
