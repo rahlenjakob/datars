@@ -29,7 +29,7 @@ The words a host adds around the chart's own — the summary, *"Step 2 of 4"*, *
 
 | Platform | What the reader gets | Verified how |
 |---|---|---|
-| Web (`<datars-view>`, React, Vite, Next) | A focusable `figure` named by the chart; first inside it the summary; then named groups, each run of data marks a `<table>` (name and value columns), axes and legends as a line, native `<input type="range">` and `<select>` for engine-drawn sliders and selects, `role="checkbox" / "switch" / "radio"` with `aria-checked`, buttons for clickable marks, one stop for a brush or a pannable view (`role="application"`, its keys described), real links over linked text. The canvas is hidden from screen readers; chart text lies over it as selectable, findable text, also hidden from them (it's in the content already). A polite live region announces each story step once, and what a click or a key changed. | Browser tests in the repository read each engine's own accessibility tree — Chrome (Chromium), Safari's WebKit and Firefox's Gecko, through Playwright — for the name, summary, tables, roles and states, the keyboard path, a brush from the keyboard, the live region, forced colours (and Chrome for more contrast); a windowed Chrome read through the macOS Accessibility API — what VoiceOver gets. **Not yet** listened to with VoiceOver, NVDA, JAWS or TalkBack driving it, nor in Safari itself (WebKit's engine, not the browser). |
+| Web (`<datars-view>`, React, Vite, Next) | A focusable `figure` named by the chart; first inside it the summary; then named groups, each run of data marks a `<table>` (name and value columns), axes and legends as a line, native `<input type="range">` and `<select>` for engine-drawn sliders and selects, `role="checkbox" / "switch" / "radio"` with `aria-checked`, buttons for clickable marks, one stop for a brush or a pannable view (`role="application"`, its keys described), real links over linked text. The canvas is hidden from screen readers; chart text lies over it as selectable, findable text, also hidden from them (it's in the content already). A polite live region announces each story step once, and what a click or a key changed. | Browser tests in the repository read each engine's own accessibility tree — Chrome (Chromium), Safari's WebKit and Firefox's Gecko, through Playwright — for the name, summary, tables, roles and states, the keyboard path, a brush from the keyboard, the live region, forced colours (and Chrome for more contrast); a windowed Chrome read through the macOS Accessibility API; and **VoiceOver itself** (macOS) in Safari and in Chrome, its cursor moved and keys pressed through AppleScript, what it said after each step recorded ([what it said](#what-voiceover-says); `scripts/test-voiceover.sh`). **Not yet** with NVDA, JAWS, or TalkBack in Chrome on Android. |
 | iOS, iPadOS (DatarsKit) | VoiceOver elements with their frames, so explore-by-touch finds a bar where it's drawn: the chart first (a summary element), its controls (sliders adjustable, saying *"32,000"*; selects as a menu; switches with the toggle trait), headings in the rotor, data marks with their values, a brush as an adjustable element; double-tap runs a clickable mark; a new step, and what an action changed, are announced. | The elements dumped in the iOS simulator (iPhone 16 Pro), and VoiceOver's actions (activate, increment, decrement, escape) run on the brush there, each announcement recorded; Increase Contrast and Bold Text switched while the chart ran. **Not yet** driven by VoiceOver, nor on a device. |
 | macOS (DatarsKit) | The chart a group with its summary as help, the reading order as its children: check boxes, radio buttons and the switch subrole with their values, buttons that press, a brush or a view that presses, increments and cancels; steps and changes announced; Increase Contrast followed. | Built and unit-tested; **not yet** read with VoiceOver, and Increase Contrast not switched on a Mac. |
 | Android | TalkBack virtual nodes through an `AccessibilityNodeProvider`, in the same order, with screen bounds, each a stop for TalkBack's swipes and for a finger exploring the screen: the chart with its summary, the story's Previous and Next step, headings, data marks with their values, `SeekBar` sliders saying their value as drawn, a `Spinner` per select, `CheckBox`, `Switch` and `RadioButton` nodes with their state, buttons, a brush or a view adjustable like a slider; a new step, and what an action changed, are announced. | **TalkBack itself** (15.0, on an Android 15 emulator, Google APIs image), driven with real touches — swipes, double-taps, a touch to explore — and what it spoke read from its log: the first 20 stops of the votes, budget, controls and prices examples, a step, a slider, a switch, a checkbox and the brush ([what it said](#what-talkback-says)). `scripts/test-talkback.sh` repeats it. **Not yet** on a device. |
@@ -75,6 +75,56 @@ prices     touch       nothing selected. Drag across the year to zoom in, range 
 ```
 
 The first run found what a dump of the node tree hadn't: TalkBack skipped every item (they weren't marked focusable for it — swipes said nothing past the chart's name), a slider said its raw number first ("32000.0. Monthly income (SEK): 32,000") and nothing when adjusted, a switch didn't say on or off, a toggle wasn't confirmed, the summary ended "10,240.." , there was no way to step the story, the prices chart said "730 data points" for a year (its detail and overview plots each counted every day), and the brush's hint gave keyboard keys. All fixed; the transcript above is after. Still to judge with people who use TalkBack every day: the prices chart's marks say a day number and a price ("1, 149.5") because that is what the example labels them — a document says "Day 1" by labelling its marks so.
+
+## What VoiceOver says
+
+VoiceOver on macOS, in Safari and in Chrome, on plain pages with one chart each: its cursor moved
+item by item ("right"), the chart's controls pressed (VoiceOver's own action) and keys typed, and
+after each step what it last said (`scripts/test-voiceover.sh`, Safari). VoiceOver's hints ("You
+are currently on…") sometimes speak in place of an item when the next step came quickly; those
+lines are left out. Abridged, Safari (Chrome said the same unless noted):
+
+```text
+votes      heading level 1 votes → Before the chart
+           Vote share by party, Sweden 2022  figure
+           Previous  dimmed button              (the story's first step: nothing before it)
+           Next  button
+           8 data points, from 4.6 to 30.3.
+           Vote share by party, 2022 (%)  group
+           y axis: 0, 5, 10, 15, 20, 25, 30, 35
+           share by party  table 2 columns, 8 rows
+           Social Democrats  column 1 of 2 → 30.3  column 2 of 2
+           row 2 of 8  Sweden Democrats  column 1 of 2 → 20.5  column 2 of 2   …
+  (Next pressed)  Ranked: eight parties cleared the 4% threshold.
+  (again)         Each bar becomes a slice.
+budget     Where a monthly income goes  figure → 6 data points, from 3,840 to 10,240.
+           Controls  group → 32,000  Monthly income (SEK)  slider
+  (→ key)  33,000      (→ key)  34,000      (← key)  33,000
+           amount by category  table 2 columns, 6 rows → Housing … 10,240 …
+controls   Central  Highlight  pop up button
+           0  Sales between, from  slider → 50  Sales between, to  slider
+           Quarter: Q1  selected radio button → Quarter: Q2  radio button
+           Average line  off switch
+  (pressed) on  Average line switch      (pressed)  off  Average line switch
+           North  checked checkbox
+  (pressed) Now 4 data points, from 18 to 36.
+           South  checked checkbox          (VoiceOver stays where it was)
+prices     (Tab)  Drag across the year to zoom in, range selection: nothing selected
+                  Enter starts a selection, … Escape cancels  web application
+  (Return) Selecting 1 to 50.   (→) 1 to 100.   (→) 1 to 150.   (Shift →) 51 to 200.
+  (Return) Selected 51 to 200. Now 515 data points.
+  (Esc)    Selection cleared. Now 365 data points.
+```
+
+The first runs found: a list marker read as an item of its own ("•") before each control and
+"end of list" after; a slider and a select saying their value twice ("32,000 Monthly income
+(SEK): 32,000 slider", "Central Highlight: Central pop up button"); a Previous button at the first
+step not saying it does nothing; and, worst, VoiceOver losing its place after every toggle or
+slider step — the element it was on was rebuilt, and it landed on the figure. The mirror is now
+updated in place (the same elements, their states changed), and the rest fixed. Left as they
+are: Chrome reads a row's name twice ("row 2 of 6 Food Food column 1 of 2"; Safari once); the
+story's Previous and Next come before the summary; a long table stops at 200 rows (the summary
+counts them all).
 
 ## Reader settings the charts follow
 
@@ -225,7 +275,7 @@ This mapping is the project's reading of the criteria against what the runtime d
 
 ## Known limitations
 
-- **One screen reader driven so far: TalkBack**, on an emulator (above). The web tree is checked in Chromium, WebKit and Gecko and through the macOS Accessibility API, the iOS tree and its actions in the simulator; VoiceOver, NVDA and JAWS haven't been driven, and real devices and the Safari browser itself are untested.
+- **Two screen readers driven so far: TalkBack** on an emulator, and **VoiceOver on macOS** with the web element in Safari and Chrome (above). The web tree is also checked in Chromium, WebKit and Gecko; the iOS tree and its actions in the simulator, not with VoiceOver; macOS apps (DatarsKit) not with VoiceOver; NVDA and JAWS not at all, nor any real phone.
 - **Safari's Tab key skips buttons** unless the reader turns on *Press Tab to highlight each item*: in WebKit, Tab goes from the chart to its data, past the story's ← and → buttons (the chart's own arrow keys still step it) and its controls' buttons.
 - **A click's result is said generically**: the clicked mark's new label, parts whose label changed, and how much data is shown now — not "filtered to …" in the chart's own terms. A selection that only changes how marks look, with labels that don't say it, is not announced: say the state in the label (`bar({ label: e("d.party + (coalition.has(d.party) ? ', in the coalition' : '')") })`).
 - **Drags of your own** (a `scrub` on a custom mark, a draggable handle) have no keyboard path; the standard library's brushes, views and sliders do. The desktop viewer offers brushes and views to screen readers (AccessKit actions), not yet to the keyboard alone.

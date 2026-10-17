@@ -126,8 +126,12 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   accessibility trees of Chromium, WebKit and Gecko (Playwright) — the same results in all three,
   except that WebKit's Tab skips buttons (Safari's default) and Firefox's tree, as Playwright reads
   it, leaves `checked=false` out — and read through the macOS Accessibility API (what VoiceOver gets) in a windowed
-  Chrome. VoiceOver itself not driven (its AppleScript control, `SCREnableAppleScript`, is a system
-  security setting this environment doesn't change). iOS: VoiceOver elements dumped and operated
+  Chrome. **VoiceOver itself driven** on macOS (its AppleScript control switched on by
+  the user) with the web element in Safari and Chrome — the cursor moved, controls pressed, keys
+  typed, what it said recorded (`scripts/test-voiceover.sh`) — which found and fixed: VoiceOver
+  losing its place after every toggle (the mirror was rebuilt; now updated in place), a list
+  marker read as an item, a slider's and a select's value said twice, a story's first Previous not
+  saying it's dimmed. iOS: VoiceOver elements dumped and operated
   (activate, increment, escape on a brush) in the simulator, Increase Contrast and Bold Text
   followed live (switched in the simulator); macOS: children with press, increment and cancel,
   Increase Contrast followed (not switched on a Mac); Android: **TalkBack itself driven** on the emulator (TalkBack 15, Android 15,
@@ -137,7 +141,7 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   their raw number and nothing when adjusted, a switch without on/off, toggles not confirmed, no
   way to step a story, a doubled full stop, a year counted twice by an overview + detail chart,
   keyboard hints on a touch screen; Contrast, High contrast text and Bold text followed live; desktop AccessKit unit-tested, with a polite live region. None
-  yet on a device; TalkBack the only screen reader driven. Reduced motion everywhere; `prefers-contrast:
+  yet on a device; TalkBack and VoiceOver (macOS, web) the screen readers driven. Reduced motion everywhere; `prefers-contrast:
   more` and forced colours on the web; the reader's text size on every host (above); labelled
   SVG posters.
 - **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text (at
