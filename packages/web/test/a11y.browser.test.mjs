@@ -131,3 +131,43 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     server.close();
   }
 });
+
+test("more contrast is the high-contrast mode; forced colours paint the chart's text in the system's", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    // The reader's settings as media features (CDP: Playwright's own options don't cover them all).
+    const open = async (features = []) => {
+      const ctx = await browser.newContext({ viewport: { width: 800, height: 500 } });
+      const p = await ctx.newPage();
+      await (await ctx.newCDPSession(p)).send("Emulation.setEmulatedMedia", { features });
+      await p.goto(`http://127.0.0.1:${server.address().port}`);
+      await p.waitForFunction(() => document.querySelector("datars-view")?.dataset.renderer, null, { timeout: 30_000 });
+      await p.waitForTimeout(300);
+      return p;
+    };
+    // The element mirrors the theme's inks as CSS properties (for its own chrome): read them.
+    const inks = (p) => p.evaluate(() => { const s = document.querySelector("datars-view").style; return { ink: s.getPropertyValue("--ink"), paper: s.getPropertyValue("--paper"), muted: s.getPropertyValue("--muted") }; });
+    const plain = await inks(await open());
+    const more = await inks(await open([{ name: "prefers-contrast", value: "more" }]));
+    assert.equal(more.ink, "#000000", `high contrast's ink: ${JSON.stringify(more)}`);
+    assert.notEqual(more.muted, plain.muted, "muted text is darker in high contrast");
+    const forced = await open([{ name: "forced-colors", value: "active" }, { name: "prefers-color-scheme", value: "dark" }]);
+    const system = await forced.evaluate(() => {
+      const probe = document.createElement("span");
+      probe.style.cssText = "color: CanvasText; background-color: Canvas";
+      document.body.appendChild(probe);
+      const cs = getComputedStyle(probe);
+      return { ink: cs.color, paper: cs.backgroundColor };
+    });
+    const f = await inks(forced);
+    const rgb = (hex) => `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+    assert.equal(rgb(f.ink), system.ink, `the chart's ink is CanvasText: ${JSON.stringify({ f, system })}`);
+    assert.equal(rgb(f.paper), system.paper, "its paper is Canvas");
+    assert.equal(rgb(f.muted), system.ink, "muted text too: no grey a contrast theme doesn't have");
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});

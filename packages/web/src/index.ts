@@ -280,6 +280,7 @@ canvas { transition: opacity .22s ease-out; }
    focused one stands for is outlined on the chart. */
 .focus { position: absolute; pointer-events: none; border-radius: 4px; outline: 2px solid var(--accent, #4269d0); outline-offset: 2px; }
 .focus[hidden] { display: none; }
+@media (forced-colors: active) { .focus, .links a:focus-visible { outline-color: Highlight; } .tip { border: 1px solid CanvasText; } }
 .controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
 .controls[hidden] { display: none; }
 .controls button { font: inherit; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--rule, #999); background: var(--paper, #fff); color: var(--ink, #111); cursor: pointer; }
@@ -450,6 +451,9 @@ export class DatarsView extends ElementBase {
         this.layoutRaf = requestAnimationFrame(() => this.layout());
       }).observe(this);
       matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => this.applyMode());
+      // More contrast asked for, or the system's own colours forced (Windows contrast themes).
+      matchMedia("(prefers-contrast: more)").addEventListener("change", () => this.applyMode());
+      matchMedia("(forced-colors: active)").addEventListener("change", () => { this.applyTokens(); this.applyMode(); });
     }
     // The reader's text size: the probe's width is their default font size in px.
     this.em = this.root.querySelector<HTMLSpanElement>(".em")!;
@@ -811,9 +815,53 @@ export class DatarsView extends ElementBase {
   /** Override theme tokens (brand colours, fonts) — honours the theme's locks. */
   setTokens(tokens: Record<string, unknown>) {
     this.hostTokens = tokens;
-    this.view?.set_tokens(JSON.stringify(tokens));
+    this.applyTokens();
+  }
+
+  /** The page's tokens, under the system's colours when it forces them. */
+  private applyTokens() {
+    this.view?.set_tokens(JSON.stringify(this.tokensNow()));
     this.kick();
     this.syncChrome();
+  }
+
+  private tokensNow(): Record<string, unknown> {
+    return { ...(this.hostTokens ?? {}), ...this.forcedColors() };
+  }
+
+  /** With forced colours (a Windows contrast theme), the chart's text, rules and surfaces in the
+   * system's colours (CanvasText on Canvas, Highlight for the accent) — the browser can't recolour
+   * a canvas itself. Data colours stay: they tell the series apart. */
+  private forcedColors(): Record<string, string> {
+    if (typeof matchMedia === "undefined" || !matchMedia("(forced-colors: active)").matches || !this.root) return {};
+    const probe = document.createElement("span");
+    probe.style.cssText = "position:absolute;visibility:hidden;color:CanvasText;background-color:Canvas;border:1px solid Highlight;outline:1px solid GrayText";
+    this.root.appendChild(probe);
+    const cs = getComputedStyle(probe);
+    const hex = (c: string) => {
+      const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+      return m ? `#${[m[1], m[2], m[3]].map((x) => Number(x).toString(16).padStart(2, "0")).join("")}` : "";
+    };
+    const [ink, paper, accent, gray] = [cs.color, cs.backgroundColor, cs.borderTopColor, cs.outlineColor].map(hex);
+    probe.remove();
+    if (!ink || !paper) return {};
+    const out: Record<string, string> = { ink, paper, "ink-2": ink, muted: ink, rule: ink, "surface-ink": ink, "card-ink": ink, "card-ink-2": ink, surface: paper, card: paper, "card-line": ink, "map.label": ink, "map.label-halo": paper };
+    if (accent) Object.assign(out, { accent, highlight: accent });
+    // Gridlines recede: the system's text colour, faint (its GrayText can be a loud green).
+    out.grid = `mix(${ink}, ${paper}, 0.7)`;
+    void gray;
+    return out;
+  }
+
+  /** The mode the chart shows in: the `mode` attribute, else the reader's — high contrast when
+   * they ask for more (`prefers-contrast: more`) or the system forces its colours, else dark or
+   * light as `prefers-color-scheme` says. */
+  private wantedMode(): string {
+    const a = this.getAttribute("mode");
+    if (a) return a;
+    if (typeof matchMedia === "undefined") return "light";
+    if (matchMedia("(forced-colors: active)").matches || matchMedia("(prefers-contrast: more)").matches) return "high-contrast";
+    return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
   }
 
   /** With the profiler on: each start-up phase, [name, when (performance.now()), ms], collected
@@ -925,8 +973,9 @@ export class DatarsView extends ElementBase {
       try { view.provide_source(name, bytes); } catch (e) { console.warn("datars: data", name, e); }
     }
     // Likewise signals and theme tokens: the first frame already shows them, in the faces they name.
-    if (this.hostTokens) {
-      try { view.set_tokens?.(JSON.stringify(this.hostTokens)); } catch (e) { console.warn("datars: tokens", e); }
+    const tokens = this.tokensNow();
+    if (Object.keys(tokens).length) {
+      try { view.set_tokens?.(JSON.stringify(tokens)); } catch (e) { console.warn("datars: tokens", e); }
       await this.themeFaces(view, live);
       if (!live()) return abandon();
     }
@@ -1031,8 +1080,8 @@ export class DatarsView extends ElementBase {
   private displayPoster(svg: string) {
     if (this.poster.innerHTML || this.posterTimer || this.engineWasHere) return;
     // The poster is the published look: before a chart the page restyles, it would flash.
-    if (this.hostTokens && Object.keys(this.hostTokens).length) return;
-    const want = this.getAttribute("mode") ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    if (Object.keys(this.tokensNow()).length) return;
+    const want = this.wantedMode();
     const drawn = /data-mode="(\w+)"/.exec(svg.slice(0, 300))?.[1];
     if (drawn && drawn !== want) return;
     // Drawn at the theme's text size: for a reader with bigger text, the chart would change under
@@ -1060,8 +1109,7 @@ export class DatarsView extends ElementBase {
   private clockAt = 0;
 
   private applyMode() {
-    const m = this.getAttribute("mode") ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    this.view?.set_mode(m);
+    this.view?.set_mode(this.wantedMode());
     this.syncChrome();
     this.kick();
   }
