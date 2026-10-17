@@ -104,7 +104,10 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
         path.push(level.len() - 1);
     }
     fn walk(nodes: &[Tree], name: &str, group: &str, out: &mut Vec<Readout>) {
-        for n in nodes {
+        // Marks without data (a map's regions with no value): one line after the rest, not a
+        // stop each — and no buttons.
+        let missing: Vec<&SemanticItem> = nodes.iter().map(|n| n.item).filter(|i| is_data(i) && i.missing).collect();
+        for n in nodes.iter().filter(|n| !(is_data(n.item) && n.item.missing)) {
             let (role, label) = (n.item.role.as_str(), n.item.label.trim());
             // What a click acts on — a filtering bar, a switch, a select's box — is a button.
             if n.item.actionable {
@@ -170,6 +173,11 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
             let group = if matches!(role, "group" | "series") && !label.is_empty() { label } else { group };
             walk(&n.kids, name, group, out);
         }
+        if !missing.is_empty() {
+            let what = if missing.iter().all(|i| i.role == "region") { "region" } else { "data point" };
+            let n = missing.len();
+            out.push(Readout { kind: "text", label: format!("{n} {what}{} without data", if n == 1 { "" } else { "s" }), value: String::new(), rect: None, path: String::new(), checked: None });
+        }
     }
     walk(&top, name, name, &mut out);
     out
@@ -180,7 +188,7 @@ mod tests {
     use super::*;
 
     fn item(role: &str, label: &str, depth: usize) -> SemanticItem {
-        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), actionable: false, value: None, kind: None, checked: None }
+        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), actionable: false, value: None, kind: None, checked: None, missing: false }
     }
 
     #[test]
@@ -208,6 +216,18 @@ mod tests {
             ("datum", "Food", "5,120"),
             ("text", "x axis: 0, 10,000", ""),
         ]);
+    }
+
+    #[test]
+    fn regions_without_data_are_one_line_and_no_buttons() {
+        let mut no = item("region", "Norway: no data", 0);
+        no.missing = true;
+        no.actionable = true;
+        let mut fi = no.clone();
+        fi.label = "Finland: no data".into();
+        let r = readout("Nordics", "", &[item("region", "Sweden: 81", 0), no, fi]);
+        let said: Vec<(&str, &str)> = r.iter().skip(1).map(|x| (x.kind, x.label.as_str())).collect();
+        assert_eq!(said, vec![("datum", "Sweden"), ("text", "2 regions without data")]);
     }
 
     #[test]

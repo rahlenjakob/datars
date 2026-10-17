@@ -47,7 +47,7 @@ function releaseGl(canvas: HTMLCanvasElement | undefined) {
 }
 
 /** A semantics item as the runtime gives it (`status().semantics`, `chrome().actions`). */
-interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio"; checked?: boolean }
+interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio"; checked?: boolean; missing?: boolean }
 
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
@@ -1858,8 +1858,11 @@ export class DatarsView extends ElementBase {
         into.appendChild(this.dataTable(run, caption, focusedPath, focusedItem));
         run = [];
       };
+      // Marks without data (a map's regions with no value): one line, after the rest.
+      const missing = nodes.filter((n) => (n.item.role === "datum" || n.item.role === "region") && n.item.missing);
       for (const n of nodes) {
         const { role, label } = n.item;
+        if (missing.includes(n)) continue;
         if (isData(n.item)) {
           if (listed >= DatarsView.MIRROR_MAX && !n.item.actionable) { left++; continue; }
           listed++;
@@ -1913,6 +1916,12 @@ export class DatarsView extends ElementBase {
         render(n.kids, into, label || caption, groupLabel);
       }
       flush();
+      if (missing.length) {
+        const p = document.createElement("p");
+        const what = missing.every((n) => n.item.role === "region") ? "region" : "data point";
+        p.textContent = `${missing.length} ${what}${missing.length === 1 ? "" : "s"} without data`;
+        into.appendChild(p);
+      }
     };
     render(top, this.mirror, "", name);
     if (left) {

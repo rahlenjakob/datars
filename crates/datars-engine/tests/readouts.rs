@@ -46,3 +46,16 @@ fn a_range_over_only_some_marks_is_not_said() {
     ] } }));
     assert_eq!(e.accessible_summary(), "3 data points.");
 }
+
+#[test]
+fn regions_without_data_are_counted_not_listed() {
+    // A choropleth's backdrop: three regions, one with a value, two whose value is null (as a
+    // map's `d.share` is for a country the data doesn't have).
+    let regions: Vec<serde_json::Value> = [("SE", Some(81.0)), ("NO", None), ("FI", None)].iter().enumerate().map(|(i, (id, v))| json!({
+        "kind": "shape", "key": id, "geom": { "type": "rect", "x": i as f64 * 30.0, "y": 0, "w": 20, "h": 20 }, "fill": "$ink",
+        "semantics": { "role": "region", "label": format!("{id}: {}", v.map(|v| v.to_string()).unwrap_or("no data".into())), "value": v.map(|v| json!(v)).unwrap_or(json!("=null")) } })).collect();
+    let mut e = engine(json!({ "datars": 1, "size": { "width": 200, "height": 100 }, "scene": { "kind": "group", "key": "root", "children": regions } }));
+    assert_eq!(e.accessible_summary(), "1 data point; 2 without data.");
+    let missing: Vec<(String, bool)> = e.semantic_items().into_iter().map(|i| (i.label, i.missing)).collect();
+    assert_eq!(missing, vec![("SE: 81".into(), false), ("NO: no data".into(), true), ("FI: no data".into(), true)]);
+}

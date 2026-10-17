@@ -199,6 +199,9 @@ pub struct SemanticItem {
     /// A control's native kind (`checkbox`, `switch`, `radio`) and whether it's checked.
     pub kind: Option<String>,
     pub checked: Option<bool>,
+    /// A mark that says it has a value but has none (a map's region without data): hosts read
+    /// these as one ("38 regions without data"), not one by one, and don't offer them as buttons.
+    pub missing: bool,
 }
 
 /// Where a keyed point is on screen this frame (for host overlays).
@@ -2695,7 +2698,7 @@ impl Engine {
                 }
                 // Pinned content (a map callout) where it's drawn, at screen size.
                 let rect = if n.common.pin { bounds::drawn_bounds(n, parent) } else { bounds::transform_rect(bounds::node_bounds(n), &parent) };
-                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked });
+                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked, missing: s.value.is_some_and(|v| !v.is_finite()) });
                 d += 1;
             }
             let inner = match &n.kind {
@@ -2712,7 +2715,7 @@ impl Engine {
                             break;
                         }
                         *budget -= 1;
-                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None, kind: None, checked: None });
+                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None, kind: None, checked: None, missing: false });
                     }
                 }
             }
@@ -2746,11 +2749,12 @@ impl Engine {
             let end = if description.ends_with(['.', '!', '?', '…']) { "" } else { "." };
             parts.push(format!("{description}{end}"));
         }
-        let data: Vec<&SemanticItem> = items.iter().filter(|i| i.role == "datum" || i.role == "region").collect();
+        let data: Vec<&SemanticItem> = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && !i.missing).collect();
+        let missing = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && i.missing).count();
         if !data.is_empty() {
             // Every mark, also past the items the description lists one by one (a parliament's
             // seats, a year of days): counted as drawn.
-            let n = self.data_count().max(data.len());
+            let n = self.data_count().saturating_sub(missing).max(data.len());
             let mut s = format!("{} data point{}", datars_text::format::number(n as f64, ",.0f", &self.doc.locale), if n == 1 { "" } else { "s" });
             let series: BTreeSet<&str> = items.iter().filter(|i| i.role == "series" && !i.label.is_empty()).map(|i| i.label.as_str()).collect();
             if series.len() > 1 {
@@ -2766,6 +2770,9 @@ impl Engine {
                     let f = |v: f64| datars_text::format::number(v, ",.4~r", &self.doc.locale);
                     s.push_str(&format!(", from {} to {}", f(lo), f(hi)));
                 }
+            }
+            if missing > 0 {
+                s.push_str(&format!("; {} without data", datars_text::format::number(missing as f64, ",.0f", &self.doc.locale)));
             }
             parts.push(format!("{s}."));
         }
