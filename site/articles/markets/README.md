@@ -11,6 +11,8 @@ shows a recorded day of bitcoin and ether that may be shown publicly.
 | `follow/session.json` | the recorded day the chart opens on (Binance Vision, CC BY-NC-SA 4.0) |
 | `data/session.mjs` | writes it: `node site/articles/markets/data/session.mjs [YYYY-MM-DD]` (default yesterday, UTC) |
 | `page/live.js`, `page/markets.css` | the page's feed (copied next to `index.html` by the build), key form, replay, screen-reader summary |
+| `page/feed.js` | its pure parts: the markets, New York's clock and the market's hours, provider messages → rows |
+| `data/feed.json` | four minutes of real bitcoin trades (Binance Vision aggTrades, CC BY-NC-SA 4.0) as Finnhub's socket sends them, for `packages/web/test/markets.test.mjs` |
 | `../../../.github/workflows/markets-session.yml` | refreshes `session.json` daily — manual only until its schedule is switched on |
 
 ## Which data, and why
@@ -80,11 +82,23 @@ page. Never commit one.
 - The open minute is the same key until it closes: its vertex moves. A new minute is a new key at
   the end: it grows out of the line.
 - The time axis is the session (09:30–16:00 ET, or the UTC day), `exact`: it never slides or
-  rescales as minutes arrive. The price axis is rounded to nice steps and moves only when a price
-  breaks one. The previous close is always on it.
+  rescales as minutes arrive. The price axis is the prices and the previous close, widened to
+  steps of 0.1 % of the reference and then to nice numbers: it moves only when a price breaks one,
+  and then it glides.
 - The feed closes while the tab is hidden or the chart is off the screen (after 2 s), and opens
   again when it's back. Failed connections back off from 1 s to a minute.
 - The screen reader's summary (`#markets-said`, polite) speaks on a new market or a change of
   state, otherwise at most every five minutes.
 - "Replay the day" plays the recorded day through the same path, as a session of its own: 30
   minutes a second.
+
+## Tests
+
+- `packages/web/test/markets.test.mjs` (no network): the recorded feed through `page/feed.js` and
+  `liveFeed` into the published chart on the wasm engine — one version a beat, one point a
+  minute, the open minute at its last trade, the session axis fixed, every move over before the
+  next beat, the same frames twice; and the market clock (hours, holidays, daylight saving).
+- `packages/web/test/markets.browser.test.mjs` (Chrome, network mocked, Finnhub's socket included):
+  the recorded day and its replay, keys from local storage, a failing provider retried, the
+  closed market said, polite announcements, the socket closed off screen and opened again,
+  "Forget my keys", no layout shift, nothing leaving the machine.
