@@ -64,6 +64,10 @@ impl Resolver<'_> {
         let assets = self.assets?;
         if let Some(i) = assets.icons.get(&key) {
             assets.used.borrow_mut().insert(format!("{}{key}", crate::assets::ICON_PREFIX));
+            // What the reader skipped in the file (text, clipping): said in `datars check`.
+            for n in &i.notes {
+                self.diag(format!("icon `{key}`: {n}"));
+            }
             return Some((key, i.clone()));
         }
         if let Some(why) = assets.failed.get(&format!("{}{key}", crate::assets::ICON_PREFIX)) {

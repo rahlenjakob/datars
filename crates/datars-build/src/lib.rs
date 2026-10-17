@@ -106,7 +106,10 @@ fn settle_assets(engine: &mut Engine, fetch: &dyn Fn(&Request) -> Option<Vec<u8>
             return;
         }
         for (name, url) in asks {
-            match fetch(&Request::Source { name: name.clone(), url: url.clone() }) {
+            // The default sets ship with the toolchain, like the default fonts: a host that
+            // doesn't answer `datars:icons/…` gets them from here.
+            let got = fetch(&Request::Source { name: name.clone(), url: url.clone() }).or_else(|| datars_icon::set::bundled_svg(&url).map(String::into_bytes));
+            match got {
                 Some(bytes) => {
                     if let Err(e) = engine.provide(&name, &bytes) {
                         report.decisions.push(format!("warning: {e}"));

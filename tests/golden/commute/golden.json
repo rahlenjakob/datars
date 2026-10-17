@@ -1,0 +1,33 @@
+{
+  "states": [
+    {
+      "name": "bars",
+      "scene": "1dbe951dfce0444d",
+      "pixels": "503a7a04bd8ae667"
+    },
+    {
+      "name": "icons",
+      "scene": "b412c46ea5fce50c",
+      "pixels": "7d185e7714f3b1f1"
+    },
+    {
+      "name": "grid",
+      "scene": "ed76d5bc757de29a",
+      "pixels": "96fa0d44da666732"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "bars",
+      "to": "icons",
+      "sweep": "94829e3518fa1f5f",
+      "samples": 64
+    },
+    {
+      "from": "icons",
+      "to": "grid",
+      "sweep": "a7373216a21c868a",
+      "samples": 64
+    }
+  ]
+}

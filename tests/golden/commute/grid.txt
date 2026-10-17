@@ -1,0 +1,83 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("page",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("body",)
+        group ("chart",) role=group "Pictogram"
+          group ("grid",)
+            ("icons-0",) instances icon lucide:user ×0
+            ("icons-1",) instances icon lucide:bike ×12
+              · ("Bike", Unit(0)) (242.07, 247.54) fill=$categorical[3]
+              · ("Bike", Unit(1)) (271.20, 247.54) fill=$categorical[3]
+              · ("Bike", Unit(2)) (300.32, 247.54) fill=$categorical[3]
+              · … 9 more
+            ("icons-2",) instances icon lucide:bus ×23
+              · ("Bus", Unit(0)) (242.07, 131.05) fill=$categorical[1]
+              · ("Bus", Unit(1)) (271.20, 131.05) fill=$categorical[1]
+              · ("Bus", Unit(2)) (300.32, 131.05) fill=$categorical[1]
+              · … 20 more
+            ("icons-3",) instances icon lucide:car ×41
+              · ("Car", Unit(0)) (212.95, 14.56) fill=$categorical[0]
+              · ("Car", Unit(1)) (242.07, 14.56) fill=$categorical[0]
+              · ("Car", Unit(2)) (271.20, 14.56) fill=$categorical[0]
+              · … 38 more
+            ("icons-4",) instances icon lucide:train-front ×17
+              · ("Train", Unit(0)) (329.44, 189.29) fill=$categorical[2]
+              · ("Train", Unit(1)) (358.56, 189.29) fill=$categorical[2]
+              · ("Train", Unit(2)) (387.68, 189.29) fill=$categorical[2]
+              · … 14 more
+            ("icons-5",) instances icon lucide:footprints ×7
+              · ("Walk", Unit(0)) (300.32, 276.66) fill=$categorical[4]
+              · ("Walk", Unit(1)) (329.44, 276.66) fill=$categorical[4]
+              · ("Walk", Unit(2)) (358.56, 276.66) fill=$categorical[4]
+              · … 4 more
+            group ("Car",) role=series "Car: 41"
+            group ("Bus",) role=series "Bus: 23"
+            group ("Train",) role=series "Train: 17"
+            group ("Bike",) role=series "Bike: 12"
+            group ("Walk",) role=series "Walk: 7"
+          group ("legend-color",) transform=[1.00 0.00 0.00 1.00 0.00 301.22] role=legend "Legend"
+            group ("Car",) transform=[1.00 0.00 0.00 1.00 0.80 0.00] role=legend-item "Car"
+              group ("icon",) transform=[1.00 0.00 0.00 1.00 5.00 7.00] role=decoration
+                ("l0",) path els=15 bounds=[-5.27 -2.64 10.54 5.27] stroke=$categorical[0]/1.05
+                ("l1",) path els=6 bounds=[-3.69 1.58 2.11 2.11] stroke=$categorical[0]/1.05
+                ("l2",) path els=2 bounds=[-1.58 2.64 3.16 0.00] stroke=$categorical[0]/1.05
+                ("l3",) path els=6 bounds=[1.58 1.58 2.11 2.11] stroke=$categorical[0]/1.05
+              ("#2",) text "Car" at (18.65, 11.00) size=11.00 ink=$ink-2
+            group ("Bus",) transform=[1.00 0.00 0.00 1.00 52.60 0.00] role=legend-item "Bus"
+              group ("icon",) transform=[1.00 0.00 0.00 1.00 5.00 7.00] role=decoration
+                ("l0",) path els=2 bounds=[-2.11 -3.16 0.00 3.16] stroke=$categorical[1]/1.05
+                ("l1",) path els=2 bounds=[1.58 -3.16 0.00 3.16] stroke=$categorical[1]/1.05
+                ("l2",) path els=2 bounds=[-5.27 0.00 10.33 0.00] stroke=$categorical[1]/1.05
+                ("l3",) path els=11 bounds=[-5.27 -3.16 10.54 6.32] stroke=$categorical[1]/1.05
+                ("l4",) path els=6 bounds=[-3.69 2.11 2.11 2.11] stroke=$categorical[1]/1.05
+                ("l5",) path els=2 bounds=[-1.58 3.16 2.64 0.00] stroke=$categorical[1]/1.05
+                ("l6",) path els=6 bounds=[1.05 2.11 2.11 2.11] stroke=$categorical[1]/1.05
+              ("#2",) text "Bus" at (18.65, 11.00) size=11.00 ink=$ink-2
+            group ("Train",) transform=[1.00 0.00 0.00 1.00 104.50 0.00] role=legend-item "Train"
+              group ("icon",) transform=[1.00 0.00 0.00 1.00 5.00 7.00] role=decoration
+                ("l0",) path els=5 bounds=[-2.11 -4.69 4.22 4.16] stroke=$categorical[2]/1.05
+                ("l1",) path els=2 bounds=[-2.11 1.05 0.53 0.53] stroke=$categorical[2]/1.05
+                ("l2",) path els=2 bounds=[1.58 1.05 0.53 0.53] stroke=$categorical[2]/1.05
+                ("l3",) path els=8 bounds=[-4.22 -5.27 8.43 8.96] stroke=$categorical[2]/1.05
+                ("l4",) path els=2 bounds=[-3.16 3.69 1.05 1.58] stroke=$categorical[2]/1.05
+                ("l5",) path els=2 bounds=[2.11 3.69 1.05 1.58] stroke=$categorical[2]/1.05
+              ("#2",) text "Train" at (18.65, 11.00) size=11.00 ink=$ink-2
+            group ("Bike",) transform=[1.00 0.00 0.00 1.00 163.91 0.00] role=legend-item "Bike"
+              group ("icon",) transform=[1.00 0.00 0.00 1.00 5.00 7.00] role=decoration
+                ("l0",) path els=6 bounds=[1.58 1.05 3.69 3.69] stroke=$categorical[3]/1.05
+                ("l1",) path els=6 bounds=[-5.27 1.05 3.69 3.69] stroke=$categorical[3]/1.05
+                ("l2",) path els=6 bounds=[1.05 -4.22 1.05 1.05] stroke=$categorical[3]/1.05
+                ("l3",) path els=6 bounds=[-1.58 -2.11 4.22 5.01] stroke=$categorical[3]/1.05
+              ("#2",) text "Bike" at (18.65, 11.00) size=11.00 ink=$ink-2
+            group ("Walk",) transform=[1.00 0.00 0.00 1.00 218.91 0.00] role=legend-item "Walk"
+              group ("icon",) transform=[1.00 0.00 0.00 1.00 5.00 7.00] role=decoration
+                ("l0",) path els=10 bounds=[-4.76 -5.27 3.71 8.43] stroke=$categorical[4]/1.05
+                ("l1",) path els=10 bounds=[1.05 -3.16 3.71 8.43] stroke=$categorical[4]/1.05
+                ("l2",) path els=2 bounds=[2.11 2.64 2.11 0.00] stroke=$categorical[4]/1.05
+                ("l3",) path els=2 bounds=[-4.22 0.53 2.11 0.00] stroke=$categorical[4]/1.05
+              ("#2",) text "Walk" at (18.65, 11.00) size=11.00 ink=$ink-2
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 330.87]
+      group ("box:thousand trips a morning, an icon each.",) transform=[1.00 0.00 0.00 1.00 12.00 12.50] role=annotation "thousand trips a morning, an icon each."
+        ("backdrop",) rect x=0.00 y=0.00 w=230.00 h=84.13 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("title",) text "A hundred" at (0.00, 0.00) size=15.00 ink=$card-ink transform=[1.00 0.00 0.00 1.00 14.00 14.00]
+        ("text",) text "thousand trips a morning, an icon each." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 38.15]

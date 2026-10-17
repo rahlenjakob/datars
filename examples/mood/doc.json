@@ -1,0 +1,176 @@
+{
+ "datars": 1,
+ "id": "mood",
+ "title": "Market mood",
+ "description": "A fictional weekly index of investor mood from 0 (panic) to 100 (euphoria), in five zones: panic, fear, neutral, greed and euphoria.",
+ "size": {
+  "width": 640,
+  "height": 420
+ },
+ "locale": "en",
+ "data": {
+  "weeks": {
+   "values": {
+    "week": [
+     "Week 1",
+     "Week 2",
+     "Week 3",
+     "Week 4"
+    ],
+    "value": [
+     71,
+     52,
+     28,
+     9
+    ]
+   },
+   "key": [
+    "week"
+   ]
+  }
+ },
+ "signals": {
+  "mood": {
+   "type": "num",
+   "default": 71
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    20,
+    14,
+    20
+   ]
+  },
+  "children": [
+   {
+    "kind": "group",
+    "key": "page",
+    "layout": {
+     "type": "rows",
+     "gap": 6
+    },
+    "children": [
+     {
+      "kind": "use",
+      "recipe": "@datars/std/title",
+      "params": {
+       "text": "Market mood",
+       "subtitle": "Investor sentiment index, 0–100 (illustrative)"
+      },
+      "key": "title",
+      "size": {
+       "h": "auto"
+      }
+     },
+     {
+      "kind": "use",
+      "recipe": "@datars/std/gauge",
+      "params": {
+       "value": {
+        "expr": "mood"
+       },
+       "min": 0,
+       "max": 100,
+       "arc": 200,
+       "label": "This week",
+       "bands": [
+        20,
+        40,
+        60,
+        80,
+        100
+       ],
+       "names": [
+        "Panic",
+        "Fear",
+        "Neutral",
+        "Greed",
+        "Euphoria"
+       ],
+       "inks": [
+        "$diverging~0",
+        "$diverging~0.25",
+        "$diverging~0.5",
+        "$diverging~0.75",
+        "$diverging~1"
+       ]
+      },
+      "key": "dial",
+      "size": {
+       "h": "fill"
+      }
+     }
+    ]
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/card",
+    "params": {
+     "title": {
+      "expr": "narration.title"
+     },
+     "text": {
+      "expr": "narration.text"
+     },
+     "width": 220
+    },
+    "key": "caption"
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "Week 1",
+    "set": {
+     "mood": 71
+    },
+    "narration": {
+     "title": "Week 1",
+     "text": "Investors shrugged off the rate decision."
+    }
+   },
+   {
+    "name": "Week 2",
+    "set": {
+     "mood": 52
+    },
+    "narration": {
+     "title": "Week 2",
+     "text": "A weak jobs report took the edge off."
+    }
+   },
+   {
+    "name": "Week 3",
+    "set": {
+     "mood": 28
+    },
+    "narration": {
+     "title": "Week 3",
+     "text": "Bank results sent the index into fear."
+    }
+   },
+   {
+    "name": "Week 4",
+    "set": {
+     "mood": 9
+    },
+    "narration": {
+     "title": "Week 4",
+     "text": "Panic: the lowest reading this year."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

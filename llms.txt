@@ -54,6 +54,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   states    <doc>                                                               list program states
   check     <doc>                                                               diagnostics (incl. fonts with no source)
   fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
+  icons     [word…] | --slots <file.svg>                                        search the default icon set (Lucide); a file's colours, by ink slot
   semantics <doc> [--state N]                                                   the accessibility tree
   bundle    <doc> [--out f.datars] [--sign key]                                 publish: document → bundle (T0–T3 variants)
   bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays
@@ -66,7 +67,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   --data    name=file[,name=file]   fill data slots from files (a user's rows instead of the sample)
 ```
 
-## Standard library (88 recipes)
+## Standard library (89 recipes)
 
 - `std/annotate`: A callout: text offset from a point (in plot coordinates via scales, or px), with a connector and a dot
 - `std/arcDiagram`: Nodes on a line and each link as an arc above it, as tall as it is long
@@ -122,6 +123,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
 - `std/network`: A node-link diagram laid out by a deterministic force simulation — seeded starts, a fixed number of steps, computed once per data and size, never per frame: links pull, nodes repel, never overlap and stay inside the box
 - `std/ohlc`: OHLC bars: per row a vertical line from low to high with the open ticked to the left and the close to the right, in `$up`/`$down` by direction (or ink)
 - `std/pareto`: The running share of the total, from the largest category down, as a line with points on the plot's right axis (`right: { domain: [0, 1], format: '.0%' }`) — over bars sorted descending, a Pareto chart
+- `std/pictogram`: A pictogram (isotype): one icon per unit — per person, per thousand tonnes (`per`) — in a row per category with its name and value (`rows`), or filling a grid like a waffle (`grid`)
 - `std/pie`: Parts of a whole as slices (set `inner` > 0 for a donut)
 - `std/plot`: A cartesian frame: x/y (and colour) scales from data, axes and gridlines sized by the engine, a title, and marks as children
 - `std/point`: A dot per row (instanced: scales to 10⁵–10⁶ points)

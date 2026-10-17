@@ -2,8 +2,9 @@
 // algorithm run by the engine (datars-algo) as a table op. Covers every chart type in the coverage
 // corpus (docs/15-chart-coverage.md).
 
-import { e, group, instances, op, recipe, repeat, shape, geom, t, text, Prop, ScaleDecl } from "@datars/sdk";
+import { e, group, instances, op, recipe, repeat, shape, geom, t, text, Prop, ScaleDecl, Template } from "@datars/sdk";
 import { fld } from "./field.js";
+import { legend } from "./guides.js";
 
 /** A number label: counting (`number`) when plain; with a prefix or suffix, formatted text. */
 // A named type, not an inline one: `datars eject` copies helpers by their first brace block.
@@ -205,6 +206,117 @@ export const waffle = recipe<WaffleParams>({
       key: "waffle",
       scales: { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } },
       children: [instances({ key: "marks", from: u, proto: "rect", x: e("d.x + (box.w - min(box.w, box.h)) / 2"), y: e("d.y + (box.h - min(box.w, box.h)) / 2"), w: e("d.w"), h: e("d.h"), fill: e(`scale.color(${fld(p.category)})`), label: e(`key.name(${fld(p.category)})`) })],
+    });
+  },
+});
+
+// ---- pictogram (isotype) ---------------------------------------------------------------------------
+
+export interface PictogramParams { data: string; value: string; category: string; icon: string; icons: Record<string, string>; per: number; layout: "rows" | "grid"; columns: number; rows: number; color: boolean; ink: string; format: string; unit: string; gap: number; legend: boolean }
+
+/** An expression picking the icon for a category: the map's entry, else `fallback`. */
+function iconFor(field: string, icons: Record<string, string>, fallback: string): string {
+  return Object.entries(icons).reduceRight((rest, [k, v]) => `(${field} == ${JSON.stringify(k)} ? ${JSON.stringify(v)} : ${rest})`, JSON.stringify(fallback));
+}
+
+export const pictogram = recipe<PictogramParams>({
+  id: "@datars/std/pictogram",
+  doc: "A pictogram (isotype): one icon per unit — per person, per thousand tonnes (`per`) — in a row per category with its name and value (`rows`), or filling a grid like a waffle (`grid`). Icons come from the default set (`user`, `car`, `tree-pine`) or a theme token, one for all or one per category (`icons`); every unit is an instance of one icon, so thousands draw as one node. Units are keyed (category, Unit i) as waffle's are, so a bar chart splits into its icons and back.",
+  params: {
+    data: t.table(), value: t.field(), category: t.field(),
+    icon: t.string("user", "The icon every unit draws (a default-set name, `lucide:…`, `$icon.…`, a `.svg` file)."),
+    icons: t.json("An icon per category (`{ \"Cars\": \"car\", \"Bikes\": \"bike\" }`); others draw `icon`.") as never,
+    per: t.number(1, "What one icon stands for (values are rounded to whole icons)."),
+    layout: t.oneOf(["rows", "grid"] as const, "rows", "`rows`: a row per category, labelled; `grid`: every unit in one grid (`columns` × `rows`), coloured by category."),
+    columns: t.number(10, "`grid`: icons across."), rows: t.number(10, "`grid`: icons down."),
+    color: t.bool(true, "Colour by category (`$categorical`); off, every icon in `ink`."),
+    ink: t.ink("$mark", "The icons' ink without `color`."),
+    format: t.string(",.0f", "The value's number format (rows)."), unit: t.string(undefined, "After the value (` people`)."),
+    gap: t.number(0.18, "Space between icons, as a share of their size."),
+    legend: t.bool(true, "`grid`: a legend of the categories (with their icons) below."),
+  },
+  tokens: ["mark", "ink", "ink-2", "muted", "size.label", "categorical"],
+  expand(p, cx) {
+    const per = p.per > 0 ? p.per : 1;
+    const icons = p.icons && typeof p.icons === "object" ? p.icons : {};
+    const u = cx.table("pictogram", p.data, op.derive("__icons", e(`round(${fld(p.value)} / ${per})`)), op.units({ value: "__icons" }));
+    const fill = p.color ? e(`scale.color(${fld(p.category)})`) : p.ink;
+    const color: Record<string, ScaleDecl> = p.color ? { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } } : {};
+    // Every distinct icon is one instances node over its categories' units.
+    const kinds = [...new Set([p.icon, ...Object.values(icons)])];
+    const nodes = (x: string, y: string, r: string): Template[] => kinds.map((ic, i) => {
+      const mine = Object.keys(icons).filter((k) => icons[k] === ic);
+      const others = Object.keys(icons).filter((k) => icons[k] !== ic);
+      const keep = ic === p.icon ? others.map((k) => `${fld(p.category)} != ${JSON.stringify(k)}`).join(" && ") : mine.map((k) => `${fld(p.category)} == ${JSON.stringify(k)}`).join(" || ");
+      const from = keep ? cx.table(`pictogram-${i}`, u, op.filter(e(keep))) : u;
+      return instances({ key: `icons-${i}`, from, icon: ic, x: e(x), y: e(y), r: e(r), fill });
+    });
+    const said = () => e(`key.name(${fld(p.category)}) + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}${per !== 1 ? ` + " (one icon: " + format(${per}, ",~g") + ")"` : ""}`);
+    if (p.layout === "grid") {
+      const g = cx.table("pictogram-grid", u, op.waffle({ columns: p.columns, rows: p.rows, width: e("min(box.w, box.h)"), height: e("min(box.w, box.h)"), gap: 0 }));
+      const off = "(box.w - min(box.w, box.h)) / 2";
+      const k = (1 - Math.min(0.6, Math.max(0, p.gap))) / 2;
+      const gridNodes = kinds.map((ic, i) => {
+        const mine = Object.keys(icons).filter((key) => icons[key] === ic);
+        const others = Object.keys(icons).filter((key) => icons[key] !== ic);
+        const keep = ic === p.icon ? others.map((key) => `${fld(p.category)} != ${JSON.stringify(key)}`).join(" && ") : mine.map((key) => `${fld(p.category)} == ${JSON.stringify(key)}`).join(" || ");
+        const from = keep ? cx.table(`pictogram-grid-${i}`, g, op.filter(e(keep))) : g;
+        return instances({ key: `icons-${i}`, from, icon: ic, x: e(`d.x + d.w / 2 + ${off}`), y: e("d.y + d.h / 2 + (box.h - min(box.w, box.h)) / 2"), r: e(`min(d.w, d.h) * ${k.toFixed(3)}`), fill });
+      });
+      const many = Object.keys(icons).length > 0;
+      return group({
+        key: "pictogram",
+        scales: color,
+        semantics: { role: "group", label: "Pictogram" },
+        layout: { type: "rows", gap: 10 },
+        children: [
+          group({ key: "grid", size: { h: "fill" }, children: [
+            ...gridNodes,
+            // What each category stands for, read once (not unit by unit).
+            repeat(p.data, group({ key: e(fld(p.category)), semantics: { role: "series", label: said(), value: e(fld(p.value)) }, children: [] })),
+          ] }),
+          p.legend !== false && p.color ? legend(many ? { scale: "color", icons } : { scale: "color", icon: p.icon }, { size: { h: "auto" } }) : null,
+        ],
+      });
+    }
+    // Rows: names on the left, the icons, the value after the last one. Icons wrap to more lines
+    // in a row rather than shrink past legibility (a phone's column); rows are as tall as their
+    // lines.
+    const labelW = "min(150, max(64, box.w * 0.24))";
+    const valueW = 'token("size.label") * 4';
+    const n = `max(1, table.count(${JSON.stringify(p.data)}))`;
+    const most = `max(1, table.max(${JSON.stringify(u)}, "__unit") + 1)`;
+    const avail = `max(20, box.w - ${labelW} - ${valueW} - 14)`;
+    const minStep = 'max(14, token("size.label") * 1.3)';
+    const perLine = `max(1, min(${most}, floor(${avail} / ${minStep})))`;
+    const lines = `ceil(${most} / ${perLine})`;
+    const room = `(box.h - ${p.per !== 1 ? 28 : 0})`;
+    const step = `max(4, min(${avail} / ${perLine}, 40, ${room} / (${n} * ${lines} * 1.15 + ${n} * 0.4)))`;
+    const rowH = `max(${lines} * ${step} * 1.15, token("size.label") * 2) + ${step} * 0.4`;
+    const r = `${step} * ${((1 - Math.min(0.6, Math.max(0, p.gap))) / 2).toFixed(3)}`;
+    const top = `scale.row(${fld(p.category)}) + ${step} * 0.2`;
+    const line = `floor(d.__unit / ${perLine})`;
+    const x = `${labelW} + 8 + (d.__unit - ${line} * ${perLine} + 0.5) * ${step}`;
+    const y = `${top} + (${line} + 0.5) * ${step} * 1.15`;
+    // The category's own count of icons: its last line, and how far along it the value goes.
+    const own = `max(1, round(${fld(p.value)} / ${per}))`;
+    const last = `floor((${own} - 1) / ${perLine})`;
+    return group({
+      key: "pictogram",
+      scales: { ...color, row: { type: "band", domain: { data: p.data, field: p.category }, range: [0, `=${n} * (${rowH})`], padding: 0 } },
+      semantics: { role: "group", label: "Pictogram" },
+      children: [
+        ...nodes(x, y, r),
+        repeat(p.data, group({
+          key: e(fld(p.category)),
+          semantics: { role: "series", label: said(), value: e(fld(p.value)) },
+          children: [
+            text(e(`key.name(${fld(p.category)})`), [e(labelW), e(`${top} + ${step} * 0.575`)], { key: "name", style: { size: "$size.label", weight: 600, ink: "$ink", align: "end", baseline: "middle", maxWidth: e(labelW) } }),
+            text(e(`format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(`${labelW} + 14 + (${own} - ${last} * ${perLine}) * ${step}`), e(`${top} + (${last} + 0.5) * ${step} * 1.15`)], { key: "value", style: { size: "$size.label", ink: "$ink-2", baseline: "middle" } }),
+          ],
+        })),
+        per !== 1 ? text(e(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(labelW + " + 8"), e(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null,
+      ],
     });
   },
 });

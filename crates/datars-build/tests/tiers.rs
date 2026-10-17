@@ -20,7 +20,7 @@ fn caps(modules: &[&str]) -> Capabilities {
 #[test]
 fn every_tier_renders_the_golden_scenes() {
     let mut checked = 0;
-    for name in ["votes", "riksdag", "business", "flows", "shapes", "warming", "dashboard", "inflation"] {
+    for name in ["votes", "riksdag", "business", "flows", "shapes", "warming", "dashboard", "inflation", "commute", "mood"] {
         let json = std::fs::read_to_string(root().join(format!("examples/{name}/doc.json"))).unwrap();
         let golden: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(root().join(format!("tests/golden/{name}/golden.json"))).unwrap()).unwrap();
         let (bundle, _) = datars_build::build(&json, &datars_build::Options::default()).unwrap();
