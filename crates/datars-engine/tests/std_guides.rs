@@ -48,9 +48,11 @@ fn a_plots_y_title_is_drawn_above_the_axis() {
     let body = s.lines().find(|l| l.contains("group (\"body\",)")).unwrap();
     let ty = |l: &str| l.split("transform=[").nth(1).and_then(|t| t.split(']').next()).and_then(|t| t.split(' ').nth(5)).and_then(|v| v.parse::<f64>().ok()).unwrap();
     assert!(ty(titles) > 15.0 && ty(titles) < ty(body), "{titles}\n{body}");
-    // The y axis itself carries no title (it would take width up the side).
+    // The y axis itself draws no title (it would take width up the side) — but is called by it,
+    // for a screen reader.
     let axis: Vec<&str> = s.lines().skip_while(|l| !l.contains("group (\"axis-y\",)")).take_while(|l| !l.contains("group (\"center\",)")).collect();
-    assert!(!axis.iter().any(|l| l.contains("\"Count\"")), "{axis:?}");
+    assert!(!axis.iter().any(|l| l.contains("text \"Count\"")), "{axis:?}");
+    assert!(axis[0].contains("role=axis \"Count\""), "{axis:?}");
 }
 
 #[test]

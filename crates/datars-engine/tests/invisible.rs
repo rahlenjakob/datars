@@ -29,8 +29,9 @@ fn layers(lan: f64) -> Engine {
     e
 }
 
+/// What's read out (a pannable view's own stop aside).
 fn labels(e: &mut Engine) -> Vec<String> {
-    e.semantic_items().into_iter().map(|i| i.label).collect()
+    e.semantic_items().into_iter().filter(|i| i.kind.is_none()).map(|i| i.label).collect()
 }
 
 #[test]
@@ -57,6 +58,10 @@ fn a_faded_out_layer_is_not_read_out() {
     assert!(!all.contains(&"Town b".to_string()), "an invisible instance isn't read: {all:?}");
     let faded = labels(&mut layers(0.0));
     assert_eq!(faded, vec!["Street".to_string()], "only what's visible");
+    // Its view's stop too: the street map's, not the faded county map's.
+    let pans: Vec<String> = layers(0.0).semantic_items().into_iter().filter(|i| i.kind.as_deref() == Some("pan")).map(|i| i.path).collect();
+    assert_eq!(pans.len(), 1, "{pans:?}");
+    assert!(pans[0].contains("streets"), "{pans:?}");
 }
 
 #[test]

@@ -210,6 +210,8 @@ test("the mirror reads every labelled mark, not only what a click acts on", { sk
     // tree follows in idle time: a screen reader finds the title, not only the buttons.
     const title = p.locator("datars-view .mirror table", { hasText: "Bar A: 42" });
     await title.waitFor({ state: "attached", timeout: 30_000 });
+    // (The whole tree, not the brief one: named by its title once it's there.)
+    await p.waitForFunction(() => document.querySelector("datars-view").getAttribute("aria-label") === "Selectable chart title", null, { timeout: 10_000 });
     const tree = await p.locator("datars-view").ariaSnapshot();
     assert.match(tree, /button "Bar A: 42"/, tree);
     const unnamed = await p.evaluate(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll(".mirror [role=group]")].filter((g) => !g.getAttribute("aria-label")).length);

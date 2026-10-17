@@ -296,8 +296,17 @@ impl Engine {
             let Some((_, xf)) = pick::node_at(scene, &path) else { continue };
             // Inside the innermost item whose path holds it (or that is it).
             let parent = items.iter().enumerate().filter(|(_, i)| p.starts_with(&i.path) && (i.path.is_empty() || p == i.path || p[i.path.len()..].starts_with('/'))).max_by_key(|(_, i)| i.path.len()).map(|(k, _)| k);
-            let what = parent.map(|k| items[k].label.trim().to_string()).filter(|l| !l.is_empty()).unwrap_or_else(|| phrase(&loc, kind, &[]));
-            let label = if state.is_empty() { format!("{what}, {}", phrase(&loc, kind, &[])) } else { format!("{what}, {}: {state}", phrase(&loc, kind, &[])) };
+            // "Spot price, range selection: 1 to 50"; in nothing named, "Range selection: …".
+            let what = parent.map(|k| items[k].label.trim().to_string()).filter(|l| !l.is_empty());
+            let name = match what {
+                Some(w) => format!("{w}, {}", phrase(&loc, kind, &[])),
+                None => {
+                    let p = phrase(&loc, kind, &[]);
+                    let mut c = p.chars();
+                    c.next().map(|f| f.to_uppercase().collect::<String>() + c.as_str()).unwrap_or(p)
+                }
+            };
+            let label = if state.is_empty() { name } else { format!("{name}: {state}") };
             let item = SemanticItem { role: "control".into(), label, depth: parent.map(|k| items[k].depth + 1).unwrap_or(0), rect: crate::bounds::transform_rect(area, &xf), path: p, actionable: true, value: None, kind: Some(kind.into()), checked: None, missing: false };
             let at = parent.map(|k| k + 1).unwrap_or(items.len());
             items.insert(at, item);
