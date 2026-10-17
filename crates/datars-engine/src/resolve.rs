@@ -978,6 +978,22 @@ impl<'a> Resolver<'a> {
         self.child_size(&exp.template, cx, depth + 1)
     }
 
+    /// Whether a template lays its contents out in whatever box it gets — a group with a rows,
+    /// columns or grid layout (a recipe: what it expands to) — so a smaller box than it asked for
+    /// still holds them (`datars_layout::Child::elastic`).
+    fn elastic(&self, c: &Template, cx: &Cx, depth: usize) -> bool {
+        if depth > MAX_EXPANSION_DEPTH {
+            return false;
+        }
+        if let Some(l) = &c.layout {
+            return matches!(l.ty.as_str(), "rows" | "columns" | "grid");
+        }
+        let TKind::Use { recipe, params } = &c.kind else { return false };
+        let ecx = serde_json::json!({ "size": [cx.box_w, cx.box_h], "sizeClass": self.size_class, "locale": self.doc.locale });
+        let Some(exp) = self.expander.and_then(|x| x.expand(recipe, params, &ecx).ok()) else { return false };
+        self.elastic(&exp.template, cx, depth + 1)
+    }
+
     /// Lay out the children at `which` (indices into `children`), one rect each.
     fn layout_some(&self, children: &[Template], which: &[usize], spec: &datars_layout::Spec, cx: &Cx, own: Rect, equal: bool) -> Vec<Rect> {
         let kids: Vec<datars_layout::Child> = which
@@ -987,7 +1003,11 @@ impl<'a> Resolver<'a> {
                 true => datars_layout::Child::default(),
                 false => {
                     let size = self.child_size(&children[i], cx, 0);
-                    datars_layout::Child { w: size.as_ref().and_then(|s| self.dim(&s.w, cx)), h: size.as_ref().and_then(|s| self.dim(&s.h, cx)) }
+                    let (w, h) = (size.as_ref().and_then(|s| self.dim(&s.w, cx)), size.as_ref().and_then(|s| self.dim(&s.h, cx)));
+                    // (Only a fixed size can be given back: ask only then.)
+                    let fixed = |d: &Option<datars_layout::Dim>| matches!(d, Some(datars_layout::Dim::Px(_) | datars_layout::Dim::Percent(_)));
+                    let elastic = (fixed(&w) || fixed(&h)) && self.elastic(&children[i], cx, 0);
+                    datars_layout::Child { w, h, elastic }
                 }
             })
             .collect();

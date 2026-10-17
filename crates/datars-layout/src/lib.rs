@@ -83,12 +83,19 @@ impl Spec {
     }
 }
 
+/// How much of its size a fixed-size child gives back when its rows (or columns) are more than
+/// their box holds: down to half.
+pub const SHRINK_TO: f64 = 0.5;
+
 /// A child's requested size. Unspecified axes default to `Fill(1)` on the main axis and stretch on
 /// the cross axis.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Child {
     pub w: Option<Dim>,
     pub h: Option<Dim>,
+    /// Its contents are laid out in whatever box it gets (a plot's rows, a panel's columns): a
+    /// fixed size it may give back when its row is more than the box holds.
+    pub elastic: bool,
 }
 
 /// Lay out `children` inside `container`. `measure(i, avail_w, avail_h)` returns the content size of
@@ -128,6 +135,27 @@ pub fn layout(container: Rect, spec: &Spec, children: &[Child], measure: &mut dy
                     Dim::Fill(w) => fills[i] = w.max(0.0),
                 }
                 fixed += main[i];
+            }
+            // More than the box holds (a reader's bigger text, a phone's narrower rows): rather than
+            // run off the end — a plot's axis names pushed back onto its bars by the canvas edge —
+            // fixed-size children whose contents are laid out in their box (`elastic`: a plot) give
+            // back what's over, the last first, each down to half its size. Measured content
+            // (`auto`: a title) and boxes drawn at fixed places (a control) keep their size.
+            let mut over = fixed + gaps - main_total;
+            if over > 0.5 {
+                for i in (0..n).rev() {
+                    let d = if rows { children[i].h } else { children[i].w }.unwrap_or(Dim::Fill(1.0));
+                    if !children[i].elastic || !matches!(d, Dim::Px(_) | Dim::Percent(_)) || main[i] <= 0.0 {
+                        continue;
+                    }
+                    let give = over.min(main[i] * SHRINK_TO);
+                    main[i] -= give;
+                    fixed -= give;
+                    over -= give;
+                    if over <= 0.5 {
+                        break;
+                    }
+                }
             }
             let weight: f64 = fills.iter().sum();
             let remaining = (main_total - fixed - gaps).max(0.0);
@@ -215,7 +243,7 @@ mod tests {
     fn plot_with_measured_axes() {
         // columns: [y-axis auto (labels 34 px wide), plot fill]
         let spec = Spec { kind: Kind::Columns, gap: 4.0, padding: [10.0, 10.0, 10.0, 10.0], align: Align::Stretch };
-        let kids = [Child { w: Some(Dim::Auto), h: None }, Child { w: None, h: None }];
+        let kids = [Child { w: Some(Dim::Auto), h: None, elastic: false }, Child { w: None, h: None, elastic: false }];
         let r = layout(Rect::new(0.0, 0.0, 400.0, 300.0), &spec, &kids, &mut |i, _, _| if i == 0 { (34.0, 0.0) } else { (0.0, 0.0) });
         assert_eq!(r[0], Rect::new(10.0, 10.0, 34.0, 280.0));
         assert_eq!(r[1], Rect::new(48.0, 10.0, 342.0, 280.0));
@@ -225,14 +253,35 @@ mod tests {
     fn rows_with_fixed_percent_and_weighted_fills() {
         let spec = Spec { kind: Kind::Rows, ..Default::default() };
         let kids = [
-            Child { h: Some(Dim::Px(20.0)), w: None },
-            Child { h: Some(Dim::Percent(0.1)), w: None },
-            Child { h: Some(Dim::Fill(1.0)), w: None },
-            Child { h: Some(Dim::Fill(3.0)), w: None },
+            Child { h: Some(Dim::Px(20.0)), w: None, elastic: false },
+            Child { h: Some(Dim::Percent(0.1)), w: None, elastic: false },
+            Child { h: Some(Dim::Fill(1.0)), w: None, elastic: false },
+            Child { h: Some(Dim::Fill(3.0)), w: None, elastic: false },
         ];
         let r = layout(Rect::new(0.0, 0.0, 100.0, 200.0), &spec, &kids, &mut no_measure);
         assert_eq!(r.iter().map(|b| b.h).collect::<Vec<_>>(), vec![20.0, 20.0, 40.0, 120.0]);
         assert_eq!(r[3].y, 80.0);
+    }
+
+    #[test]
+    fn rows_more_than_the_box_holds_shrink_their_fixed_children_from_the_end() {
+        let spec = Spec { kind: Kind::Rows, gap: 10.0, ..Default::default() };
+        // A title (measured, 40), a control row (fixed 50) and a plot (fixed 230) in 280: 60 over.
+        let el = |h: f64| Child { h: Some(Dim::Px(h)), w: None, elastic: true };
+        let kids = [Child { h: Some(Dim::Auto), w: None, elastic: false }, el(50.0), el(230.0)];
+        let r = layout(Rect::new(0.0, 0.0, 100.0, 280.0), &spec, &kids, &mut |_, _, _| (100.0, 40.0));
+        assert_eq!(r.iter().map(|b| b.h).collect::<Vec<_>>(), vec![40.0, 50.0, 170.0], "the plot gives it back; the title keeps its size");
+        assert_eq!(r[2].y1(), 280.0, "nothing runs off the end");
+        // Far over: each down to half, the rest still over.
+        let r = layout(Rect::new(0.0, 0.0, 100.0, 100.0), &spec, &kids, &mut |_, _, _| (100.0, 40.0));
+        assert_eq!(r.iter().map(|b| b.h).collect::<Vec<_>>(), vec![40.0, 25.0, 115.0]);
+        // What fits is left alone.
+        let r = layout(Rect::new(0.0, 0.0, 100.0, 400.0), &spec, &kids, &mut |_, _, _| (100.0, 40.0));
+        assert_eq!(r.iter().map(|b| b.h).collect::<Vec<_>>(), vec![40.0, 50.0, 230.0]);
+        // A box drawn at fixed places (a control) keeps its size.
+        let kids = [Child { h: Some(Dim::Px(50.0)), w: None, elastic: false }, el(230.0)];
+        let r = layout(Rect::new(0.0, 0.0, 100.0, 220.0), &spec, &kids, &mut no_measure);
+        assert_eq!(r.iter().map(|b| b.h).collect::<Vec<_>>(), vec![50.0, 160.0]);
     }
 
     #[test]
@@ -242,7 +291,7 @@ mod tests {
         let s = layout(
             Rect::new(0.0, 0.0, 100.0, 100.0),
             &Spec { align: Align::Center, ..Default::default() },
-            &[Child { w: Some(Dim::Px(20.0)), h: Some(Dim::Px(10.0)) }],
+            &[Child { w: Some(Dim::Px(20.0)), h: Some(Dim::Px(10.0)), elastic: false }],
             &mut no_measure,
         );
         assert_eq!(s[0], Rect::new(40.0, 45.0, 20.0, 10.0));

@@ -309,3 +309,27 @@ fn bars_end_where_the_axis_is() {
     // (The axis stands the rows' 6 px gap under the plot area.)
     assert!(bottoms.iter().all(|b| (b - (axis_y - 6.0)).abs() < 1.0), "every bar ends at the plot area's foot, over the axis at {axis_y}: {bottoms:?}");
 }
+
+/// Content taller than its chart — a block of controls above a plot of fixed height, on a phone —
+/// doesn't push the plot's axis off the bottom (where `contain` would push its names back up onto
+/// the bars): the plot gives back the height that's over, and its axis stays below its marks.
+#[test]
+fn a_plot_gives_back_height_its_rows_do_not_have() {
+    let use_ = |recipe: &str, params: serde_json::Value| serde_json::json!({ "kind": "use", "recipe": format!("@datars/std/{recipe}"), "params": params });
+    let doc = serde_json::json!({ "datars": 1, "size": { "width": 335, "height": 360 },
+        "data": { "p": { "values": { "party": ["Social Democrats", "Sweden Democrats", "Moderates", "Christian Democrats"], "seats": [107, 73, 68, 19] }, "key": ["party"] } },
+        "scene": { "kind": "group", "key": "root", "layout": { "type": "rows", "gap": 10 }, "children": [
+            { "kind": "group", "key": "controls", "size": { "h": 150 }, "children": [] },
+            { "kind": "use", "recipe": "@datars/std/plot", "key": "seats", "size": { "h": 230 }, "params": { "data": "p", "x": "party", "y": "seats", "children": [use_("bar", serde_json::json!({}))] } }
+        ] } });
+    let mut e = Engine::new();
+    assert!(e.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap()).is_empty());
+    assert_eq!(e.content_height(), None, "nothing runs off the bottom");
+    let snap = e.scene().snapshot();
+    // The x axis's names sit below the bars: none was pushed up (contained) into the plot area.
+    let names: Vec<&str> = snap.lines().filter(|l| l.contains("text \"") && (l.contains("Democrats") || l.contains("Moderates")) && l.contains("axis") == false).collect();
+    assert!(!names.is_empty(), "{snap}");
+    for l in names {
+        assert!(!l.contains(", -"), "a name pushed up onto the bars: {l}");
+    }
+}
