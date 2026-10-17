@@ -67,6 +67,17 @@ code { font: .84em/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace; back
 .chart.pending { background: linear-gradient(100deg, var(--softer) 30%, var(--soft) 50%, var(--softer) 70%) 0 0 / 300% 100%; animation: shimmer 1.6s linear infinite; border-radius: var(--radius); }
 @keyframes shimmer { to { background-position: -150% 0; } }
 @media (prefers-reduced-motion: reduce) { .chart.pending { animation: none; } }
+/* A phone's figure is taller than its shape (articles.js, `heightFor`): never a sliver — and that
+   height is the box's before the chart mounts, so nothing under it moves when it does. A figure
+   may ask for a taller phone shape (`--phone-aspect`, height over width; default 1.05). */
+@media (max-width: 699px) {
+  .figure .chart[style*="--aspect"] {
+    --w: calc(100vw - 2 * var(--gutter));
+    aspect-ratio: auto;
+    height: clamp(220px, max(calc(var(--w) * var(--aspect)), min(calc(var(--w) * var(--phone-aspect, 1.05)), 72vh)), 86vh);
+    height: clamp(220px, max(calc(var(--w) * var(--aspect)), min(calc(var(--w) * var(--phone-aspect, 1.05)), 72dvh)), 86dvh);
+  }
+}
 .chart datars-view { display: block; width: 100%; height: 100%; border-radius: min(var(--radius), 12px); overflow: hidden; }
 datars-view::part(controls) { display: none; }
 datars-view { --datars-font: var(--ui); }

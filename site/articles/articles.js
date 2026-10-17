@@ -14,7 +14,8 @@ function heightFor(slot, width) {
   const aspect = Number(slot.dataset.aspect) || 0.6;
   const vh = innerHeight;
   let h = width * aspect;
-  if (phone()) h = Math.max(h, Math.min(width * 1.05, vh * 0.72));
+  // (articles.css reserves the same box for phones: keep the two in step.)
+  if (phone()) h = Math.max(h, Math.min(width * (Number(getComputedStyle(slot).getPropertyValue("--phone-aspect")) || 1.05), vh * 0.72));
   return Math.round(Math.max(220, Math.min(h, vh * 0.86)));
 }
 
