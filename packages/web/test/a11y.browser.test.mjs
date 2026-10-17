@@ -65,9 +65,16 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     await p.waitForFunction(() => document.querySelector("datars-view").getAttribute("aria-description"), null, { timeout: 10_000 });
 
     // The accessibility tree as Chrome builds it.
+    // (Chrome builds its tree a little after the DOM changes: ask until the data is in it.)
     const cdp = await ctx.newCDPSession(p);
-    const { nodes } = await cdp.send("Accessibility.getFullAXTree");
     const v = (x) => x?.value ?? "";
+    let nodes = [];
+    for (let i = 0; i < 50; i++) {
+      ({ nodes } = await cdp.send("Accessibility.getFullAXTree"));
+      const fig = nodes.find((n) => v(n.role) === "figure");
+      if (v(fig?.description) && nodes.some((n) => v(n.role) === "rowheader" && v(n.name) === "Plums")) break;
+      await p.waitForTimeout(100);
+    }
     const figure = nodes.find((n) => v(n.role) === "figure");
     assert.equal(v(figure.name), "Fruit sold on Saturday", "named by the document's title");
     assert.equal(v(figure.description), "Kilograms of each fruit a market stall sold. 3 data points, from 18 to 42.");
