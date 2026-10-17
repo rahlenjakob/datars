@@ -23,7 +23,7 @@ mod tables;
 pub mod textlayer;
 mod tiles;
 
-pub use bounds::{node_bounds, quads_overlap, text_quad, text_rect};
+pub use bounds::{node_bounds, quads_overlap, text_core, text_quad, text_rect};
 pub use resolve::{BoundAction, ExprValue, Expand, Expansion, Origin, OriginRow};
 pub use points::PointStats;
 pub use tiles::{RangeFetch, TileStats, TileView};

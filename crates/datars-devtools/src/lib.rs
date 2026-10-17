@@ -110,6 +110,10 @@ pub struct DrawnLabel {
     /// Its four corners as drawn, turned with it: two slanted labels side by side collide only if
     /// these do, however much their boxes overlap.
     pub quad: [datars_math::Vec2; 4],
+    /// The same without the line spacing above and below the glyphs (what the engine's declutter
+    /// keeps apart): turned names side by side a line apart touch by their line boxes, not their
+    /// letters.
+    pub core: [datars_math::Vec2; 4],
     pub opacity: f64,
     pub clip: Option<Rect>,
     /// Inside a view with a camera (a map): what its clip cuts is panned out of sight, on purpose.
@@ -142,17 +146,18 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
         };
         match &n.kind {
             NodeKind::Text(t) if !t.text.trim().is_empty() && t.bounds.w > 0.0 => {
-                let (rect, quad) = if t.screen_size {
+                let (rect, quad, core) = if t.screen_size {
                     // Glyphs at screen size around the transformed origin, turned by `rotate`.
-                    (datars_engine::text_rect(t, &xf), datars_engine::text_quad(t, &xf))
+                    (datars_engine::text_rect(t, &xf), datars_engine::text_quad(t, &xf), datars_engine::text_core(t, &xf))
                 } else {
                     let local = Rect::new(t.origin.x + t.bounds.x, t.origin.y + t.bounds.y, t.bounds.w, t.bounds.h);
                     let turn = if t.rotate != 0.0 { Affine::translate(t.origin.x, t.origin.y).mul(Affine::rotate(t.rotate)).mul(Affine::translate(-t.origin.x, -t.origin.y)) } else { Affine::IDENTITY };
                     let m = xf.mul(turn);
-                    let quad = [(local.x, local.y), (local.x1(), local.y), (local.x1(), local.y1()), (local.x, local.y1())].map(|(x, y)| m.apply(datars_math::Vec2::new(x, y)));
-                    (corners(m, local), quad)
+                    let q = |r: Rect| [(r.x, r.y), (r.x1(), r.y), (r.x1(), r.y1()), (r.x, r.y1())].map(|(x, y)| m.apply(datars_math::Vec2::new(x, y)));
+                    let lead = (local.h * 0.12).max(0.0);
+                    (corners(m, local), q(local), q(Rect::new(local.x, local.y + lead, local.w, (local.h - 2.0 * lead).max(0.0))))
                 };
-                out.push(DrawnLabel { text: t.text.clone(), rect, quad, opacity, clip, in_camera: cam });
+                out.push(DrawnLabel { text: t.text.clone(), rect, quad, core, opacity, clip, in_camera: cam });
             }
             NodeKind::View { viewport, camera, clip: clips, children } => {
                 let inner = xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y)));
@@ -219,9 +224,10 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
     for i in 0..labels.len() {
         for j in i + 1..labels.len() {
             let (a, b) = (labels[i].0, labels[j].0);
-            // A turned label: by its slanted outline (more than a px into the other's).
+            // A turned label: by its slanted outline without the line spacing (more than a px into
+            // the other's letters).
             if turned(labels[i].1) || turned(labels[j].1) {
-                if a.intersects(&b) && datars_engine::quads_overlap(&labels[i].1.quad, &labels[j].1.quad, -1.0) {
+                if a.intersects(&b) && datars_engine::quads_overlap(&labels[i].1.core, &labels[j].1.core, -1.0) {
                     out.overlapping.push((labels[i].1.text.clone(), labels[j].1.text.clone()));
                 }
                 continue;
