@@ -1,6 +1,7 @@
 // pie / donut: slices from the `pie` layout algorithm, labelled outside with leaders when they fit.
 
 import { e, group, op, recipe, repeat, shape, geom, t, text } from "@datars/sdk";
+import { fld } from "./field.js";
 
 export interface PieParams { data: string; value: string; category: string; inner: number; pad: number; sort: "none" | "asc" | "desc"; labels: boolean; format: string; total: boolean }
 
@@ -20,7 +21,7 @@ export const pie = recipe<PieParams>({
     // the widest label beside the pie (labels never leave the box).
     const slices = cx.table("slices", p.data,
       op.pie({ value: p.value, sort: p.sort, pad: p.pad, as: ["a0", "a1"] }),
-      op.derive("lw", e(`measure(key.name(d.${p.category}), token("size.label"))`)));
+      op.derive("lw", e(`measure(key.name(${fld(p.category)}), token("size.label"))`)));
     const S = JSON.stringify(slices);
     const base = "(min(box.w, box.h) / 2 - 36)";
     const fit = `(box.w / 2 - table.max(${S}, "lw") - 26)`;
@@ -41,13 +42,13 @@ export const pie = recipe<PieParams>({
       semantics: { role: "series", label: `${p.value} by ${p.category}` },
       children: [
         repeat(slices, shape(geom.arc({ cx: e("box.w / 2"), cy: e(CY), r0: e(`(${R}) * ${p.inner}`), r1: e(R), a0: e("d.a0"), a1: e("d.a1") }), {
-          fill: e(`scale.color(d.${p.category})`),
+          fill: e(`scale.color(${fld(p.category)})`),
           stroke: { paint: "$paper", width: 1 },
-          semantics: { role: "datum", label: e(`\`\${key.name(d.${p.category})}: \${format(d.${p.value}, ${JSON.stringify(p.format)})}\``), value: e(`d.${p.value}`) },
+          semantics: { role: "datum", label: e(`\`\${key.name(${fld(p.category)})}: \${format(${fld(p.value)}, ${JSON.stringify(p.format)})}\``), value: e(`${fld(p.value)}`) },
           pickable: true,
         })),
         p.labels
-          ? group({ key: "labels", declutter: true, children: [repeat(slices, text(e(`key.name(d.${p.category})`), [e(`box.w / 2 + (${R} + 14) * sin(${mid})`), e(`${CY} - (${R} + 14) * cos(${mid})`)], {
+          ? group({ key: "labels", declutter: true, children: [repeat(slices, text(e(`key.name(${fld(p.category)})`), [e(`box.w / 2 + (${R} + 14) * sin(${mid})`), e(`${CY} - (${R} + 14) * cos(${mid})`)], {
               when: e(`!${narrow} && d.a1 - d.a0 > 0.12`),
               style: { size: "$size.label", ink: "$ink-2", align: e(`sin(${mid}) >= 0 ? "start" : "end"`), baseline: "middle" },
             }))] })

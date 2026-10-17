@@ -9,11 +9,10 @@ import { axis } from "./axis.js";
 import { grid } from "./grid.js";
 import { legend } from "./guides.js";
 import { sparkline } from "./finance.js";
+import { fld } from "./field.js";
 
 /** A string as an expression literal. */
 const q = (s: string) => JSON.stringify(s);
-/** A field of the row as expression source (`d.sales`, `d["net sales"]`). */
-const fld = (f: string) => (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(f) ? `d.${f}` : `d[${JSON.stringify(f)}]`);
 
 /** A value — a number, an expression (`e(…)`) or, in hand-written JSON, an "=…" string — as
  * expression source; a plain string is a literal (a date on a time scale, a category). */
@@ -639,7 +638,7 @@ export const dataTable = recipe<TableParams>({
           sy: { type: "linear", domain: { data: "@group", field: sy }, range: [`=${rowH} - 6`, 6], zero: false, nice: false },
         },
         children: [
-          shape(geom.polyline({ from: "@group", x: e("scale.sx(d.__sx)"), y: e(`scale.sy(d.${sy})`), curve: "linear" }), { key: "line", stroke: { paint: ink, width: 1.5, join: "round", cap: "round" }, semantics: { role: "decoration" } }),
+          shape(geom.polyline({ from: "@group", x: e("scale.sx(d.__sx)"), y: e(`scale.sy(${fld(sy)})`), curve: "linear" }), { key: "line", stroke: { paint: ink, width: 1.5, join: "round", cap: "round" }, semantics: { role: "decoration" } }),
           shape(geom.circle({ cx: e("scale.sx.max()"), cy: e(`scale.sy(${last})`), r: 2 }), { key: "dot", when: e(`${last} != null`), fill: ink, semantics: { role: "decoration" } }),
         ],
       });

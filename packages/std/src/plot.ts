@@ -7,6 +7,7 @@ import { grid } from "./grid.js";
 import { legend } from "./guides.js";
 import { financeDomain, financeKey } from "./finance.js";
 import { comparisonFrame } from "./comparisons.js";
+import { fld } from "./field.js";
 
 type ScaleType = "band" | "point" | "linear" | "log" | "sqrt" | "time";
 
@@ -243,7 +244,7 @@ export const plot = recipe<PlotParams>({
     const labelled = endLabels ? (p.children ?? []).find((c) => c.kind === "use" && c.recipe === "@datars/std/line" && (c.params as { labels?: boolean }).labels) : undefined;
     const lp = (labelled?.params ?? {}) as { data?: string; series?: string; color?: string };
     const series = lp.series ?? lp.color ?? p.color;
-    const seriesNames = labelled && series ? cx.table("series-names", lp.data ?? p.data, op.aggregate([series], { n: ["count"] }), op.derive("w", e(`measure(key.name(d.${series}), token("size.label"))`))) : undefined;
+    const seriesNames = labelled && series ? cx.table("series-names", lp.data ?? p.data, op.aggregate([series], { n: ["count"] }), op.derive("w", e(`measure(key.name(${fld(series)}), token("size.label"))`))) : undefined;
     // (`labelSpace` is at the theme's text size: a reader's bigger names get more of it.)
     const labelRoom = cmp.end ?? (seriesNames ? e(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(seriesNames)}, "w") + 12)`) : e(`${p.labelSpace} * max(1, textScale)`));
     // The vertical axes' titles, in a row of their own above the plot area: the left one starts

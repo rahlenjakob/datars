@@ -3,6 +3,7 @@
 // corpus (docs/15-chart-coverage.md).
 
 import { e, group, instances, op, recipe, repeat, shape, geom, t, text, Prop, ScaleDecl } from "@datars/sdk";
+import { fld } from "./field.js";
 
 /** A number label: counting (`number`) when plain; with a prefix or suffix, formatted text. */
 // A named type, not an inline one: `datars eject` copies helpers by their first brace block.
@@ -14,7 +15,7 @@ function affixed(p: Affix, value: string, at: [Prop, Prop], opts: Record<string,
   return text(e(`(${v} < 0 ? "−" : "") + ${JSON.stringify(p.prefix ?? "")} + format(abs(${v}), ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}`), at, opts);
 }
 
-const lbl = (cat: string, val: string, fmt: string) => e(`\`\${key.name(d.${cat})}: \${format(d.${val}, ${JSON.stringify(fmt)})}\``);
+const lbl = (cat: string, val: string, fmt: string) => e(`\`\${key.name(${fld(cat)})}: \${format(${fld(val)}, ${JSON.stringify(fmt)})}\``);
 
 // ---- cell (heatmap) -----------------------------------------------------------------------------
 
@@ -27,10 +28,10 @@ export const cell = recipe<CellParams>({
   expand(p) {
     return group({
       key: "marks",
-      children: [repeat(p.data, shape(geom.rect({ x: e(`scale.x(d.${p.x}) + ${p.gap / 2}`), y: e(`scale.y(d.${p.y}) + ${p.gap / 2}`), w: e(`scale.x.bandwidth() - ${p.gap}`), h: e(`scale.y.bandwidth() - ${p.gap}`) }), {
-        key: [e(`d.${p.y}`), e(`d.${p.x}`)],
-        fill: e(`scale.color(d.${p.color})`),
-        semantics: { role: "datum", label: p.label ?? e(`\`\${d.${p.y}}, \${d.${p.x}}: \${format(d.${p.color}, ${JSON.stringify(p.format)})}\``) },
+      children: [repeat(p.data, shape(geom.rect({ x: e(`scale.x(${fld(p.x)}) + ${p.gap / 2}`), y: e(`scale.y(${fld(p.y)}) + ${p.gap / 2}`), w: e(`scale.x.bandwidth() - ${p.gap}`), h: e(`scale.y.bandwidth() - ${p.gap}`) }), {
+        key: [e(`${fld(p.y)}`), e(`${fld(p.x)}`)],
+        fill: e(`scale.color(${fld(p.color)})`),
+        semantics: { role: "datum", label: p.label ?? e(`\`\${${fld(p.y)}}, \${${fld(p.x)}}: \${format(${fld(p.color)}, ${JSON.stringify(p.format)})}\``) },
         pickable: true,
       }))],
     });
@@ -52,8 +53,8 @@ export const stripes = recipe<StripesParams>({
         sx: { type: "band", domain: { data: p.data, field: p.x }, range: "width", padding: 0 },
         c: { type: "diverging", domain: { data: p.data, field: p.value }, range: "$diverging", mid: p.mid },
       },
-      children: [repeat(p.data, shape(geom.rect({ x: e(`scale.sx(d.${p.x})`), y: 0, w: e("scale.sx.bandwidth() + 0.5"), h: e("box.h") }), {
-        fill: e(`scale.c(d.${p.value})`), semantics: { role: "datum", label: p.label ?? e(`\`\${d.${p.x}}: \${d.${p.value}}\``) }, pickable: true,
+      children: [repeat(p.data, shape(geom.rect({ x: e(`scale.sx(${fld(p.x)})`), y: 0, w: e("scale.sx.bandwidth() + 0.5"), h: e("box.h") }), {
+        fill: e(`scale.c(${fld(p.value)})`), semantics: { role: "datum", label: p.label ?? e(`\`\${${fld(p.x)}}: \${${fld(p.value)}}\``) }, pickable: true,
       }))],
     });
   },
@@ -87,25 +88,25 @@ export const stacked = recipe<StackedParams>({
     const val = horizontal ? p.x : p.y;
     const tbl = cx.table("stack", p.data, op.stack({ x: cat, series, value: val, offset: p.offset, as: ["y0", "y1"] }));
     const g = horizontal
-      ? geom.rect({ x: e("scale.x(d.y0)"), y: e(`scale.y(d.${cat})`), w: e("scale.x(d.y1) - scale.x(d.y0)"), h: e("scale.y.bandwidth()") })
-      : geom.rect({ x: e(`scale.x(d.${cat})`), y: e("scale.y(d.y1)"), w: e("scale.x.bandwidth()"), h: e("scale.y(d.y0) - scale.y(d.y1)") });
+      ? geom.rect({ x: e("scale.x(d.y0)"), y: e(`scale.y(${fld(cat)})`), w: e("scale.x(d.y1) - scale.x(d.y0)"), h: e("scale.y.bandwidth()") })
+      : geom.rect({ x: e(`scale.x(${fld(cat)})`), y: e("scale.y(d.y1)"), w: e("scale.x.bandwidth()"), h: e("scale.y(d.y0) - scale.y(d.y1)") });
     // A value label in the middle of each segment, in the ink that reads on it — only where it
     // fits (a sliver of a party's seats keeps its number to the tooltip).
-    const lw = `measure(${JSON.stringify(p.prefix ?? "")} + format(d.${val}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}, token("size.label"))`;
+    const lw = `measure(${JSON.stringify(p.prefix ?? "")} + format(${fld(val)}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}, token("size.label"))`;
     const fits = horizontal
       ? `abs(scale.x(d.y1) - scale.x(d.y0)) >= ${lw} + 8 && scale.y.bandwidth() >= token("size.label") + 4`
       : `scale.x.bandwidth() >= ${lw} + 8 && abs(scale.y(d.y0) - scale.y(d.y1)) >= token("size.label") + 4`;
     const at: [Prop, Prop] = horizontal
-      ? [e("(scale.x(d.y0) + scale.x(d.y1)) / 2"), e(`scale.y(d.${cat}) + scale.y.bandwidth() / 2`)]
-      : [e(`scale.x(d.${cat}) + scale.x.bandwidth() / 2`), e("(scale.y(d.y0) + scale.y(d.y1)) / 2")];
-    const label = affixed(p, `d.${val}`, at, { when: e(fits), style: { size: "$size.label", ink: e(`"on(" + scale.color(d.${series}) + ")"`), align: "middle", baseline: "middle" } });
+      ? [e("(scale.x(d.y0) + scale.x(d.y1)) / 2"), e(`scale.y(${fld(cat)}) + scale.y.bandwidth() / 2`)]
+      : [e(`scale.x(${fld(cat)}) + scale.x.bandwidth() / 2`), e("(scale.y(d.y0) + scale.y(d.y1)) / 2")];
+    const label = affixed(p, `${fld(val)}`, at, { when: e(fits), style: { size: "$size.label", ink: e(`"on(" + scale.color(${fld(series)}) + ")"`), align: "middle", baseline: "middle" } });
     return group({
       key: "marks",
       children: [
         repeat(tbl, shape(g, {
-          key: p.segmentKey ?? [e(`d.${series}`), e(`d.${cat}`)],
-          fill: e(`scale.color(d.${series})`),
-          semantics: { role: "datum", label: e(`\`\${key.name(d.${series})}, \${d.${cat}}: ${affixedLabel(`d.${val}`, p)}\``), value: e(`d.${val}`) },
+          key: p.segmentKey ?? [e(`${fld(series)}`), e(`${fld(cat)}`)],
+          fill: e(`scale.color(${fld(series)})`),
+          semantics: { role: "datum", label: e(`\`\${key.name(${fld(series)})}, \${${fld(cat)}}: ${affixedLabel(`${fld(val)}`, p)}\``), value: e(`${fld(val)}`) },
           pickable: true,
         })),
         p.labels ? group({ key: "labels", children: [repeat(tbl, label)] }) : null,
@@ -127,7 +128,7 @@ export const grouped = recipe<GroupedParams>({
   tokens: ["ink-2", "size.label", "radius.bar"],
   expand(p) {
     const series = p.series ?? p.color;
-    const x = `scale.x(d.${p.x}) + scale.dodge(d.${series})`, v = `d.${p.y}`;
+    const x = `scale.x(${fld(p.x)}) + scale.dodge(${fld(series)})`, v = `${fld(p.y)}`;
     // Value labels as on `bar`: past the bar's end, or just inside it (in the ink that reads on
     // the bar) when the plot has no room above — and only where one fits its bar's slot, so
     // neighbours' labels never touch.
@@ -136,7 +137,7 @@ export const grouped = recipe<GroupedParams>({
     const inside = `(${end} - 4 - token("size.label") < -2 && abs(scale.y(${v}) - scale.y(0)) >= token("size.label") + 8)`;
     const label = affixed(p, v, [e(`${x} + scale.dodge.bandwidth() / 2`), e(`${inside} ? ${end} + 4 : ${end} - 4`)], {
       when: e(`${lw} <= scale.dodge.step() - 2`),
-      style: { size: "$size.label", ink: e(`${inside} ? "on(" + scale.color(d.${series}) + ")" : "$ink-2"`), align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) },
+      style: { size: "$size.label", ink: e(`${inside} ? "on(" + scale.color(${fld(series)}) + ")" : "$ink-2"`), align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) },
     });
     return group({
       key: "marks",
@@ -144,9 +145,9 @@ export const grouped = recipe<GroupedParams>({
       scales: { dodge: { type: "band", domain: { data: p.data, field: series }, range: [0, "=scale.x.bandwidth()"], padding: p.gap } },
       children: [
         repeat(p.data, shape(geom.rect({ x: e(x), y: e(`min(scale.y(0), scale.y(${v}))`), w: e("scale.dodge.bandwidth()"), h: e(`abs(scale.y(0) - scale.y(${v}))`), r: "$radius.bar" }), {
-          key: [e(`d.${series}`), e(`d.${p.x}`)],
-          fill: e(`scale.color(d.${series})`),
-          semantics: { role: "datum", label: e(`\`\${key.name(d.${series})}, \${d.${p.x}}: ${affixedLabel(v, p)}\``), value: e(v) },
+          key: [e(`${fld(series)}`), e(`${fld(p.x)}`)],
+          fill: e(`scale.color(${fld(series)})`),
+          semantics: { role: "datum", label: e(`\`\${key.name(${fld(series)})}, \${${fld(p.x)}}: ${affixedLabel(v, p)}\``), value: e(v) },
           pickable: true,
         })),
         p.labels ? group({ key: "labels", children: [repeat(p.data, label)] }) : null,
@@ -180,11 +181,11 @@ export const treemap = recipe<TreemapParams>({
       key: "marks",
       scales: { color },
       children: [
-        repeat(tbl, shape(geom.rect({ x: e("d.x0"), y: e("d.y0"), w: e("d.x1 - d.x0"), h: e("d.y1 - d.y0") }), { fill: e(`scale.color(d.${by})`), stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "datum", label: lbl(p.category, p.value, p.format) }, pickable: true })),
+        repeat(tbl, shape(geom.rect({ x: e("d.x0"), y: e("d.y0"), w: e("d.x1 - d.x0"), h: e("d.y1 - d.y0") }), { fill: e(`scale.color(${fld(by)})`), stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "datum", label: lbl(p.category, p.value, p.format) }, pickable: true })),
         // Each label in the ink that reads on its rectangle's fill (dark on a light one).
         // (Only in a rectangle with room for a few letters and a line of them, in the label's
         // size: a reader's bigger text leaves out labels in more of the small ones.)
-        p.labels ? group({ key: "labels", children: [repeat(tbl, text(e(`key.name(d.${p.category})`), [e("d.x0 + 6"), e('d.y0 + 4 + token("size.label") * 12 / 11')], { when: e('d.x1 - d.x0 > token("size.label") * 4 && d.y1 - d.y0 > token("size.label") * 2'), style: { size: "$size.label", weight: 600, ink: e(`"on(" + scale.color(d.${by}) + ")"`), maxWidth: e("d.x1 - d.x0 - 10") } }))] }) : null,
+        p.labels ? group({ key: "labels", children: [repeat(tbl, text(e(`key.name(${fld(p.category)})`), [e("d.x0 + 6"), e('d.y0 + 4 + token("size.label") * 12 / 11')], { when: e('d.x1 - d.x0 > token("size.label") * 4 && d.y1 - d.y0 > token("size.label") * 2'), style: { size: "$size.label", weight: 600, ink: e(`"on(" + scale.color(${fld(by)}) + ")"`), maxWidth: e("d.x1 - d.x0 - 10") } }))] }) : null,
       ],
     });
   },
@@ -203,7 +204,7 @@ export const waffle = recipe<WaffleParams>({
     return group({
       key: "waffle",
       scales: { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } },
-      children: [instances({ key: "marks", from: u, proto: "rect", x: e("d.x + (box.w - min(box.w, box.h)) / 2"), y: e("d.y + (box.h - min(box.w, box.h)) / 2"), w: e("d.w"), h: e("d.h"), fill: e(`scale.color(d.${p.category})`), label: e(`key.name(d.${p.category})`) })],
+      children: [instances({ key: "marks", from: u, proto: "rect", x: e("d.x + (box.w - min(box.w, box.h)) / 2"), y: e("d.y + (box.h - min(box.w, box.h)) / 2"), w: e("d.w"), h: e("d.h"), fill: e(`scale.color(${fld(p.category)})`), label: e(`key.name(${fld(p.category)})`) })],
     });
   },
 });
@@ -226,7 +227,7 @@ export const hemicycle = recipe<HemicycleParams>({
       scales: { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } },
       children: [
         // Few seats are big: lift them by what their radius needs beyond the 10 px under the baseline.
-        instances({ key: "seats", from: seats, x: e("d.x"), y: e("d.y - max(0, d.r - 10)"), r: e("d.r"), fill: e(`scale.color(d.${p.category})`), label: e(`key.name(d.${p.category})`) }),
+        instances({ key: "seats", from: seats, x: e("d.x"), y: e("d.y - max(0, d.r - 10)"), r: e("d.r"), fill: e(`scale.color(${fld(p.category)})`), label: e(`key.name(${fld(p.category)})`) }),
         p.total ? text("", [e("box.w / 2"), e(`${cy} - 4`)], { key: "total", number: { value: e(`sum(${JSON.stringify(p.data)}, ${JSON.stringify(p.value)})`), format: ",.0f" }, style: { font: "font.title", size: "$size.title", align: "middle" } }) : null,
       ],
     });
@@ -242,8 +243,8 @@ export const swarm = recipe<SwarmParams>({
   doc: "A beeswarm: every row a dot along one value axis, packed so none overlap (windowed neighbour search; 20k dots in about a second). In a plot it needs only `x`: without a `y`, the plot draws no y axis.",
   params: { data: t.table(), x: t.field(), color: t.field(), r: t.number(3.5), xType: t.string("linear") },
   expand(p, cx) {
-    const tbl = cx.table("swarm", p.data, op.beeswarm({ position: e(`scale.x(d.${p.x})`), radius: p.r + 0.5, as: "offset" }));
-    return instances({ key: "swarm", from: tbl, x: e(`scale.x(d.${p.x})`), y: e("box.h / 2 + d.offset"), r: p.r, fill: p.color ? e(`scale.color(d.${p.color})`) : "$mark", label: e(`\`\${d.${p.x}}\``) });
+    const tbl = cx.table("swarm", p.data, op.beeswarm({ position: e(`scale.x(${fld(p.x)})`), radius: p.r + 0.5, as: "offset" }));
+    return instances({ key: "swarm", from: tbl, x: e(`scale.x(${fld(p.x)})`), y: e("box.h / 2 + d.offset"), r: p.r, fill: p.color ? e(`scale.color(${fld(p.color)})`) : "$mark", label: e(`\`\${${fld(p.x)}}\``) });
   },
 });
 
@@ -265,7 +266,7 @@ export const sankey = recipe<SankeyParams>({
       key: "sankey",
       scales: { color: { type: "categorical", domain: { data: nodes, field: "name" }, range: "$categorical" } },
       children: [
-        group({ key: "links", children: [repeat(links, shape(geom.path(e("d.path")), { fill: e(`scale.color(d.${p.source})`), opacity: p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(d.${p.source}) || ${p.selected}.has(d.${p.target}) ? 0.42 : 0.12`) : 0.42, semantics: { role: "datum", label: p.label ?? e(`\`\${d.${p.source}} → \${d.${p.target}}: \${d.${p.value}}\``) }, pickable: true }))] }),
+        group({ key: "links", children: [repeat(links, shape(geom.path(e("d.path")), { fill: e(`scale.color(${fld(p.source)})`), opacity: p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(p.source)}) || ${p.selected}.has(${fld(p.target)}) ? 0.42 : 0.12`) : 0.42, semantics: { role: "datum", label: p.label ?? e(`\`\${${fld(p.source)}} → \${${fld(p.target)}}: \${${fld(p.value)}}\``) }, pickable: true }))] }),
         // Nodes closer than a line of their names (a short box, a reader's big text): a name that
         // would touch an earlier one is left out (its node still says it, to a pointer and a reader).
         group({ key: "nodes", declutter: true, children: [repeat(nodes, group({ children: [
@@ -288,7 +289,7 @@ export const waterfall = recipe<WaterfallParams>({
   params: { data: t.table(), x: t.field(), y: t.field(), total: t.field(), xType: t.string("band"), yType: t.string("linear"), format: t.string(",.0f"), prefix: t.string(undefined, "Before each label's number ('$')."), suffix: t.string(undefined, "After it ('M', ' kr').") },
   expand(p, cx) {
     const tbl = cx.table("waterfall", p.data, op.waterfall({ value: p.y, total: p.total }));
-    const fill = `(d.is_total || d.start == 0 ? "$ink-2" : d.${p.y} >= 0 ? "$positive" : "$negative")`;
+    const fill = `(d.is_total || d.start == 0 ? "$ink-2" : ${fld(p.y)} >= 0 ? "$positive" : "$negative")`;
     // Each label above its bar — or just inside the bar's top, in the ink that reads on it, when
     // the bar reaches the top of the plot (the label would run into the title).
     const top = "min(scale.y(d.start), scale.y(d.end))";
@@ -296,10 +297,10 @@ export const waterfall = recipe<WaterfallParams>({
     return group({
       key: "waterfall",
       children: [repeat(tbl, group({ children: [
-        shape(geom.rect({ x: e(`scale.x(d.${p.x})`), y: e("min(scale.y(d.start), scale.y(d.end))"), w: e("scale.x.bandwidth()"), h: e("abs(scale.y(d.start) - scale.y(d.end))") }), {
+        shape(geom.rect({ x: e(`scale.x(${fld(p.x)})`), y: e("min(scale.y(d.start), scale.y(d.end))"), w: e("scale.x.bandwidth()"), h: e("abs(scale.y(d.start) - scale.y(d.end))") }), {
           key: "bar", fill: e(fill), semantics: { role: "datum", label: lbl(p.x, p.y, p.format) }, pickable: true,
         }),
-        affixed(p, `d.is_total ? d.end : d.${p.y}`, [e(`scale.x(d.${p.x}) + scale.x.bandwidth() / 2`), e(`${inside} ? ${top} + 4 : ${top} - 4`)], { key: "label", style: { size: "$size.label", ink: e(`${inside} ? "on(" + ${fill} + ")" : "$ink-2"`), align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) } }),
+        affixed(p, `d.is_total ? d.end : ${fld(p.y)}`, [e(`scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2`), e(`${inside} ? ${top} + 4 : ${top} - 4`)], { key: "label", style: { size: "$size.label", ink: e(`${inside} ? "on(" + ${fill} + ")" : "$ink-2"`), align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) } }),
       ] }))],
     });
   },
@@ -321,7 +322,7 @@ export const funnel = recipe<FunnelParams>({
   tokens: ["mark", "ink", "ink-2", "muted", "paper", "size.label", "font.title", "size.title"],
   expand(p, cx) {
     const tbl = cx.table("funnel", p.data, op.window("lead", p.value, "next"));
-    const v = `d.${p.value}`;
+    const v = `${fld(p.value)}`;
     const fill = p.fill ?? "$mark";
     const fillInk = typeof fill === "string" ? JSON.stringify(`on(${fill})`) : `"$accent-ink"`;
     const value = `format(${v}, ${JSON.stringify(p.format)})`;
@@ -329,7 +330,7 @@ export const funnel = recipe<FunnelParams>({
     // right of the bar. Conversions sit in the gap below a bar, right of the connector's top edge.
     const half = `scale.fw(${v}) / 2`;
     const fits = `measure(${value}, token("size.label"), 600) + 14 <= scale.fw(${v})`;
-    const top = `scale.fy(d.${p.stage})`, bottom = `${top} + scale.fy.bandwidth()`, gapMid = `${bottom} + (scale.fy.step() - scale.fy.bandwidth()) / 2`;
+    const top = `scale.fy(${fld(p.stage)})`, bottom = `${top} + scale.fy.bandwidth()`, gapMid = `${bottom} + (scale.fy.step() - scale.fy.bandwidth()) / 2`;
     const nextHalf = `scale.fw(d.next) / 2`;
     const connector = `\`M \${box.w / 2 - ${half}} \${${bottom}} L \${box.w / 2 + ${half}} \${${bottom}} L \${box.w / 2 + ${nextHalf}} \${${bottom} + scale.fy.step() - scale.fy.bandwidth()} L \${box.w / 2 - ${nextHalf}} \${${bottom} + scale.fy.step() - scale.fy.bandwidth()} Z\``;
     return group({
@@ -347,7 +348,7 @@ export const funnel = recipe<FunnelParams>({
           layout: { type: "columns", gap: 14 },
           children: [
             // Stage names, as wide as the widest (measured by layout), so none spills or overlaps.
-            group({ key: "stages", size: { w: "auto" }, children: [repeat(tbl, text(e(`key.name(d.${p.stage})`), [0, e(`${top} + scale.fy.bandwidth() / 2`)], {
+            group({ key: "stages", size: { w: "auto" }, children: [repeat(tbl, text(e(`key.name(${fld(p.stage)})`), [0, e(`${top} + scale.fy.bandwidth() / 2`)], {
               key: "stage", style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "middle" }, semantics: { role: "decoration" },
             }))] }),
             group({ id: "funnel-area", key: "area", children: [
@@ -394,7 +395,7 @@ export const calendar = recipe<CalendarParams>({
       key: "calendar",
       scales: { c: { type: "sequential", domain: { data: p.data, field: p.value }, range: "$sequential" } },
       children: [
-        instances({ key: "days", from: tbl, proto: "rect", x: e(`d.cx + ${gutter}`), y: e("d.cy + d.panel * 8 * d.cell"), w: e("d.cell - 1"), h: e("d.cell - 1"), fill: e(`scale.c(d.${p.value})`), label: p.label ?? e(`\`\${formatDate(d.${p.date}, "%-d %b %Y")}: \${d.${p.value}}\``) }),
+        instances({ key: "days", from: tbl, proto: "rect", x: e(`d.cx + ${gutter}`), y: e("d.cy + d.panel * 8 * d.cell"), w: e("d.cell - 1"), h: e("d.cell - 1"), fill: e(`scale.c(${fld(p.value)})`), label: p.label ?? e(`\`\${formatDate(${fld(p.date)}, "%-d %b %Y")}: \${${fld(p.value)}}\``) }),
         group({ key: "years", children: [repeat(years, text(e('formatDate(d.first, "%Y")'), [0, e(`d.panel * 8 * (${cell})`)], { style: { size: "$size.label", ink: "$muted", baseline: "top" } }))] }),
       ],
     });
@@ -424,7 +425,7 @@ export const facet = recipe<FacetParams>({
       layout: { type: "grid", columns: p.columns, gap: p.gap },
       children: [repeat({ groups: p.data, by: p.by }, group({
         layout: { type: "rows", gap: 4 },
-        children: [text(e(`key.name(d.${p.by})`), [0, 0], { size: { h: "auto" }, style: { weight: 600, size: "$size.body", ink: "$ink", baseline: "top" } }), inner as never],
+        children: [text(e(`key.name(${fld(p.by)})`), [0, 0], { size: { h: "auto" }, style: { weight: 600, size: "$size.body", ink: "$ink", baseline: "top" } }), inner as never],
       }))],
     });
   },

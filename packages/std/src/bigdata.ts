@@ -7,6 +7,7 @@
 // in, so cells stay a few px wide on a phone and on a wide screen.
 
 import { e, geom, group, instances, op, recipe, repeat, shape, t, text, Prop, Template } from "@datars/sdk";
+import { fld } from "./field.js";
 
 type Agg = "count" | "sum" | "mean" | "min" | "max";
 type Ramp = "linear" | "sqrt" | "log";
@@ -257,7 +258,7 @@ export const contours = recipe<ContoursParams>({
         bands ? group({ key: "bands", children: [repeat(paths, shape(geom.path(e("d.path")), {
           fill: e("scale.lev(d.level)"), opacity: p.opacity, semantics: { role: "region", label: tip }, pickable: true,
         }))] }) : null,
-        dots ? instances({ key: "dots", from: dots, x: e(`scale.x(d.${p.x})`), y: e(`scale.y(d.${p.y})`), r: 1.1, fill: "$ink", opacity: 0.28, semantics: { role: "decoration" } }) : null,
+        dots ? instances({ key: "dots", from: dots, x: e(`scale.x(${fld(p.x)})`), y: e(`scale.y(${fld(p.y)})`), r: 1.1, fill: "$ink", opacity: 0.28, semantics: { role: "decoration" } }) : null,
         lines ? group({ key: "lines", children: [repeat(paths, shape(geom.path(e("d.path")), {
           stroke: { paint: p.stroke ?? (bands ? "$paper" : e("scale.lev(d.level)")), width: bands ? 0.8 : e("1 + d.level * 0.35"), join: "round" },
           semantics: bands ? { role: "decoration" } : { role: "region", label: tip }, pickable: !bands,
@@ -298,22 +299,22 @@ export const manyLines = recipe<ManyLinesParams>({
   expand(p, cx) {
     const s = p.series;
     const band = p.xType === "band" || p.xType === "point";
-    const x = band ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
+    const x = band ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
     // One path per series, built per resolve from the rows through the scales (a path each, not a
     // mark per point: a frame draws a few hundred paths whatever the rows).
-    const lines = cx.table("lines", p.data, op.paths({ by: s, x: e(x), y: e(`scale.y(d.${p.y})`) }));
+    const lines = cx.table("lines", p.data, op.paths({ by: s, x: e(x), y: e(`scale.y(${fld(p.y)})`) }));
     const count = `table.count(${q(lines)})`;
     const isExprObj = (v: unknown): v is { expr: string } => typeof v === "object" && v !== null && "expr" in v;
     const opacity = p.opacity ? String(p.opacity) : `clamp(3 / sqrt(max(${count}, 1)), 0.04, 0.7)`;
     const inkSrc = (v: Prop) => (isExprObj(v) ? `(${v.expr})` : q(v));
     const rest = p.stroke ?? "$muted";
     const accent = p.highlightStroke ?? "$accent";
-    const tip = p.label ?? e(`key.name(d.${s})`);
+    const tip = p.label ?? e(`key.name(${fld(s)})`);
     const hl = p.highlight;
     const hlTest = hl === undefined || hl === null ? null
-      : Array.isArray(hl) ? hl.map((v) => `d.${s} == ${q(v)}`).join(" || ") || "false"
-      : isExprObj(hl) ? `d.${s} == (${hl.expr})`
-      : `d.${s} == ${q(hl)}`;
+      : Array.isArray(hl) ? hl.map((v) => `${fld(s)} == ${q(v)}`).join(" || ") || "false"
+      : isExprObj(hl) ? `${fld(s)} == (${hl.expr})`
+      : `${fld(s)} == ${q(hl)}`;
     const picked = hlTest ? cx.table("highlight", lines, op.filter(e(hlTest))) : null;
     // Their names by their last points, pushed apart vertically so two ending close never collide.
     const names = picked && p.labels ? cx.table("names", picked, op.spread({ position: e("d.end_y"), gap: e('token("size.label") + 3'), min: 0, max: e("box.h"), as: "label_y" })) : null;
@@ -327,7 +328,7 @@ export const manyLines = recipe<ManyLinesParams>({
           ? path(e(`hover() ? ${p.highlightWidth || 2.5} : ${p.width || 1}`), e(`hover() ? ${inkSrc(accent)} : ${inkSrc(rest)}`), { opacity: e(`hover() ? 1 : ${opacity}`) })
           : path(p.width || 1, rest, { opacity: e(opacity) }))] }),
         picked ? group({ key: "highlight", children: [repeat(picked, path(p.highlightWidth || 2.5, accent, {}))] }) : null,
-        names ? group({ key: "labels", children: [repeat(names, text(e(`key.name(d.${s})`), [e("d.end_x - 6"), e("d.label_y")], {
+        names ? group({ key: "labels", children: [repeat(names, text(e(`key.name(${fld(s)})`), [e("d.end_x - 6"), e("d.label_y")], {
           style: { size: "$size.label", weight: 600, ink: accent, align: "end", baseline: "middle", contain: true }, halo: ["$paper", 3],
         }))] }) : null,
       ],

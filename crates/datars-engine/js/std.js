@@ -3,6 +3,13 @@ import { brush, e as e7, geom as geom7, group as group7, op as op5, recipe as re
 
 // src/axis.ts
 import { e, group, op, recipe, repeat, shape, geom, t, text } from "@datars/sdk";
+
+// src/field.ts
+function fld(name) {
+  return /^[A-Za-z_$][A-Za-z0-9_$]*(\.[A-Za-z_$][A-Za-z0-9_$]*)*$/.test(name) ? `d.${name}` : `d[${JSON.stringify(name)}]`;
+}
+
+// src/axis.ts
 var axis = recipe({
   id: "@datars/std/axis",
   doc: "An axis for a scale: tick labels, tick marks and a domain line. Labels never pile up: a horizontal numeric axis asks for as many ticks as its measured labels fit; category names wrap in their band, turn 45\xB0 when a word is wider than the band, and leave out every k-th name only when even that doesn't fit.",
@@ -40,7 +47,7 @@ var axis = recipe({
     const spaced = numeric ? `d.index % max(1, ceil((${widest} + 24) * max(1, d.count - 1) / max(${len}, 1))) == 0` : "true";
     const whole = p.format && wholeNumbers(p.format) ? e(`${band} || abs(d.value - round(d.value)) < 0.000001`) : void 0;
     const tickMark = vertical ? shape(geom.segment({ x1: 0, y1: e(center), x2: sign * 5, y2: e(center) }), { stroke: { paint: "$rule", width: 1 } }) : shape(geom.segment({ x1: e(center), y1: 0, x2: e(center), y2: sign * 5 }), { stroke: { paint: "$rule", width: 1 } });
-    const names = !vertical && p.data && p.field ? cx.table("names", p.data, op.derive("w", e(`measure(key.name(d.${p.field}), ${size})`)), op.derive("ww", e(`measure.word(key.name(d.${p.field}), ${size})`))) : null;
+    const names = !vertical && p.data && p.field ? cx.table("names", p.data, op.derive("w", e(`measure(key.name(${fld(p.field)}), ${size})`)), op.derive("ww", e(`measure.word(key.name(${fld(p.field)}), ${size})`))) : null;
     const step = `${S2}.step()`;
     const W = names ? `table.max(${JSON.stringify(names)}, "w")` : "36";
     const WW = names ? `table.max(${JSON.stringify(names)}, "ww")` : "36";
@@ -365,7 +372,7 @@ function affixed(p, value, at2, opts) {
   const v = `(${value})`;
   return text3(e4(`(${v} < 0 ? "\u2212" : "") + ${JSON.stringify(p.prefix ?? "")} + format(abs(${v}), ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}`), at2, opts);
 }
-var colorOr = (color, fallback) => color ? e4(`scale.color(d.${color})`) : fallback;
+var colorOr = (color, fallback) => color ? e4(`scale.color(${fld(color)})`) : fallback;
 var onInkExpr = (fill) => typeof fill === "string" ? JSON.stringify(`on(${fill})`) : fill && typeof fill === "object" && "expr" in fill ? `"on(" + (${fill.expr}) + ")"` : `"$ink"`;
 var isBand = (t17) => t17 === "band" || t17 === "point";
 var bar = recipe4({
@@ -394,16 +401,16 @@ var bar = recipe4({
     const fill = p.fill ?? colorOr(p.color, "$mark");
     const cat = horizontal ? p.y : p.x;
     const val = horizontal ? p.x : p.y;
-    const opacity = p.selected ? e4(`${p.selected}.isEmpty() || ${p.selected}.has(d.${cat}) ? 1 : token("dim")`) : void 0;
-    const g = horizontal ? geom4.rect({ x: e4(`min(scale.x(0), scale.x(d.${val}))`), y: e4(`scale.y(d.${cat})`), w: e4(`abs(scale.x(d.${val}) - scale.x(0))`), h: e4("scale.y.bandwidth()"), r: p.radius || "$radius.bar" }) : geom4.rect({ x: e4(`scale.x(d.${cat})`), y: e4(`min(scale.y(0), scale.y(d.${val}))`), w: e4("scale.x.bandwidth()"), h: e4(`abs(scale.y(0) - scale.y(d.${val}))`), r: p.radius || "$radius.bar" });
-    const text_ = `(${JSON.stringify(p.prefix ?? "")} + format(d.${val}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")})`;
+    const opacity = p.selected ? e4(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(cat)}) ? 1 : token("dim")`) : void 0;
+    const g = horizontal ? geom4.rect({ x: e4(`min(scale.x(0), scale.x(${fld(val)}))`), y: e4(`scale.y(${fld(cat)})`), w: e4(`abs(scale.x(${fld(val)}) - scale.x(0))`), h: e4("scale.y.bandwidth()"), r: p.radius || "$radius.bar" }) : geom4.rect({ x: e4(`scale.x(${fld(cat)})`), y: e4(`min(scale.y(0), scale.y(${fld(val)}))`), w: e4("scale.x.bandwidth()"), h: e4(`abs(scale.y(0) - scale.y(${fld(val)}))`), r: p.radius || "$radius.bar" });
+    const text_ = `(${JSON.stringify(p.prefix ?? "")} + format(${fld(val)}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")})`;
     const lw = `measure(${text_}, token("size.label"))`;
     const fits = horizontal ? e4('scale.y.bandwidth() >= token("size.label") - 2') : e4(`${lw} <= scale.x.bandwidth() + 6`);
-    const end = horizontal ? `max(scale.x(0), scale.x(d.${val}))` : `min(scale.y(0), scale.y(d.${val}))`;
-    const length = horizontal ? `abs(scale.x(d.${val}) - scale.x(0))` : `abs(scale.y(d.${val}) - scale.y(0))`;
+    const end = horizontal ? `max(scale.x(0), scale.x(${fld(val)}))` : `min(scale.y(0), scale.y(${fld(val)}))`;
+    const length = horizontal ? `abs(scale.x(${fld(val)}) - scale.x(0))` : `abs(scale.y(${fld(val)}) - scale.y(0))`;
     const inside = horizontal ? `(${end} + 4 + ${lw} > box.w && ${length} >= ${lw} + 8)` : `(${end} - 4 - token("size.label") < -2 && ${length} >= token("size.label") + 8)`;
     const ink = e4(`${inside} ? ${onInkExpr(fill)} : "$ink-2"`);
-    const label = horizontal ? affixed(p, `d.${val}`, [e4(`${inside} ? ${end} - 4 : ${end} + 4`), e4(`scale.y(d.${cat}) + scale.y.bandwidth() / 2`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: e4(`${inside} ? "end" : "start"`), baseline: "middle" } }) : affixed(p, `d.${val}`, [e4(`scale.x(d.${cat}) + scale.x.bandwidth() / 2`), e4(`${inside} ? ${end} + 4 : ${end} - 4`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: "middle", baseline: e4(`${inside} ? "top" : "alphabetic"`) } });
+    const label = horizontal ? affixed(p, `${fld(val)}`, [e4(`${inside} ? ${end} - 4 : ${end} + 4`), e4(`scale.y(${fld(cat)}) + scale.y.bandwidth() / 2`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: e4(`${inside} ? "end" : "start"`), baseline: "middle" } }) : affixed(p, `${fld(val)}`, [e4(`scale.x(${fld(cat)}) + scale.x.bandwidth() / 2`), e4(`${inside} ? ${end} + 4 : ${end} - 4`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: "middle", baseline: e4(`${inside} ? "top" : "alphabetic"`) } });
     return group4({
       key: "marks",
       semantics: { role: "series", label: `${val} by ${cat}` },
@@ -413,9 +420,9 @@ var bar = recipe4({
         repeat4(p.data, shape4(g, {
           fill,
           opacity,
-          semantics: { role: "datum", label: p.label ?? e4(`\`\${key.name(d.${cat})}: \${format(d.${val}, ${JSON.stringify(p.format)})}\``), value: e4(`d.${val}`) },
-          anchors: [{ name: "top", at: horizontal ? [e4(`scale.x(d.${val})`), e4(`scale.y(d.${cat}) + scale.y.bandwidth()/2`)] : [e4(`scale.x(d.${cat}) + scale.x.bandwidth()/2`), e4(`scale.y(d.${val})`)] }],
-          on: p.chapter ? { activate: { chapter: p.chapter, key: e4(`d.${cat}`) } } : p.selected ? { activate: { toggle: p.selected, value: e4(`d.${cat}`) } } : void 0,
+          semantics: { role: "datum", label: p.label ?? e4(`\`\${key.name(${fld(cat)})}: \${format(${fld(val)}, ${JSON.stringify(p.format)})}\``), value: e4(`${fld(val)}`) },
+          anchors: [{ name: "top", at: horizontal ? [e4(`scale.x(${fld(val)})`), e4(`scale.y(${fld(cat)}) + scale.y.bandwidth()/2`)] : [e4(`scale.x(${fld(cat)}) + scale.x.bandwidth()/2`), e4(`scale.y(${fld(val)})`)] }],
+          on: p.chapter ? { activate: { chapter: p.chapter, key: e4(`${fld(cat)}`) } } : p.selected ? { activate: { toggle: p.selected, value: e4(`${fld(cat)}`) } } : void 0,
           pickable: true
         })),
         p.labels ? group4({ key: "labels", children: [repeat4(p.data, label)] }) : null
@@ -447,18 +454,18 @@ var line = recipe4({
   tokens: ["mark", "stroke.line", "size.label"],
   expand(p, cx) {
     const series = p.series ?? p.color;
-    const xExpr = isBand(p.xType) ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const ink = p.stroke ?? (series && p.color ? e4(`scale.color(d.${p.color})`) : "$mark");
+    const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const ink = p.stroke ?? (series && p.color ? e4(`scale.color(${fld(p.color)})`) : "$mark");
     const ys = p.yScale || "y";
-    const lineShape = shape4(geom4.polyline({ from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(d.${p.y})`), curve: p.curve }), {
+    const lineShape = shape4(geom4.polyline({ from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(${fld(p.y)})`), curve: p.curve }), {
       key: "line",
-      opacity: p.selected && series ? e4(`${p.selected}.isEmpty() || ${p.selected}.has(d.${series}) ? 1 : token("dim")`) : void 0,
+      opacity: p.selected && series ? e4(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(series)}) ? 1 : token("dim")`) : void 0,
       stroke: { paint: ink, width: p.width || "$stroke.line", join: "round", cap: "round" },
-      semantics: { role: "series", label: series ? e4(`key.name(d.${series})`) : p.y }
+      semantics: { role: "series", label: series ? e4(`key.name(${fld(series)})`) : p.y }
     });
-    const xLabel2 = isBand(p.xType) ? `key.name(d.${p.x})` : `scale.x.label(d.${p.x})`;
-    const dotLabel = series ? `\`\${key.name(d.${series})} \xB7 \${${xLabel2}}: \${format(d.${p.y}, ",.2~f")}\`` : `\`\${${xLabel2}}: \${format(d.${p.y}, ",.2~f")}\``;
-    const pts = instances({ key: "points", from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(d.${p.y})`), r: p.points ? 3 : 0, fill: p.points ? ink : "transparent", instanceKey: e4(`d.${p.x}`), label: e4(dotLabel), hit: "line" });
+    const xLabel2 = isBand(p.xType) ? `key.name(${fld(p.x)})` : `scale.x.label(${fld(p.x)})`;
+    const dotLabel = series ? `\`\${key.name(${fld(series)})} \xB7 \${${xLabel2}}: \${format(${fld(p.y)}, ",.2~f")}\`` : `\`\${${xLabel2}}: \${format(${fld(p.y)}, ",.2~f")}\``;
+    const pts = instances({ key: "points", from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(${fld(p.y)})`), r: p.points ? 3 : 0, fill: p.points ? ink : "transparent", instanceKey: e4(`${fld(p.x)}`), label: e4(dotLabel), hit: "line" });
     const labelled = !!(p.labels && series);
     const one = group4({ clip: p.clip && labelled ? "box" : void 0, children: [lineShape, pts] });
     const each = series ? repeat4({ groups: p.data, by: series }, one) : repeat4({ groups: p.data, by: p.y === "__none" ? p.x : "__all" }, one);
@@ -470,10 +477,10 @@ var line = recipe4({
       op2.spread({ position: e4("scale.y(d.y_end)"), gap: e4('token("size.label") + 3'), min: 0, max: e4("box.h"), as: "label_y" })
     );
     const xEnd = isBand(p.xType) ? "scale.x(d.x_end) + scale.x.bandwidth() / 2" : "scale.x(d.x_end)";
-    const labelInk = p.stroke ?? (p.color ? e4(`scale.color(d.${series})`) : "$mark");
+    const labelInk = p.stroke ?? (p.color ? e4(`scale.color(${fld(series)})`) : "$mark");
     return group4({ key: "lines", children: [
       each,
-      group4({ key: "end-labels", children: [repeat4(ends, text3(e4(`key.name(d.${series})`), [e4(`min(${xEnd}, box.w) + 6`), e4("d.label_y")], { style: { size: "$size.label", ink: labelInk, baseline: "middle", contain: true } }))] })
+      group4({ key: "end-labels", children: [repeat4(ends, text3(e4(`key.name(${fld(series)})`), [e4(`min(${xEnd}, box.w) + 6`), e4("d.label_y")], { style: { size: "$size.label", ink: labelInk, baseline: "middle", contain: true } }))] })
     ] });
   },
   motion: [{ select: { kind: "polyline" }, enter: { trim: 0 } }]
@@ -497,13 +504,13 @@ var area = recipe4({
   tokens: ["mark"],
   expand(p) {
     const series = p.series ?? p.color;
-    const xExpr = isBand(p.xType) ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const fill = p.fill ?? (series && p.color ? e4(`scale.color(d.${p.color})`) : "$mark");
-    const band = shape4(geom4.area({ from: "@group", x: e4(xExpr), y0: e4(p.y0 ? `scale.y(d.${p.y0})` : "max(0, min(box.h, scale.y(0)))"), y1: e4(`scale.y(d.${p.y})`), curve: p.curve }), {
+    const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const fill = p.fill ?? (series && p.color ? e4(`scale.color(${fld(p.color)})`) : "$mark");
+    const band = shape4(geom4.area({ from: "@group", x: e4(xExpr), y0: e4(p.y0 ? `scale.y(${fld(p.y0)})` : "max(0, min(box.h, scale.y(0)))"), y1: e4(`scale.y(${fld(p.y)})`), curve: p.curve }), {
       key: "area",
       fill,
       opacity: p.opacity,
-      semantics: { role: "series", label: series ? e4(`key.name(d.${series})`) : p.y }
+      semantics: { role: "series", label: series ? e4(`key.name(${fld(series)})`) : p.y }
     });
     return group4({ key: "areas", clip: p.clip ? "box" : void 0, children: [repeat4({ groups: p.data, by: series ?? "__all" }, group4({ children: [band] }))] });
   }
@@ -527,8 +534,8 @@ var point = recipe4({
   },
   tokens: ["mark", "point.radius"],
   expand(p) {
-    const xExpr = isBand(p.xType) ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const yExpr = isBand(p.yType) ? `scale.y(d.${p.y}) + scale.y.bandwidth() / 2` : `scale.y(d.${p.y})`;
+    const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const yExpr = isBand(p.yType) ? `scale.y(${fld(p.y)}) + scale.y.bandwidth() / 2` : `scale.y(${fld(p.y)})`;
     return instances({
       key: "points",
       clip: p.clip ? "box" : void 0,
@@ -539,7 +546,7 @@ var point = recipe4({
       r: p.r ?? "$point.radius",
       fill: p.fill ?? colorOr(p.color, "$mark"),
       opacity: p.opacity,
-      label: p.label ?? e4(`\`\${d.${p.x}}, \${d.${p.y}}\``),
+      label: p.label ?? e4(`\`\${${fld(p.x)}}, \${${fld(p.y)}}\``),
       semantics: { role: "series", label: `${p.y} against ${p.x}` }
     });
   }
@@ -550,13 +557,13 @@ var dot = recipe4({
   params: { data: t4.table(), x: t4.field(), y: t4.field(), color: t4.field(), xType: t4.string("band"), yType: t4.string("linear"), r: t4.number(6), fill: t4.prop() },
   expand(p) {
     const horizontal = isBand(p.yType) && !isBand(p.xType);
-    const cx = horizontal ? e4(`scale.x(d.${p.x})`) : e4(`scale.x(d.${p.x}) + scale.x.bandwidth() / 2`);
-    const cy = horizontal ? e4(`scale.y(d.${p.y}) + scale.y.bandwidth() / 2`) : e4(`scale.y(d.${p.y})`);
+    const cx = horizontal ? e4(`scale.x(${fld(p.x)})`) : e4(`scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2`);
+    const cy = horizontal ? e4(`scale.y(${fld(p.y)}) + scale.y.bandwidth() / 2`) : e4(`scale.y(${fld(p.y)})`);
     const cat = horizontal ? p.y : p.x;
     const val = horizontal ? p.x : p.y;
     return group4({
       key: "marks",
-      children: [repeat4(p.data, shape4(geom4.circle({ cx, cy, r: p.r }), { fill: p.fill ?? colorOr(p.color, "$mark"), semantics: { role: "datum", label: e4(`\`\${key.name(d.${cat})}: \${d.${val}}\``) }, pickable: true }))]
+      children: [repeat4(p.data, shape4(geom4.circle({ cx, cy, r: p.r }), { fill: p.fill ?? colorOr(p.color, "$mark"), semantics: { role: "datum", label: e4(`\`\${key.name(${fld(cat)})}: \${${fld(val)}}\``) }, pickable: true }))]
     });
   }
 });
@@ -573,8 +580,8 @@ var pareto = recipe4({
 
 // src/finance.ts
 var isBand2 = (t17) => t17 === "band" || t17 === "point";
-var xMid = (x, xType) => isBand2(xType) ? `scale.x(d.${x}) + scale.x.bandwidth() / 2` : `scale.x(d.${x})`;
-var byDirection = (o, c, up, down) => e5(`d.${c} >= d.${o} ? ${JSON.stringify(up)} : ${JSON.stringify(down)}`);
+var xMid = (x, xType) => isBand2(xType) ? `scale.x(${fld(x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(x)})`;
+var byDirection = (o, c, up, down) => e5(`${fld(c)} >= ${fld(o)} ? ${JSON.stringify(up)} : ${JSON.stringify(down)}`);
 var tag = (v) => String(v).replace(/[^0-9A-Za-z]/g, "_");
 var nameOf = (id) => String(id ?? "").split("/").pop();
 function slotWidth(p) {
@@ -587,9 +594,9 @@ function historyOps(p, ops) {
 }
 function ohlcLabel(p) {
   const c = p.close ?? p.y;
-  const f = (v) => `format(d.${v}, ${JSON.stringify(p.format)})`;
-  const change = `(d.prev_close > 0 ? " (" + format(d.${c} / d.prev_close - 1, "+.2%") + ")" : "")`;
-  return e5(`scale.x.label(d.${p.x}) + " \xB7 O " + ${f(p.open)} + " H " + ${f(p.high)} + " L " + ${f(p.low)} + " C " + ${f(c)} + ${change}`);
+  const f = (v) => `format(${fld(v)}, ${JSON.stringify(p.format)})`;
+  const change = `(d.prev_close > 0 ? " (" + format(${fld(c)} / d.prev_close - 1, "+.2%") + ")" : "")`;
+  return e5(`scale.x.label(${fld(p.x)}) + " \xB7 O " + ${f(p.open)} + " H " + ${f(p.high)} + " L " + ${f(p.low)} + " C " + ${f(c)} + ${change}`);
 }
 var candlestick = recipe5({
   id: "@datars/std/candlestick",
@@ -618,17 +625,17 @@ var candlestick = recipe5({
     const mid = xMid(p.x, p.xType);
     const w = slotWidth(p);
     const ink = byDirection(o, c, p.up, p.down);
-    const wick = shape5(geom5.segment({ x1: e5(mid), y1: e5(`scale.y(d.${h})`), x2: e5(mid), y2: e5(`scale.y(d.${l})`) }), { stroke: { paint: ink, width: 1 }, semantics: { role: "decoration" } });
+    const wick = shape5(geom5.segment({ x1: e5(mid), y1: e5(`scale.y(${fld(h)})`), x2: e5(mid), y2: e5(`scale.y(${fld(l)})`) }), { stroke: { paint: ink, width: 1 }, semantics: { role: "decoration" } });
     const body = shape5(geom5.rect({
       x: e5(`${mid} - (${w}) / 2`),
-      y: e5(`min(scale.y(d.${o}), scale.y(d.${c}))`),
+      y: e5(`min(scale.y(${fld(o)}), scale.y(${fld(c)}))`),
       w: e5(w),
       // A doji (open = close) still shows as a line.
-      h: e5(`max(1, abs(scale.y(d.${o}) - scale.y(d.${c})))`)
+      h: e5(`max(1, abs(scale.y(${fld(o)}) - scale.y(${fld(c)})))`)
     }), {
-      fill: p.hollow ? e5(`d.${c} >= d.${o} ? "$paper" : ${JSON.stringify(p.down)}`) : ink,
+      fill: p.hollow ? e5(`${fld(c)} >= ${fld(o)} ? "$paper" : ${JSON.stringify(p.down)}`) : ink,
       stroke: p.hollow ? { paint: ink, width: 1 } : void 0,
-      semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e5(`d.${c}`) },
+      semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e5(`${fld(c)}`) },
       pickable: true
     });
     return group5({
@@ -665,14 +672,14 @@ var ohlc = recipe5({
     const tbl = cx.table("bars", p.data, op3.window("lag", c, "prev_close", { order: p.x }));
     const mid = xMid(p.x, p.xType);
     const half = `(${slotWidth(p)}) / 2`;
-    const y = (f) => `scale.y(d.${f})`;
+    const y = (f) => `scale.y(${fld(f)})`;
     const path = `\`M \${${mid}} \${${y(h)}} L \${${mid}} \${${y(l)}} M \${${mid} - ${half}} \${${y(o)}} L \${${mid}} \${${y(o)}} M \${${mid}} \${${y(c)}} L \${${mid} + ${half}} \${${y(c)}}\``;
     return group5({
       key: "ohlc",
       semantics: { role: "series", label: `${c} bars` },
       children: [repeat5(tbl, shape5(geom5.path(e5(path)), {
         stroke: { paint: p.colored ? byDirection(o, c, p.up, p.down) : "$ink", width: e5(`max(1, min(2, ${half} / 2))`), cap: "butt" },
-        semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e5(`d.${c}`) },
+        semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e5(`${fld(c)}`) },
         pickable: true
       }))]
     });
@@ -702,7 +709,7 @@ var volume = recipe5({
     const c = p.close ?? (p.y && p.y !== p.volume ? p.y : "close");
     const s = p.yScale || "lower";
     const w = slotWidth(p);
-    const v = `d.${p.volume}`;
+    const v = `${fld(p.volume)}`;
     return group5({
       key: "volume",
       semantics: { role: "series", label: p.volume },
@@ -714,7 +721,7 @@ var volume = recipe5({
       }), {
         fill: p.colored ? byDirection(p.open, c, p.up, p.down) : "$muted",
         opacity: p.opacity,
-        semantics: { role: "datum", label: e5(`scale.x.label(d.${p.x}) + " \xB7 volume " + format(${v}, ${JSON.stringify(p.format)})`), value: e5(v) },
+        semantics: { role: "datum", label: e5(`scale.x.label(${fld(p.x)}) + " \xB7 volume " + format(${v}, ${JSON.stringify(p.format)})`), value: e5(v) },
         pickable: true
       }))]
     });
@@ -765,8 +772,8 @@ function bandOps(p) {
   return [[mid, hi, lo], [
     op3.window("rolling_mean", p.y, mid, o),
     op3.window("rolling_std", p.y, sd, o),
-    op3.derive(hi, e5(`d.${mid} + ${p.k} * d.${sd}`)),
-    op3.derive(lo, e5(`d.${mid} - ${p.k} * d.${sd}`))
+    op3.derive(hi, e5(`${fld(mid)} + ${p.k} * ${fld(sd)}`)),
+    op3.derive(lo, e5(`${fld(mid)} - ${p.k} * ${fld(sd)}`))
   ]];
 }
 var bollinger = recipe5({
@@ -811,7 +818,7 @@ function indexOps(p) {
   const as = p.percent ? "change" : "indexed";
   return [as, [
     op3.window("first", p.y, "index_first", { partition: p.series ? [p.series] : void 0, order: p.x }),
-    op3.derive(as, e5(p.percent ? `d.${p.y} / d.index_first - 1` : `d.${p.y} / d.index_first * ${p.base}`))
+    op3.derive(as, e5(p.percent ? `${fld(p.y)} / d.index_first - 1` : `${fld(p.y)} / d.index_first * ${p.base}`))
   ]];
 }
 var indexed = recipe5({
@@ -853,14 +860,14 @@ function endLabels(cx, p) {
     op3.spread({ position: e5("scale.y(d.y_end)"), gap: e5('token("size.label") + 3'), min: 0, max: e5("box.h"), as: "label_y" })
   );
   const xEnd = isBand2(p.xType) ? "scale.x(d.x_end) + scale.x.bandwidth() / 2" : "scale.x(d.x_end)";
-  const name = p.series ? `key.name(d.${p.series}) + " " + ` : "";
-  const ink = p.ink ?? (p.series && p.color ? e5(`scale.color(d.${p.series})`) : "$mark");
+  const name = p.series ? `key.name(${fld(p.series)}) + " " + ` : "";
+  const ink = p.ink ?? (p.series && p.color ? e5(`scale.color(${fld(p.series)})`) : "$mark");
   return group5({ key: "end-labels", children: [repeat5(ends, text4(e5(`${name}${p.value}`), [e5(`min(${xEnd}, box.w) + 6`), e5("d.label_y")], { style: { size: "$size.label", ink, baseline: "middle", contain: true } }))] });
 }
 function drawdownOps(p) {
   return ["drawdown", [
     op3.window("cummax", p.y, "peak", { partition: p.series ? [p.series] : void 0, order: p.x }),
-    op3.derive("drawdown", e5(`d.peak > 0 ? d.${p.y} / d.peak - 1 : 0`))
+    op3.derive("drawdown", e5(`d.peak > 0 ? ${fld(p.y)} / d.peak - 1 : 0`))
   ]];
 }
 var drawdown = recipe5({
@@ -917,7 +924,7 @@ var sparkline = recipe5({
   expand(p) {
     const [first, last] = [`group.first(${JSON.stringify(p.y)})`, `group.last(${JSON.stringify(p.y)})`];
     const ink = p.stroke ?? (p.trend ? e5(`${last} >= ${first} ? "$up" : "$down"`) : "$mark");
-    const x = e5(`scale.sx(d.${p.x})`), y = e5(`scale.sy(d.${p.y})`);
+    const x = e5(`scale.sx(${fld(p.x)})`), y = e5(`scale.sy(${fld(p.y)})`);
     const label = e5(`${JSON.stringify(p.name ? `${p.name}: ` : "")} + format(${last}, ${JSON.stringify(p.format)}) + " (" + format(${last} / ${first} - 1, "+.1%") + ")"`);
     const pad = p.dot ? 3 : 1;
     return group5({
@@ -1006,7 +1013,7 @@ function financeDomain(children, inherit, cx) {
   const shown = [];
   const claimed = claims.flatMap((c, i) => c.fields.map((f) => {
     if (!c.when) return f;
-    shown.push(op3.derive(`${f}_shown_${i}`, e5(`(${c.when}) ? d.${f} : null`)));
+    shown.push(op3.derive(`${f}_shown_${i}`, e5(`(${c.when}) ? ${fld(f)} : null`)));
     return `${f}_shown_${i}`;
   }));
   const fields = [.../* @__PURE__ */ new Set([...claimed, ...replace || !inherit.y ? [] : [inherit.y]])];
@@ -1037,9 +1044,9 @@ function financeKey(children) {
 import { e as e6, group as group6, instances as instances2, op as op4, recipe as recipe6, repeat as repeat6, shape as shape6, geom as geom6, t as t6, text as text5 } from "@datars/sdk";
 var isBand3 = (type) => type === "band" || type === "point";
 var nameOf2 = (id) => String(id ?? "").split("/").pop();
-var colorOr2 = (color, fallback) => color ? e6(`scale.color(d.${color})`) : fallback;
+var colorOr2 = (color, fallback) => color ? e6(`scale.color(${fld(color)})`) : fallback;
 function at(scale, field, type) {
-  return isBand3(type) ? `scale.${scale}(d.${field}) + scale.${scale}.bandwidth() / 2` : `scale.${scale}(d.${field})`;
+  return isBand3(type) ? `scale.${scale}(${fld(field)}) + scale.${scale}.bandwidth() / 2` : `scale.${scale}(${fld(field)})`;
 }
 function written(v, p) {
   const n = `format(abs(${v}), ${JSON.stringify(p.format ?? ",.1~f")})`;
@@ -1047,7 +1054,7 @@ function written(v, p) {
 }
 function among(field, names) {
   const list = Array.isArray(names) ? names : names === void 0 || names === null || names === "" ? [] : [names];
-  return list.length ? `(${list.map((n) => `d.${field} == ${JSON.stringify(String(n))}`).join(" || ")})` : "true";
+  return list.length ? `(${list.map((n) => `${fld(field)} == ${JSON.stringify(String(n))}`).join(" || ")})` : "true";
 }
 function withDefaults(def, params) {
   const out = { ...params };
@@ -1079,12 +1086,12 @@ var lollipop = recipe6({
     const [cat, val] = horizontal ? [p.y, p.x] : [p.x, p.y];
     const [cs, vs] = horizontal ? ["y", "x"] : ["x", "y"];
     const fill = p.fill ?? colorOr2(p.color, "$mark");
-    const c = at(cs, cat, "band"), v = `scale.${vs}(d.${val})`, zero = `scale.${vs}(0)`;
+    const c = at(cs, cat, "band"), v = `scale.${vs}(${fld(val)})`, zero = `scale.${vs}(0)`;
     const pt = (a, b) => horizontal ? [e6(b), e6(a)] : [e6(a), e6(b)];
     const stem = horizontal ? geom6.segment({ x1: e6(zero), y1: e6(c), x2: e6(v), y2: e6(c) }) : geom6.segment({ x1: e6(c), y1: e6(zero), x2: e6(c), y2: e6(v) });
-    const num = written(`d.${val}`, p);
+    const num = written(`${fld(val)}`, p);
     const lw = `measure(${num}, token("size.label"))`;
-    const out = `(d.${val} >= 0)`;
+    const out = `(${fld(val)} >= 0)`;
     const past = horizontal ? `(${out} ? ${v} + ${p.r + 4} + ${lw} <= box.w : ${v} - ${p.r + 4} - ${lw} >= 0)` : `(${out} ? ${v} - ${p.r + 4} - token("size.label") >= 0 : ${v} + ${p.r + 4} + token("size.label") <= box.h)`;
     const ahead = `(${out} == ${past})`;
     const labelAt = horizontal ? pt(c, `${ahead} ? ${v} + ${p.r + 4} : ${v} - ${p.r + 4}`) : pt(c, `${ahead} ? ${v} - ${p.r + 4} : ${v} + ${p.r + 4}`);
@@ -1097,7 +1104,7 @@ var lollipop = recipe6({
         // The dots are the data: keyed by the row directly, like bars, so the two morph.
         repeat6(p.data, shape6(geom6.circle({ cx: pt(c, v)[0], cy: pt(c, v)[1], r: p.r }), {
           fill,
-          semantics: { role: "datum", label: p.label ?? e6(`key.name(d.${cat}) + ": " + ${num}`), value: e6(`d.${val}`) },
+          semantics: { role: "datum", label: p.label ?? e6(`key.name(${fld(cat)}) + ": " + ${num}`), value: e6(`${fld(val)}`) },
           pickable: true
         })),
         p.labels ? group6({ key: "labels", children: [repeat6(p.data, text5(e6(num), labelAt, { halo: ["$paper", 2], style }))] }) : null
@@ -1133,7 +1140,7 @@ var dumbbell = recipe6({
     const c = at(cs, cat, "band");
     const pos = (v) => horizontal ? [e6(`scale.x(${v})`), e6(c)] : [e6(c), e6(`scale.y(${v})`)];
     const [a, b] = [pos("d.lo"), pos("d.hi")];
-    const dotLabel = p.color && p.color !== cat ? e6(`key.name(d.${cat}) + ", " + key.name(d.${p.color}) + ": " + ${written(`d.${val}`, p)}`) : e6(`key.name(d.${cat}) + ": " + ${written(`d.${val}`, p)}`);
+    const dotLabel = p.color && p.color !== cat ? e6(`key.name(${fld(cat)}) + ", " + key.name(${fld(p.color)}) + ": " + ${written(`${fld(val)}`, p)}`) : e6(`key.name(${fld(cat)}) + ": " + ${written(`${fld(val)}`, p)}`);
     const gap = p.r + 4;
     const lo = horizontal ? [e6(`scale.x(d.lo) - ${gap}`), e6(c)] : [e6(c), e6(`scale.y(d.lo) + ${gap}`)];
     const hi = horizontal ? [e6(`scale.x(d.hi) + ${gap}`), e6(c)] : [e6(c), e6(`scale.y(d.hi) - ${gap}`)];
@@ -1144,13 +1151,13 @@ var dumbbell = recipe6({
       children: [
         group6({ key: "connectors", children: [repeat6(ends, shape6(geom6.segment({ x1: a[0], y1: a[1], x2: b[0], y2: b[1] }), {
           stroke: { paint: p.stroke ?? "$rule", width: 3, cap: "round" },
-          semantics: { role: "datum", label: e6(`key.name(d.${cat}) + ": " + ${written("d.first", p)} + " \u2192 " + ${written("d.last", p)}`), value: e6("d.last - d.first") },
+          semantics: { role: "datum", label: e6(`key.name(${fld(cat)}) + ": " + ${written("d.first", p)} + " \u2192 " + ${written("d.last", p)}`), value: e6("d.last - d.first") },
           pickable: true
         }))] }),
-        repeat6(p.data, shape6(geom6.circle({ cx: pos(`d.${val}`)[0], cy: pos(`d.${val}`)[1], r: p.r }), {
+        repeat6(p.data, shape6(geom6.circle({ cx: pos(`${fld(val)}`)[0], cy: pos(`${fld(val)}`)[1], r: p.r }), {
           fill: colorOr2(p.color, "$mark"),
           stroke: { paint: "$paper", width: 1 },
-          semantics: { role: "datum", label: p.label ?? dotLabel, value: e6(`d.${val}`) },
+          semantics: { role: "datum", label: p.label ?? dotLabel, value: e6(`${fld(val)}`) },
           pickable: true
         })),
         p.labels ? group6({ key: "labels", children: [repeat6(ends, group6({ children: [
@@ -1168,7 +1175,7 @@ function slopeTable(cx, p, name = "slope") {
 }
 function slopeText(p, side) {
   const series = p.series ?? p.color;
-  const name = `key.name(d.${series})`;
+  const name = `key.name(${fld(series)})`;
   if (!p.values) return name;
   return side === "start" ? `${name} + "  " + ${written("d.start", p)}` : `${written("d.end", p)} + "  " + ${name}`;
 }
@@ -1222,7 +1229,7 @@ var slope = recipe6({
     const pairs = slopeTable(cx, p);
     const on = among(series, p.highlight);
     const hl = p.highlight !== void 0 && p.highlight !== null;
-    const base = p.stroke ?? (p.color ? e6(`scale.color(d.${p.color})`) : "$mark");
+    const base = p.stroke ?? (p.color ? e6(`scale.color(${fld(p.color)})`) : "$mark");
     const ink = hl ? e6(`${on} ? ${typeof base === "string" ? JSON.stringify(base) : base.expr} : "$rule"`) : base;
     const fade = hl ? e6(`${on} ? 1 : 0.5`) : void 0;
     const x0 = at("x", "x0", p.xType), x1 = at("x", "x1", p.xType);
@@ -1248,7 +1255,7 @@ var slope = recipe6({
         repeat6(pairs, shape6(geom6.segment({ x1: e6(x0), y1: e6("scale.y(d.start)"), x2: e6(x1), y2: e6("scale.y(d.end)") }), {
           stroke: { paint: ink, width: hl ? e6(`${on} ? ${p.width} : ${Math.max(1, p.width - 0.5)}`) : p.width, cap: "round" },
           opacity: fade,
-          semantics: { role: "datum", label: p.label ?? e6(`key.name(d.${series}) + ": " + ${written("d.start", p)} + " \u2192 " + ${written("d.end", p)}`), value: e6("d.end - d.start") },
+          semantics: { role: "datum", label: p.label ?? e6(`key.name(${fld(series)}) + ": " + ${written("d.start", p)} + " \u2192 " + ${written("d.end", p)}`), value: e6("d.end - d.start") },
           pickable: true
         })),
         p.r > 0 ? group6({ key: "dots", children: [repeat6(pairs, group6({ children: [dot2(x0, "d.start", "start"), dot2(x1, "d.end", "end")] }))] }) : null,
@@ -1283,7 +1290,7 @@ var bump = recipe6({
     const ranked = cx.table(
       "bump",
       p.data,
-      p.rank ? op4.derive("__rank", e6(`d.${p.y}`)) : op4.window("rank", p.y, "__rank", { partition: [p.x], order: p.reverse ? p.y : `-${p.y}` }),
+      p.rank ? op4.derive("__rank", e6(`${fld(p.y)}`)) : op4.window("rank", p.y, "__rank", { partition: [p.x], order: p.reverse ? p.y : `-${p.y}` }),
       op4.derive("__lo", e6("d.__rank - 0.5")),
       op4.derive("__hi", e6("d.__rank + 0.5")),
       op4.sort(p.x)
@@ -1291,20 +1298,20 @@ var bump = recipe6({
     const on = among(s, p.highlight);
     const hl = p.highlight !== void 0 && p.highlight !== null;
     const drawn = hl ? cx.table("bump-drawn", ranked, op4.derive("__on", e6(`${on} ? 1 : 0`)), op4.sort("__on", p.x)) : ranked;
-    const ends = cx.table("bump-ends", drawn, op4.aggregate([s], { x0: ["first", p.x], r0: ["first", "__rank"], x1: ["last", p.x], r1: ["last", "__rank"] }), op4.derive("w", e6(`measure(key.name(d.${s}), token("size.label"), 600)`)));
+    const ends = cx.table("bump-ends", drawn, op4.aggregate([s], { x0: ["first", p.x], r0: ["first", "__rank"], x1: ["last", p.x], r1: ["last", "__rank"] }), op4.derive("w", e6(`measure(key.name(${fld(s)}), token("size.label"), 600)`)));
     const room = e6(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(ends)}, "w") + 12)`);
-    const ink = hl ? e6(`${on} ? scale.color(d.${s}) : "$rule"`) : e6(`scale.color(d.${s})`);
+    const ink = hl ? e6(`${on} ? scale.color(${fld(s)}) : "$rule"`) : e6(`scale.color(${fld(s)})`);
     const fade = hl ? e6(`${on} ? 1 : 0.45`) : void 0;
-    const X = `scale.x(d.${p.x})`, Y = "scale.y(d.__rank)";
-    const value = p.rank ? "" : ` + " (" + format(d.${p.y}, ${JSON.stringify(p.format)}) + ")"`;
-    const pointLabel = e6(`key.name(d.${s}) + ", " + key.name(d.${p.x}) + ": rank " + d.__rank${value}`);
+    const X = `scale.x(${fld(p.x)})`, Y = "scale.y(d.__rank)";
+    const value = p.rank ? "" : ` + " (" + format(${fld(p.y)}, ${JSON.stringify(p.format)}) + ")"`;
+    const pointLabel = e6(`key.name(${fld(s)}) + ", " + key.name(${fld(p.x)}) + ": rank " + d.__rank${value}`);
     const scales = {
       x: { type: "point", domain: { data: ranked, field: p.x }, range: { box: "bump-area", axis: "x" }, padding: 0 },
       y: { type: "linear", domain: { data: ranked, fields: ["__lo", "__hi"] }, range: { box: "bump-area", axis: "y" }, zero: false, nice: false },
       color: { type: "categorical", domain: { data: p.data, field: s }, range: "$categorical" }
     };
-    const name = (end) => text5(e6(`key.name(d.${s})`), [e6(end === "start" ? `scale.x(d.x0) - ${p.r + 6}` : `scale.x(d.x1) + ${p.r + 6}`), e6(end === "start" ? "scale.y(d.r0)" : "scale.y(d.r1)")], {
-      style: { size: "$size.label", weight: 600, ink: hl ? e6(`${on} ? scale.color(d.${s}) : "$muted"`) : e6(`scale.color(d.${s})`), align: end === "start" ? "end" : "start", baseline: "middle" }
+    const name = (end) => text5(e6(`key.name(${fld(s)})`), [e6(end === "start" ? `scale.x(d.x0) - ${p.r + 6}` : `scale.x(d.x1) + ${p.r + 6}`), e6(end === "start" ? "scale.y(d.r0)" : "scale.y(d.r1)")], {
+      style: { size: "$size.label", weight: 600, ink: hl ? e6(`${on} ? scale.color(${fld(s)}) : "$muted"`) : e6(`scale.color(${fld(s)})`), align: end === "start" ? "end" : "start", baseline: "middle" }
     });
     return group6({
       key: "bump",
@@ -1334,9 +1341,9 @@ var bump = recipe6({
                           key: "line",
                           opacity: fade,
                           stroke: { paint: ink, width: hl ? e6(`${on} ? ${p.width} : ${Math.max(1, p.width - 1.5)}`) : p.width, join: "round", cap: "round" },
-                          semantics: { role: "series", label: e6(`key.name(d.${s})`) }
+                          semantics: { role: "series", label: e6(`key.name(${fld(s)})`) }
                         }),
-                        instances2({ key: "points", from: "@group", x: e6(X), y: e6(Y), r: hl ? e6(`${on} ? ${p.r} : ${Math.max(2, p.r - 1.5)}`) : p.r, fill: ink, opacity: fade, stroke: { paint: "$paper", width: 1.5 }, instanceKey: e6(`d.${p.x}`), label: pointLabel })
+                        instances2({ key: "points", from: "@group", x: e6(X), y: e6(Y), r: hl ? e6(`${on} ? ${p.r} : ${Math.max(2, p.r - 1.5)}`) : p.r, fill: ink, opacity: fade, stroke: { paint: "$paper", width: 1.5 }, instanceKey: e6(`${fld(p.x)}`), label: pointLabel })
                       ]
                     })),
                     // Ranks closer than a line of the names (many series in a short box, big
@@ -1376,11 +1383,11 @@ var pyramid = recipe6({
   tokens: ["ink", "ink-2", "muted", "size.label", "size.title", "font.title", "categorical"],
   expand(p, cx) {
     const rows = cx.table("pyramid", p.data, op4.window("first", p.side, "__first"));
-    const isLeft = p.left !== void 0 ? `d.${p.side} == ${JSON.stringify(p.left)}` : `d.${p.side} == d.__first`;
+    const isLeft = p.left !== void 0 ? `${fld(p.side)} == ${JSON.stringify(p.left)}` : `${fld(p.side)} == d.__first`;
     const leftRows = cx.table("pyramid-left", rows, op4.filter(e6(isLeft)));
     const rightRows = cx.table("pyramid-right", rows, op4.filter(e6(`!(${isLeft})`)));
     const sides = cx.table("pyramid-sides", rows, op4.aggregate([p.side], { __first: ["first", "__first"] }));
-    const groups = cx.table("pyramid-groups", p.data, op4.aggregate([p.y], { n: ["count"] }), op4.derive("w", e6(`measure(key.name(d.${p.y}), token("size.label"))`)));
+    const groups = cx.table("pyramid-groups", p.data, op4.aggregate([p.y], { n: ["count"] }), op4.derive("w", e6(`measure(key.name(${fld(p.y)}), token("size.label"))`)));
     const gutter = `(table.max(${JSON.stringify(groups)}, "w") + 18)`;
     const fmt = { format: p.format ?? ",.4~g", prefix: p.prefix, suffix: p.suffix };
     const valueScale = (box, axisDir) => ({ type: "linear", domain: { data: p.data, field: p.value }, range: { box, axis: axisDir }, zero: true, nice: true });
@@ -1391,22 +1398,22 @@ var pyramid = recipe6({
       color: { type: "categorical", domain: { data: p.data, field: p.side }, range: "$categorical" }
     };
     const bar2 = (s) => shape6(geom6.rect({
-      x: e6(s === "xl" ? `scale.xl(d.${p.value})` : "0"),
-      y: e6(`scale.y(d.${p.y})`),
-      w: e6(s === "xl" ? `scale.xl(0) - scale.xl(d.${p.value})` : `scale.xr(d.${p.value})`),
+      x: e6(s === "xl" ? `scale.xl(${fld(p.value)})` : "0"),
+      y: e6(`scale.y(${fld(p.y)})`),
+      w: e6(s === "xl" ? `scale.xl(0) - scale.xl(${fld(p.value)})` : `scale.xr(${fld(p.value)})`),
       h: e6("scale.y.bandwidth()")
     }), {
-      fill: e6(`scale.color(d.${p.side})`),
-      semantics: { role: "datum", label: e6(`key.name(d.${p.side}) + ", " + key.name(d.${p.y}) + ": " + ${written(`d.${p.value}`, fmt)}`), value: e6(`d.${p.value}`) },
+      fill: e6(`scale.color(${fld(p.side)})`),
+      semantics: { role: "datum", label: e6(`key.name(${fld(p.side)}) + ", " + key.name(${fld(p.y)}) + ": " + ${written(`${fld(p.value)}`, fmt)}`), value: e6(`${fld(p.value)}`) },
       pickable: true
     });
-    const valueLabel = (s) => text5(e6(written(`d.${p.value}`, fmt)), [e6(s === "xl" ? `scale.xl(d.${p.value}) - 4` : `scale.xr(d.${p.value}) + 4`), e6("scale.y(d." + p.y + ") + scale.y.bandwidth() / 2")], {
+    const valueLabel = (s) => text5(e6(written(`${fld(p.value)}`, fmt)), [e6(s === "xl" ? `scale.xl(${fld(p.value)}) - 4` : `scale.xr(${fld(p.value)}) + 4`), e6("scale.y(d." + p.y + ") + scale.y.bandwidth() / 2")], {
       when: e6('scale.y.bandwidth() >= token("size.label") - 2'),
       style: { size: "$size.label", ink: "$ink-2", align: s === "xl" ? "end" : "start", baseline: "middle", contain: true }
     });
-    const head = (left) => group6({ key: "head", size: { h: "auto" }, children: [repeat6(sides, text5(e6(`key.name(d.${p.side})`), [left ? e6("box.w") : 0, 0], {
+    const head = (left) => group6({ key: "head", size: { h: "auto" }, children: [repeat6(sides, text5(e6(`key.name(${fld(p.side)})`), [left ? e6("box.w") : 0, 0], {
       when: e6(left ? isLeft : `!(${isLeft})`),
-      style: { size: "$size.label", weight: 600, ink: e6(`scale.color(d.${p.side})`), align: left ? "end" : "start", baseline: "top" }
+      style: { size: "$size.label", weight: 600, ink: e6(`scale.color(${fld(p.side)})`), align: left ? "end" : "start", baseline: "top" }
     }))] });
     const pane = (s) => group6({
       key: s === "xl" ? "left" : "right",
@@ -1421,7 +1428,7 @@ var pyramid = recipe6({
             group6({ key: "bars", children: [repeat6(s === "xl" ? leftRows : rightRows, bar2(s))] }),
             p.labels ? group6({ key: "labels", children: [repeat6(s === "xl" ? leftRows : rightRows, valueLabel(s))] }) : null,
             // The group names, centred in the gutter between the two sides.
-            s === "xl" ? group6({ key: "groups", children: [repeat6(groups, text5(e6(`key.name(d.${p.y})`), [e6(`box.w + ${gutter} / 2`), e6(`scale.y(d.${p.y}) + scale.y.bandwidth() / 2`)], {
+            s === "xl" ? group6({ key: "groups", children: [repeat6(groups, text5(e6(`key.name(${fld(p.y)})`), [e6(`box.w + ${gutter} / 2`), e6(`scale.y(${fld(p.y)}) + scale.y.bandwidth() / 2`)], {
               when: e6('scale.y.bandwidth() >= token("size.label") * 0.8'),
               style: { size: "$size.label", ink: "$muted", align: "middle", baseline: "middle" }
             }))] }) : null
@@ -1466,11 +1473,11 @@ var marimekko = recipe6({
     const g = p.gap / 2;
     const [x0, x1, y0, y1] = ["scale.mx(d.__x0)", "scale.mx(d.__x1)", "scale.my(d.y0)", "scale.my(d.y1)"];
     const w = `(${x1} - ${x0} - ${p.gap})`, h = `(${y0} - ${y1} - ${p.gap})`;
-    const name = `key.name(d.${p.series})`;
+    const name = `key.name(${fld(p.series)})`;
     const share = `format(d.y1 - d.y0, ".0%")`;
     const fits = `${w} >= max(measure(${name}, token("size.label"), 600), measure(${share}, token("size.label"))) + 10 && ${h} >= 2 * token("size.label") + 10`;
-    const onFill = e6(`"on(" + scale.color(d.${p.series}) + ")"`);
-    const colName = `key.name(d.${p.x})`;
+    const onFill = e6(`"on(" + scale.color(${fld(p.series)}) + ")"`);
+    const colName = `key.name(${fld(p.x)})`;
     const colW = `(scale.mx(d.__x1) - scale.mx(d.__x0) - ${p.gap})`;
     return group6({
       key: "marimekko",
@@ -1499,9 +1506,9 @@ var marimekko = recipe6({
                   key: "area",
                   children: [
                     repeat6(cells, shape6(geom6.rect({ x: e6(`${x0} + ${g}`), y: e6(`${y1} + ${g}`), w: e6(`max(0, ${w})`), h: e6(`max(0, ${h})`) }), {
-                      key: [e6(`d.${p.series}`), e6(`d.${p.x}`)],
-                      fill: e6(`scale.color(d.${p.series})`),
-                      semantics: { role: "datum", label: e6(`${name} + " in " + ${colName} + ": " + format(d.${p.value}, ${JSON.stringify(p.format)}) + " (" + ${share} + " of " + ${colName} + ", " + format((d.y1 - d.y0) * d.__share, ".1%") + " of all)"`), value: e6(`d.${p.value}`) },
+                      key: [e6(`${fld(p.series)}`), e6(`${fld(p.x)}`)],
+                      fill: e6(`scale.color(${fld(p.series)})`),
+                      semantics: { role: "datum", label: e6(`${name} + " in " + ${colName} + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)}) + " (" + ${share} + " of " + ${colName} + ", " + format((d.y1 - d.y0) * d.__share, ".1%") + " of all)"`), value: e6(`${fld(p.value)}`) },
                       pickable: true
                     })),
                     p.labels ? group6({ key: "labels", children: [repeat6(cells, group6({ when: e6(fits), children: [
@@ -1530,13 +1537,13 @@ function histogramTable(cx, p) {
   return cx.table(
     "histogram",
     p.data,
-    op4.filter(e6(`d.${p.x} == d.${p.x}`)),
+    op4.filter(e6(`${fld(p.x)} == ${fld(p.x)}`)),
     // no nulls (NaN is not itself)
     op4.bin(p.x, "bin", p.step > 0 ? { step: p.step } : { count: p.bins }),
     op4.aggregate(color ? ["bin", "bin_end", color] : ["bin", "bin_end"], { count: ["count"] }),
     op4.window("share_of_total", "count", "__share"),
     op4.derive("density", e6("d.__share / (d.bin_end - d.bin)")),
-    ...color ? [op4.stack({ x: "bin", series: color, value: y, as: ["y0", "y1"] })] : [op4.derive("y0", 0), op4.derive("y1", e6(`d.${y}`))]
+    ...color ? [op4.stack({ x: "bin", series: color, value: y, as: ["y0", "y1"] })] : [op4.derive("y0", 0), op4.derive("y1", e6(`${fld(y)}`))]
   );
 }
 var histogram = recipe6({
@@ -1565,9 +1572,9 @@ var histogram = recipe6({
       key: "bins",
       semantics: { role: "series", label: `${p.x}, binned` },
       children: [repeat6(tbl, shape6(geom6.rect({ x: e6(`scale.x(d.bin) + ${p.gap / 2}`), y: e6("scale.y(d.y1)"), w: e6(`max(0.5, scale.x(d.bin_end) - scale.x(d.bin) - ${p.gap})`), h: e6("max(0, scale.y(d.y0) - scale.y(d.y1))") }), {
-        key: color ? [e6(`d.${color}`), e6("d.bin")] : e6("d.bin"),
+        key: color ? [e6(`${fld(color)}`), e6("d.bin")] : e6("d.bin"),
         fill: p.fill ?? colorOr2(color, "$mark"),
-        semantics: { role: "datum", label: p.label ?? e6(`${color ? `key.name(d.${color}) + ", " + ` : ""}format(d.bin, ${f}) + "\u2013" + format(d.bin_end, ${f}) + ": " + ${what}`), value: e6(p.density ? "d.density" : "d.count") },
+        semantics: { role: "datum", label: p.label ?? e6(`${color ? `key.name(${fld(color)}) + ", " + ` : ""}format(d.bin, ${f}) + "\u2013" + format(d.bin_end, ${f}) + ": " + ${what}`), value: e6(p.density ? "d.density" : "d.count") },
         pickable: true
       }))]
     });
@@ -1599,10 +1606,10 @@ var boxplot = recipe6({
     const color = p.color && p.color !== cat ? p.color : void 0;
     const stats = cx.table("box-stats", p.data, op4.aggregate([cat], { __q1: ["q25", val], __median: ["median", val], __q3: ["q75", val], __n: ["count", val] }));
     const k = p.whisker;
-    const rows = cx.table("box-rows", p.data, op4.join(stats, cat), op4.derive("__out", e6(`d.${val} < d.__q1 - ${k} * (d.__q3 - d.__q1) || d.${val} > d.__q3 + ${k} * (d.__q3 - d.__q1)`)));
+    const rows = cx.table("box-rows", p.data, op4.join(stats, cat), op4.derive("__out", e6(`${fld(val)} < d.__q1 - ${k} * (d.__q3 - d.__q1) || ${fld(val)} > d.__q3 + ${k} * (d.__q3 - d.__q1)`)));
     const box = cx.table("box", rows, op4.filter(e6("!d.__out")), op4.aggregate([cat], { lo: ["min", val], hi: ["max", val], q1: ["first", "__q1"], median: ["first", "__median"], q3: ["first", "__q3"], n: ["first", "__n"], ...color ? { [color]: ["first", color] } : {} }));
     const outliers = cx.table("box-outliers", rows, op4.filter(e6("d.__out")));
-    const fill = p.fill ?? (p.color ? e6(`scale.color(d.${p.color})`) : "$mark");
+    const fill = p.fill ?? (p.color ? e6(`scale.color(${fld(p.color)})`) : "$mark");
     const c = at(cs, cat, "band");
     const half = `min(scale.${cs}.bandwidth() * ${p.width}, 72) / 2`;
     const V = (v) => `scale.${vs}(${v})`;
@@ -1613,7 +1620,7 @@ var boxplot = recipe6({
     };
     const rect = horizontal ? geom6.rect({ x: e6(V("d.q1")), y: e6(`${c} - ${half}`), w: e6(`${V("d.q3")} - ${V("d.q1")}`), h: e6(`2 * ${half}`) }) : geom6.rect({ x: e6(`${c} - ${half}`), y: e6(V("d.q3")), w: e6(`2 * ${half}`), h: e6(`${V("d.q1")} - ${V("d.q3")}`) });
     const f = (v) => `format(${v}, ${JSON.stringify(p.format)})`;
-    const summary = e6(`key.name(d.${cat}) + ": median " + ${f("d.median")} + ", middle half " + ${f("d.q1")} + "\u2013" + ${f("d.q3")} + ", whiskers " + ${f("d.lo")} + "\u2013" + ${f("d.hi")} + " (n = " + format(d.n, ",d") + ")"`);
+    const summary = e6(`key.name(${fld(cat)}) + ": median " + ${f("d.median")} + ", middle half " + ${f("d.q1")} + "\u2013" + ${f("d.q3")} + ", whiskers " + ${f("d.lo")} + "\u2013" + ${f("d.hi")} + " (n = " + format(d.n, ",d") + ")"`);
     const whiskerInk = "$ink-2";
     return group6({
       key: "boxes",
@@ -1628,10 +1635,10 @@ var boxplot = recipe6({
           shape6(seg(V("d.median"), `${c} - ${half}`, V("d.median"), `${c} + ${half}`), { key: "median", stroke: { paint: "$paper", width: 2 }, semantics: { role: "decoration" } })
         ] })),
         // Outliers are few: a hollow circle each, ringed in its box's ink.
-        p.outliers ? group6({ key: "outliers", children: [repeat6(outliers, shape6(geom6.circle({ cx: P(V(`d.${val}`), c)[0], cy: P(V(`d.${val}`), c)[1], r: 3 }), {
+        p.outliers ? group6({ key: "outliers", children: [repeat6(outliers, shape6(geom6.circle({ cx: P(V(`${fld(val)}`), c)[0], cy: P(V(`${fld(val)}`), c)[1], r: 3 }), {
           fill: "$paper",
           stroke: { paint: fill, width: 1.3 },
-          semantics: { role: "datum", label: e6(`key.name(d.${cat}) + ": " + ${f(`d.${val}`)} + " (beyond the whiskers)"`), value: e6(`d.${val}`) },
+          semantics: { role: "datum", label: e6(`key.name(${fld(cat)}) + ": " + ${f(`${fld(val)}`)} + " (beyond the whiskers)"`), value: e6(`${fld(val)}`) },
           pickable: true
         }))] }) : null
       ]
@@ -1645,7 +1652,7 @@ function densityTable(cx, name, p, cat, val, color, grid2) {
     p.data,
     op4.kde({ field: val, groupby: color ? [cat, color] : [cat], bandwidth: p.bandwidth || void 0, steps: p.steps, ...grid2 }),
     op4.join(stats, cat),
-    op4.derive("__g", e6(color ? `d.${cat} + " | " + d.${color}` : `d.${cat}`))
+    op4.derive("__g", e6(color ? `${fld(cat)} + " | " + ${fld(color)}` : `${fld(cat)}`))
   );
   return { kde, stats };
 }
@@ -1678,9 +1685,9 @@ var violin = recipe6({
     const c = at(cs, cat, "band");
     const peak = p.normalize === "width" ? 'group.max("density")' : `table.max(${JSON.stringify(kde)}, "density")`;
     const half = `d.density / max(${peak}, 1e-300) * scale.${cs}.bandwidth() * ${p.width} / 2`;
-    const fill = p.fill ?? (p.color ? e6(`scale.color(d.${p.color})`) : "$mark");
+    const fill = p.fill ?? (p.color ? e6(`scale.color(${fld(p.color)})`) : "$mark");
     const f = (v) => `format(${v}, ${JSON.stringify(p.format)})`;
-    const label = e6(`key.name(d.${cat}) + ": median " + ${f("d.__median")} + ", middle half " + ${f("d.__q1")} + "\u2013" + ${f("d.__q3")} + " (n = " + format(d.__n, ",d") + ")"`);
+    const label = e6(`key.name(${fld(cat)}) + ": median " + ${f("d.__median")} + ", middle half " + ${f("d.__q1")} + "\u2013" + ${f("d.__q3")} + " (n = " + format(d.__n, ",d") + ")"`);
     const outline = horizontal ? shape6(geom6.area({ from: "@group", x: e6(`scale.x(d.value)`), y0: e6(`${c} - ${half}`), y1: e6(`${c} + ${half}`), curve: "monotone-x" }), { key: "violin", fill, opacity: p.opacity, semantics: { role: "datum", label, value: e6("d.__median") }, pickable: true }) : shape6(geom6.area({ from: "@group", x: e6(`-scale.y(d.value)`), y0: e6(`${c} - ${half}`), y1: e6(`${c} + ${half}`), curve: "monotone-x" }), { key: "violin", transform: { rotate: -90 }, fill, opacity: p.opacity, semantics: { role: "datum", label, value: e6("d.__median") }, pickable: true });
     const V = (v) => `scale.${vs}(${v})`;
     const iqr = horizontal ? geom6.rect({ x: e6(V("d.__q1")), y: e6(`${c} - 1.5`), w: e6(`${V("d.__q3")} - ${V("d.__q1")}`), h: 3 }) : geom6.rect({ x: e6(`${c} - 1.5`), y: e6(V("d.__q3")), w: 3, h: e6(`${V("d.__q1")} - ${V("d.__q3")}`) });
@@ -1725,8 +1732,8 @@ var ridgeline = recipe6({
     const { kde } = ridgelineTable(cx, p);
     const peaks = cx.table("ridgeline-peaks", kde, op4.aggregate([cat], { m: ["max", "density"] }));
     const k = `min(${p.overlap} * scale.y.step() / max(table.max(${JSON.stringify(kde)}, "density"), 1e-300), (scale.y.step() + scale.y.bandwidth()) / 2 / max(table.first(${JSON.stringify(peaks)}, "m"), 1e-300))`;
-    const base = `scale.y(d.${cat}) + scale.y.bandwidth()`;
-    const fill = p.fill ?? (p.color ? e6(`scale.color(d.${p.color})`) : "$mark");
+    const base = `scale.y(${fld(cat)}) + scale.y.bandwidth()`;
+    const fill = p.fill ?? (p.color ? e6(`scale.color(${fld(p.color)})`) : "$mark");
     const f = (v) => `format(${v}, ${JSON.stringify(p.format)})`;
     return group6({
       key: "ridges",
@@ -1737,7 +1744,7 @@ var ridgeline = recipe6({
           fill,
           opacity: p.opacity,
           stroke: { paint: "$paper", width: 1 },
-          semantics: { role: "datum", label: e6(`key.name(d.${cat}) + ": median " + ${f("d.__median")} + ", middle half " + ${f("d.__q1")} + "\u2013" + ${f("d.__q3")} + " (n = " + format(d.__n, ",d") + ")"`), value: e6("d.__median") },
+          semantics: { role: "datum", label: e6(`key.name(${fld(cat)}) + ": median " + ${f("d.__median")} + ", middle half " + ${f("d.__q1")} + "\u2013" + ${f("d.__q3")} + " (n = " + format(d.__n, ",d") + ")"`), value: e6("d.__median") },
           pickable: true
         })
       ] }))]
@@ -1746,8 +1753,8 @@ var ridgeline = recipe6({
 });
 function errorTable(cx, p) {
   const val = isBand3(p.yType) && !isBand3(p.xType) ? p.x : p.y;
-  const lo = p.lo ? `d.${p.lo}` : p.error ? `d.${val} - d.${p.error}` : `d.${val}`;
-  const hi = p.hi ? `d.${p.hi}` : p.error ? `d.${val} + d.${p.error}` : `d.${val}`;
+  const lo = p.lo ? `${fld(p.lo)}` : p.error ? `${fld(val)} - ${fld(p.error)}` : `${fld(val)}`;
+  const hi = p.hi ? `${fld(p.hi)}` : p.error ? `${fld(val)} + ${fld(p.error)}` : `${fld(val)}`;
   return cx.table("error-bars", p.data, op4.derive("__lo", e6(lo)), op4.derive("__hi", e6(hi)));
 }
 var errorBars = recipe6({
@@ -1786,13 +1793,13 @@ var errorBars = recipe6({
     const ink = p.stroke ?? colorOr2(p.color, "$ink-2");
     const stroke = { paint: ink, width: p.width, cap: "butt" };
     const f = (v) => `format(${v}, ${JSON.stringify(p.format)})`;
-    const name = isBand3(horizontal ? p.yType : p.xType) ? `key.name(d.${cat})` : `scale.${cs}.label(d.${cat})`;
-    const dot2 = P(V(`d.${val}`), c);
+    const name = isBand3(horizontal ? p.yType : p.xType) ? `key.name(${fld(cat)})` : `scale.${cs}.label(${fld(cat)})`;
+    const dot2 = P(V(`${fld(val)}`), c);
     return group6({
       key: "error-bars",
       semantics: { role: "series", label: `${val} with intervals` },
       children: [repeat6(tbl, group6({ children: [
-        shape6(seg(V("d.__lo"), c, V("d.__hi"), c), { key: "interval", stroke, semantics: { role: "datum", label: p.label ?? e6(`${name} + ": " + ${f(`d.${val}`)} + " (" + ${f("d.__lo")} + "\u2013" + ${f("d.__hi")} + ")"`), value: e6(`d.${val}`) }, pickable: true }),
+        shape6(seg(V("d.__lo"), c, V("d.__hi"), c), { key: "interval", stroke, semantics: { role: "datum", label: p.label ?? e6(`${name} + ": " + ${f(`${fld(val)}`)} + " (" + ${f("d.__lo")} + "\u2013" + ${f("d.__hi")} + ")"`), value: e6(`${fld(val)}`) }, pickable: true }),
         p.cap > 0 ? shape6(seg(V("d.__lo"), `${c} - ${p.cap / 2}`, V("d.__lo"), `${c} + ${p.cap / 2}`), { key: "cap-lo", stroke, semantics: { role: "decoration" } }) : null,
         p.cap > 0 ? shape6(seg(V("d.__hi"), `${c} - ${p.cap / 2}`, V("d.__hi"), `${c} + ${p.cap / 2}`), { key: "cap-hi", stroke, semantics: { role: "decoration" } }) : null,
         p.r > 0 ? shape6(geom6.circle({ cx: dot2[0], cy: dot2[1], r: p.r }), { key: "dot", fill: ink, stroke: { paint: "$paper", width: 1 }, semantics: { role: "decoration" } }) : null
@@ -1802,7 +1809,7 @@ var errorBars = recipe6({
 });
 function stackedAreaTable(cx, p) {
   const series = p.series ?? p.color;
-  return cx.table("stacked-area", p.data, ...isBand3(p.xType) ? [] : [op4.sort(p.x), op4.derive("__x", e6(`d.${p.x}`))], op4.stack({ x: p.x, series, value: p.y, offset: p.offset, order: p.order, as: ["y0", "y1"] }));
+  return cx.table("stacked-area", p.data, ...isBand3(p.xType) ? [] : [op4.sort(p.x), op4.derive("__x", e6(`${fld(p.x)}`))], op4.stack({ x: p.x, series, value: p.y, offset: p.offset, order: p.order, as: ["y0", "y1"] }));
 }
 var stackedArea = recipe6({
   id: "@datars/std/stackedArea",
@@ -1826,12 +1833,12 @@ var stackedArea = recipe6({
     const series = p.series ?? p.color;
     const tbl = stackedAreaTable(cx, p);
     const X = at("x", p.x, p.xType);
-    const fill = p.color ? e6(`scale.color(d.${p.color})`) : "$mark";
-    const xLabel2 = isBand3(p.xType) ? `key.name(d.${p.x})` : `scale.x.label(d.${p.x})`;
-    const value = p.offset === "expand" ? `format(d.y1 - d.y0, ".1%")` : `format(d.${p.y}, ${JSON.stringify(p.format)})`;
+    const fill = p.color ? e6(`scale.color(${fld(p.color)})`) : "$mark";
+    const xLabel2 = isBand3(p.xType) ? `key.name(${fld(p.x)})` : `scale.x.label(${fld(p.x)})`;
+    const value = p.offset === "expand" ? `format(d.y1 - d.y0, ".1%")` : `format(${fld(p.y)}, ${JSON.stringify(p.format)})`;
     const thick = cx.table("stacked-area-labels", tbl, op4.derive("__t", e6("d.y1 - d.y0")), op4.window("rank", "__t", "__r", { partition: [series] }), op4.filter(e6("d.__r == 1")), op4.aggregate([series], { x: ["first", p.x], y0: ["first", "y0"], y1: ["first", "y1"] }));
     const xt = isBand3(p.xType) ? "scale.x(d.x) + scale.x.bandwidth() / 2" : "scale.x(d.x)";
-    const name = `key.name(d.${series})`;
+    const name = `key.name(${fld(series)})`;
     const lw = `measure(${name}, token("size.label"), 600)`;
     const T = JSON.stringify(tbl);
     const [xlo, xhi] = isBand3(p.xType) ? ["scale.x.min()", "scale.x.max()"] : [`scale.x(table.min(${T}, "__x"))`, `scale.x(table.max(${T}, "__x"))`];
@@ -1847,12 +1854,12 @@ var stackedArea = recipe6({
             semantics: { role: "series", label: e6(name) }
           }),
           // Hover anywhere along a layer: its value at the nearest x.
-          instances2({ key: "points", from: "@group", x: e6(X), y: e6("(scale.y(d.y0) + scale.y(d.y1)) / 2"), r: 0, fill: "transparent", instanceKey: e6(`d.${p.x}`), label: e6(`${name} + " \xB7 " + ${xLabel2} + ": " + ${value}`), hit: "line" })
+          instances2({ key: "points", from: "@group", x: e6(X), y: e6("(scale.y(d.y0) + scale.y(d.y1)) / 2"), r: 0, fill: "transparent", instanceKey: e6(`${fld(p.x)}`), label: e6(`${name} + " \xB7 " + ${xLabel2} + ": " + ${value}`), hit: "line" })
         ] })),
         // (Kept over the layers: one thickest at the first or last x is named just inside it.)
         p.labels ? group6({ key: "labels", children: [repeat6(thick, text5(e6(name), [e6(`clamp(${xt}, ${xlo} + ${lw} / 2 + 4, ${xhi} - ${lw} / 2 - 4)`), e6("(scale.y(d.y0) + scale.y(d.y1)) / 2")], {
           when: e6('abs(scale.y(d.y0) - scale.y(d.y1)) >= token("size.label") + 6'),
-          style: { size: "$size.label", weight: 600, ink: p.color ? e6(`"on(" + scale.color(d.${p.color}) + ")"`) : "$accent-ink", align: "middle", baseline: "middle", contain: true }
+          style: { size: "$size.label", weight: 600, ink: p.color ? e6(`"on(" + scale.color(${fld(p.color)}) + ")"`) : "$accent-ink", align: "middle", baseline: "middle", contain: true }
         }))] }) : null
       ]
     });
@@ -1888,7 +1895,7 @@ var connectedScatter = recipe6({
     const ink = p.stroke ?? colorOr2(p.color, "$mark");
     const lbl2 = p.text ?? ord;
     const f = (v) => `format(${v}, ${JSON.stringify(p.format)})`;
-    const pointLabel = e6(`${series ? `key.name(d.${series}) + " \xB7 " + ` : ""}${lbl2 ? `d.${lbl2} + ": " + ` : ""}${f(`d.${p.x}`)} + ", " + ${f(`d.${p.y}`)}`);
+    const pointLabel = e6(`${series ? `key.name(${fld(series)}) + " \xB7 " + ` : ""}${lbl2 ? `${fld(lbl2)} + ": " + ` : ""}${f(`${fld(p.x)}`)} + ", " + ${f(`${fld(p.y)}`)}`);
     const part = series ? [series] : [];
     const numbered = lbl2 && p.labels !== "none" ? cx.table(
       "connected-labels",
@@ -1903,9 +1910,9 @@ var connectedScatter = recipe6({
         key: "line",
         stroke: { paint: ink, width: 1.5, join: "round", cap: "round" },
         markers: p.arrow ? { end: { type: "arrow", size: 7 } } : void 0,
-        semantics: { role: "series", label: series ? e6(`key.name(d.${series})`) : `${p.y} against ${p.x}` }
+        semantics: { role: "series", label: series ? e6(`key.name(${fld(series)})`) : `${p.y} against ${p.x}` }
       }),
-      instances2({ key: "points", from: "@group", x: e6(X), y: e6(Y), r: p.r, fill: ink, stroke: { paint: "$paper", width: 1 }, instanceKey: ord ? e6(`d.${ord}`) : void 0, label: pointLabel })
+      instances2({ key: "points", from: "@group", x: e6(X), y: e6(Y), r: p.r, fill: ink, stroke: { paint: "$paper", width: 1 }, instanceKey: ord ? e6(`${fld(ord)}`) : void 0, label: pointLabel })
     ] });
     return group6({
       key: "connected",
@@ -1913,7 +1920,7 @@ var connectedScatter = recipe6({
       children: [
         series ? repeat6({ groups: tbl, by: series }, path) : repeat6({ groups: tbl, by: "__all" }, path),
         // Beside its point; a label that would land on another tries the other side, else stays out.
-        numbered ? group6({ key: "labels", declutter: true, children: [repeat6(numbered, text5(e6(`d.${lbl2}`), [e6(X), e6(Y)], {
+        numbered ? group6({ key: "labels", declutter: true, children: [repeat6(numbered, text5(e6(`${fld(lbl2)}`), [e6(X), e6(Y)], {
           offset: [p.r + 4, -(p.r + 3)],
           halo: ["$paper", 2],
           style: { size: "$size.label", ink: "$ink-2", align: "start", baseline: "alphabetic" }
@@ -2113,7 +2120,7 @@ var plot = recipe7({
     const labelled = endLabels2 ? (p.children ?? []).find((c) => c.kind === "use" && c.recipe === "@datars/std/line" && c.params.labels) : void 0;
     const lp = labelled?.params ?? {};
     const series = lp.series ?? lp.color ?? p.color;
-    const seriesNames = labelled && series ? cx.table("series-names", lp.data ?? p.data, op5.aggregate([series], { n: ["count"] }), op5.derive("w", e7(`measure(key.name(d.${series}), token("size.label"))`))) : void 0;
+    const seriesNames = labelled && series ? cx.table("series-names", lp.data ?? p.data, op5.aggregate([series], { n: ["count"] }), op5.derive("w", e7(`measure(key.name(${fld(series)}), token("size.label"))`))) : void 0;
     const labelRoom = cmp.end ?? (seriesNames ? e7(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(seriesNames)}, "w") + 12)`) : e7(`${p.labelSpace} * max(1, textScale)`));
     const yTitle = showY && p.yLabel ? p.yLabel : void 0;
     const axisTitles = yTitle || right?.label ? group7({ key: "axis-titles", size: { h: "auto" }, children: [
@@ -2188,7 +2195,7 @@ var pie = recipe8({
       "slices",
       p.data,
       op6.pie({ value: p.value, sort: p.sort, pad: p.pad, as: ["a0", "a1"] }),
-      op6.derive("lw", e8(`measure(key.name(d.${p.category}), token("size.label"))`))
+      op6.derive("lw", e8(`measure(key.name(${fld(p.category)}), token("size.label"))`))
     );
     const S2 = JSON.stringify(slices);
     const base = "(min(box.w, box.h) / 2 - 36)";
@@ -2207,12 +2214,12 @@ var pie = recipe8({
       semantics: { role: "series", label: `${p.value} by ${p.category}` },
       children: [
         repeat7(slices, shape8(geom8.arc({ cx: e8("box.w / 2"), cy: e8(CY), r0: e8(`(${R}) * ${p.inner}`), r1: e8(R), a0: e8("d.a0"), a1: e8("d.a1") }), {
-          fill: e8(`scale.color(d.${p.category})`),
+          fill: e8(`scale.color(${fld(p.category)})`),
           stroke: { paint: "$paper", width: 1 },
-          semantics: { role: "datum", label: e8(`\`\${key.name(d.${p.category})}: \${format(d.${p.value}, ${JSON.stringify(p.format)})}\``), value: e8(`d.${p.value}`) },
+          semantics: { role: "datum", label: e8(`\`\${key.name(${fld(p.category)})}: \${format(${fld(p.value)}, ${JSON.stringify(p.format)})}\``), value: e8(`${fld(p.value)}`) },
           pickable: true
         })),
-        p.labels ? group8({ key: "labels", declutter: true, children: [repeat7(slices, text7(e8(`key.name(d.${p.category})`), [e8(`box.w / 2 + (${R} + 14) * sin(${mid})`), e8(`${CY} - (${R} + 14) * cos(${mid})`)], {
+        p.labels ? group8({ key: "labels", declutter: true, children: [repeat7(slices, text7(e8(`key.name(${fld(p.category)})`), [e8(`box.w / 2 + (${R} + 14) * sin(${mid})`), e8(`${CY} - (${R} + 14) * cos(${mid})`)], {
           when: e8(`!${narrow} && d.a1 - d.a0 > 0.12`),
           style: { size: "$size.label", ink: "$ink-2", align: e8(`sin(${mid}) >= 0 ? "start" : "end"`), baseline: "middle" }
         }))] }) : null,
@@ -2238,7 +2245,7 @@ function affixed2(p, value, at2, opts) {
   const v = `(${value})`;
   return text8(e9(`(${v} < 0 ? "\u2212" : "") + ${JSON.stringify(p.prefix ?? "")} + format(abs(${v}), ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}`), at2, opts);
 }
-var lbl = (cat, val, fmt) => e9(`\`\${key.name(d.${cat})}: \${format(d.${val}, ${JSON.stringify(fmt)})}\``);
+var lbl = (cat, val, fmt) => e9(`\`\${key.name(${fld(cat)})}: \${format(${fld(val)}, ${JSON.stringify(fmt)})}\``);
 var cell = recipe9({
   id: "@datars/std/cell",
   doc: "Heatmap cells: a rectangle per (x, y) on two band scales, coloured by the colour scale. Keys (x, y) match grouped bars, so the two morph.",
@@ -2246,10 +2253,10 @@ var cell = recipe9({
   expand(p) {
     return group9({
       key: "marks",
-      children: [repeat8(p.data, shape9(geom9.rect({ x: e9(`scale.x(d.${p.x}) + ${p.gap / 2}`), y: e9(`scale.y(d.${p.y}) + ${p.gap / 2}`), w: e9(`scale.x.bandwidth() - ${p.gap}`), h: e9(`scale.y.bandwidth() - ${p.gap}`) }), {
-        key: [e9(`d.${p.y}`), e9(`d.${p.x}`)],
-        fill: e9(`scale.color(d.${p.color})`),
-        semantics: { role: "datum", label: p.label ?? e9(`\`\${d.${p.y}}, \${d.${p.x}}: \${format(d.${p.color}, ${JSON.stringify(p.format)})}\``) },
+      children: [repeat8(p.data, shape9(geom9.rect({ x: e9(`scale.x(${fld(p.x)}) + ${p.gap / 2}`), y: e9(`scale.y(${fld(p.y)}) + ${p.gap / 2}`), w: e9(`scale.x.bandwidth() - ${p.gap}`), h: e9(`scale.y.bandwidth() - ${p.gap}`) }), {
+        key: [e9(`${fld(p.y)}`), e9(`${fld(p.x)}`)],
+        fill: e9(`scale.color(${fld(p.color)})`),
+        semantics: { role: "datum", label: p.label ?? e9(`\`\${${fld(p.y)}}, \${${fld(p.x)}}: \${format(${fld(p.color)}, ${JSON.stringify(p.format)})}\``) },
         pickable: true
       }))]
     });
@@ -2266,9 +2273,9 @@ var stripes = recipe9({
         sx: { type: "band", domain: { data: p.data, field: p.x }, range: "width", padding: 0 },
         c: { type: "diverging", domain: { data: p.data, field: p.value }, range: "$diverging", mid: p.mid }
       },
-      children: [repeat8(p.data, shape9(geom9.rect({ x: e9(`scale.sx(d.${p.x})`), y: 0, w: e9("scale.sx.bandwidth() + 0.5"), h: e9("box.h") }), {
-        fill: e9(`scale.c(d.${p.value})`),
-        semantics: { role: "datum", label: p.label ?? e9(`\`\${d.${p.x}}: \${d.${p.value}}\``) },
+      children: [repeat8(p.data, shape9(geom9.rect({ x: e9(`scale.sx(${fld(p.x)})`), y: 0, w: e9("scale.sx.bandwidth() + 0.5"), h: e9("box.h") }), {
+        fill: e9(`scale.c(${fld(p.value)})`),
+        semantics: { role: "datum", label: p.label ?? e9(`\`\${${fld(p.x)}}: \${${fld(p.value)}}\``) },
         pickable: true
       }))]
     });
@@ -2303,18 +2310,18 @@ var stacked = recipe9({
     const cat = horizontal ? p.y : p.x;
     const val = horizontal ? p.x : p.y;
     const tbl = cx.table("stack", p.data, op7.stack({ x: cat, series, value: val, offset: p.offset, as: ["y0", "y1"] }));
-    const g = horizontal ? geom9.rect({ x: e9("scale.x(d.y0)"), y: e9(`scale.y(d.${cat})`), w: e9("scale.x(d.y1) - scale.x(d.y0)"), h: e9("scale.y.bandwidth()") }) : geom9.rect({ x: e9(`scale.x(d.${cat})`), y: e9("scale.y(d.y1)"), w: e9("scale.x.bandwidth()"), h: e9("scale.y(d.y0) - scale.y(d.y1)") });
-    const lw = `measure(${JSON.stringify(p.prefix ?? "")} + format(d.${val}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}, token("size.label"))`;
+    const g = horizontal ? geom9.rect({ x: e9("scale.x(d.y0)"), y: e9(`scale.y(${fld(cat)})`), w: e9("scale.x(d.y1) - scale.x(d.y0)"), h: e9("scale.y.bandwidth()") }) : geom9.rect({ x: e9(`scale.x(${fld(cat)})`), y: e9("scale.y(d.y1)"), w: e9("scale.x.bandwidth()"), h: e9("scale.y(d.y0) - scale.y(d.y1)") });
+    const lw = `measure(${JSON.stringify(p.prefix ?? "")} + format(${fld(val)}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}, token("size.label"))`;
     const fits = horizontal ? `abs(scale.x(d.y1) - scale.x(d.y0)) >= ${lw} + 8 && scale.y.bandwidth() >= token("size.label") + 4` : `scale.x.bandwidth() >= ${lw} + 8 && abs(scale.y(d.y0) - scale.y(d.y1)) >= token("size.label") + 4`;
-    const at2 = horizontal ? [e9("(scale.x(d.y0) + scale.x(d.y1)) / 2"), e9(`scale.y(d.${cat}) + scale.y.bandwidth() / 2`)] : [e9(`scale.x(d.${cat}) + scale.x.bandwidth() / 2`), e9("(scale.y(d.y0) + scale.y(d.y1)) / 2")];
-    const label = affixed2(p, `d.${val}`, at2, { when: e9(fits), style: { size: "$size.label", ink: e9(`"on(" + scale.color(d.${series}) + ")"`), align: "middle", baseline: "middle" } });
+    const at2 = horizontal ? [e9("(scale.x(d.y0) + scale.x(d.y1)) / 2"), e9(`scale.y(${fld(cat)}) + scale.y.bandwidth() / 2`)] : [e9(`scale.x(${fld(cat)}) + scale.x.bandwidth() / 2`), e9("(scale.y(d.y0) + scale.y(d.y1)) / 2")];
+    const label = affixed2(p, `${fld(val)}`, at2, { when: e9(fits), style: { size: "$size.label", ink: e9(`"on(" + scale.color(${fld(series)}) + ")"`), align: "middle", baseline: "middle" } });
     return group9({
       key: "marks",
       children: [
         repeat8(tbl, shape9(g, {
-          key: p.segmentKey ?? [e9(`d.${series}`), e9(`d.${cat}`)],
-          fill: e9(`scale.color(d.${series})`),
-          semantics: { role: "datum", label: e9(`\`\${key.name(d.${series})}, \${d.${cat}}: ${affixedLabel(`d.${val}`, p)}\``), value: e9(`d.${val}`) },
+          key: p.segmentKey ?? [e9(`${fld(series)}`), e9(`${fld(cat)}`)],
+          fill: e9(`scale.color(${fld(series)})`),
+          semantics: { role: "datum", label: e9(`\`\${key.name(${fld(series)})}, \${${fld(cat)}}: ${affixedLabel(`${fld(val)}`, p)}\``), value: e9(`${fld(val)}`) },
           pickable: true
         })),
         p.labels ? group9({ key: "labels", children: [repeat8(tbl, label)] }) : null
@@ -2342,13 +2349,13 @@ var grouped = recipe9({
   tokens: ["ink-2", "size.label", "radius.bar"],
   expand(p) {
     const series = p.series ?? p.color;
-    const x = `scale.x(d.${p.x}) + scale.dodge(d.${series})`, v = `d.${p.y}`;
+    const x = `scale.x(${fld(p.x)}) + scale.dodge(${fld(series)})`, v = `${fld(p.y)}`;
     const lw = `measure(${JSON.stringify(p.prefix ?? "")} + format(${v}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}, token("size.label"))`;
     const end = `min(scale.y(0), scale.y(${v}))`;
     const inside = `(${end} - 4 - token("size.label") < -2 && abs(scale.y(${v}) - scale.y(0)) >= token("size.label") + 8)`;
     const label = affixed2(p, v, [e9(`${x} + scale.dodge.bandwidth() / 2`), e9(`${inside} ? ${end} + 4 : ${end} - 4`)], {
       when: e9(`${lw} <= scale.dodge.step() - 2`),
-      style: { size: "$size.label", ink: e9(`${inside} ? "on(" + scale.color(d.${series}) + ")" : "$ink-2"`), align: "middle", baseline: e9(`${inside} ? "top" : "alphabetic"`) }
+      style: { size: "$size.label", ink: e9(`${inside} ? "on(" + scale.color(${fld(series)}) + ")" : "$ink-2"`), align: "middle", baseline: e9(`${inside} ? "top" : "alphabetic"`) }
     });
     return group9({
       key: "marks",
@@ -2356,9 +2363,9 @@ var grouped = recipe9({
       scales: { dodge: { type: "band", domain: { data: p.data, field: series }, range: [0, "=scale.x.bandwidth()"], padding: p.gap } },
       children: [
         repeat8(p.data, shape9(geom9.rect({ x: e9(x), y: e9(`min(scale.y(0), scale.y(${v}))`), w: e9("scale.dodge.bandwidth()"), h: e9(`abs(scale.y(0) - scale.y(${v}))`), r: "$radius.bar" }), {
-          key: [e9(`d.${series}`), e9(`d.${p.x}`)],
-          fill: e9(`scale.color(d.${series})`),
-          semantics: { role: "datum", label: e9(`\`\${key.name(d.${series})}, \${d.${p.x}}: ${affixedLabel(v, p)}\``), value: e9(v) },
+          key: [e9(`${fld(series)}`), e9(`${fld(p.x)}`)],
+          fill: e9(`scale.color(${fld(series)})`),
+          semantics: { role: "datum", label: e9(`\`\${key.name(${fld(series)})}, \${${fld(p.x)}}: ${affixedLabel(v, p)}\``), value: e9(v) },
           pickable: true
         })),
         p.labels ? group9({ key: "labels", children: [repeat8(p.data, label)] }) : null
@@ -2388,11 +2395,11 @@ var treemap = recipe9({
       key: "marks",
       scales: { color },
       children: [
-        repeat8(tbl, shape9(geom9.rect({ x: e9("d.x0"), y: e9("d.y0"), w: e9("d.x1 - d.x0"), h: e9("d.y1 - d.y0") }), { fill: e9(`scale.color(d.${by})`), stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "datum", label: lbl(p.category, p.value, p.format) }, pickable: true })),
+        repeat8(tbl, shape9(geom9.rect({ x: e9("d.x0"), y: e9("d.y0"), w: e9("d.x1 - d.x0"), h: e9("d.y1 - d.y0") }), { fill: e9(`scale.color(${fld(by)})`), stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "datum", label: lbl(p.category, p.value, p.format) }, pickable: true })),
         // Each label in the ink that reads on its rectangle's fill (dark on a light one).
         // (Only in a rectangle with room for a few letters and a line of them, in the label's
         // size: a reader's bigger text leaves out labels in more of the small ones.)
-        p.labels ? group9({ key: "labels", children: [repeat8(tbl, text8(e9(`key.name(d.${p.category})`), [e9("d.x0 + 6"), e9('d.y0 + 4 + token("size.label") * 12 / 11')], { when: e9('d.x1 - d.x0 > token("size.label") * 4 && d.y1 - d.y0 > token("size.label") * 2'), style: { size: "$size.label", weight: 600, ink: e9(`"on(" + scale.color(d.${by}) + ")"`), maxWidth: e9("d.x1 - d.x0 - 10") } }))] }) : null
+        p.labels ? group9({ key: "labels", children: [repeat8(tbl, text8(e9(`key.name(${fld(p.category)})`), [e9("d.x0 + 6"), e9('d.y0 + 4 + token("size.label") * 12 / 11')], { when: e9('d.x1 - d.x0 > token("size.label") * 4 && d.y1 - d.y0 > token("size.label") * 2'), style: { size: "$size.label", weight: 600, ink: e9(`"on(" + scale.color(${fld(by)}) + ")"`), maxWidth: e9("d.x1 - d.x0 - 10") } }))] }) : null
       ]
     });
   }
@@ -2406,7 +2413,7 @@ var waffle = recipe9({
     return group9({
       key: "waffle",
       scales: { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } },
-      children: [instances3({ key: "marks", from: u, proto: "rect", x: e9("d.x + (box.w - min(box.w, box.h)) / 2"), y: e9("d.y + (box.h - min(box.w, box.h)) / 2"), w: e9("d.w"), h: e9("d.h"), fill: e9(`scale.color(d.${p.category})`), label: e9(`key.name(d.${p.category})`) })]
+      children: [instances3({ key: "marks", from: u, proto: "rect", x: e9("d.x + (box.w - min(box.w, box.h)) / 2"), y: e9("d.y + (box.h - min(box.w, box.h)) / 2"), w: e9("d.w"), h: e9("d.h"), fill: e9(`scale.color(${fld(p.category)})`), label: e9(`key.name(${fld(p.category)})`) })]
     });
   }
 });
@@ -2429,7 +2436,7 @@ var hemicycle = recipe9({
       scales: { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } },
       children: [
         // Few seats are big: lift them by what their radius needs beyond the 10 px under the baseline.
-        instances3({ key: "seats", from: seats, x: e9("d.x"), y: e9("d.y - max(0, d.r - 10)"), r: e9("d.r"), fill: e9(`scale.color(d.${p.category})`), label: e9(`key.name(d.${p.category})`) }),
+        instances3({ key: "seats", from: seats, x: e9("d.x"), y: e9("d.y - max(0, d.r - 10)"), r: e9("d.r"), fill: e9(`scale.color(${fld(p.category)})`), label: e9(`key.name(${fld(p.category)})`) }),
         p.total ? text8("", [e9("box.w / 2"), e9(`${cy} - 4`)], { key: "total", number: { value: e9(`sum(${JSON.stringify(p.data)}, ${JSON.stringify(p.value)})`), format: ",.0f" }, style: { font: "font.title", size: "$size.title", align: "middle" } }) : null
       ]
     });
@@ -2440,8 +2447,8 @@ var swarm = recipe9({
   doc: "A beeswarm: every row a dot along one value axis, packed so none overlap (windowed neighbour search; 20k dots in about a second). In a plot it needs only `x`: without a `y`, the plot draws no y axis.",
   params: { data: t9.table(), x: t9.field(), color: t9.field(), r: t9.number(3.5), xType: t9.string("linear") },
   expand(p, cx) {
-    const tbl = cx.table("swarm", p.data, op7.beeswarm({ position: e9(`scale.x(d.${p.x})`), radius: p.r + 0.5, as: "offset" }));
-    return instances3({ key: "swarm", from: tbl, x: e9(`scale.x(d.${p.x})`), y: e9("box.h / 2 + d.offset"), r: p.r, fill: p.color ? e9(`scale.color(d.${p.color})`) : "$mark", label: e9(`\`\${d.${p.x}}\``) });
+    const tbl = cx.table("swarm", p.data, op7.beeswarm({ position: e9(`scale.x(${fld(p.x)})`), radius: p.r + 0.5, as: "offset" }));
+    return instances3({ key: "swarm", from: tbl, x: e9(`scale.x(${fld(p.x)})`), y: e9("box.h / 2 + d.offset"), r: p.r, fill: p.color ? e9(`scale.color(${fld(p.color)})`) : "$mark", label: e9(`\`\${${fld(p.x)}}\``) });
   }
 });
 var sankey = recipe9({
@@ -2465,7 +2472,7 @@ var sankey = recipe9({
       key: "sankey",
       scales: { color: { type: "categorical", domain: { data: nodes, field: "name" }, range: "$categorical" } },
       children: [
-        group9({ key: "links", children: [repeat8(links, shape9(geom9.path(e9("d.path")), { fill: e9(`scale.color(d.${p.source})`), opacity: p.selected ? e9(`${p.selected}.isEmpty() || ${p.selected}.has(d.${p.source}) || ${p.selected}.has(d.${p.target}) ? 0.42 : 0.12`) : 0.42, semantics: { role: "datum", label: p.label ?? e9(`\`\${d.${p.source}} \u2192 \${d.${p.target}}: \${d.${p.value}}\``) }, pickable: true }))] }),
+        group9({ key: "links", children: [repeat8(links, shape9(geom9.path(e9("d.path")), { fill: e9(`scale.color(${fld(p.source)})`), opacity: p.selected ? e9(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(p.source)}) || ${p.selected}.has(${fld(p.target)}) ? 0.42 : 0.12`) : 0.42, semantics: { role: "datum", label: p.label ?? e9(`\`\${${fld(p.source)}} \u2192 \${${fld(p.target)}}: \${${fld(p.value)}}\``) }, pickable: true }))] }),
         // Nodes closer than a line of their names (a short box, a reader's big text): a name that
         // would touch an earlier one is left out (its node still says it, to a pointer and a reader).
         group9({ key: "nodes", declutter: true, children: [repeat8(nodes, group9({ children: [
@@ -2483,19 +2490,19 @@ var waterfall = recipe9({
   params: { data: t9.table(), x: t9.field(), y: t9.field(), total: t9.field(), xType: t9.string("band"), yType: t9.string("linear"), format: t9.string(",.0f"), prefix: t9.string(void 0, "Before each label's number ('$')."), suffix: t9.string(void 0, "After it ('M', ' kr').") },
   expand(p, cx) {
     const tbl = cx.table("waterfall", p.data, op7.waterfall({ value: p.y, total: p.total }));
-    const fill = `(d.is_total || d.start == 0 ? "$ink-2" : d.${p.y} >= 0 ? "$positive" : "$negative")`;
+    const fill = `(d.is_total || d.start == 0 ? "$ink-2" : ${fld(p.y)} >= 0 ? "$positive" : "$negative")`;
     const top = "min(scale.y(d.start), scale.y(d.end))";
     const inside = `(${top} - 4 - token("size.label") < -2 && abs(scale.y(d.start) - scale.y(d.end)) >= token("size.label") + 8)`;
     return group9({
       key: "waterfall",
       children: [repeat8(tbl, group9({ children: [
-        shape9(geom9.rect({ x: e9(`scale.x(d.${p.x})`), y: e9("min(scale.y(d.start), scale.y(d.end))"), w: e9("scale.x.bandwidth()"), h: e9("abs(scale.y(d.start) - scale.y(d.end))") }), {
+        shape9(geom9.rect({ x: e9(`scale.x(${fld(p.x)})`), y: e9("min(scale.y(d.start), scale.y(d.end))"), w: e9("scale.x.bandwidth()"), h: e9("abs(scale.y(d.start) - scale.y(d.end))") }), {
           key: "bar",
           fill: e9(fill),
           semantics: { role: "datum", label: lbl(p.x, p.y, p.format) },
           pickable: true
         }),
-        affixed2(p, `d.is_total ? d.end : d.${p.y}`, [e9(`scale.x(d.${p.x}) + scale.x.bandwidth() / 2`), e9(`${inside} ? ${top} + 4 : ${top} - 4`)], { key: "label", style: { size: "$size.label", ink: e9(`${inside} ? "on(" + ${fill} + ")" : "$ink-2"`), align: "middle", baseline: e9(`${inside} ? "top" : "alphabetic"`) } })
+        affixed2(p, `d.is_total ? d.end : ${fld(p.y)}`, [e9(`scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2`), e9(`${inside} ? ${top} + 4 : ${top} - 4`)], { key: "label", style: { size: "$size.label", ink: e9(`${inside} ? "on(" + ${fill} + ")" : "$ink-2"`), align: "middle", baseline: e9(`${inside} ? "top" : "alphabetic"`) } })
       ] }))]
     });
   }
@@ -2515,13 +2522,13 @@ var funnel = recipe9({
   tokens: ["mark", "ink", "ink-2", "muted", "paper", "size.label", "font.title", "size.title"],
   expand(p, cx) {
     const tbl = cx.table("funnel", p.data, op7.window("lead", p.value, "next"));
-    const v = `d.${p.value}`;
+    const v = `${fld(p.value)}`;
     const fill = p.fill ?? "$mark";
     const fillInk = typeof fill === "string" ? JSON.stringify(`on(${fill})`) : `"$accent-ink"`;
     const value = `format(${v}, ${JSON.stringify(p.format)})`;
     const half = `scale.fw(${v}) / 2`;
     const fits = `measure(${value}, token("size.label"), 600) + 14 <= scale.fw(${v})`;
-    const top = `scale.fy(d.${p.stage})`, bottom = `${top} + scale.fy.bandwidth()`, gapMid = `${bottom} + (scale.fy.step() - scale.fy.bandwidth()) / 2`;
+    const top = `scale.fy(${fld(p.stage)})`, bottom = `${top} + scale.fy.bandwidth()`, gapMid = `${bottom} + (scale.fy.step() - scale.fy.bandwidth()) / 2`;
     const nextHalf = `scale.fw(d.next) / 2`;
     const connector2 = `\`M \${box.w / 2 - ${half}} \${${bottom}} L \${box.w / 2 + ${half}} \${${bottom}} L \${box.w / 2 + ${nextHalf}} \${${bottom} + scale.fy.step() - scale.fy.bandwidth()} L \${box.w / 2 - ${nextHalf}} \${${bottom} + scale.fy.step() - scale.fy.bandwidth()} Z\``;
     return group9({
@@ -2539,7 +2546,7 @@ var funnel = recipe9({
           layout: { type: "columns", gap: 14 },
           children: [
             // Stage names, as wide as the widest (measured by layout), so none spills or overlaps.
-            group9({ key: "stages", size: { w: "auto" }, children: [repeat8(tbl, text8(e9(`key.name(d.${p.stage})`), [0, e9(`${top} + scale.fy.bandwidth() / 2`)], {
+            group9({ key: "stages", size: { w: "auto" }, children: [repeat8(tbl, text8(e9(`key.name(${fld(p.stage)})`), [0, e9(`${top} + scale.fy.bandwidth() / 2`)], {
               key: "stage",
               style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "middle" },
               semantics: { role: "decoration" }
@@ -2582,7 +2589,7 @@ var calendar = recipe9({
       key: "calendar",
       scales: { c: { type: "sequential", domain: { data: p.data, field: p.value }, range: "$sequential" } },
       children: [
-        instances3({ key: "days", from: tbl, proto: "rect", x: e9(`d.cx + ${gutter}`), y: e9("d.cy + d.panel * 8 * d.cell"), w: e9("d.cell - 1"), h: e9("d.cell - 1"), fill: e9(`scale.c(d.${p.value})`), label: p.label ?? e9(`\`\${formatDate(d.${p.date}, "%-d %b %Y")}: \${d.${p.value}}\``) }),
+        instances3({ key: "days", from: tbl, proto: "rect", x: e9(`d.cx + ${gutter}`), y: e9("d.cy + d.panel * 8 * d.cell"), w: e9("d.cell - 1"), h: e9("d.cell - 1"), fill: e9(`scale.c(${fld(p.value)})`), label: p.label ?? e9(`\`\${formatDate(${fld(p.date)}, "%-d %b %Y")}: \${${fld(p.value)}}\``) }),
         group9({ key: "years", children: [repeat8(years, text8(e9('formatDate(d.first, "%Y")'), [0, e9(`d.panel * 8 * (${cell2})`)], { style: { size: "$size.label", ink: "$muted", baseline: "top" } }))] })
       ]
     });
@@ -2608,7 +2615,7 @@ var facet = recipe9({
       layout: { type: "grid", columns: p.columns, gap: p.gap },
       children: [repeat8({ groups: p.data, by: p.by }, group9({
         layout: { type: "rows", gap: 4 },
-        children: [text8(e9(`key.name(d.${p.by})`), [0, 0], { size: { h: "auto" }, style: { weight: 600, size: "$size.body", ink: "$ink", baseline: "top" } }), inner]
+        children: [text8(e9(`key.name(${fld(p.by)})`), [0, 0], { size: { h: "auto" }, style: { weight: 600, size: "$size.body", ink: "$ink", baseline: "top" } }), inner]
       }))]
     });
   }
@@ -2650,13 +2657,13 @@ var map = recipe10({
     const scales = {};
     let regions = p.source;
     if (p.data && p.key) {
-      const vals = cx.table("values", p.data, op8.derive("id", e10(`d.${p.key}`)));
+      const vals = cx.table("values", p.data, op8.derive("id", e10(`${fld(p.key)}`)));
       regions = cx.table("regions", p.source, op8.join(vals, "id", p.backdrop ? "left" : "inner"));
       scales.color = p.colorType === "piecewise" ? { type: "piecewise", stops: p.stops, domain: { data: p.data, field: p.value } } : { type: p.colorType, domain: { data: p.data, field: p.colorType === "categorical" ? p.key : p.value }, range: p.colorType === "categorical" ? "$categorical" : p.colorType === "diverging" ? "$diverging" : "$sequential" };
     }
-    const color = p.data ? `d.${p.value} == null ? "$map.no-data" : scale.color(d.${p.colorType === "categorical" ? p.key : p.value})` : `"$map.land"`;
+    const color = p.data ? `${fld(p.value)} == null ? "$map.no-data" : scale.color(${fld(p.colorType === "categorical" ? p.key : p.value)})` : `"$map.land"`;
     const fill = p.selected ? e10(`${p.selected}.isEmpty() || ${p.selected}.has(d.id) ? (${color}) : "$map.no-data"`) : p.data ? e10(color) : "$map.land";
-    const label = p.label ?? (p.data ? e10(`\`\${d.name ?? d.id}: \${d.${p.value} == null ? "no data" : format(d.${p.value}, ${JSON.stringify(p.format)})}\``) : e10("d.name ?? d.id"));
+    const label = p.label ?? (p.data ? e10(`\`\${d.name ?? d.id}: \${${fld(p.value)} == null ? "no data" : format(${fld(p.value)}, ${JSON.stringify(p.format)})}\``) : e10("d.name ?? d.id"));
     const coord = { type: "geo", projection: p.projection, fit: p.fit ?? { source: p.source }, padding: p.padding };
     const layers = [
       p.base?.length ? group10({ key: "base", children: p.base }) : null,
@@ -2669,7 +2676,7 @@ var map = recipe10({
       p.regions === false ? null : group10({ key: "regions", opacity: (p.fillOpacity ?? (p.base?.length ? 0.85 : 1)) < 1 ? p.fillOpacity ?? 0.85 : void 0, children: [repeat9(regions, shape10(geom10.feature(p.source, e10("d.id")), {
         fill,
         stroke: p.stroke ? { paint: "$map.border", width: 0.5, nonScaling: true } : void 0,
-        semantics: { role: "region", label, value: p.data ? e10(`d.${p.value}`) : void 0 },
+        semantics: { role: "region", label, value: p.data ? e10(`${fld(p.value)}`) : void 0 },
         on: p.chapter ? { activate: { chapter: p.chapter, key: e10("d.id") } } : void 0,
         pickable: true
       }))] }),
@@ -2726,25 +2733,25 @@ var symbols = recipe10({
     label: t10.prop("Label per symbol (tooltip, accessible name); default `name: value`.")
   },
   expand(p) {
-    const name = `key.name(d.${p.key})`;
+    const name = `key.name(${fld(p.key)})`;
     const scales = {};
     if (p.value) scales.size = { type: "sqrt", domain: { data: p.data, field: p.value }, range: [0, p.max], zero: true };
     if (p.value && p.stops) scales.fill = { type: "piecewise", stops: p.stops, domain: { data: p.data, field: p.value } };
-    const fill = p.value && p.stops ? e10(`scale.fill(d.${p.value})`) : p.fill ?? "$accent@0.7";
+    const fill = p.value && p.stops ? e10(`scale.fill(${fld(p.value)})`) : p.fill ?? "$accent@0.7";
     return group10({
       key: "symbols",
       scales: p.value ? scales : void 0,
       children: [instances4({
         key: "circles",
         from: p.data,
-        instanceKey: e10(`d.${p.key}`),
-        x: e10(`geo.cx(${JSON.stringify(p.source)}, d.${p.key})`),
-        y: e10(`geo.cy(${JSON.stringify(p.source)}, d.${p.key})`),
-        r: p.value ? e10(`scale.size(d.${p.value})`) : p.r,
+        instanceKey: e10(`${fld(p.key)}`),
+        x: e10(`geo.cx(${JSON.stringify(p.source)}, ${fld(p.key)})`),
+        y: e10(`geo.cy(${JSON.stringify(p.source)}, ${fld(p.key)})`),
+        r: p.value ? e10(`scale.size(${fld(p.value)})`) : p.r,
         fill,
         stroke: { paint: "$paper", width: 0.75 },
         screenSize: true,
-        label: p.label ?? (p.value ? e10(`\`\${${name}}: \${format(d.${p.value}, ${JSON.stringify(p.format)})}\``) : e10(name))
+        label: p.label ?? (p.value ? e10(`\`\${${name}}: \${format(${fld(p.value)}, ${JSON.stringify(p.format)})}\``) : e10(name))
       })]
     });
   }
@@ -2758,9 +2765,9 @@ var geoPoints = recipe10({
     return instances4({
       key: "points",
       from: p.data,
-      instanceKey: p.key ? e10(`d.${p.key}`) : void 0,
-      x: e10(`geo.x(d.${p.lon}, d.${p.lat})`),
-      y: e10(`geo.y(d.${p.lon}, d.${p.lat})`),
+      instanceKey: p.key ? e10(`${fld(p.key)}`) : void 0,
+      x: e10(`geo.x(${fld(p.lon)}, ${fld(p.lat)})`),
+      y: e10(`geo.y(${fld(p.lon)}, ${fld(p.lat)})`),
       r: p.r ?? 3,
       fill: p.fill ?? "$map.marker",
       stroke: { paint: "$map.label-halo", width: 1 },
@@ -2789,13 +2796,13 @@ var geoLines = recipe10({
       return group10({ key: `lines-${p.source}`, children: [repeat9(p.source, shape10(geom10.feature(p.source, e10("d.id")), { stroke: stroke(p.ink), semantics: { role: "decoration" } }))] });
     }
     const coloured = !!(p.value && p.stops);
-    const label = p.value ? e10(`key.name(d.${p.key}) + ": " + format(d.${p.value}, ${JSON.stringify(p.format)})`) : e10(`key.name(d.${p.key})`);
+    const label = p.value ? e10(`key.name(${fld(p.key)}) + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)})`) : e10(`key.name(${fld(p.key)})`);
     return group10({
       key: `lines-${p.source}`,
       scales: coloured ? { stroke: { type: "piecewise", stops: p.stops, domain: { data: p.data, field: p.value } } } : void 0,
-      children: [repeat9(p.data, shape10(geom10.feature(p.source, e10(`d.${p.key}`)), {
-        key: e10(`d.${p.key}`),
-        stroke: stroke(coloured ? e10(`scale.stroke(d.${p.value})`) : p.ink),
+      children: [repeat9(p.data, shape10(geom10.feature(p.source, e10(`${fld(p.key)}`)), {
+        key: e10(`${fld(p.key)}`),
+        stroke: stroke(coloured ? e10(`scale.stroke(${fld(p.value)})`) : p.ink),
         semantics: { role: "datum", label },
         pickable: true
       }))]
@@ -2807,7 +2814,7 @@ var route = recipe10({
   doc: "Great-circle routes between two lon/lat points per row.",
   params: { data: t10.table(), lon0: t10.field(), lat0: t10.field(), lon1: t10.field(), lat1: t10.field(), ink: t10.ink("$accent@0.6"), width: t10.prop() },
   expand(p) {
-    return group10({ key: "routes", children: [repeat9(p.data, shape10(geom10.path(e10(`geo.geodesic(d.${p.lon0}, d.${p.lat0}, d.${p.lon1}, d.${p.lat1})`)), { stroke: { paint: p.ink, width: p.width ?? 1.5, nonScaling: true, cap: "round" } }))] });
+    return group10({ key: "routes", children: [repeat9(p.data, shape10(geom10.path(e10(`geo.geodesic(${fld(p.lon0)}, ${fld(p.lat0)}, ${fld(p.lon1)}, ${fld(p.lat1)})`)), { stroke: { paint: p.ink, width: p.width ?? 1.5, nonScaling: true, cap: "round" } }))] });
   }
 });
 var track = recipe10({
@@ -2825,14 +2832,14 @@ var track = recipe10({
   },
   expand(p, cx) {
     const until = typeof p.until === "number" ? String(p.until) : p.until && typeof p.until === "object" && "expr" in p.until ? p.until.expr : "1e18";
-    const drawn = cx.table("drawn", p.data, op8.filter(e10(`d.${p.time} <= (${until})`)));
+    const drawn = cx.table("drawn", p.data, op8.filter(e10(`${fld(p.time)} <= (${until})`)));
     return group10({
       key: "track",
       children: [
-        p.future ? shape10(geom10.polyline({ from: p.data, x: e10(`geo.x(d.${p.lon}, d.${p.lat})`), y: e10(`geo.y(d.${p.lon}, d.${p.lat})`), curve: "catmull-rom" }), { key: "future", stroke: { paint: p.ink, width: 1.5, nonScaling: true, cap: "round", join: "round", dash: [4, 4] }, opacity: 0.35 }) : null,
+        p.future ? shape10(geom10.polyline({ from: p.data, x: e10(`geo.x(${fld(p.lon)}, ${fld(p.lat)})`), y: e10(`geo.y(${fld(p.lon)}, ${fld(p.lat)})`), curve: "catmull-rom" }), { key: "future", stroke: { paint: p.ink, width: 1.5, nonScaling: true, cap: "round", join: "round", dash: [4, 4] }, opacity: 0.35 }) : null,
         // The head is the path's own end: when the clock moves between steps the path grows along
         // itself (a line that runs on is trimmed, not bent) and the head rides its tip.
-        shape10(geom10.polyline({ from: drawn, x: e10(`geo.x(d.${p.lon}, d.${p.lat})`), y: e10(`geo.y(d.${p.lon}, d.${p.lat})`), curve: "catmull-rom" }), {
+        shape10(geom10.polyline({ from: drawn, x: e10(`geo.x(${fld(p.lon)}, ${fld(p.lat)})`), y: e10(`geo.y(${fld(p.lon)}, ${fld(p.lat)})`), curve: "catmull-rom" }), {
           key: "path",
           stroke: { paint: p.ink, width: 2.5, nonScaling: true, cap: "round", join: "round" },
           markers: p.head ? { end: { type: "dot", r: 5 } } : void 0
@@ -2855,8 +2862,8 @@ var dotDensity = recipe10({
     seed: t10.number(1)
   },
   expand(p, cx) {
-    const dots = cx.table("dots", p.data, op8.scatterIn({ geo: p.source, key: p.key, count: e10(`floor(d.${p.value} / ${p.per})`), seed: p.seed }));
-    const label = p.key ? e10(`key.name(d.${p.key})`) : void 0;
+    const dots = cx.table("dots", p.data, op8.scatterIn({ geo: p.source, key: p.key, count: e10(`floor(${fld(p.value)} / ${p.per})`), seed: p.seed }));
+    const label = p.key ? e10(`key.name(${fld(p.key)})`) : void 0;
     return instances4({ key: "dots", from: dots, x: e10("geo.x(d.lon, d.lat)"), y: e10("geo.y(d.lon, d.lat)"), r: p.r, fill: p.fill ?? "$ink@0.7", screenSize: true, label });
   }
 });
@@ -3325,8 +3332,8 @@ var cloud = recipe13({
         p.glow != null && p.glow !== 0 ? instances5({
           key: "glow",
           from: p.data,
-          x: e13(`d.${p.x}`),
-          y: e13(`d.${p.y}`),
+          x: e13(`${fld(p.x)}`),
+          y: e13(`${fld(p.y)}`),
           r: p.glow,
           fill: p.fill ?? "$mark",
           opacity: p.glowOpacity ?? 0.05,
@@ -3337,12 +3344,12 @@ var cloud = recipe13({
         instances5({
           key: "rows",
           from: p.data,
-          x: e13(`d.${p.x}`),
-          y: e13(`d.${p.y}`),
+          x: e13(`${fld(p.x)}`),
+          y: e13(`${fld(p.y)}`),
           r: p.r ?? 1.2,
           fill: p.fill ?? "$mark",
           opacity: p.opacity,
-          label: p.label ?? e13(`\`\${d.${p.x}}, \${d.${p.y}}\``),
+          label: p.label ?? e13(`\`\${${fld(p.x)}}, \${${fld(p.y)}}\``),
           screenSize: true,
           lod: { points: p.points, budget: p.budget },
           semantics: { role: "series", label: p.name ?? `${p.data}: ${p.y} against ${p.x}` }
@@ -3577,7 +3584,7 @@ var contours = recipe14({
           semantics: { role: "region", label: tip },
           pickable: true
         }))] }) : null,
-        dots ? instances6({ key: "dots", from: dots, x: e14(`scale.x(d.${p.x})`), y: e14(`scale.y(d.${p.y})`), r: 1.1, fill: "$ink", opacity: 0.28, semantics: { role: "decoration" } }) : null,
+        dots ? instances6({ key: "dots", from: dots, x: e14(`scale.x(${fld(p.x)})`), y: e14(`scale.y(${fld(p.y)})`), r: 1.1, fill: "$ink", opacity: 0.28, semantics: { role: "decoration" } }) : null,
         lines ? group13({ key: "lines", children: [repeat10(paths, shape13(geom13.path(e14("d.path")), {
           stroke: { paint: p.stroke ?? (bands ? "$paper" : e14("scale.lev(d.level)")), width: bands ? 0.8 : e14("1 + d.level * 0.35"), join: "round" },
           semantics: bands ? { role: "decoration" } : { role: "region", label: tip },
@@ -3611,17 +3618,17 @@ var manyLines = recipe14({
   expand(p, cx) {
     const s = p.series;
     const band = p.xType === "band" || p.xType === "point";
-    const x = band ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const lines = cx.table("lines", p.data, op9.paths({ by: s, x: e14(x), y: e14(`scale.y(d.${p.y})`) }));
+    const x = band ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const lines = cx.table("lines", p.data, op9.paths({ by: s, x: e14(x), y: e14(`scale.y(${fld(p.y)})`) }));
     const count = `table.count(${q(lines)})`;
     const isExprObj = (v) => typeof v === "object" && v !== null && "expr" in v;
     const opacity = p.opacity ? String(p.opacity) : `clamp(3 / sqrt(max(${count}, 1)), 0.04, 0.7)`;
     const inkSrc = (v) => isExprObj(v) ? `(${v.expr})` : q(v);
     const rest = p.stroke ?? "$muted";
     const accent = p.highlightStroke ?? "$accent";
-    const tip = p.label ?? e14(`key.name(d.${s})`);
+    const tip = p.label ?? e14(`key.name(${fld(s)})`);
     const hl = p.highlight;
-    const hlTest = hl === void 0 || hl === null ? null : Array.isArray(hl) ? hl.map((v) => `d.${s} == ${q(v)}`).join(" || ") || "false" : isExprObj(hl) ? `d.${s} == (${hl.expr})` : `d.${s} == ${q(hl)}`;
+    const hlTest = hl === void 0 || hl === null ? null : Array.isArray(hl) ? hl.map((v) => `${fld(s)} == ${q(v)}`).join(" || ") || "false" : isExprObj(hl) ? `${fld(s)} == (${hl.expr})` : `${fld(s)} == ${q(hl)}`;
     const picked = hlTest ? cx.table("highlight", lines, op9.filter(e14(hlTest))) : null;
     const names = picked && p.labels ? cx.table("names", picked, op9.spread({ position: e14("d.end_y"), gap: e14('token("size.label") + 3'), min: 0, max: e14("box.h"), as: "label_y" })) : null;
     const path = (width, paint, extra) => shape13(geom13.path(e14("d.path")), { stroke: { paint, width, join: "round", cap: "round" }, pickable: true, semantics: { role: "series", label: tip }, ...extra });
@@ -3632,7 +3639,7 @@ var manyLines = recipe14({
         // Hovered (with a mouse), a series takes the highlight's ink, width and full opacity.
         group13({ key: "all", children: [repeat10(lines, p.hover ? path(e14(`hover() ? ${p.highlightWidth || 2.5} : ${p.width || 1}`), e14(`hover() ? ${inkSrc(accent)} : ${inkSrc(rest)}`), { opacity: e14(`hover() ? 1 : ${opacity}`) }) : path(p.width || 1, rest, { opacity: e14(opacity) }))] }),
         picked ? group13({ key: "highlight", children: [repeat10(picked, path(p.highlightWidth || 2.5, accent, {}))] }) : null,
-        names ? group13({ key: "labels", children: [repeat10(names, text12(e14(`key.name(d.${s})`), [e14("d.end_x - 6"), e14("d.label_y")], {
+        names ? group13({ key: "labels", children: [repeat10(names, text12(e14(`key.name(${fld(s)})`), [e14("d.end_x - 6"), e14("d.label_y")], {
           style: { size: "$size.label", weight: 600, ink: accent, align: "end", baseline: "middle", contain: true },
           halo: ["$paper", 3]
         }))] }) : null
@@ -3644,7 +3651,7 @@ var manyLines = recipe14({
 // src/networks.ts
 import { e as e15, group as group14, op as op10, recipe as recipe15, repeat as repeat11, shape as shape14, geom as geom14, t as t15, text as text13 } from "@datars/sdk";
 var J = JSON.stringify;
-var col = (name) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name) ? `d.${name}` : `d[${J(name)}]`;
+var col = fld;
 function graphNames(p) {
   const id = p.id ?? "id";
   return { id, source: p.source ?? "source", target: p.target ?? "target", label: p.label ? col(p.label) : `key.name(${col(id)})` };
@@ -4245,7 +4252,6 @@ var icicle = recipe15({
 // src/business.ts
 import { e as e16, geom as geom15, group as group15, instances as instances7, op as op11, recipe as recipe16, repeat as repeat12, shape as shape15, t as t16, text as text14 } from "@datars/sdk";
 var q2 = (s) => JSON.stringify(s);
-var fld = (f) => /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(f) ? `d.${f}` : `d[${JSON.stringify(f)}]`;
 function vsrc(v, fallback = "null") {
   if (typeof v === "number") return Number.isFinite(v) ? String(v) : "null";
   if (typeof v === "boolean") return String(v);
@@ -4762,7 +4768,7 @@ var dataTable = recipe16({
           sy: { type: "linear", domain: { data: "@group", field: sy }, range: [`=${rowH} - 6`, 6], zero: false, nice: false }
         },
         children: [
-          shape15(geom15.polyline({ from: "@group", x: e16("scale.sx(d.__sx)"), y: e16(`scale.sy(d.${sy})`), curve: "linear" }), { key: "line", stroke: { paint: ink, width: 1.5, join: "round", cap: "round" }, semantics: { role: "decoration" } }),
+          shape15(geom15.polyline({ from: "@group", x: e16("scale.sx(d.__sx)"), y: e16(`scale.sy(${fld(sy)})`), curve: "linear" }), { key: "line", stroke: { paint: ink, width: 1.5, join: "round", cap: "round" }, semantics: { role: "decoration" } }),
           shape15(geom15.circle({ cx: e16("scale.sx.max()"), cy: e16(`scale.sy(${last})`), r: 2 }), { key: "dot", when: e16(`${last} != null`), fill: ink, semantics: { role: "decoration" } })
         ]
       });
@@ -5154,6 +5160,7 @@ export {
   facet,
   financeDomain,
   financeKey,
+  fld,
   funnel,
   gantt,
   gauge,

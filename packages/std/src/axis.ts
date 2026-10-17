@@ -2,6 +2,7 @@
 // the engine, so the plot area gets exactly the space the labels leave.
 
 import { e, group, op, recipe, repeat, shape, geom, t, text, Template } from "@datars/sdk";
+import { fld } from "./field.js";
 
 export interface AxisParams { scale: string; orient: "left" | "bottom" | "right" | "top"; ticks: number; format: string; label: string; name: string; line: boolean; prefix: string; suffix: string; data: string; field: string; type: string }
 
@@ -61,7 +62,7 @@ export const axis = recipe<AxisParams>({
     // more — flat when it's close, since flat reads better. Names unknown (a facet's panel): every
     // k-th, wrapped at 36 px.
     const names = !vertical && p.data && p.field
-      ? cx.table("names", p.data, op.derive("w", e(`measure(key.name(d.${p.field}), ${size})`)), op.derive("ww", e(`measure.word(key.name(d.${p.field}), ${size})`)))
+      ? cx.table("names", p.data, op.derive("w", e(`measure(key.name(${fld(p.field)}), ${size})`)), op.derive("ww", e(`measure.word(key.name(${fld(p.field)}), ${size})`)))
       : null;
     const step = `${S}.step()`;
     const W = names ? `table.max(${JSON.stringify(names)}, "w")` : "36";

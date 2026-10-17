@@ -16,3 +16,4 @@ export { candlestick, ohlc, volume, movingAverage, bollinger, indexed, drawdown,
 export { slope, dumbbell, bump, lollipop, pyramid, marimekko, histogram, boxplot, violin, ridgeline, errorBars, stackedArea, connectedScatter, comparisonFrame } from "./comparisons.js";
 export { network, arcDiagram, chord, matrix, tree, dendrogram, sunburst, icicle } from "./networks.js";
 export { kpi, bullet, gauge, progress, gantt, timeline, radar, dataTable, tileMap } from "./business.js";
+export { fld } from "./field.js";

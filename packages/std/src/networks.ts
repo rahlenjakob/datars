@@ -4,10 +4,11 @@
 // partitions); these recipes only draw the rows they add.
 
 import { e, group, op, recipe, repeat, shape, geom, t, text, Cx, Prop, Template } from "@datars/sdk";
+import { fld } from "./field.js";
 
 const J = JSON.stringify;
-/** A column of the current row, as expression source. */
-const col = (name: string) => (/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(name) ? `d.${name}` : `d[${J(name)}]`);
+/** A column of the current row, as expression source (`fld`). */
+const col = fld;
 
 // Helper signatures use one-line `type`s, never inline object types: `datars eject` copies each
 // helper by its first brace block and each `type` by its line.

@@ -12,12 +12,13 @@
 import { e, geom, group, op, recipe, repeat, shape, t, text, Cx, Op, Prop, Recipe, Template } from "@datars/sdk";
 import { area, line } from "./marks.js";
 import { rule } from "./guides.js";
+import { fld } from "./field.js";
 
 const isBand = (t?: string) => t === "band" || t === "point";
 /** The centre of a row's slot on x. */
-const xMid = (x: string, xType: string) => (isBand(xType) ? `scale.x(d.${x}) + scale.x.bandwidth() / 2` : `scale.x(d.${x})`);
+const xMid = (x: string, xType: string) => (isBand(xType) ? `scale.x(${fld(x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(x)})`);
 /** An ink chosen per row by direction (close at or above open: up). */
-const byDirection = (o: string, c: string, up: string, down: string) => e(`d.${c} >= d.${o} ? ${JSON.stringify(up)} : ${JSON.stringify(down)}`);
+const byDirection = (o: string, c: string, up: string, down: string) => e(`${fld(c)} >= ${fld(o)} ? ${JSON.stringify(up)} : ${JSON.stringify(down)}`);
 /** A field name safe in expressions for a number (2.5 → 2_5). */
 const tag = (v: number) => String(v).replace(/[^0-9A-Za-z]/g, "_");
 /** A recipe's name, whatever its package: an ejected `@local/candlestick/candlestick` is still a candlestick. */
@@ -48,9 +49,9 @@ type Ohlc = { open: string; high: string; low: string; close: string; y: string;
  * change from the previous close when there is one. */
 function ohlcLabel(p: Ohlc): Prop {
   const c = p.close ?? p.y;
-  const f = (v: string) => `format(d.${v}, ${JSON.stringify(p.format)})`;
-  const change = `(d.prev_close > 0 ? " (" + format(d.${c} / d.prev_close - 1, "+.2%") + ")" : "")`;
-  return e(`scale.x.label(d.${p.x}) + " · O " + ${f(p.open)} + " H " + ${f(p.high)} + " L " + ${f(p.low)} + " C " + ${f(c)} + ${change}`);
+  const f = (v: string) => `format(${fld(v)}, ${JSON.stringify(p.format)})`;
+  const change = `(d.prev_close > 0 ? " (" + format(${fld(c)} / d.prev_close - 1, "+.2%") + ")" : "")`;
+  return e(`scale.x.label(${fld(p.x)}) + " · O " + ${f(p.open)} + " H " + ${f(p.high)} + " L " + ${f(p.low)} + " C " + ${f(c)} + ${change}`);
 }
 
 // ---- candlestick --------------------------------------------------------------------------------
@@ -82,17 +83,17 @@ export const candlestick = recipe<CandlestickParams>({
     const mid = xMid(p.x, p.xType);
     const w = slotWidth(p);
     const ink = byDirection(o, c, p.up, p.down);
-    const wick = shape(geom.segment({ x1: e(mid), y1: e(`scale.y(d.${h})`), x2: e(mid), y2: e(`scale.y(d.${l})`) }), { stroke: { paint: ink, width: 1 }, semantics: { role: "decoration" } });
+    const wick = shape(geom.segment({ x1: e(mid), y1: e(`scale.y(${fld(h)})`), x2: e(mid), y2: e(`scale.y(${fld(l)})`) }), { stroke: { paint: ink, width: 1 }, semantics: { role: "decoration" } });
     const body = shape(geom.rect({
       x: e(`${mid} - (${w}) / 2`),
-      y: e(`min(scale.y(d.${o}), scale.y(d.${c}))`),
+      y: e(`min(scale.y(${fld(o)}), scale.y(${fld(c)}))`),
       w: e(w),
       // A doji (open = close) still shows as a line.
-      h: e(`max(1, abs(scale.y(d.${o}) - scale.y(d.${c})))`),
+      h: e(`max(1, abs(scale.y(${fld(o)}) - scale.y(${fld(c)})))`),
     }), {
-      fill: p.hollow ? e(`d.${c} >= d.${o} ? "$paper" : ${JSON.stringify(p.down)}`) : ink,
+      fill: p.hollow ? e(`${fld(c)} >= ${fld(o)} ? "$paper" : ${JSON.stringify(p.down)}`) : ink,
       stroke: p.hollow ? { paint: ink, width: 1 } : undefined,
-      semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e(`d.${c}`) },
+      semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e(`${fld(c)}`) },
       pickable: true,
     });
     // Bodies are keyed by the datum (a std convention) so a candle morphs to the same day's
@@ -130,14 +131,14 @@ export const ohlc = recipe<OhlcParams>({
     const tbl = cx.table("bars", p.data, op.window("lag", c, "prev_close", { order: p.x }));
     const mid = xMid(p.x, p.xType);
     const half = `(${slotWidth(p)}) / 2`;
-    const y = (f: string) => `scale.y(d.${f})`;
+    const y = (f: string) => `scale.y(${fld(f)})`;
     const path = `\`M \${${mid}} \${${y(h)}} L \${${mid}} \${${y(l)}} M \${${mid} - ${half}} \${${y(o)}} L \${${mid}} \${${y(o)}} M \${${mid}} \${${y(c)}} L \${${mid} + ${half}} \${${y(c)}}\``;
     return group({
       key: "ohlc",
       semantics: { role: "series", label: `${c} bars` },
       children: [repeat(tbl, shape(geom.path(e(path)), {
         stroke: { paint: p.colored ? byDirection(o, c, p.up, p.down) : "$ink", width: e(`max(1, min(2, ${half} / 2))`), cap: "butt" },
-        semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e(`d.${c}`) },
+        semantics: { role: "datum", label: p.label ?? ohlcLabel({ ...p, close: c }), value: e(`${fld(c)}`) },
         pickable: true,
       }))],
     });
@@ -169,7 +170,7 @@ export const volume = recipe<VolumeParams>({
     const c = p.close ?? (p.y && p.y !== p.volume ? p.y : "close");
     const s = p.yScale || "lower";
     const w = slotWidth(p);
-    const v = `d.${p.volume}`;
+    const v = `${fld(p.volume)}`;
     return group({
       key: "volume",
       semantics: { role: "series", label: p.volume },
@@ -181,7 +182,7 @@ export const volume = recipe<VolumeParams>({
       }), {
         fill: p.colored ? byDirection(p.open, c, p.up, p.down) : "$muted",
         opacity: p.opacity,
-        semantics: { role: "datum", label: e(`scale.x.label(d.${p.x}) + " · volume " + format(${v}, ${JSON.stringify(p.format)})`), value: e(v) },
+        semantics: { role: "datum", label: e(`scale.x.label(${fld(p.x)}) + " · volume " + format(${v}, ${JSON.stringify(p.format)})`), value: e(v) },
         pickable: true,
       }))],
     });
@@ -245,8 +246,8 @@ function bandOps(p: BandParams): [string[], Op[]] {
   return [[mid, hi, lo], [
     op.window("rolling_mean", p.y, mid, o),
     op.window("rolling_std", p.y, sd, o),
-    op.derive(hi, e(`d.${mid} + ${p.k} * d.${sd}`)),
-    op.derive(lo, e(`d.${mid} - ${p.k} * d.${sd}`)),
+    op.derive(hi, e(`${fld(mid)} + ${p.k} * ${fld(sd)}`)),
+    op.derive(lo, e(`${fld(mid)} - ${p.k} * ${fld(sd)}`)),
   ]];
 }
 
@@ -293,7 +294,7 @@ function indexOps(p: IndexParams): [string, Op[]] {
   const as = p.percent ? "change" : "indexed";
   return [as, [
     op.window("first", p.y, "index_first", { partition: p.series ? [p.series] : undefined, order: p.x }),
-    op.derive(as, e(p.percent ? `d.${p.y} / d.index_first - 1` : `d.${p.y} / d.index_first * ${p.base}`)),
+    op.derive(as, e(p.percent ? `${fld(p.y)} / d.index_first - 1` : `${fld(p.y)} / d.index_first * ${p.base}`)),
   ]];
 }
 
@@ -333,8 +334,8 @@ function endLabels(cx: Cx, p: EndLabelParams): Template {
   const ends = cx.table("ends", p.table, op.aggregate(p.series ? [p.series] : [], { x_end: ["last", p.x], y_end: ["last", p.field] }),
     op.spread({ position: e("scale.y(d.y_end)"), gap: e('token("size.label") + 3'), min: 0, max: e("box.h"), as: "label_y" }));
   const xEnd = isBand(p.xType) ? "scale.x(d.x_end) + scale.x.bandwidth() / 2" : "scale.x(d.x_end)";
-  const name = p.series ? `key.name(d.${p.series}) + " " + ` : "";
-  const ink = p.ink ?? (p.series && p.color ? e(`scale.color(d.${p.series})`) : "$mark");
+  const name = p.series ? `key.name(${fld(p.series)}) + " " + ` : "";
+  const ink = p.ink ?? (p.series && p.color ? e(`scale.color(${fld(p.series)})`) : "$mark");
   return group({ key: "end-labels", children: [repeat(ends, text(e(`${name}${p.value}`), [e(`min(${xEnd}, box.w) + 6`), e("d.label_y")], { style: { size: "$size.label", ink, baseline: "middle", contain: true } }))] });
 }
 
@@ -348,7 +349,7 @@ type DrawdownOpsParams = { y: string; series: string; x: string };
 function drawdownOps(p: DrawdownOpsParams): [string, Op[]] {
   return ["drawdown", [
     op.window("cummax", p.y, "peak", { partition: p.series ? [p.series] : undefined, order: p.x }),
-    op.derive("drawdown", e(`d.peak > 0 ? d.${p.y} / d.peak - 1 : 0`)),
+    op.derive("drawdown", e(`d.peak > 0 ? ${fld(p.y)} / d.peak - 1 : 0`)),
   ]];
 }
 
@@ -403,7 +404,7 @@ export const sparkline = recipe<SparklineParams>({
   expand(p) {
     const [first, last] = [`group.first(${JSON.stringify(p.y)})`, `group.last(${JSON.stringify(p.y)})`];
     const ink = p.stroke ?? (p.trend ? e(`${last} >= ${first} ? "$up" : "$down"`) : "$mark");
-    const x = e(`scale.sx(d.${p.x})`), y = e(`scale.sy(d.${p.y})`);
+    const x = e(`scale.sx(${fld(p.x)})`), y = e(`scale.sy(${fld(p.y)})`);
     const label = e(`${JSON.stringify(p.name ? `${p.name}: ` : "")} + format(${last}, ${JSON.stringify(p.format)}) + " (" + format(${last} / ${first} - 1, "+.1%") + ")"`);
     const pad = p.dot ? 3 : 1;
     return group({
@@ -515,7 +516,7 @@ export function financeDomain(children: Template[], inherit: Inherited, cx: Cx):
   const shown: Op[] = [];
   const claimed = claims.flatMap((c, i) => c.fields.map((f) => {
     if (!c.when) return f;
-    shown.push(op.derive(`${f}_shown_${i}`, e(`(${c.when}) ? d.${f} : null`)));
+    shown.push(op.derive(`${f}_shown_${i}`, e(`(${c.when}) ? ${fld(f)} : null`)));
     return `${f}_shown_${i}`;
   }));
   const fields = [...new Set([...claimed, ...(replace || !inherit.y ? [] : [inherit.y])])];

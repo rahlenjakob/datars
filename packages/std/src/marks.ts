@@ -2,6 +2,7 @@
 // plot's scales (`x`, `y`, `color`) and inherits `data`/`x`/`y`/`color` from the plot.
 
 import { e, group, instances, op, recipe, repeat, shape, geom, t, text, Prop } from "@datars/sdk";
+import { fld } from "./field.js";
 
 // A number label: counting (`number`) when plain; with a prefix or suffix, formatted text with the
 // sign leading (−$38.6M). Kept local (as in charts.ts) so an ejected recipe stays self-contained.
@@ -13,7 +14,7 @@ function affixed(p: Affix, value: string, at: [Prop, Prop], opts: Record<string,
   return text(e(`(${v} < 0 ? "−" : "") + ${JSON.stringify(p.prefix ?? "")} + format(abs(${v}), ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")}`), at, opts);
 }
 
-const colorOr = (color: string | undefined, fallback: string) => (color ? e(`scale.color(d.${color})`) : fallback);
+const colorOr = (color: string | undefined, fallback: string) => (color ? e(`scale.color(${fld(color)})`) : fallback);
 /** An expression for the ink that reads on `fill` (a literal/token ink or an ink expression). */
 const onInkExpr = (fill: Prop) => (typeof fill === "string" ? JSON.stringify(`on(${fill})`) : fill && typeof fill === "object" && "expr" in fill ? `"on(" + (${(fill as { expr: string }).expr}) + ")"` : `"$ink"`);
 const isBand = (t?: string) => t === "band" || t === "point";
@@ -45,12 +46,12 @@ export const bar = recipe<BarParams>({
     const fill = p.fill ?? colorOr(p.color, "$mark");
     const cat = horizontal ? p.y : p.x;
     const val = horizontal ? p.x : p.y;
-    const opacity = p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(d.${cat}) ? 1 : token("dim")`) : undefined;
+    const opacity = p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(cat)}) ? 1 : token("dim")`) : undefined;
     const g = horizontal
-      ? geom.rect({ x: e(`min(scale.x(0), scale.x(d.${val}))`), y: e(`scale.y(d.${cat})`), w: e(`abs(scale.x(d.${val}) - scale.x(0))`), h: e("scale.y.bandwidth()"), r: p.radius || "$radius.bar" })
-      : geom.rect({ x: e(`scale.x(d.${cat})`), y: e(`min(scale.y(0), scale.y(d.${val}))`), w: e("scale.x.bandwidth()"), h: e(`abs(scale.y(0) - scale.y(d.${val}))`), r: p.radius || "$radius.bar" });
+      ? geom.rect({ x: e(`min(scale.x(0), scale.x(${fld(val)}))`), y: e(`scale.y(${fld(cat)})`), w: e(`abs(scale.x(${fld(val)}) - scale.x(0))`), h: e("scale.y.bandwidth()"), r: p.radius || "$radius.bar" })
+      : geom.rect({ x: e(`scale.x(${fld(cat)})`), y: e(`min(scale.y(0), scale.y(${fld(val)}))`), w: e("scale.x.bandwidth()"), h: e(`abs(scale.y(0) - scale.y(${fld(val)}))`), r: p.radius || "$radius.bar" });
     // Value labels only where they fit: as wide as the bar (vertical), as tall as the band (horizontal).
-    const text_ = `(${JSON.stringify(p.prefix ?? "")} + format(d.${val}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")})`;
+    const text_ = `(${JSON.stringify(p.prefix ?? "")} + format(${fld(val)}, ${JSON.stringify(p.format)}) + ${JSON.stringify(p.suffix ?? "")})`;
     const lw = `measure(${text_}, token("size.label"))`;
     const fits = horizontal
       ? e('scale.y.bandwidth() >= token("size.label") - 2')
@@ -58,15 +59,15 @@ export const bar = recipe<BarParams>({
     // Past the bar's end when there's room in the plot area; else just inside the end, in the ink
     // that reads on the bar — so the longest bar's label never leaves the canvas and the tallest
     // bar's never runs into the title.
-    const end = horizontal ? `max(scale.x(0), scale.x(d.${val}))` : `min(scale.y(0), scale.y(d.${val}))`;
-    const length = horizontal ? `abs(scale.x(d.${val}) - scale.x(0))` : `abs(scale.y(d.${val}) - scale.y(0))`;
+    const end = horizontal ? `max(scale.x(0), scale.x(${fld(val)}))` : `min(scale.y(0), scale.y(${fld(val)}))`;
+    const length = horizontal ? `abs(scale.x(${fld(val)}) - scale.x(0))` : `abs(scale.y(${fld(val)}) - scale.y(0))`;
     const inside = horizontal
       ? `(${end} + 4 + ${lw} > box.w && ${length} >= ${lw} + 8)`
       : `(${end} - 4 - token("size.label") < -2 && ${length} >= token("size.label") + 8)`;
     const ink = e(`${inside} ? ${onInkExpr(fill)} : "$ink-2"`);
     const label = horizontal
-      ? affixed(p, `d.${val}`, [e(`${inside} ? ${end} - 4 : ${end} + 4`), e(`scale.y(d.${cat}) + scale.y.bandwidth() / 2`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: e(`${inside} ? "end" : "start"`), baseline: "middle" } })
-      : affixed(p, `d.${val}`, [e(`scale.x(d.${cat}) + scale.x.bandwidth() / 2`), e(`${inside} ? ${end} + 4 : ${end} - 4`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) } });
+      ? affixed(p, `${fld(val)}`, [e(`${inside} ? ${end} - 4 : ${end} + 4`), e(`scale.y(${fld(cat)}) + scale.y.bandwidth() / 2`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: e(`${inside} ? "end" : "start"`), baseline: "middle" } })
+      : affixed(p, `${fld(val)}`, [e(`scale.x(${fld(cat)}) + scale.x.bandwidth() / 2`), e(`${inside} ? ${end} + 4 : ${end} - 4`)], { when: fits, style: { size: "$size.label", ink, contain: true, align: "middle", baseline: e(`${inside} ? "top" : "alphabetic"`) } });
     return group({
       key: "marks",
       semantics: { role: "series", label: `${val} by ${cat}` },
@@ -76,9 +77,9 @@ export const bar = recipe<BarParams>({
         repeat(p.data, shape(g, {
           fill,
           opacity,
-          semantics: { role: "datum", label: p.label ?? e(`\`\${key.name(d.${cat})}: \${format(d.${val}, ${JSON.stringify(p.format)})}\``), value: e(`d.${val}`) },
-          anchors: [{ name: "top", at: horizontal ? [e(`scale.x(d.${val})`), e(`scale.y(d.${cat}) + scale.y.bandwidth()/2`)] : [e(`scale.x(d.${cat}) + scale.x.bandwidth()/2`), e(`scale.y(d.${val})`)] }],
-          on: p.chapter ? { activate: { chapter: p.chapter, key: e(`d.${cat}`) } } : p.selected ? { activate: { toggle: p.selected, value: e(`d.${cat}`) } } : undefined,
+          semantics: { role: "datum", label: p.label ?? e(`\`\${key.name(${fld(cat)})}: \${format(${fld(val)}, ${JSON.stringify(p.format)})}\``), value: e(`${fld(val)}`) },
+          anchors: [{ name: "top", at: horizontal ? [e(`scale.x(${fld(val)})`), e(`scale.y(${fld(cat)}) + scale.y.bandwidth()/2`)] : [e(`scale.x(${fld(cat)}) + scale.x.bandwidth()/2`), e(`scale.y(${fld(val)})`)] }],
+          on: p.chapter ? { activate: { chapter: p.chapter, key: e(`${fld(cat)}`) } } : p.selected ? { activate: { toggle: p.selected, value: e(`${fld(cat)}`) } } : undefined,
           pickable: true,
         })),
         p.labels ? group({ key: "labels", children: [repeat(p.data, label)] }) : null,
@@ -111,22 +112,22 @@ export const line = recipe<LineParams>({
   tokens: ["mark", "stroke.line", "size.label"],
   expand(p, cx) {
     const series = p.series ?? p.color;
-    const xExpr = isBand(p.xType) ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const ink = p.stroke ?? (series && p.color ? e(`scale.color(d.${p.color})`) : "$mark");
+    const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const ink = p.stroke ?? (series && p.color ? e(`scale.color(${fld(p.color)})`) : "$mark");
     const ys = p.yScale || "y";
-    const lineShape = shape(geom.polyline({ from: "@group", x: e(xExpr), y: e(`scale.${ys}(d.${p.y})`), curve: p.curve }), {
+    const lineShape = shape(geom.polyline({ from: "@group", x: e(xExpr), y: e(`scale.${ys}(${fld(p.y)})`), curve: p.curve }), {
       key: "line",
-      opacity: p.selected && series ? e(`${p.selected}.isEmpty() || ${p.selected}.has(d.${series}) ? 1 : token("dim")`) : undefined,
+      opacity: p.selected && series ? e(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(series)}) ? 1 : token("dim")`) : undefined,
       stroke: { paint: ink, width: p.width || "$stroke.line", join: "round", cap: "round" },
-      semantics: { role: "series", label: series ? e(`key.name(d.${series})`) : p.y },
+      semantics: { role: "series", label: series ? e(`key.name(${fld(series)})`) : p.y },
     });
     // Each point says what it is: the series, where on x (as the axis writes it) and the value.
-    const xLabel = isBand(p.xType) ? `key.name(d.${p.x})` : `scale.x.label(d.${p.x})`;
-    const dotLabel = series ? `\`\${key.name(d.${series})} · \${${xLabel}}: \${format(d.${p.y}, ",.2~f")}\`` : `\`\${${xLabel}}: \${format(d.${p.y}, ",.2~f")}\``;
+    const xLabel = isBand(p.xType) ? `key.name(${fld(p.x)})` : `scale.x.label(${fld(p.x)})`;
+    const dotLabel = series ? `\`\${key.name(${fld(series)})} · \${${xLabel}}: \${format(${fld(p.y)}, ",.2~f")}\`` : `\`\${${xLabel}}: \${format(${fld(p.y)}, ",.2~f")}\``;
     // The points are where the pointer finds the line's values: hovered or tapped anywhere along
     // the line, the nearest point's series, x and value (`hit: "line"`). Dots with `points`,
     // otherwise drawn as nothing.
-    const pts = instances({ key: "points", from: "@group", x: e(xExpr), y: e(`scale.${ys}(d.${p.y})`), r: p.points ? 3 : 0, fill: p.points ? ink : "transparent", instanceKey: e(`d.${p.x}`), label: e(dotLabel), hit: "line" });
+    const pts = instances({ key: "points", from: "@group", x: e(xExpr), y: e(`scale.${ys}(${fld(p.y)})`), r: p.points ? 3 : 0, fill: p.points ? ink : "transparent", instanceKey: e(`${fld(p.x)}`), label: e(dotLabel), hit: "line" });
     const labelled = !!(p.labels && series);
     // Clipped with end labels, each line clips itself (to the plot area, its box): the labels sit
     // just past the area's edge, beside the lines in the same group — so a line's key path is the
@@ -139,10 +140,10 @@ export const line = recipe<LineParams>({
       op.aggregate([series], { x_end: ["last", p.x], y_end: ["last", p.y] }),
       op.spread({ position: e("scale.y(d.y_end)"), gap: e('token("size.label") + 3'), min: 0, max: e("box.h"), as: "label_y" }));
     const xEnd = isBand(p.xType) ? "scale.x(d.x_end) + scale.x.bandwidth() / 2" : "scale.x(d.x_end)";
-    const labelInk = p.stroke ?? (p.color ? e(`scale.color(d.${series})`) : "$mark");
+    const labelInk = p.stroke ?? (p.color ? e(`scale.color(${fld(series)})`) : "$mark");
     return group({ key: "lines", children: [
       each,
-      group({ key: "end-labels", children: [repeat(ends, text(e(`key.name(d.${series})`), [e(`min(${xEnd}, box.w) + 6`), e("d.label_y")], { style: { size: "$size.label", ink: labelInk, baseline: "middle", contain: true } }))] }),
+      group({ key: "end-labels", children: [repeat(ends, text(e(`key.name(${fld(series)})`), [e(`min(${xEnd}, box.w) + 6`), e("d.label_y")], { style: { size: "$size.label", ink: labelInk, baseline: "middle", contain: true } }))] }),
     ] });
   },
   motion: [{ select: { kind: "polyline" }, enter: { trim: 0 } }],
@@ -162,10 +163,10 @@ export const area = recipe<AreaParams>({
   tokens: ["mark"],
   expand(p) {
     const series = p.series ?? p.color;
-    const xExpr = isBand(p.xType) ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const fill = p.fill ?? (series && p.color ? e(`scale.color(d.${p.color})`) : "$mark");
-    const band = shape(geom.area({ from: "@group", x: e(xExpr), y0: e(p.y0 ? `scale.y(d.${p.y0})` : "max(0, min(box.h, scale.y(0)))"), y1: e(`scale.y(d.${p.y})`), curve: p.curve }), {
-      key: "area", fill, opacity: p.opacity, semantics: { role: "series", label: series ? e(`key.name(d.${series})`) : p.y },
+    const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const fill = p.fill ?? (series && p.color ? e(`scale.color(${fld(p.color)})`) : "$mark");
+    const band = shape(geom.area({ from: "@group", x: e(xExpr), y0: e(p.y0 ? `scale.y(${fld(p.y0)})` : "max(0, min(box.h, scale.y(0)))"), y1: e(`scale.y(${fld(p.y)})`), curve: p.curve }), {
+      key: "area", fill, opacity: p.opacity, semantics: { role: "series", label: series ? e(`key.name(${fld(series)})`) : p.y },
     });
     return group({ key: "areas", clip: p.clip ? "box" : undefined, children: [repeat({ groups: p.data, by: series ?? "__all" }, group({ children: [band] }))] });
   },
@@ -185,8 +186,8 @@ export const point = recipe<PointParams>({
   },
   tokens: ["mark", "point.radius"],
   expand(p) {
-    const xExpr = isBand(p.xType) ? `scale.x(d.${p.x}) + scale.x.bandwidth() / 2` : `scale.x(d.${p.x})`;
-    const yExpr = isBand(p.yType) ? `scale.y(d.${p.y}) + scale.y.bandwidth() / 2` : `scale.y(d.${p.y})`;
+    const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
+    const yExpr = isBand(p.yType) ? `scale.y(${fld(p.y)}) + scale.y.bandwidth() / 2` : `scale.y(${fld(p.y)})`;
     return instances({
       key: "points",
       clip: p.clip ? "box" : undefined,
@@ -197,7 +198,7 @@ export const point = recipe<PointParams>({
       r: p.r ?? "$point.radius",
       fill: p.fill ?? colorOr(p.color, "$mark"),
       opacity: p.opacity,
-      label: p.label ?? e(`\`\${d.${p.x}}, \${d.${p.y}}\``),
+      label: p.label ?? e(`\`\${${fld(p.x)}}, \${${fld(p.y)}}\``),
       semantics: { role: "series", label: `${p.y} against ${p.x}` },
     });
   },
@@ -213,13 +214,13 @@ export const dot = recipe<DotParams>({
   params: { data: t.table(), x: t.field(), y: t.field(), color: t.field(), xType: t.string("band"), yType: t.string("linear"), r: t.number(6), fill: t.prop() },
   expand(p) {
     const horizontal = isBand(p.yType) && !isBand(p.xType);
-    const cx = horizontal ? e(`scale.x(d.${p.x})`) : e(`scale.x(d.${p.x}) + scale.x.bandwidth() / 2`);
-    const cy = horizontal ? e(`scale.y(d.${p.y}) + scale.y.bandwidth() / 2`) : e(`scale.y(d.${p.y})`);
+    const cx = horizontal ? e(`scale.x(${fld(p.x)})`) : e(`scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2`);
+    const cy = horizontal ? e(`scale.y(${fld(p.y)}) + scale.y.bandwidth() / 2`) : e(`scale.y(${fld(p.y)})`);
     const cat = horizontal ? p.y : p.x;
     const val = horizontal ? p.x : p.y;
     return group({
       key: "marks",
-      children: [repeat(p.data, shape(geom.circle({ cx, cy, r: p.r }), { fill: p.fill ?? colorOr(p.color, "$mark"), semantics: { role: "datum", label: e(`\`\${key.name(d.${cat})}: \${d.${val}}\``) }, pickable: true }))],
+      children: [repeat(p.data, shape(geom.circle({ cx, cy, r: p.r }), { fill: p.fill ?? colorOr(p.color, "$mark"), semantics: { role: "datum", label: e(`\`\${key.name(${fld(cat)})}: \${${fld(val)}}\``) }, pickable: true }))],
     });
   },
 });

@@ -6,6 +6,7 @@
 // gives each dot a tooltip.
 
 import { e, instances, recipe, t, view, Prop, Template } from "@datars/sdk";
+import { fld } from "./field.js";
 
 export interface CloudParams {
   data: string; x: string; y: string; r: Prop; fill: Prop; opacity: Prop; label: Prop; name: string;
@@ -50,8 +51,8 @@ export const cloud = recipe<CloudParams>({
         p.glow != null && p.glow !== 0 ? instances({
           key: "glow",
           from: p.data,
-          x: e(`d.${p.x}`),
-          y: e(`d.${p.y}`),
+          x: e(`${fld(p.x)}`),
+          y: e(`${fld(p.y)}`),
           r: p.glow,
           fill: p.fill ?? "$mark",
           opacity: p.glowOpacity ?? 0.05,
@@ -62,12 +63,12 @@ export const cloud = recipe<CloudParams>({
         instances({
           key: "rows",
           from: p.data,
-          x: e(`d.${p.x}`),
-          y: e(`d.${p.y}`),
+          x: e(`${fld(p.x)}`),
+          y: e(`${fld(p.y)}`),
           r: p.r ?? 1.2,
           fill: p.fill ?? "$mark",
           opacity: p.opacity,
-          label: p.label ?? e(`\`\${d.${p.x}}, \${d.${p.y}}\``),
+          label: p.label ?? e(`\`\${${fld(p.x)}}, \${${fld(p.y)}}\``),
           screenSize: true,
           lod: { points: p.points, budget: p.budget },
           semantics: { role: "series", label: p.name ?? `${p.data}: ${p.y} against ${p.x}` },

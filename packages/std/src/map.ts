@@ -3,6 +3,7 @@
 // no bridge: a region's shape pairs with a bar by key like any other element.
 
 import { e, group, instances, op, recipe, repeat, shape, geom, t, text, view, Cx, Prop, ScaleDecl, Template } from "@datars/sdk";
+import { fld } from "./field.js";
 
 export interface MapParams {
   source: string; data: string; key: string; value: string;
@@ -44,18 +45,18 @@ export const map = recipe<MapParams>({
     const scales: Record<string, never> = {} as never;
     let regions = p.source;
     if (p.data && p.key) {
-      const vals = cx.table("values", p.data, op.derive("id", e(`d.${p.key}`)));
+      const vals = cx.table("values", p.data, op.derive("id", e(`${fld(p.key)}`)));
       // backdrop: every feature (no data → $map.no-data); otherwise only the features with data.
       regions = cx.table("regions", p.source, op.join(vals, "id", p.backdrop ? "left" : "inner"));
       (scales as Record<string, unknown>).color = p.colorType === "piecewise"
         ? { type: "piecewise", stops: p.stops, domain: { data: p.data, field: p.value } }
         : { type: p.colorType, domain: { data: p.data, field: p.colorType === "categorical" ? p.key : p.value }, range: p.colorType === "categorical" ? "$categorical" : p.colorType === "diverging" ? "$diverging" : "$sequential" };
     }
-    const color = p.data ? `d.${p.value} == null ? "$map.no-data" : scale.color(d.${p.colorType === "categorical" ? p.key : p.value})` : `"$map.land"`;
+    const color = p.data ? `${fld(p.value)} == null ? "$map.no-data" : scale.color(${fld(p.colorType === "categorical" ? p.key : p.value)})` : `"$map.land"`;
     // Selected regions keep their colour; the others recede to neutral land (a colour, so the
     // change animates like any other fill).
     const fill = p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(d.id) ? (${color}) : "$map.no-data"`) : p.data ? e(color) : "$map.land";
-    const label = p.label ?? (p.data ? e(`\`\${d.name ?? d.id}: \${d.${p.value} == null ? "no data" : format(d.${p.value}, ${JSON.stringify(p.format)})}\``) : e("d.name ?? d.id"));
+    const label = p.label ?? (p.data ? e(`\`\${d.name ?? d.id}: \${${fld(p.value)} == null ? "no data" : format(${fld(p.value)}, ${JSON.stringify(p.format)})}\``) : e("d.name ?? d.id"));
     const coord = { type: "geo" as const, projection: p.projection, fit: p.fit ?? { source: p.source }, padding: p.padding };
     const layers: (Template | null)[] = [
       p.base?.length ? group({ key: "base", children: p.base }) : null,
@@ -66,7 +67,7 @@ export const map = recipe<MapParams>({
       p.regions === false ? null : group({ key: "regions", opacity: (p.fillOpacity ?? (p.base?.length ? 0.85 : 1)) < 1 ? (p.fillOpacity ?? 0.85) : undefined, children: [repeat(regions, shape(geom.feature(p.source, e("d.id")), {
         fill,
         stroke: p.stroke ? { paint: "$map.border", width: 0.5, nonScaling: true } : undefined,
-        semantics: { role: "region", label, value: p.data ? e(`d.${p.value}`) : undefined },
+        semantics: { role: "region", label, value: p.data ? e(`${fld(p.value)}`) : undefined },
         on: p.chapter ? { activate: { chapter: p.chapter, key: e("d.id") } } : undefined,
         pickable: true,
       }))] }),
@@ -132,19 +133,19 @@ export const symbols = recipe<SymbolsParams>({
     label: t.prop("Label per symbol (tooltip, accessible name); default `name: value`."),
   },
   expand(p) {
-    const name = `key.name(d.${p.key})`;
+    const name = `key.name(${fld(p.key)})`;
     const scales: Record<string, ScaleDecl> = {};
     if (p.value) scales.size = { type: "sqrt", domain: { data: p.data, field: p.value }, range: [0, p.max], zero: true };
     if (p.value && p.stops) scales.fill = { type: "piecewise", stops: p.stops, domain: { data: p.data, field: p.value } };
-    const fill = p.value && p.stops ? e(`scale.fill(d.${p.value})`) : p.fill ?? "$accent@0.7";
+    const fill = p.value && p.stops ? e(`scale.fill(${fld(p.value)})`) : p.fill ?? "$accent@0.7";
     return group({
       key: "symbols",
       scales: p.value ? scales : undefined,
       children: [instances({
-        key: "circles", from: p.data, instanceKey: e(`d.${p.key}`),
-        x: e(`geo.cx(${JSON.stringify(p.source)}, d.${p.key})`), y: e(`geo.cy(${JSON.stringify(p.source)}, d.${p.key})`),
-        r: p.value ? e(`scale.size(d.${p.value})`) : p.r, fill, stroke: { paint: "$paper", width: 0.75 }, screenSize: true,
-        label: p.label ?? (p.value ? e(`\`\${${name}}: \${format(d.${p.value}, ${JSON.stringify(p.format)})}\``) : e(name)),
+        key: "circles", from: p.data, instanceKey: e(`${fld(p.key)}`),
+        x: e(`geo.cx(${JSON.stringify(p.source)}, ${fld(p.key)})`), y: e(`geo.cy(${JSON.stringify(p.source)}, ${fld(p.key)})`),
+        r: p.value ? e(`scale.size(${fld(p.value)})`) : p.r, fill, stroke: { paint: "$paper", width: 0.75 }, screenSize: true,
+        label: p.label ?? (p.value ? e(`\`\${${name}}: \${format(${fld(p.value)}, ${JSON.stringify(p.format)})}\``) : e(name)),
       })],
     });
   },
@@ -159,8 +160,8 @@ export const geoPoints = recipe<GeoPointsParams>({
   tokens: ["map.marker", "map.label-halo"],
   expand(p) {
     return instances({
-      key: "points", from: p.data, instanceKey: p.key ? e(`d.${p.key}`) : undefined,
-      x: e(`geo.x(d.${p.lon}, d.${p.lat})`), y: e(`geo.y(d.${p.lon}, d.${p.lat})`),
+      key: "points", from: p.data, instanceKey: p.key ? e(`${fld(p.key)}`) : undefined,
+      x: e(`geo.x(${fld(p.lon)}, ${fld(p.lat)})`), y: e(`geo.y(${fld(p.lon)}, ${fld(p.lat)})`),
       r: p.r ?? 3, fill: p.fill ?? "$map.marker", stroke: { paint: "$map.label-halo", width: 1 }, screenSize: true, label: p.label,
     });
   },
@@ -182,13 +183,13 @@ export const geoLines = recipe<GeoLinesParams>({
       return group({ key: `lines-${p.source}`, children: [repeat(p.source, shape(geom.feature(p.source, e("d.id")), { stroke: stroke(p.ink), semantics: { role: "decoration" } }))] });
     }
     const coloured = !!(p.value && p.stops);
-    const label = p.value ? e(`key.name(d.${p.key}) + ": " + format(d.${p.value}, ${JSON.stringify(p.format)})`) : e(`key.name(d.${p.key})`);
+    const label = p.value ? e(`key.name(${fld(p.key)}) + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)})`) : e(`key.name(${fld(p.key)})`);
     return group({
       key: `lines-${p.source}`,
       scales: coloured ? { stroke: { type: "piecewise", stops: p.stops, domain: { data: p.data, field: p.value } } } : undefined,
-      children: [repeat(p.data, shape(geom.feature(p.source, e(`d.${p.key}`)), {
-        key: e(`d.${p.key}`),
-        stroke: stroke(coloured ? e(`scale.stroke(d.${p.value})`) : p.ink),
+      children: [repeat(p.data, shape(geom.feature(p.source, e(`${fld(p.key)}`)), {
+        key: e(`${fld(p.key)}`),
+        stroke: stroke(coloured ? e(`scale.stroke(${fld(p.value)})`) : p.ink),
         semantics: { role: "datum", label },
         pickable: true,
       }))],
@@ -203,7 +204,7 @@ export const route = recipe<RouteParams>({
   doc: "Great-circle routes between two lon/lat points per row.",
   params: { data: t.table(), lon0: t.field(), lat0: t.field(), lon1: t.field(), lat1: t.field(), ink: t.ink("$accent@0.6"), width: t.prop() },
   expand(p) {
-    return group({ key: "routes", children: [repeat(p.data, shape(geom.path(e(`geo.geodesic(d.${p.lon0}, d.${p.lat0}, d.${p.lon1}, d.${p.lat1})`)), { stroke: { paint: p.ink, width: p.width ?? 1.5, nonScaling: true, cap: "round" } }))] });
+    return group({ key: "routes", children: [repeat(p.data, shape(geom.path(e(`geo.geodesic(${fld(p.lon0)}, ${fld(p.lat0)}, ${fld(p.lon1)}, ${fld(p.lat1)})`)), { stroke: { paint: p.ink, width: p.width ?? 1.5, nonScaling: true, cap: "round" } }))] });
   },
 });
 
@@ -217,14 +218,14 @@ export const track = recipe<TrackParams>({
   },
   expand(p, cx) {
     const until = typeof p.until === "number" ? String(p.until) : p.until && typeof p.until === "object" && "expr" in (p.until as object) ? (p.until as { expr: string }).expr : "1e18";
-    const drawn = cx.table("drawn", p.data, op.filter(e(`d.${p.time} <= (${until})`)));
+    const drawn = cx.table("drawn", p.data, op.filter(e(`${fld(p.time)} <= (${until})`)));
     return group({
       key: "track",
       children: [
-        p.future ? shape(geom.polyline({ from: p.data, x: e(`geo.x(d.${p.lon}, d.${p.lat})`), y: e(`geo.y(d.${p.lon}, d.${p.lat})`), curve: "catmull-rom" }), { key: "future", stroke: { paint: p.ink, width: 1.5, nonScaling: true, cap: "round", join: "round", dash: [4, 4] }, opacity: 0.35 }) : null,
+        p.future ? shape(geom.polyline({ from: p.data, x: e(`geo.x(${fld(p.lon)}, ${fld(p.lat)})`), y: e(`geo.y(${fld(p.lon)}, ${fld(p.lat)})`), curve: "catmull-rom" }), { key: "future", stroke: { paint: p.ink, width: 1.5, nonScaling: true, cap: "round", join: "round", dash: [4, 4] }, opacity: 0.35 }) : null,
         // The head is the path's own end: when the clock moves between steps the path grows along
         // itself (a line that runs on is trimmed, not bent) and the head rides its tip.
-        shape(geom.polyline({ from: drawn, x: e(`geo.x(d.${p.lon}, d.${p.lat})`), y: e(`geo.y(d.${p.lon}, d.${p.lat})`), curve: "catmull-rom" }), {
+        shape(geom.polyline({ from: drawn, x: e(`geo.x(${fld(p.lon)}, ${fld(p.lat)})`), y: e(`geo.y(${fld(p.lon)}, ${fld(p.lat)})`), curve: "catmull-rom" }), {
           key: "path", stroke: { paint: p.ink, width: 2.5, nonScaling: true, cap: "round", join: "round" }, markers: p.head ? { end: { type: "dot", r: 5 } } : undefined,
         }),
       ],
@@ -243,9 +244,9 @@ export const dotDensity = recipe<DotDensityParams>({
     per: t.number(1000, "Units per dot."), r: t.number(1.2, "Dot radius (px)."), fill: t.prop(), seed: t.number(1),
   },
   expand(p, cx) {
-    const dots = cx.table("dots", p.data, op.scatterIn({ geo: p.source, key: p.key, count: e(`floor(d.${p.value} / ${p.per})`), seed: p.seed }));
+    const dots = cx.table("dots", p.data, op.scatterIn({ geo: p.source, key: p.key, count: e(`floor(${fld(p.value)} / ${p.per})`), seed: p.seed }));
     // Keyed by the table's (region, dot) key; each says whose it is.
-    const label = p.key ? e(`key.name(d.${p.key})`) : undefined;
+    const label = p.key ? e(`key.name(${fld(p.key)})`) : undefined;
     return instances({ key: "dots", from: dots, x: e("geo.x(d.lon, d.lat)"), y: e("geo.y(d.lon, d.lat)"), r: p.r, fill: p.fill ?? "$ink@0.7", screenSize: true, label });
   },
 });

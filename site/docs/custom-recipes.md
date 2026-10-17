@@ -21,6 +21,7 @@ A lollipop chart — a dot on a stem per row — as a recipe you can drop into a
 ```ts
 // recipes/lollipop.ts
 import { e, geom, group, recipe, repeat, shape, t, type Prop } from "@datars/sdk";
+import { fld } from "@datars/std";
 
 interface LollipopParams { data: string; x: string; y: string; r: number; fill: Prop }
 
@@ -36,15 +37,15 @@ export const lollipop = recipe<LollipopParams>({
   },
   tokens: ["mark", "ink-2"],
   expand(p, cx) {
-    const mid = `scale.x(d.${p.x}) + scale.x.bandwidth() / 2`;
-    const top = `scale.y(d.${p.y})`;
+    const mid = `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2`;
+    const top = `scale.y(${fld(p.y)})`;
     return group({ key: "lollipops", children: [
-      repeat(p.data, group({ key: e(`d.${p.x}`), children: [
+      repeat(p.data, group({ key: e(fld(p.x)), children: [
         shape(geom.segment({ x1: e(mid), y1: e("scale.y(0)"), x2: e(mid), y2: e(top) }),
           { key: "stem", stroke: { paint: "$ink-2", width: 1.5 }, semantics: { role: "decoration" } }),
         shape(geom.circle({ cx: e(mid), cy: e(top), r: p.r }),
           { key: "dot", fill: p.fill ?? "$mark", pickable: true,
-            semantics: { role: "datum", label: e(`\`\${key.name(d.${p.x})}: \${format(d.${p.y}, ",.1~f")}\``) } }),
+            semantics: { role: "datum", label: e(`\`\${key.name(${fld(p.x)})}: \${format(${fld(p.y)}, ",.1~f")}\``) } }),
       ] })),
     ] });
   },
@@ -61,6 +62,8 @@ import { lollipop } from "./recipes/lollipop";
 
 plot({ data: "sales", x: "region", y: "sales", children: [lollipop({ r: 6 })] })
 ```
+
+Field names come from the document, and a spreadsheet's are rarely identifiers ("Avg. nightly rate", "Share (%)"): `fld(name)` makes the row's field as expression source — `d.sales` for an identifier, `d["Avg. nightly rate"]` for the rest — as every standard recipe does. A bare `` d.${p.x} `` reads nothing for such a column.
 
 ### The parts
 
