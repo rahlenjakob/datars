@@ -197,6 +197,10 @@ fn coerce(t: &mut Table, decl: &Source) -> Result<(), String> {
             })
             .map(|v| Column::Bool(v.into_iter().map(|x| x.unwrap_or(false)).collect())),
             ("str", Column::Num(v)) => Some(Column::Str(v.iter().map(|x| (!x.is_nan()).then(|| std::sync::Arc::from(datars_data::num::fmt_num(*x).as_str()))).collect())),
+            // Text that looks like dates (`"2026-10-16"`) is read as dates; declared text stays
+            // text, as written — an id, a session's name, a code that a later row may not
+            // spell as a date.
+            ("str", Column::Date(v)) => Some(Column::Str(v.iter().map(|d| d.map(|d| std::sync::Arc::from(datars_data::date::format_date(d).as_str()))).collect())),
             ("num" | "date" | "bool" | "str", _) => None,
             (other, _) => return Err(format!("column `{col}`: unknown type `{other}` (num, str, bool or date)")),
         };
@@ -210,6 +214,11 @@ fn coerce(t: &mut Table, decl: &Source) -> Result<(), String> {
 /// The records under `path` (`data`, `results.items`) of a JSON response, as their own document.
 fn rows_at(bytes: &[u8], path: &str) -> Result<Vec<u8>, String> {
     let v: serde_json::Value = serde_json::from_slice(bytes).map_err(|e| e.to_string())?;
+    // Rows handed over as rows — a host's feed sends just the new records, not the API's whole
+    // response — are taken as they are (unless the path indexes into the array: `0.items`).
+    if v.is_array() && path.split('.').find(|p| !p.is_empty()).is_some_and(|p| p.parse::<usize>().is_err()) {
+        return Ok(bytes.to_vec());
+    }
     let mut at = &v;
     for part in path.split('.').filter(|p| !p.is_empty()) {
         at = match at {

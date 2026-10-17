@@ -116,3 +116,34 @@ fn signal_transitions_are_not_capped() {
     e.frame(1.2);
     assert!(e.frame(2.0).animating, "a signal's transition runs its 0.9 s");
 }
+
+#[test]
+fn rows_arrive_as_rows_where_the_response_wraps_them() {
+    // The snapshot is an API's response (rows under `prices`); a feed sends just the rows.
+    let doc = serde_json::json!({
+        "datars": 1, "size": { "width": 200, "height": 100 },
+        "data": { "ticks": { "url": "ticks.json", "rows": "prices", "key": ["t"], "live": { "mode": "upsert" } } },
+        "scene": { "kind": "repeat", "from": "ticks", "template": { "kind": "shape", "geom": { "type": "rect", "x": "=d.t / 1000", "y": 0, "w": 4, "h": "=d.p" }, "fill": "$accent" } }
+    });
+    let mut e = Engine::new();
+    e.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap());
+    e.provide("ticks", br#"{"prices": [{"t": 1000, "p": 2}]}"#).unwrap();
+    e.provide("ticks", br#"[{"t": 2000, "p": 3}]"#).unwrap();
+    let b = bars(&mut e, 10.0);
+    assert!(b.contains(&(1.0, 2.0)) && b.contains(&(2.0, 3.0)), "{b:?}");
+}
+
+#[test]
+fn a_column_declared_text_stays_text_when_it_looks_like_dates() {
+    // A session named by its day ("2026-10-16") and later one named otherwise ("replay-1"): both
+    // are text, so the rows merge.
+    let doc = serde_json::json!({
+        "datars": 1, "size": { "width": 200, "height": 100 },
+        "data": { "ticks": { "values": [{ "day": "2026-10-16", "t": 0, "p": 1 }], "key": ["day", "t"], "types": { "day": "str" }, "live": { "mode": "upsert" } } },
+        "scene": { "kind": "repeat", "from": "ticks", "template": { "kind": "shape", "geom": { "type": "rect", "x": "=d.t / 1000", "y": 0, "w": 4, "h": "=d.p" }, "fill": "$accent" } }
+    });
+    let mut e = Engine::new();
+    assert!(e.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap()).is_empty());
+    e.provide("ticks", br#"[{"day": "replay-1", "t": 0, "p": 2}]"#).unwrap();
+    assert_eq!(bars(&mut e, 10.0).len(), 2);
+}
