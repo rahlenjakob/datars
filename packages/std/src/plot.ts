@@ -2,7 +2,7 @@
 // marks as children. Marks inherit `data`, `x`, `y`, `color` unless they set their own.
 
 import { brush, e, geom, group, op, recipe, shape, t, text, Template, ScaleDecl } from "@datars/sdk";
-import { axis, tickCount } from "./axis.js";
+import { axis, tickCount, topRoom } from "./axis.js";
 import { grid } from "./grid.js";
 import { legend } from "./guides.js";
 import { financeDomain, financeKey } from "./finance.js";
@@ -244,7 +244,8 @@ export const plot = recipe<PlotParams>({
     const lp = (labelled?.params ?? {}) as { data?: string; series?: string; color?: string };
     const series = lp.series ?? lp.color ?? p.color;
     const seriesNames = labelled && series ? cx.table("series-names", lp.data ?? p.data, op.aggregate([series], { n: ["count"] }), op.derive("w", e(`measure(key.name(d.${series}), token("size.label"))`))) : undefined;
-    const labelRoom = cmp.end ?? (seriesNames ? e(`min(${p.labelSpace}, table.max(${JSON.stringify(seriesNames)}, "w") + 12)`) : p.labelSpace);
+    // (`labelSpace` is at the theme's text size: a reader's bigger names get more of it.)
+    const labelRoom = cmp.end ?? (seriesNames ? e(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(seriesNames)}, "w") + 12)`) : e(`${p.labelSpace} * max(1, textScale)`));
     // The vertical axes' titles, in a row of their own above the plot area: the left one starts
     // where the y axis's labels do, the right one ends where the right axis's do. (Up the side, a
     // title would need the room its labels leave; above, it can never run into the title.)
@@ -263,6 +264,7 @@ export const plot = recipe<PlotParams>({
         p.subtitle ? text(p.subtitle, [0, 0], { key: "subtitle", size: { h: "auto" }, style: { size: "$size.body", ink: "$ink-2", baseline: "top", maxWidth: e("box.w") } }) : null,
         keyRow,
         axisTitles,
+        showY ? topRoom() : null,
         group({
           key: "body",
           layout: { type: "columns", gap: 6 },

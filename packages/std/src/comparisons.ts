@@ -9,7 +9,7 @@
 // own, with their own scales.
 
 import { e, group, instances, op, recipe, repeat, shape, geom, t, text, Cx, Prop, RecipeDef, ScaleDecl, Template } from "@datars/sdk";
-import { axis } from "./axis.js";
+import { axis, topRoom } from "./axis.js";
 import { grid } from "./grid.js";
 import { legend } from "./guides.js";
 
@@ -274,7 +274,8 @@ export const bump = recipe<BumpParams>({
     // Highlighted series last, so they draw on top of the grey ones.
     const drawn = hl ? cx.table("bump-drawn", ranked, op.derive("__on", e(`${on} ? 1 : 0`)), op.sort("__on", p.x)) : ranked;
     const ends = cx.table("bump-ends", drawn, op.aggregate([s], { x0: ["first", p.x], r0: ["first", "__rank"], x1: ["last", p.x], r1: ["last", "__rank"] }), op.derive("w", e(`measure(key.name(d.${s}), token("size.label"), 600)`)));
-    const room = e(`min(${p.labelSpace}, table.max(${JSON.stringify(ends)}, "w") + 12)`);
+    // (`labelSpace` is at the theme's text size: a reader's bigger names get more of it.)
+    const room = e(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(ends)}, "w") + 12)`);
     const ink = hl ? e(`${on} ? scale.color(d.${s}) : "$rule"`) : e(`scale.color(d.${s})`);
     const fade = hl ? e(`${on} ? 1 : 0.45`) : undefined;
     const X = `scale.x(d.${p.x})`, Y = "scale.y(d.__rank)";
@@ -321,8 +322,10 @@ export const bump = recipe<BumpParams>({
                         instances({ key: "points", from: "@group", x: e(X), y: e(Y), r: hl ? e(`${on} ? ${p.r} : ${Math.max(2, p.r - 1.5)}`) : p.r, fill: ink, opacity: fade, stroke: { paint: "$paper", width: 1.5 }, instanceKey: e(`d.${p.x}`), label: pointLabel }),
                       ],
                     })),
-                    group({ key: "start-labels", children: [repeat(ends, name("start"))] }),
-                    group({ key: "end-labels", children: [repeat(ends, name("end"))] }),
+                    // Ranks closer than a line of the names (many series in a short box, big
+                    // text): a name that would touch the one above is left out.
+                    group({ key: "start-labels", declutter: true, children: [repeat(ends, name("start"))] }),
+                    group({ key: "end-labels", declutter: true, children: [repeat(ends, name("end"))] }),
                   ],
                 }),
                 axis({ scale: "x", orient: "bottom", type: "point", data: ranked, field: p.x, line: false }, { size: { h: "auto" } }),
@@ -464,6 +467,7 @@ export const marimekko = recipe<MarimekkoParams>({
       children: [
         p.title ? text(p.title, [0, 0], { key: "title", size: { h: "auto" }, style: { font: "font.title", size: "$size.title", ink: "$ink", baseline: "top", maxWidth: e("box.w") }, semantics: { role: "title", label: p.title } }) : null,
         p.subtitle ? text(p.subtitle, [0, 0], { key: "subtitle", size: { h: "auto" }, style: { size: "$size.body", ink: "$ink-2", baseline: "top", maxWidth: e("box.w") } }) : null,
+        topRoom(),
         group({
           key: "body",
           layout: { type: "columns", gap: 6 },

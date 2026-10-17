@@ -9,6 +9,11 @@ const SNAPPY = [{ duration: 0.18, easing: "cubic-out" }];
 /** A wash over what the pointer is on (`hover()`: never on touch screens). Ink at a low opacity
  * reads as a hover in light and dark mode alike: darker on paper, lighter on night. */
 const WASH = (strength = 0.06) => e(`hover() ? ${strength} : 0`);
+/** Controls are laid out for the theme's text size: with a reader's bigger text their rows grow
+ * with it (labels clear of tracks, options tall enough for their names — and bigger targets), so a
+ * control's heights and offsets are `px × S`. At the theme's size and below, as drawn. */
+const S = "max(1, textScale)";
+const px = (n: number | string) => `(${n} * ${S})`;
 
 export interface SliderParams { signal: string; min: number; max: number; step: number; label: string; format: string }
 
@@ -25,10 +30,10 @@ export const slider = recipe<SliderParams>({
   expand(p) {
     const v = p.signal;
     const x = e(`scale.x(${v})`);
-    const y = 30;
+    const y = e(px(30));
     return group({
       key: "slider",
-      size: { h: 44 },
+      size: { h: e(px(44)) },
       scales: { x: { type: "linear", domain: [p.min, p.max], range: [10, "=box.w - 10"] } },
       on: { drag: scrub(v, { step: p.step }) },
       pickable: true,
@@ -76,27 +81,27 @@ export const segmented = recipe<SegmentedParams>({
     const labels = p.labels as unknown[] | undefined;
     const sig = p.signal;
     const n = Math.max(1, opts.length);
-    const top = p.label ? 20 : 0;
-    const h = 32;
+    const top = px(p.label ? 20 : 0);
+    const h = px(32);
     const at = opts.map((v, i) => `${sig} == ${lit(v)} ? ${i} : `).join("") + "-1";
     const w = `box.w / ${n}`;
     return group({
       key: "segmented",
-      size: { h: top + h },
+      size: { h: e(`${top} + ${h}`) },
       children: [
         p.label ? text(p.label, [0, 0], { key: "label", style: LABEL }) : null,
-        shape(geom.rect({ x: 0, y: top, w: e("box.w"), h, r: 8 }), { key: "track", fill: "$surface", stroke: { paint: "$rule", width: 1 } }),
+        shape(geom.rect({ x: 0, y: e(top), w: e("box.w"), h: e(h), r: 8 }), { key: "track", fill: "$surface", stroke: { paint: "$rule", width: 1 } }),
         // One highlight that slides to the chosen option.
-        shape(geom.rect({ x: e(`max(0, ${at}) * ${w} + 2`), y: top + 2, w: e(`${w} - 4`), h: h - 4, r: 6 }), { key: "thumb", fill: "$accent", opacity: e(`(${at}) >= 0 ? 1 : 0`) }),
+        shape(geom.rect({ x: e(`max(0, ${at}) * ${w} + 2`), y: e(`${top} + 2`), w: e(`${w} - 4`), h: e(`${h} - 4`), r: 6 }), { key: "thumb", fill: "$accent", opacity: e(`(${at}) >= 0 ? 1 : 0`) }),
         ...opts.map((v, i) => group({
           key: `option:${String(v)}`,
           pickable: true,
           on: { activate: { set: sig, value: v as never } },
           semantics: { role: "control", label: e(`${p.label ? `${lit(p.label + ": ")} + ` : ""}${say(v, labels, i)} + (${sig} == ${lit(v)} ? ", selected" : "")`) },
           children: [
-            shape(geom.rect({ x: e(`${i} * ${w}`), y: top, w: e(w), h }), { key: "hit", pickable: true, fill: "transparent" }),
-            shape(geom.rect({ x: e(`${i} * ${w} + 2`), y: top + 2, w: e(`${w} - 4`), h: h - 4, r: 6 }), { key: "hover", fill: "$ink", opacity: e(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
-            text(e(say(v, labels, i)), [e(`(${i} + 0.5) * ${w}`), top + h / 2], { key: "text", style: { size: "$size.label", weight: 600, ink: e(`${sig} == ${lit(v)} ? "on($accent)" : "$ink"`), align: "middle", baseline: "middle", maxWidth: e(`${w} - 8`) } }),
+            shape(geom.rect({ x: e(`${i} * ${w}`), y: e(top), w: e(w), h: e(h) }), { key: "hit", pickable: true, fill: "transparent" }),
+            shape(geom.rect({ x: e(`${i} * ${w} + 2`), y: e(`${top} + 2`), w: e(`${w} - 4`), h: e(`${h} - 4`), r: 6 }), { key: "hover", fill: "$ink", opacity: e(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
+            text(e(say(v, labels, i)), [e(`(${i} + 0.5) * ${w}`), e(`${top} + ${h} / 2`)], { key: "text", style: { size: "$size.label", weight: 600, ink: e(`${sig} == ${lit(v)} ? "on($accent)" : "$ink"`), align: "middle", baseline: "middle", maxWidth: e(`${w} - 8`) } }),
           ],
         })),
       ],
@@ -127,20 +132,21 @@ export const select = recipe<SelectParams>({
     // option changes the signal, which closes it — one action per click.
     const state = `${sig}.open`;
     const isOpen = `${state} == \`o:\${${sig}}\``;
-    const top = p.label ? 20 : 0;
-    const h = 34;
-    const row = 28;
+    const top = px(p.label ? 20 : 0);
+    const h = px(34);
+    const row = px(28);
     // Balanced columns of at most `rows` options, each at least 110 px wide.
     const cols = Math.max(1, Math.ceil(opts.length / Math.max(1, p.rows || 6)));
     const perCol = Math.max(1, Math.ceil(opts.length / cols));
-    const colW = `max(box.w / ${cols}, 110)`;
-    const listH = perCol * row + 8;
-    const listY = p.open === "up" ? top - listH - 4 : top + h + 4;
-    const chevron = (up: boolean) => (up ? [top + h / 2 + 3, top + h / 2 - 2] : [top + h / 2 - 2, top + h / 2 + 3]);
+    const colW = `max(box.w / ${cols}, ${px(110)})`;
+    const listH = `(${perCol} * ${row} + 8)`;
+    const listY = p.open === "up" ? `(${top} - ${listH} - 4)` : `(${top} + ${h} + 4)`;
+    const mid = `(${top} + ${h} / 2)`;
+    const chevron = (up: boolean) => (up ? [`${mid} + 3`, `${mid} - 2`] : [`${mid} - 2`, `${mid} + 3`]);
     const [cy0, cy1] = chevron(false), [uy0, uy1] = chevron(true);
     return group({
       key: "select",
-      size: { h: top + h },
+      size: { h: e(`${top} + ${h}`) },
       children: [
         p.label ? text(p.label, [0, 0], { key: "label", style: LABEL }) : null,
         group({
@@ -151,9 +157,9 @@ export const select = recipe<SelectParams>({
           on: { activate: { set: state, value: e(`${isOpen} ? "" : \`o:\${${sig}}\``) }, pick: pick(sig, opts as never, opts.map((v, i) => e(say(v, labels, i)))) },
           semantics: { role: "control", label: e(`${p.label ? `${lit(p.label + ": ")} + ` : ""}${current(sig, opts, labels)}`) },
           children: [
-            shape(geom.rect({ x: 0, y: top, w: e("box.w"), h, r: 8 }), { key: "frame", pickable: true, fill: "$surface", stroke: { paint: e(`${isOpen} ? "$accent" : hover() ? "$ink-2" : "$rule"`), width: e(`${isOpen} ? 1.5 : 1`) } }),
-            shape(geom.rect({ x: 1, y: top + 1, w: e("box.w - 2"), h: h - 2, r: 7 }), { key: "hover", fill: "$ink", opacity: e(`hover() && !(${isOpen}) ? 0.04 : 0`) }),
-            text(e(current(sig, opts, labels)), [12, top + h / 2], { key: "value", style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "middle", maxWidth: e("box.w - 40") } }),
+            shape(geom.rect({ x: 0, y: e(top), w: e("box.w"), h: e(h), r: 8 }), { key: "frame", pickable: true, fill: "$surface", stroke: { paint: e(`${isOpen} ? "$accent" : hover() ? "$ink-2" : "$rule"`), width: e(`${isOpen} ? 1.5 : 1`) } }),
+            shape(geom.rect({ x: 1, y: e(`${top} + 1`), w: e("box.w - 2"), h: e(`${h} - 2`), r: 7 }), { key: "hover", fill: "$ink", opacity: e(`hover() && !(${isOpen}) ? 0.04 : 0`) }),
+            text(e(current(sig, opts, labels)), [12, e(mid)], { key: "value", style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "middle", maxWidth: e("box.w - 40") } }),
             // A chevron that points up while the list is open.
             shape(geom.segment({ x1: e("box.w - 22"), y1: e(`${isOpen} ? ${uy0} : ${cy0}`), x2: e("box.w - 17"), y2: e(`${isOpen} ? ${uy1} : ${cy1}`) }), { key: "chevron-a", stroke: { paint: "$ink-2", width: 1.5, cap: "round" } }),
             shape(geom.segment({ x1: e("box.w - 17"), y1: e(`${isOpen} ? ${uy1} : ${cy1}`), x2: e("box.w - 12"), y2: e(`${isOpen} ? ${uy0} : ${cy0}`) }), { key: "chevron-b", stroke: { paint: "$ink-2", width: 1.5, cap: "round" } }),
@@ -166,7 +172,7 @@ export const select = recipe<SelectParams>({
           when: e(isOpen),
           z: 1001,
           children: [
-            shape(geom.rect({ x: 0, y: listY, w: e(`${colW} * ${cols}`), h: listH, r: 8 }), { key: "panel", fill: "$paper", stroke: { paint: "$rule", width: 1 } }),
+            shape(geom.rect({ x: 0, y: e(listY), w: e(`${colW} * ${cols}`), h: e(listH), r: 8 }), { key: "panel", fill: "$paper", stroke: { paint: "$rule", width: 1 } }),
             ...opts.map((v, i) => group({
               key: `option:${String(v)}`,
               pickable: true,
@@ -174,13 +180,13 @@ export const select = recipe<SelectParams>({
               semantics: { role: "control", label: e(`${say(v, labels, i)} + (${sig} == ${lit(v)} ? ", selected" : "")`) },
               children: (() => {
                 const x = `4 + ${Math.floor(i / perCol)} * ${colW}`;
-                const y = listY + 4 + (i % perCol) * row;
+                const y = `(${listY} + 4 + ${i % perCol} * ${row})`;
                 return [
                   // The chosen option has no target: a click on it falls through to the veil and closes.
-                  shape(geom.rect({ x: e(x), y, w: e(`${colW} - 8`), h: row, r: 6 }), { key: "hit", when: e(`${sig} != ${lit(v)}`), pickable: true, fill: "transparent" }),
-                  shape(geom.rect({ x: e(x), y, w: e(`${colW} - 8`), h: row, r: 6 }), { key: "chosen", fill: "$accent", opacity: e(`${sig} == ${lit(v)} ? 0.14 : 0`) }),
-                  shape(geom.rect({ x: e(x), y, w: e(`${colW} - 8`), h: row, r: 6 }), { key: "hover", fill: "$ink", opacity: e(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
-                  text(e(say(v, labels, i)), [e(`${x} + 10`), y + row / 2], { key: "text", style: { size: "$size.label", weight: e(`${sig} == ${lit(v)} ? 600 : 400`), ink: "$ink", baseline: "middle", maxWidth: e(`${colW} - 28`) } }),
+                  shape(geom.rect({ x: e(x), y: e(y), w: e(`${colW} - 8`), h: e(row), r: 6 }), { key: "hit", when: e(`${sig} != ${lit(v)}`), pickable: true, fill: "transparent" }),
+                  shape(geom.rect({ x: e(x), y: e(y), w: e(`${colW} - 8`), h: e(row), r: 6 }), { key: "chosen", fill: "$accent", opacity: e(`${sig} == ${lit(v)} ? 0.14 : 0`) }),
+                  shape(geom.rect({ x: e(x), y: e(y), w: e(`${colW} - 8`), h: e(row), r: 6 }), { key: "hover", fill: "$ink", opacity: e(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
+                  text(e(say(v, labels, i)), [e(`${x} + 10`), e(`${y} + ${row} / 2`)], { key: "text", style: { size: "$size.label", weight: e(`${sig} == ${lit(v)} ? 600 : 400`), ink: "$ink", baseline: "middle", maxWidth: e(`${colW} - 28`) } }),
                 ];
               })(),
             })),
@@ -203,16 +209,16 @@ export const toggle = recipe<ToggleParams>({
     const sig = p.signal;
     return group({
       key: "toggle",
-      size: { h: 28 },
+      size: { h: e(px(28)) },
       pickable: true,
       on: { activate: { set: sig, value: e(`!${sig}`) } },
       semantics: { role: "control", label: e(`${lit((p.label || sig) + ": ")} + (${sig} ? "on" : "off")`) },
       children: [
-        shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: 28 }), { key: "hit", pickable: true, fill: "transparent" }),
-        shape(geom.rect({ x: 0, y: 3, w: 40, h: 22, r: 11 }), { key: "track", fill: e(`${sig} ? "$accent" : "$rule"`) }),
-        shape(geom.circle({ cx: e(`${sig} ? 29 : 11`), cy: 14, r: 13 }), { key: "halo", fill: "$ink", opacity: WASH(0.1) }),
-        shape(geom.circle({ cx: e(`${sig} ? 29 : 11`), cy: 14, r: 8 }), { key: "knob", fill: "$paper" }),
-        p.label ? text(p.label, [52, 14], { key: "label", style: { size: "$size.label", ink: "$ink", baseline: "middle" } }) : null,
+        shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e(px(28)) }), { key: "hit", pickable: true, fill: "transparent" }),
+        shape(geom.rect({ x: 0, y: e(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e(`${sig} ? "$accent" : "$rule"`) }),
+        shape(geom.circle({ cx: e(`${sig} ? 29 : 11`), cy: e(px(14)), r: 13 }), { key: "halo", fill: "$ink", opacity: WASH(0.1) }),
+        shape(geom.circle({ cx: e(`${sig} ? 29 : 11`), cy: e(px(14)), r: 8 }), { key: "knob", fill: "$paper" }),
+        p.label ? text(p.label, [52, e(px(14))], { key: "label", style: { size: "$size.label", ink: "$ink", baseline: "middle" } }) : null,
       ],
     });
   },
@@ -283,7 +289,7 @@ export const range = recipe<RangeParams>({
   expand(p) {
     const { lo, hi } = p;
     const f = lit(p.format);
-    const y = 30;
+    const y = e(px(30));
     const x = (s: string) => `scale.x(${s})`;
     // Each thumb takes the half of the gap between them that's on its side (16 px at most), so
     // two thumbs at the same value can still be told apart: low to the left, high to the right.
@@ -295,15 +301,15 @@ export const range = recipe<RangeParams>({
       semantics: { role: "control", label: e(`\`${p.label || "Range"} ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
       children: [
         key === "lo"
-          ? shape(geom.rect({ x: e(`${x(lo)} - 16`), y: 12, w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" })
-          : shape(geom.rect({ x: e(`${x(hi)} - ${half}`), y: 12, w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
+          ? shape(geom.rect({ x: e(`${x(lo)} - 16`), y: e(`${px(30)} - 18`), w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" })
+          : shape(geom.rect({ x: e(`${x(hi)} - ${half}`), y: e(`${px(30)} - 18`), w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
         shape(geom.circle({ cx: e(x(key === "lo" ? lo : hi)), cy: y, r: 15 }), { key: "halo", fill: "$accent", opacity: WASH(0.18) }),
         shape(geom.circle({ cx: e(x(key === "lo" ? lo : hi)), cy: y, r: 8 }), { key: "thumb", fill: "$accent", stroke: { paint: "$paper", width: 2 } }),
       ],
     });
     return group({
       key: "range",
-      size: { h: 44 },
+      size: { h: e(px(44)) },
       scales: { x: { type: "linear", domain: [p.min, p.max], range: [10, "=box.w - 10"] } },
       semantics: { role: "control", label: e(`\`${p.label || "Range"}: \${format(${lo}, ${f})}–\${format(${hi}, ${f})}\``) },
       children: [
@@ -339,14 +345,14 @@ export const button = recipe<ButtonParams>({
     const action = p.event ? { event: p.event } : { set: p.set, value: p.value as never };
     return group({
       key: "button",
-      size: { h: 36 },
+      size: { h: e(px(36)) },
       pickable: true,
       on: { activate: action },
       semantics: { role: "control", label: p.label },
       children: [
-        shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: 36, r: 8 }), { key: "face", pickable: true, fill: primary ? "$accent" : "$surface", stroke: primary ? undefined : { paint: e(`hover() ? "$ink-2" : "$rule"`), width: 1 } }),
-        shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: 36, r: 8 }), { key: "hover", fill: "$ink", opacity: WASH(primary ? 0.12 : 0.05) }),
-        text(p.label, [e("box.w / 2"), 18], { key: "text", style: { size: "$size.label", weight: 600, ink: primary ? "on($accent)" : "$ink", align: "middle", baseline: "middle", maxWidth: e("box.w - 12") } }),
+        shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e(px(36)), r: 8 }), { key: "face", pickable: true, fill: primary ? "$accent" : "$surface", stroke: primary ? undefined : { paint: e(`hover() ? "$ink-2" : "$rule"`), width: 1 } }),
+        shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e(px(36)), r: 8 }), { key: "hover", fill: "$ink", opacity: WASH(primary ? 0.12 : 0.05) }),
+        text(p.label, [e("box.w / 2"), e(px(18))], { key: "text", style: { size: "$size.label", weight: 600, ink: primary ? "on($accent)" : "$ink", align: "middle", baseline: "middle", maxWidth: e("box.w - 12") } }),
       ],
     });
   },

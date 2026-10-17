@@ -182,7 +182,9 @@ export const treemap = recipe<TreemapParams>({
       children: [
         repeat(tbl, shape(geom.rect({ x: e("d.x0"), y: e("d.y0"), w: e("d.x1 - d.x0"), h: e("d.y1 - d.y0") }), { fill: e(`scale.color(d.${by})`), stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "datum", label: lbl(p.category, p.value, p.format) }, pickable: true })),
         // Each label in the ink that reads on its rectangle's fill (dark on a light one).
-        p.labels ? group({ key: "labels", children: [repeat(tbl, text(e(`key.name(d.${p.category})`), [e("d.x0 + 6"), e("d.y0 + 16")], { when: e("d.x1 - d.x0 > 44 && d.y1 - d.y0 > 22"), style: { size: "$size.label", weight: 600, ink: e(`"on(" + scale.color(d.${by}) + ")"`), maxWidth: e("d.x1 - d.x0 - 10") } }))] }) : null,
+        // (Only in a rectangle with room for a few letters and a line of them, in the label's
+        // size: a reader's bigger text leaves out labels in more of the small ones.)
+        p.labels ? group({ key: "labels", children: [repeat(tbl, text(e(`key.name(d.${p.category})`), [e("d.x0 + 6"), e('d.y0 + 4 + token("size.label") * 12 / 11')], { when: e('d.x1 - d.x0 > token("size.label") * 4 && d.y1 - d.y0 > token("size.label") * 2'), style: { size: "$size.label", weight: 600, ink: e(`"on(" + scale.color(d.${by}) + ")"`), maxWidth: e("d.x1 - d.x0 - 10") } }))] }) : null,
       ],
     });
   },

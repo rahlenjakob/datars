@@ -256,7 +256,7 @@ pub fn run(opts: &Options) -> Report {
     let _ = std::fs::create_dir_all(&out_dir);
     let list = examples(&opts.root, &opts.filter);
     // One thread per example (each builds its own engine; results are deterministic regardless).
-    let results: Vec<(String, Golden, Vec<Failure>, usize, BTreeMap<String, String>)> = std::thread::scope(|s| {
+    let results: Vec<(String, Golden, Vec<Failure>, usize, BTreeMap<String, String>, BTreeMap<String, usize>)> = std::thread::scope(|s| {
         let handles: Vec<_> = list
             .iter()
             .map(|(name, path)| {
@@ -270,7 +270,7 @@ pub fn run(opts: &Options) -> Report {
             .collect();
         handles.into_iter().map(|h| h.join().expect("example thread")).collect()
     });
-    for (name, golden, mut failures, frames, snaps) in results {
+    for (name, golden, mut failures, frames, snaps, labels) in results {
         report.examples += 1;
         report.states += golden.states.len();
         report.transitions += golden.transitions.len();
@@ -278,6 +278,25 @@ pub fn run(opts: &Options) -> Report {
         let gdir = opts.root.join("tests/golden").join(&name);
         let gfile = gdir.join("golden.json");
         let old: Option<Golden> = std::fs::read_to_string(&gfile).ok().and_then(|s| serde_json::from_str(&s).ok());
+        // Legibility as readers get it (a phone, a tablet, a wide column; 1, 1.5 and 2 × text): a
+        // ratchet — a reading where more labels can't be read than the golden says fails; fewer is
+        // progress, recorded with --update.
+        let lfile = gdir.join("labels.json");
+        let old_labels: Option<BTreeMap<String, usize>> = std::fs::read_to_string(&lfile).ok().and_then(|s| serde_json::from_str(&s).ok());
+        match &old_labels {
+            Some(prev) if !opts.update => {
+                for (reading, n) in &labels {
+                    let was = prev.get(reading).copied().unwrap_or(0);
+                    if *n > was {
+                        failures.push(Failure { example: name.clone(), what: format!("{reading}: {n} unreadable labels (the golden has {was})"), detail: format!("`datars labels examples/{name}/doc.json --verbose` lists them"), artifacts: vec![] });
+                    }
+                }
+            }
+            _ => {
+                let _ = std::fs::create_dir_all(&gdir);
+                let _ = std::fs::write(&lfile, serde_json::to_string_pretty(&labels).unwrap_or_default());
+            }
+        }
         if opts.update || old.is_none() {
             let _ = std::fs::create_dir_all(&gdir);
             let _ = std::fs::write(&gfile, serde_json::to_string_pretty(&golden).unwrap_or_default());
@@ -325,7 +344,17 @@ pub fn run(opts: &Options) -> Report {
     report
 }
 
-fn run_example(name: &str, path: &Path, out_dir: &Path, samples: usize, pixels: bool) -> (String, Golden, Vec<Failure>, usize, BTreeMap<String, String>) {
+/// Unreadable labels per reading (`Reading::standard` at the document's height), every state.
+fn label_counts(engine: &mut Engine) -> BTreeMap<String, usize> {
+    let h = engine.viewport().height;
+    let mut out = BTreeMap::new();
+    for a in datars_devtools::audit_labels(engine, &datars_devtools::Reading::standard(h)) {
+        *out.entry(format!("{} px, text {}×", a.reading.width, a.reading.text_scale)).or_insert(0) += a.issues.count();
+    }
+    out
+}
+
+fn run_example(name: &str, path: &Path, out_dir: &Path, samples: usize, pixels: bool) -> (String, Golden, Vec<Failure>, usize, BTreeMap<String, String>, BTreeMap<String, usize>) {
     let mut failures = Vec::new();
     let mut golden = Golden::default();
     let mut snaps = BTreeMap::new();
@@ -334,14 +363,14 @@ fn run_example(name: &str, path: &Path, out_dir: &Path, samples: usize, pixels: 
         Ok(j) => j,
         Err(e) => {
             failures.push(Failure { example: name.into(), what: "read".into(), detail: e.to_string(), artifacts: vec![] });
-            return (name.into(), golden, failures, 0, snaps);
+            return (name.into(), golden, failures, 0, snaps, BTreeMap::new());
         }
     };
     let mut engine: Engine = match datars_headless::load_at(&json, path.parent()) {
         Ok(e) => e,
         Err(e) => {
             failures.push(Failure { example: name.into(), what: "load".into(), detail: e, artifacts: vec![] });
-            return (name.into(), golden, failures, 0, snaps);
+            return (name.into(), golden, failures, 0, snaps, BTreeMap::new());
         }
     };
     let names = engine.state_names();
@@ -387,7 +416,9 @@ fn run_example(name: &str, path: &Path, out_dir: &Path, samples: usize, pixels: 
         }
         golden.transitions.push(TransitionGolden { from: names[i].clone(), to: names[i + 1].clone(), sweep: hash_all(&hashes), samples });
     }
-    (name.into(), golden, failures, frames_checked, snaps)
+    // Last: it lays the chart out at other sizes.
+    let labels = label_counts(&mut engine);
+    (name.into(), golden, failures, frames_checked, snaps, labels)
 }
 
 /// A minimal line diff (changed lines with +/-), capped for readability.

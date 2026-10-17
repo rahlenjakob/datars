@@ -203,7 +203,9 @@ export const arcDiagram = recipe<ArcDiagramParams>({
           semantics: { role: "datum", label: e(`\`\${${g.label}}: \${format(${col(size)}, ${f})}${p.size ? "" : " links"}\``), value: e(col(size)) },
           pickable: true,
         }))] }),
-        p.labels ? group({ key: "labels", children: [repeat(nodes, text(e(g.label), [e(`scale.nx(${col(g.id)})`), e(`${base} + ${R + 5}`)], {
+        // Turned names closer than a line (a phone, a reader's big text) would pile up: those
+        // that would touch an earlier one are left out.
+        p.labels ? group({ key: "labels", declutter: true, children: [repeat(nodes, text(e(g.label), [e(`scale.nx(${col(g.id)})`), e(`${base} + ${R + 5}`)], {
           key: e(col(g.id)),
           rotate: e(`${turned} ? -90 : 0`),
           style: { size: "$size.label", ink: "$ink-2", align: e(`${turned} ? "end" : "middle"`), baseline: e(`${turned} ? "middle" : "top"`), contain: true },
@@ -468,7 +470,10 @@ function hierarchyTree(p: TreeParams, cx: Cx, method: "tidy" | "cluster"): Templ
         semantics: { role: "datum", label: e("d.path") },
         pickable: true,
       }))] }),
-      p.labels ? group({ key: "leaf-labels", children: [repeat(laid, text(e(label), leafAt, {
+      // Leaves a line apart or closer (many of them, or a reader's big text) would pile up: those
+      // that would touch an earlier one are left out (the nodes still name them, to a pointer and
+      // to screen readers).
+      p.labels ? group({ key: "leaf-labels", declutter: true, children: [repeat(laid, text(e(label), leafAt, {
         key: e(col(id)), when: e("d.leaf"), rotate: leafRotate,
         style: { size: "$size.label", ink: "$ink-2", align: leafAlign, baseline: leafBaseline, contain: true },
       }))] }) : null,

@@ -115,19 +115,22 @@ export const kpi = recipe<KpiParams>({
     const body = 'token("size.body")';
     const dw = `measure(${deltaText}, ${body}, 600)`;
     const lw = p.compareLabel ? `measure(${q(p.compareLabel)}, ${body})` : "0";
-    const dx0 = center ? `((box.w - 13 - ${dw} - ${p.compareLabel ? `5 - ${lw}` : "0"}) / 2)` : "0";
-    const mid = "box.h / 2";
+    // What it's against goes under the change when the two don't fit on a line (a phone's
+    // narrow tile, a reader's big text).
+    const under = p.compareLabel ? `(18 + ${dw} + ${lw} > box.w)` : "false";
+    const dx0 = center ? `((box.w - 13 - ${dw} - ${p.compareLabel ? `(${under} ? 0 : 5 + ${lw})` : "0"}) / 2)` : "0";
+    const mid = `(${under} ? ${body} * 0.75 : box.h / 2)`;
     const tri = `${diff} >= 0 ? \`M \${${dx0}} \${${mid} + 4} L \${${dx0} + 4.5} \${${mid} - 4} L \${${dx0} + 9} \${${mid} + 4} Z\` : \`M \${${dx0}} \${${mid} - 4} L \${${dx0} + 9} \${${mid} - 4} L \${${dx0} + 4.5} \${${mid} + 4} Z\``;
     const deltaRow = hasDelta ? group({
       key: "delta-row",
-      size: { h: e(`${body} * 1.5`) },
+      size: { h: e(`${body} * (${under} ? 2.75 : 1.5)`) },
       when: e(`${c} != null && ${change} != null`),
       children: [
         shape(geom.path(e(tri)), { key: "arrow", when: e(`${diff} != 0`), fill: e(ink), semantics: { role: "decoration" } }),
         // Keyed by its format: the change counts from one value to the next, but a change of
         // format (a share to an amount) is a new line, not a count between the two.
         text(deltaCounts ? "" : e(deltaText), [e(`${dx0} + 13`), e(mid)], { key: `delta ${deltaFmt}`, number: deltaCounts ? { value: e(change), format: deltaFmt } : undefined, style: { size: "$size.body", weight: 600, ink: e(ink), baseline: "middle" } }),
-        p.compareLabel ? text(p.compareLabel, [e(`${dx0} + 18 + ${dw}`), e(mid)], { key: "against", style: { size: "$size.body", ink: "$muted", baseline: "middle" } }) : null,
+        p.compareLabel ? text(p.compareLabel, [e(`${under} ? ${center ? `(box.w - ${lw}) / 2` : "0"} : ${dx0} + 18 + ${dw}`), e(`${under} ? ${body} * 2 : ${mid}`)], { key: "against", style: { size: "$size.body", ink: "$muted", baseline: "middle", maxWidth: e("box.w") } }) : null,
       ],
     }) : null;
     return group({
@@ -301,7 +304,9 @@ export const gauge = recipe<GaugeParams>({
       key: "gauge",
       semantics: { role: "group", label: p.label || "Gauge" },
       children: [
-        group({ key: "dial", children: [
+        // A small dial (a phone's column of three) or big text: the value comes first, and the
+        // range's ends give way rather than sit under it.
+        group({ key: "dial", declutter: true, children: [
           arc("track", "0", "1", bands.length ? "$ink@0.06" : "$ink@0.1"),
           ...bandArcs,
           needle ? null : arc("fill", "0", frac, p.ink, { semantics: { role: "datum", label: e(said), value: e(v) }, pickable: true }),
@@ -749,7 +754,9 @@ export const gantt = recipe<GanttParams>({
       semantics: { role: "group", label: "Plan" },
       children: [
         // Names in a column as wide as the widest (up to a third of the box: longer ones clip).
-        group({ key: "labels", size: { w: e(`min(box.w * 0.34, table.max(${q(Tl)}, "__lw"))`) }, clip: "box", children: [repeat(T, text(e(`String(${fld(p.task)})`), [e(`d.__kind == "group" ? 0 : ${indent}`), e(cyv)], {
+        // Rows closer than a line of text (many tasks, a reader's big text): a name that would
+        // touch the one above is left out — the bar still says it, to a pointer and a screen reader.
+        group({ key: "labels", size: { w: e(`min(box.w * 0.34, table.max(${q(Tl)}, "__lw"))`) }, clip: "box", declutter: true, children: [repeat(T, text(e(`String(${fld(p.task)})`), [e(`d.__kind == "group" ? 0 : ${indent}`), e(cyv)], {
           key: e("d.__id"),
           style: { size: e('d.__kind == "group" ? token("size.body") : token("size.label")'), weight: e('d.__kind == "group" ? 600 : 400'), ink: e('d.__kind == "group" ? "$ink" : "$ink-2"'), baseline: "middle" },
           semantics: { role: "decoration" },

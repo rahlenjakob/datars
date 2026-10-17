@@ -13,8 +13,9 @@ export const legend = recipe<LegendParams>({
     const items = repeat({ legend: p.scale }, group({
       semantics: { role: "legend-item", label: e("key.name(d.label)") },
       children: [
-        shape(geom.rect({ x: 0, y: 2, w: 10, h: 10, r: 2 }), { fill: e("d.ink") }),
-        text(e("key.name(d.label)"), [15, 11], { style: { size: "$size.label", ink: "$ink-2" } }),
+        // The swatch beside the label's letters, at any text size (2 and 11 px at the theme's).
+        shape(geom.rect({ x: 0, y: e('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e("d.ink") }),
+        text(e("key.name(d.label)"), [15, e('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } }),
       ],
     }));
     const semantics = { role: "legend" as const, label: p.title ?? "Legend" };
@@ -234,9 +235,11 @@ export const card = recipe<CardParams>({
     const norm = (v: Prop): Prop => (typeof v === "string" && v.startsWith("=") ? e(v.slice(1)) : v);
     const p = { ...params, text: norm(params.text), title: norm(params.title), kicker: norm(params.kicker), at: norm(params.at) };
     const pad = 14;
-    // As wide as asked, but never wider than the box leaves (a 300 px card in a 320 px phone chart).
+    // As wide as asked — at the theme's text size: a reader's bigger text gets a wider card, so
+    // the note keeps its lines instead of growing a tower of them — but never wider than the box
+    // leaves (a 300 px card in a 320 px phone chart).
     const m = Array.isArray(p.margin) ? p.margin : [p.margin, p.margin, p.margin, p.margin];
-    const width = e(`min(${p.width}, box.w - ${m[1] + m[3]})`);
+    const width = e(`min(${p.width} * max(1, textScale), box.w - ${m[1] + m[3]})`);
     const isExpr = (v: unknown): v is { expr: string } => typeof v === "object" && v !== null && "expr" in v;
     const exprOf = (v: Prop) => (isExpr(v) ? v.expr : JSON.stringify(v ?? ""));
     const hidden = isExpr(p.text) ? e(`(${exprOf(p.text)}) != ""`) : undefined;

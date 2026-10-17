@@ -275,12 +275,14 @@ test("plot: lines labelled at their ends get the room their names need, up to la
   let room;
   const walk = (n) => { if (n && typeof n === "object") { if (n.key === "end-labels") room = n.size.w; Object.values(n).forEach(walk); } };
   walk(out.template);
-  assert.equal(room.expr, `min(150, table.max(${JSON.stringify(series)}, "w") + 12)`);
+  // (labelSpace is at the theme's text size: a reader's bigger names get more of it.)
+  assert.equal(room.expr, `min(150 * max(1, textScale), table.max(${JSON.stringify(series)}, "w") + 12)`);
 });
 
 test("card: never wider than its box leaves; its lines wrap to the card", () => {
   const box = card.__expand({ text: "Hello", width: 300, margin: [12, 10, 12, 14] }, {}).template.children[0];
-  assert.equal(box.size.w.expr, "min(300, box.w - 24)");
+  // (300 px at the theme's text size: wider for a reader's bigger text, never wider than the box.)
+  assert.equal(box.size.w.expr, "min(300 * max(1, textScale), box.w - 24)");
   assert.equal(box.children[0].style.max_width.expr, "box.w");
 });
 
@@ -409,7 +411,9 @@ test("plot: yLabel (and the right axis's label) in a row above the plot area, no
   const t = plot.__expand({ data: "t", x: "k", y: "v", title: "T", yLabel: "People", right: { y: "s", label: "Share" }, children: [bar({})] }, {}).template;
   const titles = byKey(t, "axis-titles");
   assert.deepEqual(titles.children.map((c) => [c.key, c.text, c.style.align]), [["y", "People", undefined], ["y2", "Share", "end"]]);
-  assert.equal(t.children.indexOf(titles), t.children.findIndex((c) => c.key === "body") - 1, "right above the body, under the title");
+  // Right above the body (but for the room the top tick label needs with big text), under the title.
+  assert.equal(t.children.indexOf(titles), t.children.findIndex((c) => c.key === "body") - 2, "right above the body, under the title");
+  assert.equal(t.children[t.children.indexOf(titles) + 1].key, "top-room");
   assert.deepEqual(uses(t, "axis").map((a) => a.label), [undefined, undefined, undefined], "no axis draws a vertical title itself");
   const hidden = plot.__expand({ data: "t", x: "k", y: "v", yLabel: "People", axes: "x", children: [] }, {}).template;
   assert.equal(byKey(hidden, "axis-titles"), undefined, "no y axis, no y title");

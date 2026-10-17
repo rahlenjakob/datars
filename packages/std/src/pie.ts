@@ -28,7 +28,9 @@ export const pie = recipe<PieParams>({
     // legend below it instead.
     const colW = `(table.max(${S}, "lw") + 26)`;
     const cols = `max(1, floor(box.w / ${colW}))`;
-    const legendH = `(ceil(table.count(${S}) / ${cols}) * 16 + 10)`;
+    // Legend rows a line of its labels apart (16 px at the theme's 11 px).
+    const rowH = '(token("size.label") * 16 / 11)';
+    const legendH = `(ceil(table.count(${S}) / ${cols}) * ${rowH} + 10)`;
     const narrow = p.labels ? `(${fit} < min(box.w, box.h) * 0.2)` : "false";
     const R = p.labels ? `(${narrow} ? min(box.w, box.h - ${legendH}) / 2 - 4 : min(${base}, ${fit}))` : base;
     const CY = p.labels ? `(${narrow} ? (box.h - ${legendH}) / 2 : box.h / 2)` : "box.h / 2";
@@ -52,11 +54,11 @@ export const pie = recipe<PieParams>({
           : null,
         p.labels
           ? group({ key: "legend", when: e(narrow), semantics: { role: "legend", label: "Legend" }, children: [repeat({ legend: "color" }, group({
-              transform: { translate: [e(`(d.index % ${cols}) * ${colW} + (box.w - min(table.count(${S}), ${cols}) * ${colW}) / 2`), e(`box.h - ${legendH} + 10 + floor(d.index / ${cols}) * 16`)] },
+              transform: { translate: [e(`(d.index % ${cols}) * ${colW} + (box.w - min(table.count(${S}), ${cols}) * ${colW}) / 2`), e(`box.h - ${legendH} + 10 + floor(d.index / ${cols}) * ${rowH}`)] },
               semantics: { role: "legend-item", label: e("key.name(d.label)") },
               children: [
                 shape(geom.rect({ x: 0, y: 0, w: 10, h: 10, r: 2 }), { fill: e("d.ink") }),
-                text(e("key.name(d.label)"), [14, 9], { style: { size: "$size.label", ink: "$ink-2"} }),
+                text(e("key.name(d.label)"), [14, e('token("size.label") * 9 / 11')], { style: { size: "$size.label", ink: "$ink-2"} }),
               ],
             }))] })
           : null,

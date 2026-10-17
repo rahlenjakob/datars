@@ -1,7 +1,7 @@
 // axis: ticks, labels and a domain line for a scale. Left/bottom/right/top. Its size is measured by
 // the engine, so the plot area gets exactly the space the labels leave.
 
-import { e, group, op, recipe, repeat, shape, geom, t, text } from "@datars/sdk";
+import { e, group, op, recipe, repeat, shape, geom, t, text, Template } from "@datars/sdk";
 
 export interface AxisParams { scale: string; orient: "left" | "bottom" | "right" | "top"; ticks: number; format: string; label: string; line: boolean; prefix: string; suffix: string; data: string; field: string; type: string }
 
@@ -111,6 +111,15 @@ export const axis = recipe<AxisParams>({
     });
   },
 });
+
+/** The y axis's top label stands half a line above the plot area, into the gap over it: at the
+ * theme's sizes the rows' 6 px are enough; with a reader's bigger text (1.5 ×, 2 ×) they aren't,
+ * and the row above (a title, the axis titles) would touch it. A spacer then — only then, so
+ * charts at the theme's sizes don't move — gives the label's upper half its room. */
+export function topRoom(gap = 6): Template {
+  const half = 'token("size.label") * 0.62';
+  return group({ key: "top-room", when: e(`${half} > ${gap} * 1.5`), size: { h: e(`max(0, ${half} - ${2 * gap})`) } });
+}
 
 type TickSpec = { scale: string; orient?: string; ticks?: number; type?: string; format?: string; prefix?: string; suffix?: string };
 

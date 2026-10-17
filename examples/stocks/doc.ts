@@ -84,14 +84,15 @@ export default doc({
       // A watchlist: last close, change over the range and a sparkline per ticker.
       group({
         key: "watchlist",
-        size: { h: 40 },
+        // Two lines of labels: taller with a reader's bigger text.
+        size: { h: e("40 * textScale") },
         layout: { type: "grid", columns: 3, gap: 16 },
         children: [repeat({ groups: "watch", by: "ticker" }, group({
           layout: { type: "columns", gap: 8 },
           children: [
             group({ key: "quote", size: { w: "auto" }, children: [
               text(e("key.name(d.ticker)"), [0, 0], { key: "name", style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "top" } }),
-              text(e('format(group.last("close"), ",.2f") + "  " + format(group.last("close") / group.first("close") - 1, "+.1%")'), [0, 18], {
+              text(e('format(group.last("close"), ",.2f") + "  " + format(group.last("close") / group.first("close") - 1, "+.1%")'), [0, e("18 * textScale")], {
                 key: "last", style: { size: "$size.label", ink: e('group.last("close") >= group.first("close") ? "$up" : "$down"'), baseline: "top" },
               }),
             ] }),
@@ -125,7 +126,7 @@ export default doc({
           }, { key: "chart", when: showing(["drawdown"]) }),
         ],
       }),
-      text("Synthetic prices for fictional companies — not market data.", [0, 0], { key: "note", size: { h: 12 }, style: { size: "$size.small", ink: "$muted", baseline: "top" } }),
+      text("Synthetic prices for fictional companies — not market data.", [0, 0], { key: "note", size: { h: "auto" }, style: { size: "$size.small", ink: "$muted", baseline: "top", maxWidth: e("box.w") } }),
     ],
   }),
   program: story({

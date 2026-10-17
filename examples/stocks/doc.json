@@ -6877,7 +6877,9 @@
     "kind": "group",
     "key": "watchlist",
     "size": {
-     "h": 40
+     "h": {
+      "expr": "40 * textScale"
+     }
     },
     "layout": {
      "type": "grid",
@@ -6930,7 +6932,9 @@
            },
            "at": [
             0,
-            18
+            {
+             "expr": "18 * textScale"
+            }
            ],
            "style": {
             "size": "$size.label",
@@ -7077,7 +7081,7 @@
     "kind": "text",
     "key": "note",
     "size": {
-     "h": 12
+     "h": "auto"
     },
     "text": "Synthetic prices for fictional companies — not market data.",
     "at": [
@@ -7087,7 +7091,10 @@
     "style": {
      "size": "$size.small",
      "ink": "$muted",
-     "baseline": "top"
+     "baseline": "top",
+     "max_width": {
+      "expr": "box.w"
+     }
     }
    }
   ]

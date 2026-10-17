@@ -33,60 +33,60 @@ scene 760.00×500.00 background=$paper
         ("title",) text "Performance, rebased to 100 at the start" at (0.00, 0.00) size=17.00 ink=$ink role=title "Performance, rebased to 100 at the start"
         group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
           group ("axis-y",) transform=[1.00 0.00 0.00 1.00 26.52 0.00] role=axis "y axis"
-            ("domain",) segment (0.00, 0.00)→(0.00, 345.62) stroke=$rule/1.00
+            ("domain",) segment (0.00, 0.00)→(0.00, 345.52) stroke=$rule/1.00
             group (60,) role=tick "60"
-              ("#0",) segment (0.00, 345.62)→(-5.00, 345.62) stroke=$rule/1.00
-              ("#1",) text "60" at (-8.00, 345.62) size=11.00 ink=$muted
+              ("#0",) segment (0.00, 345.52)→(-5.00, 345.52) stroke=$rule/1.00
+              ("#1",) text "60" at (-8.00, 345.52) size=11.00 ink=$muted
             group (80,) role=tick "80"
-              ("#0",) segment (0.00, 259.22)→(-5.00, 259.22) stroke=$rule/1.00
-              ("#1",) text "80" at (-8.00, 259.22) size=11.00 ink=$muted
+              ("#0",) segment (0.00, 259.14)→(-5.00, 259.14) stroke=$rule/1.00
+              ("#1",) text "80" at (-8.00, 259.14) size=11.00 ink=$muted
             group (100,) role=tick "100"
-              ("#0",) segment (0.00, 172.81)→(-5.00, 172.81) stroke=$rule/1.00
-              ("#1",) text "100" at (-8.00, 172.81) size=11.00 ink=$muted
+              ("#0",) segment (0.00, 172.76)→(-5.00, 172.76) stroke=$rule/1.00
+              ("#1",) text "100" at (-8.00, 172.76) size=11.00 ink=$muted
             group (120,) role=tick "120"
-              ("#0",) segment (0.00, 86.41)→(-5.00, 86.41) stroke=$rule/1.00
-              ("#1",) text "120" at (-8.00, 86.41) size=11.00 ink=$muted
+              ("#0",) segment (0.00, 86.38)→(-5.00, 86.38) stroke=$rule/1.00
+              ("#1",) text "120" at (-8.00, 86.38) size=11.00 ink=$muted
             group (140,) role=tick "140"
               ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
               ("#1",) text "140" at (-8.00, 0.00) size=11.00 ink=$muted
           group ("center",) transform=[1.00 0.00 0.00 1.00 33.02 0.00]
             group ("area",)
               group ("grid-y",) role=decoration
-                (60,) segment (0.00, 345.62)→(580.98, 345.62) stroke=$grid/1.00 role=decoration
-                (80,) segment (0.00, 259.22)→(580.98, 259.22) stroke=$grid/1.00 role=decoration
-                (100,) segment (0.00, 172.81)→(580.98, 172.81) stroke=$grid/1.00 role=decoration
-                (120,) segment (0.00, 86.41)→(580.98, 86.41) stroke=$grid/1.00 role=decoration
+                (60,) segment (0.00, 345.52)→(580.98, 345.52) stroke=$grid/1.00 role=decoration
+                (80,) segment (0.00, 259.14)→(580.98, 259.14) stroke=$grid/1.00 role=decoration
+                (100,) segment (0.00, 172.76)→(580.98, 172.76) stroke=$grid/1.00 role=decoration
+                (120,) segment (0.00, 86.38)→(580.98, 86.38) stroke=$grid/1.00 role=decoration
                 (140,) segment (0.00, 0.00)→(580.98, 0.00) stroke=$grid/1.00 role=decoration
               group ("indexed",)
                 group ("rule-y-100",) role=annotation "y = 100"
-                  ("#0",) segment (0.00, 172.81)→(580.98, 172.81) stroke=$ink-2/1.00
+                  ("#0",) segment (0.00, 172.76)→(580.98, 172.76) stroke=$ink-2/1.00
                 group ("lines",)
                   group ("NORD",)
-                    ("line",) polyline n=252 first=(1.15, 172.81) stroke=$categorical[0]/2.00 role=series "Nordhavn"
+                    ("line",) polyline n=252 first=(1.15, 172.76) stroke=$categorical[0]/2.00 role=series "Nordhavn"
                     ("points",) instances circle ×252
-                      · ("20101",) (1.15, 172.81) fill=#00000000
-                      · ("20102",) (3.46, 174.59) fill=#00000000
-                      · ("20103",) (5.76, 178.56) fill=#00000000
+                      · ("20101",) (1.15, 172.76) fill=#00000000
+                      · ("20102",) (3.46, 174.54) fill=#00000000
+                      · ("20103",) (5.76, 178.50) fill=#00000000
                       · … 249 more
                   group ("VIKA",)
-                    ("line",) polyline n=252 first=(1.15, 172.81) stroke=$categorical[1]/2.00 role=series "Vikafjell"
+                    ("line",) polyline n=252 first=(1.15, 172.76) stroke=$categorical[1]/2.00 role=series "Vikafjell"
                     ("points",) instances circle ×252
-                      · ("20101",) (1.15, 172.81) fill=#00000000
-                      · ("20102",) (3.46, 181.92) fill=#00000000
-                      · ("20103",) (5.76, 190.64) fill=#00000000
+                      · ("20101",) (1.15, 172.76) fill=#00000000
+                      · ("20102",) (3.46, 181.87) fill=#00000000
+                      · ("20103",) (5.76, 190.59) fill=#00000000
                       · … 249 more
                   group ("ASKR",)
-                    ("line",) polyline n=252 first=(1.15, 172.81) stroke=$categorical[2]/2.00 role=series "Askr"
+                    ("line",) polyline n=252 first=(1.15, 172.76) stroke=$categorical[2]/2.00 role=series "Askr"
                     ("points",) instances circle ×252
-                      · ("20101",) (1.15, 172.81) fill=#00000000
-                      · ("20102",) (3.46, 165.37) fill=#00000000
-                      · ("20103",) (5.76, 166.62) fill=#00000000
+                      · ("20101",) (1.15, 172.76) fill=#00000000
+                      · ("20102",) (3.46, 165.32) fill=#00000000
+                      · ("20103",) (5.76, 166.58) fill=#00000000
                       · … 249 more
                 group ("end-labels",)
-                  ("NORD",) text "Nordhavn +17.1%" at (585.83, 98.95) size=11.00 ink=$categorical[0]
-                  ("VIKA",) text "Vikafjell −8.6%" at (585.83, 210.12) size=11.00 ink=$categorical[1]
-                  ("ASKR",) text "Askr +7.5%" at (585.83, 140.32) size=11.00 ink=$categorical[2]
-            group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 352.12] role=axis "x axis"
+                  ("NORD",) text "Nordhavn +17.1%" at (585.83, 98.92) size=11.00 ink=$categorical[0]
+                  ("VIKA",) text "Vikafjell −8.6%" at (585.83, 210.06) size=11.00 ink=$categorical[1]
+                  ("ASKR",) text "Askr +7.5%" at (585.83, 140.28) size=11.00 ink=$categorical[2]
+            group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 352.02] role=axis "x axis"
               ("domain",) segment (0.00, 0.00)→(580.98, 0.00) stroke=$rule/1.00
               group (20122,) role=tick "Feb"
                 ("#0",) segment (35.73, 0.00)→(35.73, 5.00) stroke=$rule/1.00
@@ -125,4 +125,4 @@ scene 760.00×500.00 background=$paper
                 ("#0",) segment (561.38, 0.00)→(561.38, 5.00) stroke=$rule/1.00
                 ("#1",) text "2026" at (561.38, 8.00) size=11.00 ink=$muted
           group ("end-labels",) transform=[1.00 0.00 0.00 1.00 620.00 0.00]
-    ("note",) text "Synthetic prices for fictional companies — not market data." at (0.00, 0.00) size=10.00 ink=$muted transform=[1.00 0.00 0.00 1.00 12.00 478.00]
+    ("note",) text "Synthetic prices for fictional companies — not market data." at (0.00, 0.00) size=10.00 ink=$muted transform=[1.00 0.00 0.00 1.00 12.00 477.90]

@@ -22,8 +22,8 @@ var axis = recipe({
   tokens: ["muted", "rule", "size.label"],
   expand(p, cx) {
     const s = p.scale;
-    const S = `scale.${s}`;
-    const center = `d.pos + ${S}.bandwidth() / 2`;
+    const S2 = `scale.${s}`;
+    const center = `d.pos + ${S2}.bandwidth() / 2`;
     const affix = (n) => p.prefix || p.suffix ? `${JSON.stringify(p.prefix ?? "")} + ${n} + ${JSON.stringify(p.suffix ?? "")}` : n;
     const num = p.format ? `format(d.value, ${JSON.stringify(p.format)})` : "d.label";
     const plain = affix(num);
@@ -32,7 +32,7 @@ var axis = recipe({
     const vertical = p.orient === "left" || p.orient === "right";
     const sign = p.orient === "left" || p.orient === "top" ? -1 : 1;
     const size = `token("size.label")`;
-    const len = `(${S}.max() - ${S}.min())`;
+    const len = `(${S2}.max() - ${S2}.min())`;
     const numeric = fitsTicks(p);
     const widest = widestTick(p);
     const from = { ticks: s, count: tickCount(p) };
@@ -40,7 +40,7 @@ var axis = recipe({
     const whole = p.format && wholeNumbers(p.format) ? e(`${band} || abs(d.value - round(d.value)) < 0.000001`) : void 0;
     const tickMark = vertical ? shape(geom.segment({ x1: 0, y1: e(center), x2: sign * 5, y2: e(center) }), { stroke: { paint: "$rule", width: 1 } }) : shape(geom.segment({ x1: e(center), y1: 0, x2: e(center), y2: sign * 5 }), { stroke: { paint: "$rule", width: 1 } });
     const names = !vertical && p.data && p.field ? cx.table("names", p.data, op.derive("w", e(`measure(key.name(d.${p.field}), ${size})`)), op.derive("ww", e(`measure.word(key.name(d.${p.field}), ${size})`))) : null;
-    const step = `${S}.step()`;
+    const step = `${S2}.step()`;
     const W = names ? `table.max(${JSON.stringify(names)}, "w")` : "36";
     const WW = names ? `table.max(${JSON.stringify(names)}, "ww")` : "36";
     const kFlat = names ? `max(1, ceil((${WW} + 4) / ${step}))` : `max(1, ceil(40 / ${step}))`;
@@ -54,9 +54,9 @@ var axis = recipe({
     const tickLabel = vertical ? text(e(plain), [sign * 8, e(center)], { when: e(shown), style: { size: "$size.label", ink: "$muted", align: sign < 0 ? "end" : "start", baseline: "middle" } }) : text(e(plain), [e(center), sign < 0 ? -8 : 8], { when: e(`${shown} && ${spaced}`), style: { size: "$size.label", ink: "$muted", align: "middle", contain: true, baseline: sign < 0 ? "bottom" : "top" } });
     const catLabel = vertical ? text(e(label), [sign * 8, e(center)], { when: e(`${band} && ${thin}`), style: { size: "$size.label", ink: "$muted", align: sign < 0 ? "end" : "start", baseline: "middle" } }) : text(e(label), [e(center), sign < 0 ? -8 : 8], { when: e(`${band} && ${thin} && !${turned}`), style: { size: "$size.label", ink: "$muted", align: "middle", contain: true, baseline: sign < 0 ? "bottom" : "top", maxWidth: e(flatWidth) } });
     const turnedLabel = !vertical && names && sign > 0 ? text(e(label), [e(center), 8], { key: "turned", when: e(`${band} && ${thin} && ${turned}`), rotate: -45, style: { size: "$size.label", ink: "$muted", align: "end", contain: true, baseline: "middle" } }) : null;
-    const domainLine = vertical ? shape(geom.segment({ x1: 0, y1: e(`${S}.min()`), x2: 0, y2: e(`${S}.max()`) }), { key: "domain", stroke: { paint: "$rule", width: 1 } }) : shape(geom.segment({ x1: e(`${S}.min()`), y1: 0, x2: e(`${S}.max()`), y2: 0 }), { key: "domain", stroke: { paint: "$rule", width: 1 } });
+    const domainLine = vertical ? shape(geom.segment({ x1: 0, y1: e(`${S2}.min()`), x2: 0, y2: e(`${S2}.max()`) }), { key: "domain", stroke: { paint: "$rule", width: 1 } }) : shape(geom.segment({ x1: e(`${S2}.min()`), y1: 0, x2: e(`${S2}.max()`), y2: 0 }), { key: "domain", stroke: { paint: "$rule", width: 1 } });
     const titleY = turnedLabel ? e(`${turned} ? 12 + (${W} + ${size}) * 0.71 : 30`) : 30;
-    const top = `min(${S}.min(), ${S}.max()) - 8`;
+    const top = `min(${S2}.min(), ${S2}.max()) - 8`;
     return group({
       key: `axis-${s}`,
       // Whatever the rules above miss — a last label nudged in from the edge onto its neighbour, a
@@ -66,21 +66,25 @@ var axis = recipe({
       children: [
         p.line ? domainLine : null,
         repeat(from, group({ when: whole, semantics: { role: "tick", label: e(label) }, children: [tickMark, tickLabel, catLabel, turnedLabel] })),
-        p.label ? vertical ? text(p.label, [sign * 8, e(top)], { key: "label", style: { size: "$size.label", ink: "$muted", align: sign < 0 ? "end" : "start", baseline: "bottom" } }) : text(p.label, [e(`${S}.max()`), titleY], { key: "label", style: { size: "$size.label", ink: "$muted", align: "end", baseline: "top" } }) : null
+        p.label ? vertical ? text(p.label, [sign * 8, e(top)], { key: "label", style: { size: "$size.label", ink: "$muted", align: sign < 0 ? "end" : "start", baseline: "bottom" } }) : text(p.label, [e(`${S2}.max()`), titleY], { key: "label", style: { size: "$size.label", ink: "$muted", align: "end", baseline: "top" } }) : null
       ]
     });
   }
 });
+function topRoom(gap = 6) {
+  const half = 'token("size.label") * 0.62';
+  return group({ key: "top-room", when: e(`${half} > ${gap} * 1.5`), size: { h: e(`max(0, ${half} - ${2 * gap})`) } });
+}
 function fitsTicks(p) {
   return (p.orient === "bottom" || p.orient === "top") && !!p.type && !["band", "point", "time"].includes(p.type);
 }
 function widestTick(p) {
-  const S = `scale.${p.scale}`, size = `token("size.label")`;
+  const S2 = `scale.${p.scale}`, size = `token("size.label")`;
   const written2 = (v) => {
-    const n = p.format ? `format(${v}, ${JSON.stringify(p.format)})` : `${S}.label(${v})`;
+    const n = p.format ? `format(${v}, ${JSON.stringify(p.format)})` : `${S2}.label(${v})`;
     return p.prefix || p.suffix ? `${JSON.stringify(p.prefix ?? "")} + ${n} + ${JSON.stringify(p.suffix ?? "")}` : n;
   };
-  return `max(measure(${written2(`${S}.invert(${S}.min())`)}, ${size}), measure(${written2(`${S}.invert(${S}.max())`)}, ${size}))`;
+  return `max(measure(${written2(`${S2}.invert(${S2}.min())`)}, ${size}), measure(${written2(`${S2}.invert(${S2}.max())`)}, ${size}))`;
 }
 function tickCount(p) {
   if (p.ticks) return p.ticks;
@@ -128,8 +132,9 @@ var legend = recipe3({
     const items = repeat3({ legend: p.scale }, group3({
       semantics: { role: "legend-item", label: e3("key.name(d.label)") },
       children: [
-        shape3(geom3.rect({ x: 0, y: 2, w: 10, h: 10, r: 2 }), { fill: e3("d.ink") }),
-        text2(e3("key.name(d.label)"), [15, 11], { style: { size: "$size.label", ink: "$ink-2" } })
+        // The swatch beside the label's letters, at any text size (2 and 11 px at the theme's).
+        shape3(geom3.rect({ x: 0, y: e3('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e3("d.ink") }),
+        text2(e3("key.name(d.label)"), [15, e3('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } })
       ]
     }));
     const semantics = { role: "legend", label: p.title ?? "Legend" };
@@ -313,7 +318,7 @@ var card = recipe3({
     const p = { ...params, text: norm(params.text), title: norm(params.title), kicker: norm(params.kicker), at: norm(params.at) };
     const pad = 14;
     const m = Array.isArray(p.margin) ? p.margin : [p.margin, p.margin, p.margin, p.margin];
-    const width = e3(`min(${p.width}, box.w - ${m[1] + m[3]})`);
+    const width = e3(`min(${p.width} * max(1, textScale), box.w - ${m[1] + m[3]})`);
     const isExpr = (v) => typeof v === "object" && v !== null && "expr" in v;
     const exprOf2 = (v) => isExpr(v) ? v.expr : JSON.stringify(v ?? "");
     const hidden = isExpr(p.text) ? e3(`(${exprOf2(p.text)}) != ""`) : void 0;
@@ -1255,7 +1260,7 @@ var bump = recipe6({
     const hl = p.highlight !== void 0 && p.highlight !== null;
     const drawn = hl ? cx.table("bump-drawn", ranked, op4.derive("__on", e6(`${on} ? 1 : 0`)), op4.sort("__on", p.x)) : ranked;
     const ends = cx.table("bump-ends", drawn, op4.aggregate([s], { x0: ["first", p.x], r0: ["first", "__rank"], x1: ["last", p.x], r1: ["last", "__rank"] }), op4.derive("w", e6(`measure(key.name(d.${s}), token("size.label"), 600)`)));
-    const room = e6(`min(${p.labelSpace}, table.max(${JSON.stringify(ends)}, "w") + 12)`);
+    const room = e6(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(ends)}, "w") + 12)`);
     const ink = hl ? e6(`${on} ? scale.color(d.${s}) : "$rule"`) : e6(`scale.color(d.${s})`);
     const fade = hl ? e6(`${on} ? 1 : 0.45`) : void 0;
     const X = `scale.x(d.${p.x})`, Y = "scale.y(d.__rank)";
@@ -1302,8 +1307,10 @@ var bump = recipe6({
                         instances2({ key: "points", from: "@group", x: e6(X), y: e6(Y), r: hl ? e6(`${on} ? ${p.r} : ${Math.max(2, p.r - 1.5)}`) : p.r, fill: ink, opacity: fade, stroke: { paint: "$paper", width: 1.5 }, instanceKey: e6(`d.${p.x}`), label: pointLabel })
                       ]
                     })),
-                    group6({ key: "start-labels", children: [repeat6(ends, name("start"))] }),
-                    group6({ key: "end-labels", children: [repeat6(ends, name("end"))] })
+                    // Ranks closer than a line of the names (many series in a short box, big
+                    // text): a name that would touch the one above is left out.
+                    group6({ key: "start-labels", declutter: true, children: [repeat6(ends, name("start"))] }),
+                    group6({ key: "end-labels", declutter: true, children: [repeat6(ends, name("end"))] })
                   ]
                 }),
                 axis({ scale: "x", orient: "bottom", type: "point", data: ranked, field: p.x, line: false }, { size: { h: "auto" } })
@@ -1445,6 +1452,7 @@ var marimekko = recipe6({
       children: [
         p.title ? text5(p.title, [0, 0], { key: "title", size: { h: "auto" }, style: { font: "font.title", size: "$size.title", ink: "$ink", baseline: "top", maxWidth: e6("box.w") }, semantics: { role: "title", label: p.title } }) : null,
         p.subtitle ? text5(p.subtitle, [0, 0], { key: "subtitle", size: { h: "auto" }, style: { size: "$size.body", ink: "$ink-2", baseline: "top", maxWidth: e6("box.w") } }) : null,
+        topRoom(),
         group6({
           key: "body",
           layout: { type: "columns", gap: 6 },
@@ -2074,7 +2082,7 @@ var plot = recipe7({
     const lp = labelled?.params ?? {};
     const series = lp.series ?? lp.color ?? p.color;
     const seriesNames = labelled && series ? cx.table("series-names", lp.data ?? p.data, op5.aggregate([series], { n: ["count"] }), op5.derive("w", e7(`measure(key.name(d.${series}), token("size.label"))`))) : void 0;
-    const labelRoom = cmp.end ?? (seriesNames ? e7(`min(${p.labelSpace}, table.max(${JSON.stringify(seriesNames)}, "w") + 12)`) : p.labelSpace);
+    const labelRoom = cmp.end ?? (seriesNames ? e7(`min(${p.labelSpace} * max(1, textScale), table.max(${JSON.stringify(seriesNames)}, "w") + 12)`) : e7(`${p.labelSpace} * max(1, textScale)`));
     const yTitle = showY && p.yLabel ? p.yLabel : void 0;
     const axisTitles = yTitle || right?.label ? group7({ key: "axis-titles", size: { h: "auto" }, children: [
       yTitle ? text6(yTitle, [0, 0], { key: "y", style: { size: "$size.label", ink: "$muted", baseline: "top" } }) : null,
@@ -2090,6 +2098,7 @@ var plot = recipe7({
         p.subtitle ? text6(p.subtitle, [0, 0], { key: "subtitle", size: { h: "auto" }, style: { size: "$size.body", ink: "$ink-2", baseline: "top", maxWidth: e7("box.w") } }) : null,
         keyRow,
         axisTitles,
+        showY ? topRoom() : null,
         group7({
           key: "body",
           layout: { type: "columns", gap: 6 },
@@ -2149,12 +2158,13 @@ var pie = recipe8({
       op6.pie({ value: p.value, sort: p.sort, pad: p.pad, as: ["a0", "a1"] }),
       op6.derive("lw", e8(`measure(key.name(d.${p.category}), token("size.label"))`))
     );
-    const S = JSON.stringify(slices);
+    const S2 = JSON.stringify(slices);
     const base = "(min(box.w, box.h) / 2 - 36)";
-    const fit = `(box.w / 2 - table.max(${S}, "lw") - 26)`;
-    const colW = `(table.max(${S}, "lw") + 26)`;
+    const fit = `(box.w / 2 - table.max(${S2}, "lw") - 26)`;
+    const colW = `(table.max(${S2}, "lw") + 26)`;
     const cols = `max(1, floor(box.w / ${colW}))`;
-    const legendH = `(ceil(table.count(${S}) / ${cols}) * 16 + 10)`;
+    const rowH = '(token("size.label") * 16 / 11)';
+    const legendH = `(ceil(table.count(${S2}) / ${cols}) * ${rowH} + 10)`;
     const narrow = p.labels ? `(${fit} < min(box.w, box.h) * 0.2)` : "false";
     const R = p.labels ? `(${narrow} ? min(box.w, box.h - ${legendH}) / 2 - 4 : min(${base}, ${fit}))` : base;
     const CY = p.labels ? `(${narrow} ? (box.h - ${legendH}) / 2 : box.h / 2)` : "box.h / 2";
@@ -2175,11 +2185,11 @@ var pie = recipe8({
           style: { size: "$size.label", ink: "$ink-2", align: e8(`sin(${mid}) >= 0 ? "start" : "end"`), baseline: "middle" }
         }))] }) : null,
         p.labels ? group8({ key: "legend", when: e8(narrow), semantics: { role: "legend", label: "Legend" }, children: [repeat7({ legend: "color" }, group8({
-          transform: { translate: [e8(`(d.index % ${cols}) * ${colW} + (box.w - min(table.count(${S}), ${cols}) * ${colW}) / 2`), e8(`box.h - ${legendH} + 10 + floor(d.index / ${cols}) * 16`)] },
+          transform: { translate: [e8(`(d.index % ${cols}) * ${colW} + (box.w - min(table.count(${S2}), ${cols}) * ${colW}) / 2`), e8(`box.h - ${legendH} + 10 + floor(d.index / ${cols}) * ${rowH}`)] },
           semantics: { role: "legend-item", label: e8("key.name(d.label)") },
           children: [
             shape8(geom8.rect({ x: 0, y: 0, w: 10, h: 10, r: 2 }), { fill: e8("d.ink") }),
-            text7(e8("key.name(d.label)"), [14, 9], { style: { size: "$size.label", ink: "$ink-2" } })
+            text7(e8("key.name(d.label)"), [14, e8('token("size.label") * 9 / 11')], { style: { size: "$size.label", ink: "$ink-2" } })
           ]
         }))] }) : null,
         p.total && p.inner > 0 ? text7("", [e8("box.w / 2"), e8(CY)], { key: "total", number: { value: e8(`sum(${JSON.stringify(p.data)}, ${JSON.stringify(p.value)})`), format: p.format }, style: { font: "font.title", size: "$size.title", align: "middle", baseline: "middle" } }) : null
@@ -2348,7 +2358,9 @@ var treemap = recipe9({
       children: [
         repeat8(tbl, shape9(geom9.rect({ x: e9("d.x0"), y: e9("d.y0"), w: e9("d.x1 - d.x0"), h: e9("d.y1 - d.y0") }), { fill: e9(`scale.color(d.${by})`), stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "datum", label: lbl(p.category, p.value, p.format) }, pickable: true })),
         // Each label in the ink that reads on its rectangle's fill (dark on a light one).
-        p.labels ? group9({ key: "labels", children: [repeat8(tbl, text8(e9(`key.name(d.${p.category})`), [e9("d.x0 + 6"), e9("d.y0 + 16")], { when: e9("d.x1 - d.x0 > 44 && d.y1 - d.y0 > 22"), style: { size: "$size.label", weight: 600, ink: e9(`"on(" + scale.color(d.${by}) + ")"`), maxWidth: e9("d.x1 - d.x0 - 10") } }))] }) : null
+        // (Only in a rectangle with room for a few letters and a line of them, in the label's
+        // size: a reader's bigger text leaves out labels in more of the small ones.)
+        p.labels ? group9({ key: "labels", children: [repeat8(tbl, text8(e9(`key.name(d.${p.category})`), [e9("d.x0 + 6"), e9('d.y0 + 4 + token("size.label") * 12 / 11')], { when: e9('d.x1 - d.x0 > token("size.label") * 4 && d.y1 - d.y0 > token("size.label") * 2'), style: { size: "$size.label", weight: 600, ink: e9(`"on(" + scale.color(d.${by}) + ")"`), maxWidth: e9("d.x1 - d.x0 - 10") } }))] }) : null
       ]
     });
   }
@@ -2818,6 +2830,8 @@ var dotDensity = recipe10({
 import { e as e11, group as group11, pick, recipe as recipe11, scrub, shape as shape11, geom as geom11, t as t11, text as text10 } from "@datars/sdk";
 var SNAPPY = [{ duration: 0.18, easing: "cubic-out" }];
 var WASH = (strength = 0.06) => e11(`hover() ? ${strength} : 0`);
+var S = "max(1, textScale)";
+var px = (n) => `(${n} * ${S})`;
 var slider = recipe11({
   id: "@datars/std/slider",
   doc: "A slider for a numeric signal: press or drag to set it (snapped to `step`). Shows the label and the current value.",
@@ -2834,10 +2848,10 @@ var slider = recipe11({
   expand(p) {
     const v = p.signal;
     const x = e11(`scale.x(${v})`);
-    const y = 30;
+    const y = e11(px(30));
     return group11({
       key: "slider",
-      size: { h: 44 },
+      size: { h: e11(px(44)) },
       scales: { x: { type: "linear", domain: [p.min, p.max], range: [10, "=box.w - 10"] } },
       on: { drag: scrub(v, { step: p.step }) },
       pickable: true,
@@ -2875,27 +2889,27 @@ var segmented = recipe11({
     const labels = p.labels;
     const sig = p.signal;
     const n = Math.max(1, opts.length);
-    const top = p.label ? 20 : 0;
-    const h = 32;
+    const top = px(p.label ? 20 : 0);
+    const h = px(32);
     const at2 = opts.map((v, i) => `${sig} == ${lit(v)} ? ${i} : `).join("") + "-1";
     const w = `box.w / ${n}`;
     return group11({
       key: "segmented",
-      size: { h: top + h },
+      size: { h: e11(`${top} + ${h}`) },
       children: [
         p.label ? text10(p.label, [0, 0], { key: "label", style: LABEL }) : null,
-        shape11(geom11.rect({ x: 0, y: top, w: e11("box.w"), h, r: 8 }), { key: "track", fill: "$surface", stroke: { paint: "$rule", width: 1 } }),
+        shape11(geom11.rect({ x: 0, y: e11(top), w: e11("box.w"), h: e11(h), r: 8 }), { key: "track", fill: "$surface", stroke: { paint: "$rule", width: 1 } }),
         // One highlight that slides to the chosen option.
-        shape11(geom11.rect({ x: e11(`max(0, ${at2}) * ${w} + 2`), y: top + 2, w: e11(`${w} - 4`), h: h - 4, r: 6 }), { key: "thumb", fill: "$accent", opacity: e11(`(${at2}) >= 0 ? 1 : 0`) }),
+        shape11(geom11.rect({ x: e11(`max(0, ${at2}) * ${w} + 2`), y: e11(`${top} + 2`), w: e11(`${w} - 4`), h: e11(`${h} - 4`), r: 6 }), { key: "thumb", fill: "$accent", opacity: e11(`(${at2}) >= 0 ? 1 : 0`) }),
         ...opts.map((v, i) => group11({
           key: `option:${String(v)}`,
           pickable: true,
           on: { activate: { set: sig, value: v } },
           semantics: { role: "control", label: e11(`${p.label ? `${lit(p.label + ": ")} + ` : ""}${say(v, labels, i)} + (${sig} == ${lit(v)} ? ", selected" : "")`) },
           children: [
-            shape11(geom11.rect({ x: e11(`${i} * ${w}`), y: top, w: e11(w), h }), { key: "hit", pickable: true, fill: "transparent" }),
-            shape11(geom11.rect({ x: e11(`${i} * ${w} + 2`), y: top + 2, w: e11(`${w} - 4`), h: h - 4, r: 6 }), { key: "hover", fill: "$ink", opacity: e11(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
-            text10(e11(say(v, labels, i)), [e11(`(${i} + 0.5) * ${w}`), top + h / 2], { key: "text", style: { size: "$size.label", weight: 600, ink: e11(`${sig} == ${lit(v)} ? "on($accent)" : "$ink"`), align: "middle", baseline: "middle", maxWidth: e11(`${w} - 8`) } })
+            shape11(geom11.rect({ x: e11(`${i} * ${w}`), y: e11(top), w: e11(w), h: e11(h) }), { key: "hit", pickable: true, fill: "transparent" }),
+            shape11(geom11.rect({ x: e11(`${i} * ${w} + 2`), y: e11(`${top} + 2`), w: e11(`${w} - 4`), h: e11(`${h} - 4`), r: 6 }), { key: "hover", fill: "$ink", opacity: e11(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
+            text10(e11(say(v, labels, i)), [e11(`(${i} + 0.5) * ${w}`), e11(`${top} + ${h} / 2`)], { key: "text", style: { size: "$size.label", weight: 600, ink: e11(`${sig} == ${lit(v)} ? "on($accent)" : "$ink"`), align: "middle", baseline: "middle", maxWidth: e11(`${w} - 8`) } })
           ]
         }))
       ]
@@ -2921,19 +2935,20 @@ var select = recipe11({
     const sig = p.signal;
     const state = `${sig}.open`;
     const isOpen = `${state} == \`o:\${${sig}}\``;
-    const top = p.label ? 20 : 0;
-    const h = 34;
-    const row = 28;
+    const top = px(p.label ? 20 : 0);
+    const h = px(34);
+    const row = px(28);
     const cols = Math.max(1, Math.ceil(opts.length / Math.max(1, p.rows || 6)));
     const perCol = Math.max(1, Math.ceil(opts.length / cols));
-    const colW = `max(box.w / ${cols}, 110)`;
-    const listH = perCol * row + 8;
-    const listY = p.open === "up" ? top - listH - 4 : top + h + 4;
-    const chevron = (up) => up ? [top + h / 2 + 3, top + h / 2 - 2] : [top + h / 2 - 2, top + h / 2 + 3];
+    const colW = `max(box.w / ${cols}, ${px(110)})`;
+    const listH = `(${perCol} * ${row} + 8)`;
+    const listY = p.open === "up" ? `(${top} - ${listH} - 4)` : `(${top} + ${h} + 4)`;
+    const mid = `(${top} + ${h} / 2)`;
+    const chevron = (up) => up ? [`${mid} + 3`, `${mid} - 2`] : [`${mid} - 2`, `${mid} + 3`];
     const [cy0, cy1] = chevron(false), [uy0, uy1] = chevron(true);
     return group11({
       key: "select",
-      size: { h: top + h },
+      size: { h: e11(`${top} + ${h}`) },
       children: [
         p.label ? text10(p.label, [0, 0], { key: "label", style: LABEL }) : null,
         group11({
@@ -2944,9 +2959,9 @@ var select = recipe11({
           on: { activate: { set: state, value: e11(`${isOpen} ? "" : \`o:\${${sig}}\``) }, pick: pick(sig, opts, opts.map((v, i) => e11(say(v, labels, i)))) },
           semantics: { role: "control", label: e11(`${p.label ? `${lit(p.label + ": ")} + ` : ""}${current(sig, opts, labels)}`) },
           children: [
-            shape11(geom11.rect({ x: 0, y: top, w: e11("box.w"), h, r: 8 }), { key: "frame", pickable: true, fill: "$surface", stroke: { paint: e11(`${isOpen} ? "$accent" : hover() ? "$ink-2" : "$rule"`), width: e11(`${isOpen} ? 1.5 : 1`) } }),
-            shape11(geom11.rect({ x: 1, y: top + 1, w: e11("box.w - 2"), h: h - 2, r: 7 }), { key: "hover", fill: "$ink", opacity: e11(`hover() && !(${isOpen}) ? 0.04 : 0`) }),
-            text10(e11(current(sig, opts, labels)), [12, top + h / 2], { key: "value", style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "middle", maxWidth: e11("box.w - 40") } }),
+            shape11(geom11.rect({ x: 0, y: e11(top), w: e11("box.w"), h: e11(h), r: 8 }), { key: "frame", pickable: true, fill: "$surface", stroke: { paint: e11(`${isOpen} ? "$accent" : hover() ? "$ink-2" : "$rule"`), width: e11(`${isOpen} ? 1.5 : 1`) } }),
+            shape11(geom11.rect({ x: 1, y: e11(`${top} + 1`), w: e11("box.w - 2"), h: e11(`${h} - 2`), r: 7 }), { key: "hover", fill: "$ink", opacity: e11(`hover() && !(${isOpen}) ? 0.04 : 0`) }),
+            text10(e11(current(sig, opts, labels)), [12, e11(mid)], { key: "value", style: { size: "$size.label", weight: 600, ink: "$ink", baseline: "middle", maxWidth: e11("box.w - 40") } }),
             // A chevron that points up while the list is open.
             shape11(geom11.segment({ x1: e11("box.w - 22"), y1: e11(`${isOpen} ? ${uy0} : ${cy0}`), x2: e11("box.w - 17"), y2: e11(`${isOpen} ? ${uy1} : ${cy1}`) }), { key: "chevron-a", stroke: { paint: "$ink-2", width: 1.5, cap: "round" } }),
             shape11(geom11.segment({ x1: e11("box.w - 17"), y1: e11(`${isOpen} ? ${uy1} : ${cy1}`), x2: e11("box.w - 12"), y2: e11(`${isOpen} ? ${uy0} : ${cy0}`) }), { key: "chevron-b", stroke: { paint: "$ink-2", width: 1.5, cap: "round" } })
@@ -2959,7 +2974,7 @@ var select = recipe11({
           when: e11(isOpen),
           z: 1001,
           children: [
-            shape11(geom11.rect({ x: 0, y: listY, w: e11(`${colW} * ${cols}`), h: listH, r: 8 }), { key: "panel", fill: "$paper", stroke: { paint: "$rule", width: 1 } }),
+            shape11(geom11.rect({ x: 0, y: e11(listY), w: e11(`${colW} * ${cols}`), h: e11(listH), r: 8 }), { key: "panel", fill: "$paper", stroke: { paint: "$rule", width: 1 } }),
             ...opts.map((v, i) => group11({
               key: `option:${String(v)}`,
               pickable: true,
@@ -2967,13 +2982,13 @@ var select = recipe11({
               semantics: { role: "control", label: e11(`${say(v, labels, i)} + (${sig} == ${lit(v)} ? ", selected" : "")`) },
               children: (() => {
                 const x = `4 + ${Math.floor(i / perCol)} * ${colW}`;
-                const y = listY + 4 + i % perCol * row;
+                const y = `(${listY} + 4 + ${i % perCol} * ${row})`;
                 return [
                   // The chosen option has no target: a click on it falls through to the veil and closes.
-                  shape11(geom11.rect({ x: e11(x), y, w: e11(`${colW} - 8`), h: row, r: 6 }), { key: "hit", when: e11(`${sig} != ${lit(v)}`), pickable: true, fill: "transparent" }),
-                  shape11(geom11.rect({ x: e11(x), y, w: e11(`${colW} - 8`), h: row, r: 6 }), { key: "chosen", fill: "$accent", opacity: e11(`${sig} == ${lit(v)} ? 0.14 : 0`) }),
-                  shape11(geom11.rect({ x: e11(x), y, w: e11(`${colW} - 8`), h: row, r: 6 }), { key: "hover", fill: "$ink", opacity: e11(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
-                  text10(e11(say(v, labels, i)), [e11(`${x} + 10`), y + row / 2], { key: "text", style: { size: "$size.label", weight: e11(`${sig} == ${lit(v)} ? 600 : 400`), ink: "$ink", baseline: "middle", maxWidth: e11(`${colW} - 28`) } })
+                  shape11(geom11.rect({ x: e11(x), y: e11(y), w: e11(`${colW} - 8`), h: e11(row), r: 6 }), { key: "hit", when: e11(`${sig} != ${lit(v)}`), pickable: true, fill: "transparent" }),
+                  shape11(geom11.rect({ x: e11(x), y: e11(y), w: e11(`${colW} - 8`), h: e11(row), r: 6 }), { key: "chosen", fill: "$accent", opacity: e11(`${sig} == ${lit(v)} ? 0.14 : 0`) }),
+                  shape11(geom11.rect({ x: e11(x), y: e11(y), w: e11(`${colW} - 8`), h: e11(row), r: 6 }), { key: "hover", fill: "$ink", opacity: e11(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
+                  text10(e11(say(v, labels, i)), [e11(`${x} + 10`), e11(`${y} + ${row} / 2`)], { key: "text", style: { size: "$size.label", weight: e11(`${sig} == ${lit(v)} ? 600 : 400`), ink: "$ink", baseline: "middle", maxWidth: e11(`${colW} - 28`) } })
                 ];
               })()
             }))
@@ -2993,16 +3008,16 @@ var toggle = recipe11({
     const sig = p.signal;
     return group11({
       key: "toggle",
-      size: { h: 28 },
+      size: { h: e11(px(28)) },
       pickable: true,
       on: { activate: { set: sig, value: e11(`!${sig}`) } },
       semantics: { role: "control", label: e11(`${lit((p.label || sig) + ": ")} + (${sig} ? "on" : "off")`) },
       children: [
-        shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: 28 }), { key: "hit", pickable: true, fill: "transparent" }),
-        shape11(geom11.rect({ x: 0, y: 3, w: 40, h: 22, r: 11 }), { key: "track", fill: e11(`${sig} ? "$accent" : "$rule"`) }),
-        shape11(geom11.circle({ cx: e11(`${sig} ? 29 : 11`), cy: 14, r: 13 }), { key: "halo", fill: "$ink", opacity: WASH(0.1) }),
-        shape11(geom11.circle({ cx: e11(`${sig} ? 29 : 11`), cy: 14, r: 8 }), { key: "knob", fill: "$paper" }),
-        p.label ? text10(p.label, [52, 14], { key: "label", style: { size: "$size.label", ink: "$ink", baseline: "middle" } }) : null
+        shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: e11(px(28)) }), { key: "hit", pickable: true, fill: "transparent" }),
+        shape11(geom11.rect({ x: 0, y: e11(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e11(`${sig} ? "$accent" : "$rule"`) }),
+        shape11(geom11.circle({ cx: e11(`${sig} ? 29 : 11`), cy: e11(px(14)), r: 13 }), { key: "halo", fill: "$ink", opacity: WASH(0.1) }),
+        shape11(geom11.circle({ cx: e11(`${sig} ? 29 : 11`), cy: e11(px(14)), r: 8 }), { key: "knob", fill: "$paper" }),
+        p.label ? text10(p.label, [52, e11(px(14))], { key: "label", style: { size: "$size.label", ink: "$ink", baseline: "middle" } }) : null
       ]
     });
   }
@@ -3070,7 +3085,7 @@ var range = recipe11({
   expand(p) {
     const { lo, hi } = p;
     const f = lit(p.format);
-    const y = 30;
+    const y = e11(px(30));
     const x = (s) => `scale.x(${s})`;
     const half = `clamp((${x(hi)} - ${x(lo)}) / 2, 0, 16)`;
     const thumb = (key) => group11({
@@ -3079,14 +3094,14 @@ var range = recipe11({
       on: { drag: scrub(key === "lo" ? lo : hi, { step: p.step, ...key === "lo" ? { max: e11(hi) } : { min: e11(lo) } }) },
       semantics: { role: "control", label: e11(`\`${p.label || "Range"} ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
       children: [
-        key === "lo" ? shape11(geom11.rect({ x: e11(`${x(lo)} - 16`), y: 12, w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }) : shape11(geom11.rect({ x: e11(`${x(hi)} - ${half}`), y: 12, w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
+        key === "lo" ? shape11(geom11.rect({ x: e11(`${x(lo)} - 16`), y: e11(`${px(30)} - 18`), w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }) : shape11(geom11.rect({ x: e11(`${x(hi)} - ${half}`), y: e11(`${px(30)} - 18`), w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
         shape11(geom11.circle({ cx: e11(x(key === "lo" ? lo : hi)), cy: y, r: 15 }), { key: "halo", fill: "$accent", opacity: WASH(0.18) }),
         shape11(geom11.circle({ cx: e11(x(key === "lo" ? lo : hi)), cy: y, r: 8 }), { key: "thumb", fill: "$accent", stroke: { paint: "$paper", width: 2 } })
       ]
     });
     return group11({
       key: "range",
-      size: { h: 44 },
+      size: { h: e11(px(44)) },
       scales: { x: { type: "linear", domain: [p.min, p.max], range: [10, "=box.w - 10"] } },
       semantics: { role: "control", label: e11(`\`${p.label || "Range"}: \${format(${lo}, ${f})}\u2013\${format(${hi}, ${f})}\``) },
       children: [
@@ -3117,14 +3132,14 @@ var button = recipe11({
     const action = p.event ? { event: p.event } : { set: p.set, value: p.value };
     return group11({
       key: "button",
-      size: { h: 36 },
+      size: { h: e11(px(36)) },
       pickable: true,
       on: { activate: action },
       semantics: { role: "control", label: p.label },
       children: [
-        shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: 36, r: 8 }), { key: "face", pickable: true, fill: primary ? "$accent" : "$surface", stroke: primary ? void 0 : { paint: e11(`hover() ? "$ink-2" : "$rule"`), width: 1 } }),
-        shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: 36, r: 8 }), { key: "hover", fill: "$ink", opacity: WASH(primary ? 0.12 : 0.05) }),
-        text10(p.label, [e11("box.w / 2"), 18], { key: "text", style: { size: "$size.label", weight: 600, ink: primary ? "on($accent)" : "$ink", align: "middle", baseline: "middle", maxWidth: e11("box.w - 12") } })
+        shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: e11(px(36)), r: 8 }), { key: "face", pickable: true, fill: primary ? "$accent" : "$surface", stroke: primary ? void 0 : { paint: e11(`hover() ? "$ink-2" : "$rule"`), width: 1 } }),
+        shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: e11(px(36)), r: 8 }), { key: "hover", fill: "$ink", opacity: WASH(primary ? 0.12 : 0.05) }),
+        text10(p.label, [e11("box.w / 2"), e11(px(18))], { key: "text", style: { size: "$size.label", weight: 600, ink: primary ? "on($accent)" : "$ink", align: "middle", baseline: "middle", maxWidth: e11("box.w - 12") } })
       ]
     });
   }
@@ -3373,7 +3388,7 @@ var hexbin = recipe14({
     );
     const k = p.size ? `clamp(sqrt(max(d.value, 0) / max(table.max(${q(bins)}, "value"), 1e-12)), 0.18, 1)` : "1";
     const inset = p.gap ? `max(0, 1 - ${p.gap / 2} / max(d.hwp, 0.01))` : "(1 + 0.5 / max(d.hwp, 1))";
-    const px = cx.table(
+    const px2 = cx.table(
       "hexagons",
       bins,
       op9.derive("cx", e14("scale.x(d.x)")),
@@ -3393,10 +3408,10 @@ var hexbin = recipe14({
       children: [
         // Keyed by the lattice: hexagons of another size are other hexagons, so a change of size
         // crossfades the two layers whole (the same lattice morphs hexagon by hexagon).
-        group13({ key: `hexagons-${columns}`, children: [repeat10(px, shape13(geom13.path(e14(hexPath)), { fill: p.fill ?? e14("scale.hex(d.shade)"), pickable: false }))] }),
+        group13({ key: `hexagons-${columns}`, children: [repeat10(px2, shape13(geom13.path(e14(hexPath)), { fill: p.fill ?? e14("scale.hex(d.shade)"), pickable: false }))] }),
         // Where the pointer finds a hexagon: an invisible disc as wide as each, with its tooltip
         // (instances, so the accessible description lists a sample, not every hexagon).
-        instances6({ key: `pick-${columns}`, from: px, x: e14("d.cx"), y: e14("d.cy"), r: e14("d.hwp"), fill: "transparent", instanceKey: e14("d.hex"), label: tip }),
+        instances6({ key: `pick-${columns}`, from: px2, x: e14("d.cx"), y: e14("d.cy"), r: e14("d.hwp"), fill: "transparent", instanceKey: e14("d.hex"), label: tip }),
         p.fill === void 0 ? rampKey("hex", bins, keyTitle(p.value, fn, unit, "hexagon"), p.format, p.legend) : null
       ]
     });
@@ -3633,10 +3648,10 @@ var network = recipe15({
     const g = graphNames(p);
     const links = { links: p.links, source: g.source, target: g.target, id: g.id, weight: p.weight };
     const stats = cx.table("stats", p.nodes, op10.communities(links));
-    const S = J(stats);
+    const S2 = J(stats);
     const size = p.size ?? "degree";
-    const count = `max(1, table.count(${S}))`;
-    const radius = `${p.minRadius} + ${Math.max(0, p.maxRadius - p.minRadius)} * sqrt(max(0, ${col(size)}) / max(1e-9, table.max(${S}, ${J(size)})))`;
+    const count = `max(1, table.count(${S2}))`;
+    const radius = `${p.minRadius} + ${Math.max(0, p.maxRadius - p.minRadius)} * sqrt(max(0, ${col(size)}) / max(1e-9, table.max(${S2}, ${J(size)})))`;
     const dist = p.distance ? String(p.distance) : `clamp(sqrt(box.w * box.h / ${count}) * 0.45, 12, 100)`;
     const charge = p.charge ? String(p.charge) : `-(${dist}) * (${dist}) / 20`;
     const nodes = cx.table(
@@ -3757,7 +3772,9 @@ var arcDiagram = recipe15({
           semantics: { role: "datum", label: e15(`\`\${${g.label}}: \${format(${col(size)}, ${f})}${p.size ? "" : " links"}\``), value: e15(col(size)) },
           pickable: true
         }))] }),
-        p.labels ? group14({ key: "labels", children: [repeat11(nodes, text13(e15(g.label), [e15(`scale.nx(${col(g.id)})`), e15(`${base} + ${R + 5}`)], {
+        // Turned names closer than a line (a phone, a reader's big text) would pile up: those
+        // that would touch an earlier one are left out.
+        p.labels ? group14({ key: "labels", declutter: true, children: [repeat11(nodes, text13(e15(g.label), [e15(`scale.nx(${col(g.id)})`), e15(`${base} + ${R + 5}`)], {
           key: e15(col(g.id)),
           rotate: e15(`${turned} ? -90 : 0`),
           style: { size: "$size.label", ink: "$ink-2", align: e15(`${turned} ? "end" : "middle"`), baseline: e15(`${turned} ? "middle" : "top"`), contain: true }
@@ -4019,7 +4036,10 @@ function hierarchyTree(p, cx, method) {
         semantics: { role: "datum", label: e15("d.path") },
         pickable: true
       }))] }),
-      p.labels ? group14({ key: "leaf-labels", children: [repeat11(laid, text13(e15(label), leafAt, {
+      // Leaves a line apart or closer (many of them, or a reader's big text) would pile up: those
+      // that would touch an earlier one are left out (the nodes still name them, to a pointer and
+      // to screen readers).
+      p.labels ? group14({ key: "leaf-labels", declutter: true, children: [repeat11(laid, text13(e15(label), leafAt, {
         key: e15(col(id)),
         when: e15("d.leaf"),
         rotate: leafRotate,
@@ -4250,7 +4270,7 @@ var kpi = recipe16({
     const amount = p.delta === "absolute" ? affixed3(`abs(${diff})`, dfmt.replace(/^\+/, ""), p.prefix, p.suffix) : `format(abs(${change}), ${q2(dfmt.replace(/^\+/, ""))})`;
     const said = `${q2(p.label ? `${p.label}: ` : "")} + ${valueText}` + (hasDelta ? ` + (${c} == null || ${change} == null ? "" : ", " + ${word} + (${diff} != 0 ? ${amount} : "") + ${q2(p.compareLabel ? ` ${p.compareLabel}` : "")})` : "");
     const spark = !!(p.spark && rows && p.x);
-    const S = p.size ? String(p.size) : `clamp(min(box.h * ${spark ? 0.26 : 0.36}, box.w * 0.17), 22, 60)`;
+    const S2 = p.size ? String(p.size) : `clamp(min(box.h * ${spark ? 0.26 : 0.36}, box.w * 0.17), 22, 60)`;
     const center = p.align === "center";
     const vs = "(box.h / 1.2)";
     const pw = p.prefix ? `measure(${q2(p.prefix)}, ${vs}, 600)` : "0";
@@ -4260,7 +4280,7 @@ var kpi = recipe16({
     const big = { size: e16(vs), weight: 600, ink: "$ink", baseline: "top" };
     const valueRow = group15({
       key: "value-row",
-      size: { h: e16(`${S} * 1.2`) },
+      size: { h: e16(`${S2} * 1.2`) },
       children: [
         p.prefix ? text14(p.prefix, [e16(x0), 0], { key: "prefix", style: big }) : null,
         text14("", [e16(`${x0} + ${pw}`), 0], { key: "value", number: { value: e16(v), format: p.format }, style: big, semantics: { role: "datum", label: e16(said), value: e16(v) }, pickable: true }),
@@ -4270,19 +4290,20 @@ var kpi = recipe16({
     const body = 'token("size.body")';
     const dw = `measure(${deltaText}, ${body}, 600)`;
     const lw = p.compareLabel ? `measure(${q2(p.compareLabel)}, ${body})` : "0";
-    const dx0 = center ? `((box.w - 13 - ${dw} - ${p.compareLabel ? `5 - ${lw}` : "0"}) / 2)` : "0";
-    const mid = "box.h / 2";
+    const under = p.compareLabel ? `(18 + ${dw} + ${lw} > box.w)` : "false";
+    const dx0 = center ? `((box.w - 13 - ${dw} - ${p.compareLabel ? `(${under} ? 0 : 5 + ${lw})` : "0"}) / 2)` : "0";
+    const mid = `(${under} ? ${body} * 0.75 : box.h / 2)`;
     const tri = `${diff} >= 0 ? \`M \${${dx0}} \${${mid} + 4} L \${${dx0} + 4.5} \${${mid} - 4} L \${${dx0} + 9} \${${mid} + 4} Z\` : \`M \${${dx0}} \${${mid} - 4} L \${${dx0} + 9} \${${mid} - 4} L \${${dx0} + 4.5} \${${mid} + 4} Z\``;
     const deltaRow = hasDelta ? group15({
       key: "delta-row",
-      size: { h: e16(`${body} * 1.5`) },
+      size: { h: e16(`${body} * (${under} ? 2.75 : 1.5)`) },
       when: e16(`${c} != null && ${change} != null`),
       children: [
         shape15(geom15.path(e16(tri)), { key: "arrow", when: e16(`${diff} != 0`), fill: e16(ink), semantics: { role: "decoration" } }),
         // Keyed by its format: the change counts from one value to the next, but a change of
         // format (a share to an amount) is a new line, not a count between the two.
         text14(deltaCounts ? "" : e16(deltaText), [e16(`${dx0} + 13`), e16(mid)], { key: `delta ${deltaFmt}`, number: deltaCounts ? { value: e16(change), format: deltaFmt } : void 0, style: { size: "$size.body", weight: 600, ink: e16(ink), baseline: "middle" } }),
-        p.compareLabel ? text14(p.compareLabel, [e16(`${dx0} + 18 + ${dw}`), e16(mid)], { key: "against", style: { size: "$size.body", ink: "$muted", baseline: "middle" } }) : null
+        p.compareLabel ? text14(p.compareLabel, [e16(`${under} ? ${center ? `(box.w - ${lw}) / 2` : "0"} : ${dx0} + 18 + ${dw}`), e16(`${under} ? ${body} * 2 : ${mid}`)], { key: "against", style: { size: "$size.body", ink: "$muted", baseline: "middle", maxWidth: e16("box.w") } }) : null
       ]
     }) : null;
     return group15({
@@ -4435,7 +4456,9 @@ var gauge = recipe16({
       key: "gauge",
       semantics: { role: "group", label: p.label || "Gauge" },
       children: [
-        group15({ key: "dial", children: [
+        // A small dial (a phone's column of three) or big text: the value comes first, and the
+        // range's ends give way rather than sit under it.
+        group15({ key: "dial", declutter: true, children: [
           arc("track", "0", "1", bands.length ? "$ink@0.06" : "$ink@0.1"),
           ...bandArcs,
           needle ? null : arc("fill", "0", frac, p.ink, { semantics: { role: "datum", label: e16(said), value: e16(v) }, pickable: true }),
@@ -4771,9 +4794,9 @@ var gantt = recipe16({
   },
   tokens: ["ink", "ink-2", "muted", "mark", "accent", "paper", "categorical", "grid", "size.body", "size.label", "size.small"],
   expand(p, cx) {
-    const [S, E] = [fld(p.start), fld(p.end)];
-    const ms = p.milestone ? `(${fld(p.milestone)} == true)` : `(${E} == null || ${E} == ${S})`;
-    const base = cx.table("gantt-base", p.data, op11.derive("__s", e16(S)), op11.derive("__e", e16(`${E} ?? ${S}`)));
+    const [S2, E] = [fld(p.start), fld(p.end)];
+    const ms = p.milestone ? `(${fld(p.milestone)} == true)` : `(${E} == null || ${E} == ${S2})`;
+    const base = cx.table("gantt-base", p.data, op11.derive("__s", e16(S2)), op11.derive("__e", e16(`${E} ?? ${S2}`)));
     const byGroup = !!p.group;
     const tasks = [
       op11.derive("__id", e16(`String(${fld(p.task)})`)),
@@ -4815,7 +4838,9 @@ var gantt = recipe16({
       semantics: { role: "group", label: "Plan" },
       children: [
         // Names in a column as wide as the widest (up to a third of the box: longer ones clip).
-        group15({ key: "labels", size: { w: e16(`min(box.w * 0.34, table.max(${q2(Tl)}, "__lw"))`) }, clip: "box", children: [repeat12(T, text14(e16(`String(${fld(p.task)})`), [e16(`d.__kind == "group" ? 0 : ${indent}`), e16(cyv)], {
+        // Rows closer than a line of text (many tasks, a reader's big text): a name that would
+        // touch the one above is left out — the bar still says it, to a pointer and a screen reader.
+        group15({ key: "labels", size: { w: e16(`min(box.w * 0.34, table.max(${q2(Tl)}, "__lw"))`) }, clip: "box", declutter: true, children: [repeat12(T, text14(e16(`String(${fld(p.task)})`), [e16(`d.__kind == "group" ? 0 : ${indent}`), e16(cyv)], {
           key: e16("d.__id"),
           style: { size: e16('d.__kind == "group" ? token("size.body") : token("size.label")'), weight: e16('d.__kind == "group" ? 600 : 400'), ink: e16('d.__kind == "group" ? "$ink" : "$ink-2"'), baseline: "middle" },
           semantics: { role: "decoration" }
