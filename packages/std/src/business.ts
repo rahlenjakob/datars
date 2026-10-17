@@ -749,7 +749,10 @@ export const gantt = recipe<GanttParams>({
       T = cx.table("gantt", base, ...tasks);
     }
     const indent = byGroup ? 12 : 0;
-    const Tl = cx.table("gantt-labels", T, op.derive("__lw", e(`d.__kind == "group" ? measure(String(${fld(p.task)}), token("size.body"), 600) : measure(String(${fld(p.task)}), token("size.label")) + ${indent}`)));
+    const Tl = cx.table("gantt-labels", T, op.derive("__lw", e(`d.__kind == "group" ? measure(String(${fld(p.task)}), token("size.body"), 600) : measure(String(${fld(p.task)}), token("size.label")) + ${indent}`)),
+      // Its longest word: a name wraps between words, so the column is at least that wide (up to
+      // nearly half the box) — a reader's big text doesn't cut "Competitor" to "Competito".
+      op.derive("__ww", e(`d.__kind == "group" ? measure.word(String(${fld(p.task)}), token("size.body"), 600) : measure.word(String(${fld(p.task)}), token("size.label")) + ${indent}`)));
     const colorField = p.color ?? p.group;
     const y = "scale.y(d.__id)", bw = "scale.y.bandwidth()";
     const x0 = "scale.x(d.__s)", x1 = "scale.x(d.__e)";
@@ -772,10 +775,13 @@ export const gantt = recipe<GanttParams>({
       layout: { type: "columns", gap: 12 },
       semantics: { role: "group", label: "Plan" },
       children: [
-        // Names in a column as wide as the widest (up to a third of the box: longer ones clip).
-        // Rows closer than a line of text (many tasks, a reader's big text): a name that would
-        // touch the one above is left out — the bar still says it, to a pointer and a screen reader.
-        group({ key: "labels", size: { w: e(`min(box.w * 0.34, table.max(${q(Tl)}, "__lw"))`) }, clip: "box", declutter: true, children: [repeat(T, text(e(`String(${fld(p.task)})`), [e(`d.__kind == "group" ? 0 : ${indent}`), e(cyv)], {
+        // Names in a column as wide as the widest (up to a third of the box, or as wide as the
+        // longest word up to nearly half: longer ones wrap, a word longer still clips —
+        // across only: a heading taller than its row, with a reader's big text, may stand past the
+        // column's top and bottom). Rows closer than a line of text (many tasks, big text): a name
+        // that would touch the one above is left out — the bar still says it, to a pointer and a
+        // screen reader.
+        group({ key: "labels", size: { w: e(`max(min(box.w * 0.34, table.max(${q(Tl)}, "__lw")), min(box.w * 0.45, table.max(${q(Tl)}, "__ww") + 2))`) }, clip: [0, e('-token("size.body") * 1.3'), e("box.w"), e('box.h + token("size.body") * 2.6')], declutter: true, children: [repeat(T, text(e(`String(${fld(p.task)})`), [e(`d.__kind == "group" ? 0 : ${indent}`), e(cyv)], {
           key: e("d.__id"),
           // A name wider than the column wraps in it (to a second line where the row has room;
           // a name that then touches the next is left out, as above) rather than being cut.

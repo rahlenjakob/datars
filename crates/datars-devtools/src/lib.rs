@@ -225,9 +225,14 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
         if inside && crosses && l.clip.is_none() {
             out.cut.push(l.text.clone());
         }
-        // (A sliver — a descender, a halo — is no loss.)
-        if l.clip.is_some() && !l.in_camera && r.w * r.h < 0.85 * l.rect.w * l.rect.h && (l.rect.w - r.w > 2.0 || l.rect.h - r.h > 2.0) {
-            out.clipped.push(l.text.clone());
+        // Clipped where its letters are (a descender, a halo past the edge is no loss; the end of
+        // a word — "Competito" — is).
+        if let (Some(c), false) = (l.clip, l.in_camera) {
+            let letters = l.core.iter().fold(datars_math::Rect::empty(), |acc, p| acc.include(*p));
+            let kept = c.intersect(&letters).unwrap_or(datars_math::Rect::new(letters.x, letters.y, 0.0, 0.0));
+            if letters.w - kept.w > 2.0 || letters.h - kept.h > 2.0 {
+                out.clipped.push(l.text.clone());
+            }
         }
     }
     // Text boxes are line boxes (ascent to descent): a sliver of overlap between stacked lines is
