@@ -59,3 +59,11 @@ fn regions_without_data_are_counted_not_listed() {
     let missing: Vec<(String, bool)> = e.semantic_items().into_iter().map(|i| (i.label, i.missing)).collect();
     assert_eq!(missing, vec![("SE: 81".into(), false), ("NO: no data".into(), true), ("FI: no data".into(), true)]);
 }
+
+#[test]
+fn the_summary_speaks_the_documents_language() {
+    let mut d = bars("Saker vi räknade", "Hur många av varje sak");
+    d["locale"] = json!("sv-SE");
+    let mut e = engine(d);
+    assert_eq!(e.accessible_summary(), "Hur många av varje sak. 4 datapunkter, från 7 till 4\u{a0}500.");
+}

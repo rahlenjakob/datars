@@ -57,6 +57,8 @@ function serve() {
     if (path === "/controls") return send(page.replace("/doc.json", "/controls.json").replace('height="320"', 'height="200"'), "text/html; charset=utf-8");
     if (path === "/doc.json") return send(JSON.stringify(doc), "application/json");
     if (path === "/controls.json") return send(JSON.stringify(controlsDoc), "application/json");
+    if (path === "/sv") return send(page.replace("/doc.json", "/sv.json"), "text/html; charset=utf-8");
+    if (path === "/sv.json") return send(JSON.stringify({ ...doc, locale: "sv-SE", title: "Frukt", description: "Kilo frukt.", program: { states: [{ name: "a" }, { name: "b" }] } }), "application/json");
     const file = normalize(join(dist, path.replace(/^\/runtime\//, "")));
     if (path.startsWith("/runtime/") && file.startsWith(dist) && existsSync(file)) return send(readFileSync(file), types[extname(file)] ?? "application/octet-stream");
     res.writeHead(404).end();
@@ -216,6 +218,25 @@ test("a switch, checkboxes and segments are switch, checkbox and radio to a scre
     await p.keyboard.press("Space");
     await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror [role=switch]")?.getAttribute("aria-checked") === "false", null, { timeout: 10_000 });
     assert.equal(await p.evaluate(() => document.querySelector("datars-view").signals.on), false);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test("the element's own words speak the document's language", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    const p = await browser.newPage({ viewport: { width: 800, height: 500 } });
+    await p.goto(`http://127.0.0.1:${server.address().port}/sv`);
+    await p.waitForFunction(() => document.querySelector("datars-view").getAttribute("aria-description"), null, { timeout: 30_000 });
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").getAttribute("aria-description")), "Kilo frukt. 3 datapunkter, från 18 till 42.");
+    await p.locator("datars-view").focus();
+    await p.keyboard.press("ArrowRight");
+    await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent !== "", null, { timeout: 10_000 });
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent), "Steg 2 av 2");
   } finally {
     await browser.close();
     server.close();

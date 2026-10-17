@@ -10,6 +10,8 @@ Here is what a screen reader is told about a simple bar chart — the output of 
 
 {{run:semantics examples/votes/doc.json|24}}
 
+The words the hosts add around the chart's own — the summary (*"8 data points, from 3.5 to 27.6"*), *"Step 2 of 4"*, *"215 regions without data"*, captions — follow the document's `locale`: English and Swedish today (*"8 datapunkter, från 3,5 till 27,6"*, *"Steg 2 av 4"*), from a small table of phrases in the engine (`datars_engine::phrases`) that takes another language as one more table; a language without one is said in English.
+
 That tree comes from the chart itself. Every host first names the chart — its `title` — and says what it shows: its `description`, then how much data and the range, from the state on screen (*"Kilograms of each fruit a stall sold. 3 data points, from 18 to 42."*). Then the content, in one reading order: headings for the parts, an axis or a legend as one line (*"y axis: 0, 10, 20, 30, 40"*), each data mark with its name and its value apart, marks repeated in a row as one with a count (a parliament's *"S × 107"*), marks that have no value — a world map's countries without data — as one line (*"215 regions without data"*) rather than a stop each, and whatever a click acts on as a button. On each platform that becomes what its assistive technology understands:
 
 | Platform | What it becomes |

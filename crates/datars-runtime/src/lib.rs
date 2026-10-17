@@ -201,7 +201,8 @@ impl Core {
         let items = self.engine.semantic_items();
         let name = self.engine.accessible_name();
         let summary = self.engine.accessible_summary();
-        readout::readout(&name, &summary, &items)
+        let locale = self.engine.doc().locale.clone();
+        readout::readout_in(&locale, &name, &summary, &items)
     }
 
     /// What a native accessibility bridge needs at once: [`Core::status_brief`] (state, narration,
@@ -230,6 +231,9 @@ impl Core {
         let actions = self.actions();
         serde_json::json!({
             "name": self.engine.accessible_name(),
+            // The words a host says around the chart's own (captions, step announcements), in
+            // the document's language.
+            "phrases": datars_engine::phrases::all(&self.engine.doc().locale),
             "contentHeight": self.engine.content_height(),
             "state": self.engine.state(),
             "index": self.engine.state_index(),

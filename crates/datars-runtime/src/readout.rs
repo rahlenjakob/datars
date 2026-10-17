@@ -79,9 +79,16 @@ fn split(label: &str) -> (String, String) {
     }
 }
 
-/// The reading order for a chart named `name` with `summary`, from its semantics `items`.
+/// The reading order for a chart named `name` with `summary`, from its semantics `items`, its own
+/// words in English (see [`readout_in`]).
 pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout> {
-    let mut out = vec![Readout { kind: "chart", label: if name.is_empty() { "Chart".into() } else { name.into() }, value: summary.into(), rect: None, path: String::new(), checked: None }];
+    readout_in("en", name, summary, items)
+}
+
+/// [`readout`] with its own words ("Legend", "Note:", "… without data") in `locale`'s language.
+pub fn readout_in(locale: &str, name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout> {
+    use datars_engine::phrases::{counted, phrase};
+    let mut out = vec![Readout { kind: "chart", label: if name.is_empty() { phrase(locale, "chart", &[]) } else { name.into() }, value: summary.into(), rect: None, path: String::new(), checked: None }];
     // Dragged and picked controls are the host's native ones; clicked controls are buttons.
     let shown: Vec<&SemanticItem> = items.iter().filter(|i| i.role != "control" || i.actionable).collect();
     let mut top: Vec<Tree> = Vec::new();
@@ -103,7 +110,8 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
         level.push(node);
         path.push(level.len() - 1);
     }
-    fn walk(nodes: &[Tree], name: &str, group: &str, out: &mut Vec<Readout>) {
+    fn walk(locale: &str, nodes: &[Tree], name: &str, group: &str, out: &mut Vec<Readout>) {
+        use datars_engine::phrases::{counted, phrase};
         // Marks without data (a map's regions with no value): one line after the rest, not a
         // stop each — and no buttons.
         let missing: Vec<&SemanticItem> = nodes.iter().map(|n| n.item).filter(|i| is_data(i) && i.missing).collect();
@@ -148,7 +156,8 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
                 "axis" | "legend" => {
                     let mut parts = Vec::new();
                     descend(n, if role == "axis" { "tick" } else { "legend-item" }, &mut parts);
-                    let title = if label.is_empty() && role == "legend" { "Legend" } else { label };
+                    let legend = phrase(locale, "legend", &[]);
+                    let title = if label.is_empty() && role == "legend" { legend.as_str() } else { label };
                     let text = if parts.is_empty() { title.to_string() } else if title.is_empty() { line(&parts) } else { format!("{title}: {}", line(&parts)) };
                     if !text.is_empty() {
                         out.push(Readout { kind: "text", label: text, value: String::new(), rect: rect_of(n.item), path: String::new(), checked: None });
@@ -164,22 +173,23 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
                     "group" | "series" | "title" => "heading",
                     _ => "text",
                 };
-                let text = if role == "annotation" { format!("Note: {label}") } else { label.to_string() };
+                let text = if role == "annotation" { phrase(locale, "note", &[("text", label)]) } else { label.to_string() };
                 // A series right under its part's heading of the same name: once is enough.
                 if !(kind == "heading" && out.last().is_some_and(|l| l.kind == "heading" && l.label == text)) {
                     out.push(Readout { kind, label: text, value: String::new(), rect: rect_of(n.item), path: String::new(), checked: None });
                 }
             }
             let group = if matches!(role, "group" | "series") && !label.is_empty() { label } else { group };
-            walk(&n.kids, name, group, out);
+            walk(locale, &n.kids, name, group, out);
         }
         if !missing.is_empty() {
-            let what = if missing.iter().all(|i| i.role == "region") { "region" } else { "data point" };
+            let key = if missing.iter().all(|i| i.role == "region") { "regions-missing" } else { "points-missing" };
             let n = missing.len();
-            out.push(Readout { kind: "text", label: format!("{n} {what}{} without data", if n == 1 { "" } else { "s" }), value: String::new(), rect: None, path: String::new(), checked: None });
+            out.push(Readout { kind: "text", label: counted(locale, key, n, &n.to_string()), value: String::new(), rect: None, path: String::new(), checked: None });
         }
     }
-    walk(&top, name, name, &mut out);
+    let _ = counted;
+    walk(locale, &top, name, name, &mut out);
     out
 }
 
@@ -228,6 +238,15 @@ mod tests {
         let r = readout("Nordics", "", &[item("region", "Sweden: 81", 0), no, fi]);
         let said: Vec<(&str, &str)> = r.iter().skip(1).map(|x| (x.kind, x.label.as_str())).collect();
         assert_eq!(said, vec![("datum", "Sweden"), ("text", "2 regions without data")]);
+    }
+
+    #[test]
+    fn its_own_words_follow_the_documents_language() {
+        let mut no = item("region", "Norge: inga data", 0);
+        no.missing = true;
+        let r = readout_in("sv", "", "", &[item("legend", "", 0), item("legend-item", "Norden", 1), no]);
+        let said: Vec<&str> = r.iter().map(|x| x.label.as_str()).collect();
+        assert_eq!(said, vec!["Diagram", "Teckenförklaring: Norden", "1 område utan data"]);
     }
 
     #[test]

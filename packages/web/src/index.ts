@@ -1733,6 +1733,7 @@ export class DatarsView extends ElementBase {
     if (!this.view) return;
     // Without the semantics tree (thousands of items on a big map): not needed here.
     const s = this.view.chrome?.() ?? this.view.status();
+    if (s.phrases) this.phrases = s.phrases;
     const t = s.tokens?.tokens ?? {};
     for (const k of ["ink", "paper", "muted", "rule", "surface", "surface-ink", "accent"]) if (t[k]) this.style.setProperty(`--${k}`, t[k]);
     const n = s.narration;
@@ -1764,6 +1765,17 @@ export class DatarsView extends ElementBase {
 
   /** The step the live region last announced. */
   private announced = -1;
+  /** The words the element says around the chart's own, in the document's language (the
+   * status's `phrases`; English until it's there). */
+  private phrases: Record<string, string> = {};
+
+  private ph(key: string, args: Record<string, string | number> = {}): string {
+    const fallback: Record<string, string> = { step: "Step {i} of {n}", note: "Note: {text}", legend: "Legend", data: "Data", controls: "Controls", chart: "Chart", more: "{n} more",
+      "regions-missing.one": "{n} region without data", "regions-missing.other": "{n} regions without data", "points-missing.one": "{n} data point without data", "points-missing.other": "{n} data points without data" };
+    let out = this.phrases[key] ?? fallback[key] ?? key;
+    for (const [k, v] of Object.entries(args)) out = out.split(`{${k}}`).join(String(v));
+    return out;
+  }
 
   /** A new step, said once by the live region: its narration (title and text), else where the
    * reader is in the story ("Step 2 of 4"). The first state isn't announced: the chart's name and
@@ -1777,7 +1789,7 @@ export class DatarsView extends ElementBase {
     const n = s.narration;
     const said = [n?.title, n?.text].filter((x) => x && String(x).trim()).join(". ");
     const count = s.states?.length ?? 0;
-    this.live.textContent = said || (count > 1 ? `Step ${index + 1} of ${count}` : "");
+    this.live.textContent = said || (count > 1 ? this.ph("step", { i: index + 1, n: count }) : "");
   }
 
   /** The whole semantics tree into the mirror, in idle time and only while no transition runs:
@@ -1817,7 +1829,7 @@ export class DatarsView extends ElementBase {
     const controls = (s.controls ?? []) as any[];
     if (controls.length) {
       const ul = document.createElement("ul");
-      ul.setAttribute("aria-label", "Controls");
+      ul.setAttribute("aria-label", this.ph("controls"));
       for (const c of controls) {
         const li = document.createElement("li");
         if (c.kind === "select") {
@@ -1854,7 +1866,7 @@ export class DatarsView extends ElementBase {
     const rootLabel = shown[0]?.depth === 0 && !shown[0].actionable && shown[0].role !== "control" ? shown[0].label : "";
     const name = (s.name as string | undefined)?.trim() || rootLabel || shown.find((i) => i.role === "title" && i.label.trim())?.label || "";
     if (name) this.setAttribute("aria-label", name);
-    else if (!this.getAttribute("aria-label")) this.setAttribute("aria-label", "Chart");
+    else if (!this.getAttribute("aria-label")) this.setAttribute("aria-label", this.ph("chart"));
     if (typeof s.summary === "string") {
       if (s.summary) this.setAttribute("aria-description", s.summary);
       else this.removeAttribute("aria-description");
@@ -1897,7 +1909,7 @@ export class DatarsView extends ElementBase {
         if (role === "axis" || role === "legend") {
           const p = document.createElement("p");
           const parts = descend(n, role === "axis" ? "tick" : "legend-item");
-          const title = label || (role === "legend" ? "Legend" : "");
+          const title = label || (role === "legend" ? this.ph("legend") : "");
           p.textContent = parts.length ? `${title}${title ? ": " : ""}${line(parts)}` : title;
           if (p.textContent) into.appendChild(p);
           continue;
@@ -1933,7 +1945,7 @@ export class DatarsView extends ElementBase {
         }
         if (label.trim() && !(role === "series" && n.kids.length === 0 && label === caption)) {
           const p = document.createElement("p");
-          p.textContent = role === "annotation" ? `Note: ${label}` : label;
+          p.textContent = role === "annotation" ? this.ph("note", { text: label }) : label;
           into.appendChild(p);
         }
         render(n.kids, into, label || caption, groupLabel);
@@ -1941,15 +1953,15 @@ export class DatarsView extends ElementBase {
       flush();
       if (missing.length) {
         const p = document.createElement("p");
-        const what = missing.every((n) => n.item.role === "region") ? "region" : "data point";
-        p.textContent = `${missing.length} ${what}${missing.length === 1 ? "" : "s"} without data`;
+        const what = missing.every((n) => n.item.role === "region") ? "regions-missing" : "points-missing";
+        p.textContent = this.ph(`${what}.${missing.length === 1 ? "one" : "other"}`, { n: missing.length });
         into.appendChild(p);
       }
     };
     render(top, this.mirror, "", name);
     if (left) {
       const p = document.createElement("p");
-      p.textContent = `${left} more`;
+      p.textContent = this.ph("more", { n: left });
       this.mirror.appendChild(p);
     }
     // One stop for the keyboard among the data: where it was, else the first; arrows move on.
@@ -1999,7 +2011,7 @@ export class DatarsView extends ElementBase {
     }
     const table = document.createElement("table");
     const cap = document.createElement("caption");
-    cap.textContent = caption || "Data";
+    cap.textContent = caption || this.ph("data");
     table.appendChild(cap);
     const split = (l: string) => {
       const i = l.lastIndexOf(": ");

@@ -494,7 +494,8 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         val n = s.optJSONObject("narration")
         val said = listOfNotNull(n?.optString("title"), n?.optString("text")).filter { it.isNotEmpty() }.joinToString(". ")
         val count = s.optJSONArray("states")?.length() ?: 0
-        val text = said.ifEmpty { if (count > 1) "Step ${index + 1} of $count" else "" }
+        val step = (s.optJSONObject("phrases")?.optString("step")?.takeIf { it.isNotEmpty() } ?: "Step {i} of {n}").replace("{i}", "${index + 1}").replace("{n}", "$count")
+        val text = said.ifEmpty { if (count > 1) step else "" }
         @Suppress("DEPRECATION")
         if (text.isNotEmpty()) announceForAccessibility(text)
     }

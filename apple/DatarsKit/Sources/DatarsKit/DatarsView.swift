@@ -545,7 +545,8 @@ open class DatarsChartView: PlatformView {
         let n = a["narration"] as? [String: Any]
         let said = [n?["title"] as? String, n?["text"] as? String].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ". ")
         let count = (a["states"] as? [Any])?.count ?? 0
-        let text = said.isEmpty ? (count > 1 ? "Step \(index + 1) of \(count)" : "") : said
+        let step = ((a["phrases"] as? [String: String])?["step"] ?? "Step {i} of {n}").replacingOccurrences(of: "{i}", with: "\(index + 1)").replacingOccurrences(of: "{n}", with: "\(count)")
+        let text = said.isEmpty ? (count > 1 ? step : "") : said
         if !text.isEmpty { UIAccessibility.post(notification: .announcement, argument: text) }
     }
 
@@ -672,7 +673,8 @@ open class DatarsChartView: PlatformView {
             let n = a["narration"] as? [String: Any]
             let said = [n?["title"] as? String, n?["text"] as? String].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ". ")
             let count = (a["states"] as? [Any])?.count ?? 0
-            let text = said.isEmpty ? (count > 1 ? "Step \(index + 1) of \(count)" : "") : said
+            let step = ((a["phrases"] as? [String: String])?["step"] ?? "Step {i} of {n}").replacingOccurrences(of: "{i}", with: "\(index + 1)").replacingOccurrences(of: "{n}", with: "\(count)")
+            let text = said.isEmpty ? (count > 1 ? step : "") : said
             if !first && !text.isEmpty {
                 NSAccessibility.post(element: self, notification: .announcementRequested, userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue])
             }

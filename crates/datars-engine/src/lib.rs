@@ -15,6 +15,7 @@ mod geo;
 mod graph_ops;
 mod layout_ops;
 pub mod obstacles;
+pub mod phrases;
 pub mod pick;
 pub mod points;
 pub mod program;
@@ -2778,13 +2779,15 @@ impl Engine {
         let data: Vec<&SemanticItem> = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && !i.missing).collect();
         let missing = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && i.missing).count();
         if !data.is_empty() {
+            let loc = self.doc.locale.clone();
+            let num = |v: f64, f: &str| datars_text::format::number(v, f, &loc);
             // Every mark, also past the items the description lists one by one (a parliament's
             // seats, a year of days): counted as drawn.
             let n = self.data_count().saturating_sub(missing).max(data.len());
-            let mut s = format!("{} data point{}", datars_text::format::number(n as f64, ",.0f", &self.doc.locale), if n == 1 { "" } else { "s" });
+            let mut s = phrases::counted(&loc, "points", n, &num(n as f64, ",.0f"));
             let series: BTreeSet<&str> = items.iter().filter(|i| i.role == "series" && !i.label.is_empty()).map(|i| i.label.as_str()).collect();
             if series.len() > 1 {
-                s.push_str(&format!(" in {} series", series.len()));
+                s.push_str(&phrases::phrase(&loc, "series", &[("n", &series.len().to_string())]));
             }
             // The range only when every mark says its value: a range over some of them (a chart's
             // bars, not its lines) would mislead.
@@ -2793,12 +2796,11 @@ impl Engine {
                 let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
                 let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
                 if lo < hi {
-                    let f = |v: f64| datars_text::format::number(v, ",.4~r", &self.doc.locale);
-                    s.push_str(&format!(", from {} to {}", f(lo), f(hi)));
+                    s.push_str(&phrases::phrase(&loc, "range", &[("lo", &num(lo, ",.4~r")), ("hi", &num(hi, ",.4~r"))]));
                 }
             }
             if missing > 0 {
-                s.push_str(&format!("; {} without data", datars_text::format::number(missing as f64, ",.0f", &self.doc.locale)));
+                s.push_str(&phrases::phrase(&loc, "missing", &[("n", &num(missing as f64, ",.0f"))]));
             }
             parts.push(format!("{s}."));
         }
