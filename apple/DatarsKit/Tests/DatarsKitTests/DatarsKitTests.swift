@@ -144,6 +144,41 @@ final class DatarsKitTests: XCTestCase {
     }
     #endif
 
+    #if canImport(AppKit) && !canImport(UIKit)
+    /// On the Mac the view is the chart, a group VoiceOver enters, named by it: what it shows first,
+    /// then its content, then the story's Next step — in that order, not by where each is drawn —
+    /// and an item keeps its element when a press updates the chart (VoiceOver stays on it).
+    @MainActor
+    func testVoiceOverOnTheMacReadsTheChartInItsOrder() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../../..").standardized
+        let doc = try String(contentsOf: root.appendingPathComponent("examples/votes/doc.json"), encoding: .utf8)
+        let e = DatarsEngine(allowScript: true)
+        _ = e.loadDocument(json: doc)
+        e.resize(width: 720, height: 440, scale: 1)
+        e.frame(now: 0)
+        let view = DatarsChartView(engine: e)
+        view.frame = CGRect(x: 0, y: 0, width: 720, height: 440)
+        view.updateAccessibility()
+        XCTAssertTrue(view.isAccessibilityElement())
+        XCTAssertEqual(view.accessibilityRole(), .group)
+        XCTAssertEqual(view.accessibilityLabel(), "Vote share by party, Sweden 2022")
+        let order = (view.accessibilityChildrenInNavigationOrder() ?? []).map { $0 as AnyObject as! NSAccessibilityElement }
+        let said = order.map { [$0.accessibilityLabel(), $0.accessibilityValue() as? String].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ") }
+        XCTAssertEqual(said.first, "8 data points, from 4.6 to 30.3.", "what it shows, first")
+        XCTAssertEqual(said[1], "Vote share by party, 2022 (%)")
+        XCTAssertTrue(said.contains("Social Democrats, 30.3"), "a mark says its name, then its value: \(said)")
+        XCTAssertEqual(said.last, "Next step", "how to move on, last")
+        XCTAssertEqual(order.count, (view.accessibilityChildren() ?? []).count)
+        let first = order[1]
+        view.updateAccessibility()
+        let again = (view.accessibilityChildrenInNavigationOrder() ?? []).map { $0 as AnyObject }
+        XCTAssertTrue(again[1] === first, "the same element after an update")
+        // Pressing Next step steps the story.
+        XCTAssertTrue(order.last!.accessibilityPerformPress())
+        XCTAssertEqual(e.status()["index"] as? Int, 1)
+    }
+    #endif
+
     func testABrushTakesKeysAndSaysWhatItDid() {
         let e = DatarsEngine(allowScript: false)
         _ = e.loadDocument(json: #"{"datars":1,"size":{"width":200,"height":100},"scene":{"kind":"group","key":"area","scales":{"x":{"type":"linear","domain":[0,100],"range":[0,200]}},"on":{"brush":{"brush":"sel"}},"children":[{"kind":"shape","key":"bg","geom":{"type":"rect","x":0,"y":0,"w":200,"h":100},"fill":"$surface"}]}}"#)
