@@ -503,6 +503,7 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         val s = JSONObject(Native.accessibility(handle) ?: "{}")
         val out = mutableListOf<A11yItem>()
         val items = s.optJSONArray("readout") ?: org.json.JSONArray()
+        phrases = s.optJSONObject("phrases")
         fun rect(it: JSONObject) = it.optJSONArray("rect")?.let { a -> if (a.length() == 4 && !a.isNull(0)) android.graphics.RectF(a.getDouble(0).toFloat(), a.getDouble(1).toFloat(), (a.getDouble(0) + a.getDouble(2)).toFloat(), (a.getDouble(1) + a.getDouble(3)).toFloat()) else null }
         // Engine-drawn controls, each with where it is: sliders as adjustable ranges, selects as
         // buttons that open the platform's list (and the list is what a tap on one opens too).
@@ -520,7 +521,11 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                     out.add(A11yItem(c.optString("label"), "select", r, "", true, c.optString("signal")))
                     continue
                 }
-                out.add(A11yItem(c.optString("label"), "control", rect(c), "", false, c.optString("signal"), c.optDouble("min"), c.optDouble("max"), c.optDouble("step"), c.optDouble("value")))
+                // A slider says its name, then its value as drawn ("32,000"), not the raw number.
+                val l = c.optString("label")
+                val cut = l.lastIndexOf(": ")
+                val (name, value) = if (cut > 0) l.substring(0, cut) to l.substring(cut + 2) else l to ""
+                out.add(A11yItem(name, "control", rect(c), "", false, c.optString("signal"), c.optDouble("min"), c.optDouble("max"), c.optDouble("step"), c.optDouble("value"), said = value))
             }
         }
         pickers = found
@@ -531,13 +536,30 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             // A select is its list above (the drawn box isn't a second one).
             if (kind == "button" && it.optString("label") in selectLabels) continue
             val clicks = kind == "button" || kind == "checkbox" || kind == "switch" || kind == "radio" || kind == "brush" || kind == "pan"
-            val hint = if (kind == "brush" || kind == "pan") s.optJSONObject("phrases")?.optString("$kind-hint") ?: "" else ""
+            // (How to operate it with TalkBack's gestures, not the keyboard's keys.)
+            val hint = if (kind == "brush" || kind == "pan") s.optJSONObject("phrases")?.optString("$kind-hint-touch") ?: "" else ""
             val item = A11yItem(it.optString("label"), kind, rect(it), it.optString("path"), clicks, said = it.optString("value"), checked = if (it.has("checked")) it.optBoolean("checked") else null, hint = hint)
             // The chart first, then its controls, then its content.
             if (kind == "chart") out.add(0, item) else out.add(item)
         }
+        // A story's steps, right after the chart: TalkBack has no other way to move it (a tap on
+        // the view is the app's to give a meaning).
+        val states = s.optJSONArray("states")?.length() ?: 0
+        if (states > 1) {
+            val at = out.indexOfFirst { it.role == "chart" } + 1
+            val i = s.optInt("index")
+            fun word(key: String, fallback: String) = s.optJSONObject("phrases")?.optString(key)?.takeIf { it.isNotEmpty() } ?: fallback
+            val steps = listOfNotNull(
+                if (i > 0) A11yItem(word("previous-step", "Previous step"), "step", null, "prev", true) else null,
+                if (i < states - 1) A11yItem(word("next-step", "Next step"), "step", null, "next", true) else null,
+            )
+            out.addAll(at, steps)
+        }
         a11y = out
-        contentDescription = out.firstOrNull { it.role == "chart" }?.label
+        // The chart's name is its first item's (with its summary): the view itself says nothing
+        // more, or TalkBack would read the name twice — once for the view, once for the chart.
+        contentDescription = if (out.isEmpty()) "Chart" else null
+        if (a11yFocused >= out.size) a11yFocused = View.NO_ID
         sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
         announce(s)
     }
@@ -547,9 +569,10 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     /** What the reader's last tap, activation or adjustment changed, said once ("Pears, hidden.
      * Total: 69 kg."). */
-    private fun sayChange() {
-        val text = Native.takeAnnouncement(handle)
-        if (text.isNullOrEmpty()) return
+    private fun sayChange(state: String? = null) {
+        val change = Native.takeAnnouncement(handle)
+        val text = listOfNotNull(state, change).filter { it.isNotEmpty() }.joinToString(" ")
+        if (text.isEmpty()) return
         onAnnouncement?.invoke(text)
         @Suppress("DEPRECATION")
         announceForAccessibility(text)
@@ -579,6 +602,59 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (text.isNotEmpty()) announceForAccessibility(text)
     }
 
+    /** The virtual node TalkBack's focus is on (`View.NO_ID`: none). */
+    private var a11yFocused = View.NO_ID
+    /** The virtual node a finger exploring the screen is over. */
+    private var a11yHovered = View.NO_ID
+
+    /** An accessibility event from virtual node `id` (focus moved, a finger entered it). */
+    private fun sendVirtual(id: Int, type: Int) {
+        val item = a11y.getOrNull(id) ?: return
+        @Suppress("DEPRECATION")
+        val e = android.view.accessibility.AccessibilityEvent.obtain(type)
+        e.setSource(this, id)
+        e.packageName = context.packageName
+        e.className = classOf(item)
+        item.checked?.let { e.isChecked = it }
+        e.contentDescription = if (item.said.isNotEmpty() && item.signal == null) "${item.label}, ${item.said.trimEnd('.')}" else item.label
+        parent?.requestSendAccessibilityEvent(this, e)
+    }
+
+    /** The Android widget an item is to TalkBack (its role words and state come from it). */
+    private fun classOf(item: A11yItem): String = when {
+        item.role == "select" -> "android.widget.Spinner"
+        item.signal != null -> "android.widget.SeekBar"
+        item.role == "checkbox" -> "android.widget.CheckBox"
+        item.role == "switch" -> "android.widget.Switch"
+        item.role == "radio" -> "android.widget.RadioButton"
+        item.actionable && item.role != "brush" && item.role != "pan" -> "android.widget.Button"
+        else -> "android.view.View"
+    }
+
+    /** The words the view says around the chart's own, in the document's language (the status's
+     * `phrases`). */
+    private var phrases: JSONObject? = null
+
+    /** Explore by touch: the item under the finger (the smallest box that holds it: a bar inside its
+     * plot) is what TalkBack hears about. */
+    override fun dispatchHoverEvent(e: MotionEvent): Boolean {
+        val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+        if (!am.isEnabled || !am.isTouchExplorationEnabled || a11y.isEmpty()) return super.dispatchHoverEvent(e)
+        val d = resources.displayMetrics.density
+        val (x, y) = e.x / d to e.y / d
+        val at = when (e.actionMasked) {
+            MotionEvent.ACTION_HOVER_EXIT -> View.NO_ID
+            else -> a11y.indices.filter { a11y[it].role != "chart" && a11y[it].rect?.contains(x, y) == true }.minByOrNull { a11y[it].rect!!.width() * a11y[it].rect!!.height() }
+                ?: a11y.indexOfFirst { it.role == "chart" }
+        }
+        if (at != a11yHovered) {
+            if (a11yHovered != View.NO_ID) sendVirtual(a11yHovered, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_HOVER_EXIT)
+            a11yHovered = at
+            if (at != View.NO_ID) sendVirtual(at, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_HOVER_ENTER)
+        }
+        return true
+    }
+
     private val provider = object : android.view.accessibility.AccessibilityNodeProvider() {
         // obtain() is deprecated from API 33; its replacements don't exist on the API 24 floor.
         @Suppress("DEPRECATION")
@@ -595,9 +671,15 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             info.setParent(host)
             info.packageName = context.packageName
             info.text = item.label
-            if (item.said.isNotEmpty()) info.contentDescription = "${item.label}, ${item.said}"
+            // (The chart's summary ends a sentence: TalkBack adds its own full stop.)
+            if (item.said.isNotEmpty() && item.signal == null && item.role != "brush" && item.role != "pan") info.contentDescription = "${item.label}, ${item.said.trimEnd('.')}"
             info.isEnabled = true
             info.isVisibleToUser = true
+            // Each item is a stop for TalkBack's swipes and for a finger exploring the screen.
+            info.isFocusable = true
+            if (android.os.Build.VERSION.SDK_INT >= 28) info.isScreenReaderFocusable = true
+            info.isAccessibilityFocused = virtualViewId == a11yFocused
+            info.addAction(if (virtualViewId == a11yFocused) android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLEAR_ACCESSIBILITY_FOCUS else android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_ACCESSIBILITY_FOCUS)
             val d = resources.displayMetrics.density
             val loc = IntArray(2).also { host.getLocationOnScreen(it) }
             val r = item.rect ?: android.graphics.RectF(0f, 0f, width / d, height / d)
@@ -611,6 +693,8 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 }
                 item.signal != null -> {
                     info.className = "android.widget.SeekBar"
+                    // Its value as drawn: what TalkBack says for it, not the range's raw number.
+                    if (item.said.isNotEmpty() && android.os.Build.VERSION.SDK_INT >= 30) info.stateDescription = item.said
                     info.rangeInfo = android.view.accessibility.AccessibilityNodeInfo.RangeInfo.obtain(android.view.accessibility.AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT, item.min.toFloat(), item.max.toFloat(), item.value.toFloat())
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)
@@ -620,7 +704,12 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                     // What a finger drags, for TalkBack: a double-tap starts (and keeps) a selection
                     // or shows all of a view; scrolling forward and back extends a selection or
                     // zooms; a view's scroll left, right, up and down moves it; dismiss cancels.
-                    info.className = "android.view.View"
+                    // Adjustable, as a slider is: TalkBack's swipe up and down are scroll forward and
+                    // back here; what it holds ("1 to 50") is what it says as its state.
+                    info.className = "android.widget.SeekBar"
+                    info.rangeInfo = android.view.accessibility.AccessibilityNodeInfo.RangeInfo.obtain(android.view.accessibility.AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT, 0f, 1f, 0.5f)
+                    // (In the middle of its range: TalkBack swipes both ways only off the ends.)
+                    if (android.os.Build.VERSION.SDK_INT >= 30) info.stateDescription = item.said
                     if (item.hint.isNotEmpty() && android.os.Build.VERSION.SDK_INT >= 26) info.hintText = item.hint
                     info.isClickable = true
                     listOf(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK,
@@ -642,6 +731,10 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                         else -> "android.widget.Button"
                     }
                     item.checked?.let { info.isCheckable = true; info.isChecked = it }
+                    // A switch says on or off (TalkBack takes a switch's state from its description,
+                    // as Android's own switches give it).
+                    if (item.role == "switch" && item.checked != null && android.os.Build.VERSION.SDK_INT >= 30)
+                        info.stateDescription = phrases?.optString(if (item.checked) "on" else "off")?.takeIf { it.isNotEmpty() } ?: if (item.checked) "On" else "Off"
                     info.isClickable = true
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
                 }
@@ -656,13 +749,29 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
         override fun performAction(virtualViewId: Int, action: Int, arguments: android.os.Bundle?): Boolean {
             val item = a11y.getOrNull(virtualViewId) ?: return false
+            // TalkBack's focus: it moves here (and says the item), or leaves.
+            if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS) {
+                if (a11yFocused == virtualViewId) return false
+                val was = a11yFocused
+                a11yFocused = virtualViewId
+                if (was != View.NO_ID) sendVirtual(was, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED)
+                sendVirtual(virtualViewId, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED)
+                return true
+            }
+            if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLEAR_ACCESSIBILITY_FOCUS) {
+                if (a11yFocused != virtualViewId) return false
+                a11yFocused = View.NO_ID
+                sendVirtual(virtualViewId, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED)
+                return true
+            }
             val step = if (item.step > 0) item.step else (item.max - item.min) / 20
             val drag = item.role == "brush" || item.role == "pan"
             fun key(k: String) = input { Native.key(handle, item.path, k) }
             val done = when {
+                item.role == "step" && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK -> input { Native.event(handle, item.path) }
                 drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK -> key(if (item.role == "brush") "Enter" else "0")
                 drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> if (item.role == "pan") key("+") else (key("ArrowRight") || key("Enter"))
-                drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> key(if (item.role == "pan") "-" else "ArrowLeft")
+                drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> if (item.role == "pan") key("-") else (key("ArrowLeft") || key("Enter"))
                 drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_DISMISS -> key("Escape")
                 drag && action == android.R.id.accessibilityActionScrollLeft -> key("ArrowLeft")
                 drag && action == android.R.id.accessibilityActionScrollRight -> key("ArrowRight")
@@ -678,7 +787,38 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 }
                 else -> false
             }
-            if (done) { renderFrame(); updateAccessibility(); sayChange() }
+            if (done) {
+                renderFrame(); updateAccessibility()
+                // The item acted on, as it is now (a slider's new value, a switch's new state):
+                // TalkBack's focus stays on it and hears what changed about it.
+                val now = a11y.indexOfFirst { (item.signal != null && it.signal == item.signal) || (item.path.isNotEmpty() && it.path == item.path) }
+                if (now >= 0) {
+                    a11yFocused = now
+                    @Suppress("DEPRECATION")
+                    val e = android.view.accessibility.AccessibilityEvent.obtain(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+                    e.setSource(this@DatarsView, now)
+                    e.packageName = context.packageName
+                    e.contentChangeTypes = android.view.accessibility.AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT or (if (android.os.Build.VERSION.SDK_INT >= 30) android.view.accessibility.AccessibilityEvent.CONTENT_CHANGE_TYPE_STATE_DESCRIPTION else 0) or
+                        // (CONTENT_CHANGE_TYPE_CHECKED, Android 15: TalkBack says a checked state's change from it.)
+                        (if (android.os.Build.VERSION.SDK_INT >= 35 && item.checked != null) 0x2000 else 0)
+                    parent?.requestSendAccessibilityEvent(this@DatarsView, e)
+                    // A slider says its new value the way Android's own does: as a selection; a
+                    // click is a click (a checkbox's, a switch's new state).
+                    if (item.signal != null || (drag && action != android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)) sendVirtual(now, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_SELECTED)
+                    else if (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK) sendVirtual(now, android.view.accessibility.AccessibilityEvent.TYPE_VIEW_CLICKED)
+                }
+                // A checkbox's, a switch's or a radio button's new state, said: TalkBack (15) says
+                // nothing of its own when a virtual one is toggled.
+                val toggled = a11y.getOrNull(now)?.takeIf { action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK && it.checked != null }
+                val state = toggled?.let { t ->
+                    val key = when (t.role) { "switch" -> if (t.checked == true) "on" else "off"; else -> if (t.checked == true) "checked" else "unchecked" }
+                    (phrases?.optString(key)?.takeIf { it.isNotEmpty() } ?: key.replaceFirstChar { it.uppercase() }) + "."
+                }
+                // (A brush's step says its new range as its state, through the selection event:
+                // the engine's words for it would say it twice.)
+                val stepped = item.role == "brush" && (action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD || action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD)
+                if (stepped) Native.takeAnnouncement(handle) else sayChange(state)
+            }
             return done
         }
     }

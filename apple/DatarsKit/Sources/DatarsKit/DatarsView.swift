@@ -63,12 +63,12 @@ open class DatarsChartView: PlatformView {
     public var onFrame: ((_ cpuMs: Double, _ moving: Bool, _ at: CFTimeInterval) -> Void)?
     /// Called once a chart has loaded (and its first frame is drawn).
     public var onLoad: (() -> Void)?
+    /// What the reader's last tap, click, activation or adjustment changed, as VoiceOver is told it
+    /// ("Pears, hidden. Now 2 data points…"): for an app that also shows it.
+    public var onAnnouncement: ((String) -> Void)?
     #if canImport(UIKit)
     /// Every tap on the chart: the label of what it landed on (nil: nothing), and where. Touch has
     /// no hover, so a tap is how a reader asks what a mark is — a line's value anywhere along it.
-    /// What the reader's last tap, activation or adjustment changed, as VoiceOver is told it
-    /// ("Pears, hidden. Now 2 data points…"): for an app that also shows it.
-    public var onAnnouncement: ((String) -> Void)?
     public var onTap: ((_ label: String?, _ at: CGPoint) -> Void)?
     /// Show what a tap lands on in a small label above the finger, until the next tap or the next
     /// step (default). Off, apps show `onTap`'s label their own way.
@@ -550,7 +550,7 @@ open class DatarsChartView: PlatformView {
             let e: UIAccessibilityElement
             let checked = r["checked"] as? Bool
             if ["brush", "pan"].contains(kind), let path = r["path"] as? String {
-                e = DatarsDragElement(view: self, path: path, kind: kind, hint: (a["phrases"] as? [String: String])?["\(kind)-hint"])
+                e = DatarsDragElement(view: self, path: path, kind: kind, hint: (a["phrases"] as? [String: String])?["\(kind)-hint-touch"])
             } else if ["button", "checkbox", "switch", "radio"].contains(kind), let path = r["path"] as? String {
                 e = DatarsActionable(view: self, path: path)
             } else {
@@ -819,7 +819,7 @@ final class DatarsMacDrag: NSAccessibilityElement {
     }
     override func accessibilityPerformPress() -> Bool { key(kind == "brush" ? "Enter" : "0") }
     override func accessibilityPerformIncrement() -> Bool { kind == "pan" ? key("+") : (key("ArrowRight") || key("Enter")) }
-    override func accessibilityPerformDecrement() -> Bool { key(kind == "pan" ? "-" : "ArrowLeft") }
+    override func accessibilityPerformDecrement() -> Bool { kind == "pan" ? key("-") : (key("ArrowLeft") || key("Enter")) }
     override func accessibilityPerformCancel() -> Bool { key("Escape") }
 }
 #endif
@@ -874,7 +874,11 @@ final class DatarsDragElement: UIAccessibilityElement {
         // Swiping up before a selection is under way starts one.
         if !key("ArrowRight") { key("Enter") }
     }
-    override func accessibilityDecrement() { key(kind == "pan" ? "-" : "ArrowLeft") }
+    override func accessibilityDecrement() {
+        if kind == "pan" { key("-"); return }
+        // Swiping down with no selection under way starts one too.
+        if !key("ArrowLeft") { key("Enter") }
+    }
     override func accessibilityPerformEscape() -> Bool { key("Escape") }
     override func accessibilityScroll(_ direction: UIAccessibilityScrollDirection) -> Bool {
         guard kind == "pan" else { return false }
