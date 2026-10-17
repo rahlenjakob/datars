@@ -166,6 +166,7 @@ impl Core {
     pub fn status(&mut self) -> serde_json::Value {
         let mut v = self.status_brief();
         v["semantics"] = serde_json::Value::Array(self.semantics());
+        v["summary"] = serde_json::Value::String(self.summary());
         v
     }
 
@@ -176,6 +177,16 @@ impl Core {
             return Vec::new();
         }
         self.engine.semantic_items().into_iter().map(semantic_json).collect()
+    }
+
+    /// What a screen reader says about the chart after its name (`Engine::accessible_summary`):
+    /// the document's description, how much data it shows and its range. Reads the whole
+    /// semantics tree, so hosts ask for it when a step settles, not every frame.
+    pub fn summary(&mut self) -> String {
+        if self.tier == Some(datars_bundle::Tier::T0) {
+            return String::new();
+        }
+        self.engine.accessible_summary()
     }
 
     /// The semantic items a reader can activate (`actionable`, in [`Core::semantics`]' shape):
@@ -194,6 +205,7 @@ impl Core {
     pub fn status_brief(&mut self) -> serde_json::Value {
         let actions = self.actions();
         serde_json::json!({
+            "name": self.engine.accessible_name(),
             "state": self.engine.state(),
             "index": self.engine.state_index(),
             "states": self.engine.state_names(),
@@ -214,7 +226,11 @@ impl Core {
 
 /// A [`datars_engine::SemanticItem`] as hosts read it.
 fn semantic_json(s: datars_engine::SemanticItem) -> serde_json::Value {
-    serde_json::json!({ "role": s.role, "label": s.label, "depth": s.depth, "rect": [s.rect.x, s.rect.y, s.rect.w, s.rect.h], "path": s.path, "actionable": s.actionable })
+    let mut v = serde_json::json!({ "role": s.role, "label": s.label, "depth": s.depth, "rect": [s.rect.x, s.rect.y, s.rect.w, s.rect.h], "path": s.path, "actionable": s.actionable });
+    if let Some(x) = s.value {
+        v["value"] = serde_json::json!(x);
+    }
+    v
 }
 
 impl Core {

@@ -261,7 +261,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
     };
     let poster_svg = poster_svg.replacen("<svg ", &format!("<svg data-mode=\"{poster_mode}\" "), 1);
     let poster = b.chunk("poster", poster_svg.into_bytes(), meta(&[("format", "svg".into()), ("state", 0.into())]));
-    let program = serde_json::json!({ "program": doc.program, "motion": doc.motion, "size": doc.size, "theme": doc.theme, "locale": doc.locale, "title": doc.title });
+    let program = serde_json::json!({ "program": doc.program, "motion": doc.motion, "size": doc.size, "theme": doc.theme, "locale": doc.locale, "title": doc.title, "description": doc.description });
 
     if opts.tiers.contains(&Tier::T0) {
         b.variant(Tier::T0, Requires::default(), &[poster.clone(), text.clone()], serde_json::json!({ "title": doc.title }));

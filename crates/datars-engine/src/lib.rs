@@ -193,6 +193,9 @@ pub struct SemanticItem {
     /// those as buttons, so pointer-only interactions work from keyboards and screen readers.
     pub path: String,
     pub actionable: bool,
+    /// The number a data mark stands for (its semantics' `value`): what a host's data table and
+    /// the summary's range read.
+    pub value: Option<f64>,
 }
 
 /// Where a keyed point is on screen this frame (for host overlays).
@@ -2689,7 +2692,7 @@ impl Engine {
                 }
                 // Pinned content (a map callout) where it's drawn, at screen size.
                 let rect = if n.common.pin { bounds::drawn_bounds(n, parent) } else { bounds::transform_rect(bounds::node_bounds(n), &parent) };
-                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here) });
+                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()) });
                 d += 1;
             }
             let inner = match &n.kind {
@@ -2706,7 +2709,7 @@ impl Engine {
                             break;
                         }
                         *budget -= 1;
-                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false });
+                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None });
                     }
                 }
             }
@@ -2718,6 +2721,75 @@ impl Engine {
             out.retain(|i| i.actionable);
         }
         out
+    }
+
+    /// The chart's accessible name: the document's title, else its root's label (a recipe's title).
+    pub fn accessible_name(&mut self) -> String {
+        if !self.doc.title.trim().is_empty() {
+            return self.doc.title.trim().to_string();
+        }
+        self.scene().root.semantics.as_ref().map(|s| s.label.trim().to_string()).unwrap_or_default()
+    }
+
+    /// What a screen reader says about the chart as a whole, after its name: the document's
+    /// description, then how much data it shows and its range — "Eight data points, from 3.5 to
+    /// 27.6." — from the current state's semantics, so it follows filters and steps. Hosts give
+    /// it as the chart's description (`aria-description`, `accessibilityHint`, the node's hint).
+    pub fn accessible_summary(&mut self) -> String {
+        let items = self.semantic_items();
+        let mut parts: Vec<String> = Vec::new();
+        let description = self.doc.description.trim();
+        if !description.is_empty() {
+            let end = if description.ends_with(['.', '!', '?', '…']) { "" } else { "." };
+            parts.push(format!("{description}{end}"));
+        }
+        let data: Vec<&SemanticItem> = items.iter().filter(|i| i.role == "datum" || i.role == "region").collect();
+        if !data.is_empty() {
+            // Every mark, also past the items the description lists one by one (a parliament's
+            // seats, a year of days): counted as drawn.
+            let n = self.data_count().max(data.len());
+            let mut s = format!("{} data point{}", datars_text::format::number(n as f64, ",.0f", &self.doc.locale), if n == 1 { "" } else { "s" });
+            let series: BTreeSet<&str> = items.iter().filter(|i| i.role == "series" && !i.label.is_empty()).map(|i| i.label.as_str()).collect();
+            if series.len() > 1 {
+                s.push_str(&format!(" in {} series", series.len()));
+            }
+            // The range only when every mark says its value: a range over some of them (a chart's
+            // bars, not its lines) would mislead.
+            let values: Vec<f64> = data.iter().filter_map(|i| i.value).collect();
+            if values.len() >= 2 && values.len() == data.len() && n == data.len() {
+                let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
+                let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+                if lo < hi {
+                    let f = |v: f64| datars_text::format::number(v, ",.4~r", &self.doc.locale);
+                    s.push_str(&format!(", from {} to {}", f(lo), f(hi)));
+                }
+            }
+            parts.push(format!("{s}."));
+        }
+        parts.join(" ")
+    }
+
+    /// How many data marks the current scene draws (role datum or region, and labelled instances),
+    /// as a reader can see them.
+    fn data_count(&mut self) -> usize {
+        fn walk(n: &datars_scene::Node, acc: f64) -> usize {
+            let acc = pick::seen(n, acc);
+            if acc <= pick::INVISIBLE {
+                return 0;
+            }
+            let own = match &n.semantics {
+                Some(s) if s.role == datars_scene::Role::Decoration => return 0,
+                Some(s) if matches!(s.role, datars_scene::Role::Datum | datars_scene::Role::Region) => 1,
+                _ => 0,
+            };
+            let inst = match &n.kind {
+                datars_scene::NodeKind::Instances(i) => i.labels.as_ref().map(|ls| (0..ls.len()).filter(|k| acc * i.opacity_at(*k) > pick::INVISIBLE).count()).unwrap_or(0),
+                _ => 0,
+            };
+            own + inst + n.children().iter().map(|c| walk(c, acc)).sum::<usize>()
+        }
+        let scene = self.scene();
+        walk(&scene.root, 1.0)
     }
 
     /// Run the `activate` intent of the node at `path` (as `SemanticItem::path` spells it) — the

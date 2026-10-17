@@ -385,6 +385,12 @@ mod web {
         pub fn semantics(&mut self) -> JsValue {
             serde_wasm(&serde_json::Value::Array(self.core.semantics()))
         }
+        /// What a screen reader says about the chart after its name: the document's description,
+        /// how much data it shows and its range (`Engine::accessible_summary`). Reads the
+        /// semantics tree: idle time, once per settled state.
+        pub fn summary(&mut self) -> String {
+            self.core.summary()
+        }
         /// The current state's narration (`{title, text, anchor}` or null) — cheap, for per-frame use.
         pub fn narration(&self) -> JsValue {
             serde_wasm(&serde_json::json!(self.core.engine.narration()))

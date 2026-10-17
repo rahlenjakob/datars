@@ -60,7 +60,7 @@ fn open_parts(engine: &mut Engine, manifest: &Manifest, tier: Tier, entry: &serd
             let (_, prog) = chunks("program").into_iter().next().ok_or("missing program chunk")?;
             let p: serde_json::Value = serde_json::from_slice(&prog).map_err(|e| e.to_string())?;
             let doc: datars_ir::Doc = serde_json::from_value(serde_json::json!({
-                "datars": 1, "title": p["title"], "size": p["size"], "theme": p["theme"], "locale": p["locale"],
+                "datars": 1, "title": p["title"], "description": p.get("description").filter(|d| d.is_string()).cloned().unwrap_or(serde_json::json!("")), "size": p["size"], "theme": p["theme"], "locale": p["locale"],
                 "program": p["program"], "motion": p["motion"], "scene": { "kind": "group" }
             }))
             .map_err(|e| e.to_string())?;

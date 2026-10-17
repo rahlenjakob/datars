@@ -172,7 +172,7 @@ test("what a click acts on is a button in the semantics mirror: a keyboard press
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`http://127.0.0.1:${server.address().port}`);
     // The page's chrome reads the brief status (no semantics tree): its `actions` are the buttons.
-    const button = p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" });
+    const button = p.locator("datars-view .mirror button", { hasText: "Bar A: 42" });
     await button.waitFor({ state: "attached", timeout: 30_000 });
     await button.focus();
     await p.keyboard.press("Enter");
@@ -208,21 +208,22 @@ test("the mirror reads every labelled mark, not only what a click acts on", { sk
     await p.goto(`http://127.0.0.1:${server.address().port}`);
     // Steps stay cheap (the brief status has only what a click acts on); the whole semantics
     // tree follows in idle time: a screen reader finds the title, not only the buttons.
-    const title = p.locator("datars-view ul.sr li", { hasText: "title: Selectable chart title" });
+    const title = p.locator("datars-view .mirror table", { hasText: "Bar A: 42" });
     await title.waitFor({ state: "attached", timeout: 30_000 });
     const tree = await p.locator("datars-view").ariaSnapshot();
-    assert.match(tree, /listitem: "title: Selectable chart title"/, tree);
     assert.match(tree, /button "Bar A: 42"/, tree);
-    const unnamed = await p.evaluate(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll("ul.sr li")].filter((li) => li.textContent.trim() === "group:").length);
+    const unnamed = await p.evaluate(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll(".mirror [role=group]")].filter((g) => !g.getAttribute("aria-label")).length);
     assert.equal(unnamed, 0, "a group with no name says nothing");
+    assert.doesNotMatch(tree, /(datum|title|group): /, "no role words read out");
+    assert.match(tree, /figure "Selectable chart title"/, "without a document title, the chart is named by its first title");
     // A button whose label follows the state says the new state at once, not when the tree
     // catches up after the transition.
-    await p.locator("datars-view ul.sr button", { hasText: "Light: off" }).focus();
+    await p.locator("datars-view .mirror button", { hasText: "Light: off" }).focus();
     await p.keyboard.press("Enter");
     await p.waitForTimeout(60);
     assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.textContent), "Light: on");
     // A press rebuilds the mirror: the whole tree is back once the chart settles.
-    await p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" }).focus();
+    await p.locator("datars-view .mirror button", { hasText: "Bar A: 42" }).focus();
     await p.keyboard.press("Enter");
     await p.waitForFunction(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll(".texts span[data-key]")].some((s) => s.textContent === "Picked: A"), null, { timeout: 10_000 });
     await title.waitFor({ state: "attached", timeout: 10_000 });
@@ -248,14 +249,13 @@ test("the page reads the signals and hears what the reader's input changed", { s
     });
     // Steps stay cheap (the brief status has only what a click acts on); the whole semantics
     // tree follows in idle time: a screen reader finds the title, not only the buttons.
-    const title = p.locator("datars-view ul.sr li", { hasText: "title: Selectable chart title" });
+    const title = p.locator("datars-view .mirror table", { hasText: "Bar A: 42" });
     await title.waitFor({ state: "attached", timeout: 30_000 });
     const tree = await p.locator("datars-view").ariaSnapshot();
-    assert.match(tree, /listitem: "title: Selectable chart title"/, tree);
     assert.match(tree, /button "Bar A: 42"/, tree);
     // The page reads the signals as it would set them, and hears when the reader changes one.
     assert.equal((await p.evaluate(() => document.querySelector("datars-view").signals)).picked, "nothing");
-    await p.locator("datars-view ul.sr button", { hasText: "Bar A: 42" }).focus();
+    await p.locator("datars-view .mirror button", { hasText: "Bar A: 42" }).focus();
     await p.keyboard.press("Enter");
     await p.waitForFunction(() => window.__changes.some((c) => c.includes("picked")), null, { timeout: 10_000 });
     assert.equal((await p.evaluate(() => document.querySelector("datars-view").signals)).picked, "A");

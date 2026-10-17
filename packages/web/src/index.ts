@@ -46,6 +46,9 @@ function releaseGl(canvas: HTMLCanvasElement | undefined) {
   gl?.getExtension("WEBGL_lose_context")?.loseContext();
 }
 
+/** A semantics item as the runtime gives it (`status().semantics`, `chrome().actions`). */
+interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number }
+
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
   return actions.map((a) => `${a.path}\t${a.label}`).join("\n");
@@ -304,7 +307,7 @@ export class DatarsView extends ElementBase {
   private poster!: HTMLDivElement;
   private card!: HTMLDivElement;
   private tip!: HTMLDivElement;
-  private mirror!: HTMLUListElement;
+  private mirror!: HTMLDivElement;
   /** What the mirror's buttons offer (each action's path and label), as last built. */
   private mirrorActions = "";
   private live!: HTMLDivElement;
@@ -363,10 +366,10 @@ export class DatarsView extends ElementBase {
 
   connectedCallback() {
     this.root.innerHTML = `<style>${CSS}</style>
-      <div class="stage" part="stage"><div class="poster" part="poster"></div><canvas hidden part="canvas"></canvas>
+      <div class="stage" part="stage"><div class="poster" part="poster"></div><canvas hidden part="canvas" aria-hidden="true"></canvas>
       <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
       <div class="controls" part="controls" hidden><button data-ev="prev" aria-label="Previous">←</button><button data-ev="next" aria-label="Next">→</button></div>
-      <ul class="sr" role="list" aria-label="Chart content"></ul><div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
+      <div class="sr mirror"></div><div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
     this.stage = this.root.querySelector(".stage")!;
     // The height the page asked for, from the first frame the element is on the page: laid out a
     // frame later, the chart would grow into its space and push the page down.
@@ -376,19 +379,46 @@ export class DatarsView extends ElementBase {
     this.card = this.root.querySelector(".card")!;
     this.linkLayer = this.root.querySelector(".links")!;
     this.tip = this.root.querySelector(".tip")!;
-    this.mirror = this.root.querySelector("ul")!;
+    this.mirror = this.root.querySelector(".mirror")!;
     this.live = this.root.querySelector("[aria-live]")!;
     // A sighted keyboard user sees where the hidden list's focus is: the item's box on the chart.
     const ring = this.root.querySelector<HTMLDivElement>(".focus")!;
     this.mirror.addEventListener("focusin", (e) => {
-      const r = (e.target as HTMLElement).dataset?.rect?.split(",").map(Number);
-      if (!r || r.length !== 4 || !(r[2] > 0 && r[3] > 0)) return void (ring.hidden = true);
+      const el = e.target as HTMLElement;
+      const r = el.dataset?.rect?.split(",").map(Number);
+      if (!r || r.length !== 4 || !(r[2] > 0 && r[3] > 0)) { ring.hidden = true; this.tip.hidden = true; return; }
       Object.assign(ring.style, { left: `${r[0]}px`, top: `${r[1]}px`, width: `${r[2]}px`, height: `${r[3]}px` });
       ring.hidden = false;
+      // A data mark the keyboard is on says what it is, as the pointer's tooltip would.
+      if (el.dataset.label) {
+        this.tip.textContent = el.dataset.label;
+        this.tip.hidden = false;
+        this.tipPinned = false;
+        const tw = this.tip.offsetWidth, th = this.tip.offsetHeight;
+        const above = r[1] - th - 8 >= 0;
+        this.tip.style.left = `${Math.max(0, Math.min(r[0] + r[2] / 2 - tw / 2, this.size.w - tw))}px`;
+        this.tip.style.top = `${above ? r[1] - th - 8 : Math.min(r[1] + r[3] + 8, this.size.h - th)}px`;
+      } else this.tip.hidden = true;
     });
     this.mirror.addEventListener("focusout", (e) => {
       // Moving to another of the list's items: its own focusin places the ring.
-      if (!this.mirror.contains(e.relatedTarget as Node | null)) ring.hidden = true;
+      if (!this.mirror.contains(e.relatedTarget as Node | null)) { ring.hidden = true; this.tip.hidden = true; }
+    });
+    // The data's rows are one stop for Tab; the arrow keys (and Home, End) move between them.
+    this.mirror.addEventListener("keydown", (e) => {
+      const el = e.target as HTMLElement;
+      if (!el.dataset || !("nav" in el.dataset)) return;
+      const stops = [...this.mirror.querySelectorAll<HTMLElement>("[data-nav]")];
+      const i = stops.indexOf(el);
+      const k = e.key;
+      const j = k === "ArrowDown" || k === "ArrowRight" ? Math.min(stops.length - 1, i + 1)
+        : k === "ArrowUp" || k === "ArrowLeft" ? Math.max(0, i - 1)
+        : k === "Home" ? 0 : k === "End" ? stops.length - 1 : -1;
+      if (j < 0) return;
+      e.preventDefault();
+      el.tabIndex = -1;
+      stops[j].tabIndex = 0;
+      stops[j].focus();
     });
     this.tabIndex = 0;
     this.setAttribute("role", "figure");
@@ -1657,7 +1687,25 @@ export class DatarsView extends ElementBase {
       }
     }
     if (s.semantics) this.describedGen = this.chromeGen;
-    this.live.textContent = n?.text ?? "";
+    this.announce(s);
+  }
+
+  /** The step the live region last announced. */
+  private announced = -1;
+
+  /** A new step, said once by the live region: its narration (title and text), else where the
+   * reader is in the story ("Step 2 of 4"). The first state isn't announced: the chart's name and
+   * description say what it is when the reader gets to it. */
+  private announce(s: Record<string, any>) {
+    const index = s.index ?? 0;
+    if (index === this.announced) return;
+    const first = this.announced < 0;
+    this.announced = index;
+    if (first) return;
+    const n = s.narration;
+    const said = [n?.title, n?.text].filter((x) => x && String(x).trim()).join(". ");
+    const count = s.states?.length ?? 0;
+    this.live.textContent = said || (count > 1 ? `Step ${index + 1} of ${count}` : "");
   }
 
   /** The whole semantics tree into the mirror, in idle time and only while no transition runs:
@@ -1672,7 +1720,9 @@ export class DatarsView extends ElementBase {
       if (!view || this.describedGen === this.chromeGen) return;
       if (view.transitioning?.()) return; // the frame loop asks again when it settles
       this.describedGen = this.chromeGen;
-      this.fillMirror(view.chrome?.() ?? view.status(), view.semantics());
+      const brief = view.chrome?.() ?? view.status();
+      if (view.summary) brief.summary = view.summary();
+      this.fillMirror(brief, view.semantics());
     }, { timeout: 1000 });
   }
 
@@ -1680,74 +1730,227 @@ export class DatarsView extends ElementBase {
    * the data), and building it would cost the page. */
   private static MIRROR_MAX = 500;
 
-  /** The hidden list screen readers and keyboards use: engine-drawn controls as native ones,
-   * clickable marks as buttons, and every other labelled item (`items`: the semantics tree, or
-   * only what a click acts on) as text, indented by depth. */
-  private fillMirror(s: Record<string, any>, items: { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[] }[]) {
+  /** What screen readers and keyboards get (the canvas is a picture to them): engine-drawn
+   * controls as native ones; then the chart's content as the semantics tree says it — groups as
+   * named groups, an axis or a legend as one line ("y axis: 0 to 1,600"), annotations as text,
+   * and each run of data marks as a table (name, value), its rows reachable with the arrow keys
+   * and outlined on the chart as the keyboard moves; clickable marks are buttons. The chart's
+   * name and summary go on the element itself (`aria-label`, `aria-description`). */
+  private fillMirror(s: Record<string, any>, items: MirrorItem[]) {
     // Where the keyboard is, read before the mirror is rebuilt: rebuilding mustn't lose it.
-    const focused = (this.root.activeElement as HTMLInputElement | null)?.dataset?.signal;
-    const focusedPath = (this.root.activeElement as HTMLElement | null)?.dataset?.path;
+    const active = this.root.activeElement as HTMLElement | null;
+    const focused = active?.dataset?.signal, focusedPath = active?.dataset?.path, focusedItem = active?.dataset?.item;
     this.mirror.innerHTML = "";
     // Engine-drawn controls as native ones: keyboards and screen readers can operate them.
-    for (const c of s.controls ?? []) {
-      const li = document.createElement("li");
-      if (c.kind === "select") {
-        // A select as a real one: its options, the chosen one, the same signal.
-        const sel = this.nativeSelect(c);
-        sel.setAttribute("aria-label", c.label);
-        if (c.rect) sel.dataset.rect = c.rect.join(",");
-        li.appendChild(sel);
-        this.mirror.appendChild(li);
-        if (c.signal === focused) sel.focus();
-        continue;
+    const controls = (s.controls ?? []) as any[];
+    if (controls.length) {
+      const ul = document.createElement("ul");
+      ul.setAttribute("aria-label", "Controls");
+      for (const c of controls) {
+        const li = document.createElement("li");
+        if (c.kind === "select") {
+          // A select as a real one: its options, the chosen one, the same signal.
+          const sel = this.nativeSelect(c);
+          sel.setAttribute("aria-label", c.label);
+          if (c.rect) sel.dataset.rect = c.rect.join(",");
+          li.appendChild(sel);
+          ul.appendChild(li);
+          if (c.signal === focused) queueMicrotask(() => sel.focus());
+          continue;
+        }
+        const input = document.createElement("input");
+        Object.assign(input, { type: "range", min: String(c.min), max: String(c.max), step: c.step > 0 ? String(c.step) : "any", value: String(c.value) });
+        input.setAttribute("aria-label", c.label);
+        // What the drawn control says ("32,000"), not the raw number.
+        const said = /:\s*(.+)$/.exec(c.label)?.[1];
+        if (said) input.setAttribute("aria-valuetext", said);
+        input.dataset.signal = c.signal;
+        if (c.rect) input.dataset.rect = c.rect.join(",");
+        input.addEventListener("input", () => { this.view?.set_signal(c.signal, input.value); this.kick(); this.noteSignals(); });
+        input.addEventListener("change", () => this.syncChrome());
+        li.appendChild(input);
+        ul.appendChild(li);
+        if (c.signal === focused) queueMicrotask(() => input.focus()); // rebuilding mustn't steal the keyboard's place
       }
-      const input = document.createElement("input");
-      Object.assign(input, { type: "range", min: String(c.min), max: String(c.max), step: c.step > 0 ? String(c.step) : "any", value: String(c.value) });
-      input.setAttribute("aria-label", c.label);
-      input.dataset.signal = c.signal;
-      if (c.rect) input.dataset.rect = c.rect.join(",");
-      input.addEventListener("input", () => { this.view?.set_signal(c.signal, input.value); this.kick(); this.noteSignals(); });
-      input.addEventListener("change", () => this.syncChrome());
-      li.appendChild(input);
-      this.mirror.appendChild(li);
-      if (c.signal === focused) input.focus(); // rebuilding mustn't steal the keyboard's place
+      this.mirror.appendChild(ul);
     }
     // A select is its native select above, not its drawn box; a dragged control (a slider's
     // thumb) is its range input.
-    const selectLabels = new Set((s.controls ?? []).filter((c: { kind?: string }) => c.kind === "select").map((c: { label: string }) => c.label));
-    let listed = 0, left = 0;
-    for (const item of items) {
-      if (item.role === "control" && (!item.actionable || selectLabels.has(item.label))) continue;
-      // A group with no name of its own (a plot's frame) says nothing: its marks follow.
-      if (!item.actionable && !item.label) continue;
-      if (listed >= DatarsView.MIRROR_MAX && !item.actionable) { left++; continue; }
-      listed++;
-      const li = document.createElement("li");
-      li.style.paddingLeft = `${item.depth}em`;
-      if (item.actionable) {
-        // Click interactions (select, filter, drill) as buttons: keyboards and screen readers too.
-        const b = document.createElement("button");
-        b.textContent = item.label;
-        b.dataset.path = item.path;
-        if (item.rect) b.dataset.rect = item.rect.join(",");
-        b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); } });
-        li.appendChild(b);
-        this.mirror.appendChild(li);
-        if (item.path === focusedPath) b.focus();
-        continue;
-      }
-      li.textContent = `${item.role}: ${item.label}`;
-      this.mirror.appendChild(li);
-    }
-    if (left) {
-      const li = document.createElement("li");
-      li.textContent = `${left} more`;
-      this.mirror.appendChild(li);
-    }
-    // The chart's name: its root's label (the title), else what the page called it.
-    const name = items[0]?.depth === 0 && !items[0].actionable ? items[0].label : "";
+    const selectLabels = new Set(controls.filter((c) => c.kind === "select").map((c) => c.label));
+    const shown = items.filter((i) => !(i.role === "control" && (!i.actionable || selectLabels.has(i.label))));
+    // The chart's name: the document's title, else its root's label, else what the page said.
+    const rootLabel = shown[0]?.depth === 0 && !shown[0].actionable && shown[0].role !== "control" ? shown[0].label : "";
+    const name = (s.name as string | undefined)?.trim() || rootLabel || shown.find((i) => i.role === "title" && i.label.trim())?.label || "";
     if (name) this.setAttribute("aria-label", name);
     else if (!this.getAttribute("aria-label")) this.setAttribute("aria-label", "Chart");
+    if (typeof s.summary === "string") {
+      if (s.summary) this.setAttribute("aria-description", s.summary);
+      else this.removeAttribute("aria-description");
+    }
+    // The flat list (pre-order, with depths) as a tree.
+    type N = { item: MirrorItem; kids: N[] };
+    const top: N[] = [];
+    const stack: N[] = [];
+    for (const item of shown) {
+      const node = { item, kids: [] };
+      while (stack.length && stack[stack.length - 1].item.depth >= item.depth) stack.pop();
+      (stack.length ? stack[stack.length - 1].kids : top).push(node);
+      stack.push(node);
+    }
+    let listed = 0, left = 0;
+    const isData = (i: MirrorItem) => i.role === "datum" || i.role === "region" || (i.actionable && i.role !== "control");
+    const descend = (n: N, role: string): string[] => n.kids.flatMap((k) => (k.item.role === role ? [k.item.label] : descend(k, role))).filter((l) => l && l.trim());
+    /** Labels as one line: all of a few, the ends of many. */
+    const line = (labels: string[]) => (labels.length <= 12 ? labels.join(", ") : `${labels[0]} to ${labels[labels.length - 1]}`);
+    const render = (nodes: N[], into: HTMLElement, caption: string, groupLabel: string) => {
+      let run: MirrorItem[] = [];
+      const flush = () => {
+        if (!run.length) return;
+        into.appendChild(this.dataTable(run, caption, focusedPath, focusedItem));
+        run = [];
+      };
+      for (const n of nodes) {
+        const { role, label } = n.item;
+        if (isData(n.item)) {
+          if (listed >= DatarsView.MIRROR_MAX && !n.item.actionable) { left++; continue; }
+          listed++;
+          run.push(n.item);
+          continue;
+        }
+        flush();
+        if (role === "tick" || role === "legend-item") continue; // said with their axis or legend
+        if (role === "axis" || role === "legend") {
+          const p = document.createElement("p");
+          const parts = descend(n, role === "axis" ? "tick" : "legend-item");
+          const title = label || (role === "legend" ? "Legend" : "");
+          p.textContent = parts.length ? `${title}${title ? ": " : ""}${line(parts)}` : title;
+          if (p.textContent) into.appendChild(p);
+          continue;
+        }
+        // A title that repeats its chart's name or its group's says nothing new.
+        if (role === "title" && (label === name || label === groupLabel)) { render(n.kids, into, caption, groupLabel); continue; }
+        // The root (it's the chart: named on the element), and groups without a name: their
+        // content belongs to what's around them.
+        if ((n.item.depth === 0 && label === name) || ((role === "group" || role === "series") && !label.trim())) {
+          render(n.kids, into, caption, groupLabel);
+          continue;
+        }
+        // A series that is only its marks: their table, named by it (not a group around it too).
+        if (n.kids.length && role === "series" && n.kids.every((k) => isData(k.item) && !k.kids.length)) {
+          render(n.kids, into, label, groupLabel);
+          continue;
+        }
+        if (n.kids.length && (role === "group" || role === "series")) {
+          const g = document.createElement("div");
+          g.setAttribute("role", "group");
+          g.setAttribute("aria-label", label);
+          into.appendChild(g);
+          render(n.kids, g, label, label);
+          continue;
+        }
+        if (n.item.actionable) {
+          // A control the engine draws (a toggle, a button): a native button.
+          const b = this.mirrorButton(n.item);
+          into.appendChild(b);
+          if (n.item.path === focusedPath) queueMicrotask(() => b.focus());
+          render(n.kids, into, caption, groupLabel);
+          continue;
+        }
+        if (label.trim() && !(role === "series" && n.kids.length === 0 && label === caption)) {
+          const p = document.createElement("p");
+          p.textContent = role === "annotation" ? `Note: ${label}` : label;
+          into.appendChild(p);
+        }
+        render(n.kids, into, label || caption, groupLabel);
+      }
+      flush();
+    };
+    render(top, this.mirror, "", name);
+    if (left) {
+      const p = document.createElement("p");
+      p.textContent = `${left} more`;
+      this.mirror.appendChild(p);
+    }
+    // One stop for the keyboard among the data: where it was, else the first; arrows move on.
+    const stops = [...this.mirror.querySelectorAll<HTMLElement>("[data-nav]")];
+    const current = stops.find((x) => x.dataset.item === focusedItem && focusedItem) ?? stops[0];
+    for (const x of stops) x.tabIndex = x === current ? 0 : -1;
+    if (current && focusedItem && current.dataset.item === focusedItem) queueMicrotask(() => current.focus());
+  }
+
+  /** A native button for a mark or control a click acts on. */
+  private mirrorButton(item: MirrorItem): HTMLButtonElement {
+    const b = document.createElement("button");
+    b.textContent = item.label;
+    b.dataset.path = item.path;
+    if (item.rect) b.dataset.rect = item.rect.join(",");
+    b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); } });
+    return b;
+  }
+
+  /** A run of data marks as a table: a row per mark, its name and — when its label says one
+   * ("Housing: 10,240") — its value in a column of its own, so a screen reader's table commands
+   * read down a column. Rows are keyboard stops (one tab stop; arrows move between them). */
+  private dataTable(marks: MirrorItem[], caption: string, focusedPath?: string, focusedItem?: string): HTMLTableElement {
+    // Marks that say the same in a row (a parliament's seats, each "V") are one row and a count,
+    // outlined together on the chart.
+    const run: MirrorItem[] = [];
+    const counts: number[] = [];
+    for (const m of marks) {
+      const last = run[run.length - 1];
+      if (last && !m.actionable && !last.actionable && last.label === m.label) {
+        counts[counts.length - 1]++;
+        if (last.rect && m.rect) {
+          const [x, y, w, h] = last.rect, [a, b, c, d] = m.rect;
+          const x0 = Math.min(x, a), y0 = Math.min(y, b);
+          run[run.length - 1] = { ...last, rect: [x0, y0, Math.max(x + w, a + c) - x0, Math.max(y + h, b + d) - y0] };
+        }
+        continue;
+      }
+      run.push(m);
+      counts.push(1);
+    }
+    const table = document.createElement("table");
+    const cap = document.createElement("caption");
+    cap.textContent = caption || "Data";
+    table.appendChild(cap);
+    const split = (l: string) => {
+      const i = l.lastIndexOf(": ");
+      return i > 0 ? [l.slice(0, i), l.slice(i + 2)] : [l, ""];
+    };
+    const pairs = run.map((i) => split(i.label));
+    // (Buttons keep their whole label: it's what pressing one acts on.)
+    const twoColumns = (pairs.some((p) => p[1]) || counts.some((c) => c > 1)) && !run.some((i) => i.actionable);
+    const body = document.createElement("tbody");
+    run.forEach((item, k) => {
+      const tr = document.createElement("tr");
+      const th = document.createElement("th");
+      th.scope = "row";
+      const [label, value] = counts[k] > 1 ? [item.label, `× ${counts[k]}`] : twoColumns ? pairs[k] : [item.label, ""];
+      let stop: HTMLElement = th;
+      if (item.actionable) {
+        const b = this.mirrorButton(item);
+        b.textContent = item.label;
+        th.appendChild(b);
+        stop = b;
+      } else {
+        th.textContent = label;
+      }
+      stop.dataset.nav = "";
+      stop.dataset.item = `${caption}\u0000${item.label}\u0000${item.path}`;
+      stop.dataset.label = item.label;
+      if (item.rect) stop.dataset.rect = item.rect.join(",");
+      tr.appendChild(th);
+      if (twoColumns) {
+        const td = document.createElement("td");
+        td.textContent = item.actionable ? "" : value;
+        tr.appendChild(td);
+      }
+      body.appendChild(tr);
+      if (item.actionable && item.path === focusedPath && !focusedItem) queueMicrotask(() => stop.focus());
+    });
+    table.appendChild(body);
+    return table;
   }
 
   /** A `<select>` for an engine-drawn one: the options it offers, the chosen one selected, a
