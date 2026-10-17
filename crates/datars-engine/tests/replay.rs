@@ -45,6 +45,7 @@ fn a_recorded_session_replays_bit_exactly() {
     e.event("next");
     tick(&mut e, 12, &mut hashes); // mid-transition frames
     e.set_mode(Mode::Dark);
+    e.set_text_scale(1.5);
     e.resize(300.0, 120.0, 2.0);
     tick(&mut e, 30, &mut hashes);
     let session = e.take_recording().expect("recording");

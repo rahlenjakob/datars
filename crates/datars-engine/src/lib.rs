@@ -114,6 +114,11 @@ pub enum Pointer {
     Wheel { x: f64, y: f64, delta: f64 },
 }
 
+/// The text sizes a reader can ask for, as a multiple of the theme's (`Engine::set_text_scale`):
+/// from a little smaller than the theme's to the largest accessibility sizes (iOS's AX5 body text
+/// is 3.1 × its default, Android's largest font scale 2 ×).
+pub const TEXT_SCALE_RANGE: (f64, f64) = (0.75, 3.0);
+
 /// The longest a hover state takes to fade in or out.
 const HOVER_SECONDS: f64 = 0.2;
 
@@ -366,6 +371,8 @@ pub struct Engine {
     playing: bool,
     /// The reader asked for reduced motion: every transition is a short crossfade.
     reduced_motion: bool,
+    /// The reader's text size, as a multiple of the theme's (`Engine::set_text_scale`).
+    text_scale: f64,
     /// Clock signals (name, rate per second), and the seconds they have run: time accumulates only
     /// while a settled scene reads them, so a transition never makes them jump.
     clocks: Vec<(String, f64)>,
@@ -412,6 +419,19 @@ pub struct Engine {
     /// Whether the document draws its own narration, once asked (`Engine::draws_narration`).
     narration_drawn: std::cell::Cell<Option<bool>>,
     range_fetch: Option<Box<RangeFetch>>,
+}
+
+/// The theme's text sizes (its `size.*` tokens: `size.small`, `size.label`, `size.body`,
+/// `size.title`, and any a theme adds) at the reader's text size.
+fn scale_text_sizes(theme: &mut ResolvedTheme, scale: f64) {
+    if scale == 1.0 {
+        return;
+    }
+    for (name, v) in theme.numbers.iter_mut() {
+        if name.starts_with("size.") {
+            *v *= scale;
+        }
+    }
 }
 
 impl Engine {
@@ -473,6 +493,7 @@ impl Engine {
             settled_at: None,
             playing: true,
             reduced_motion: false,
+            text_scale: 1.0,
             clocks: Vec::new(),
             clock_time: 0.0,
             clock_last: None,
@@ -807,7 +828,7 @@ impl Engine {
     pub fn expanded_doc(&self) -> Result<Doc, String> {
         let ex = self.expander.as_ref().ok_or("no sandbox")?;
         let mut doc = self.doc.clone();
-        let cx = serde_json::json!({ "size": [doc.size.width, doc.size.height], "sizeClass": self.viewport.size_class(), "locale": doc.locale });
+        let cx = serde_json::json!({ "size": [doc.size.width, doc.size.height], "sizeClass": self.size_class(), "locale": doc.locale });
         let mut tables = BTreeMap::new();
         doc.scene = expand::expand_all(ex, &doc.scene, &cx, &mut tables, 0)?;
         for (k, v) in tables {
@@ -900,7 +921,7 @@ impl Engine {
                 by_source.entry(b.from.clone()).or_default().push(b);
             }
         }
-        let env = tiles::BuildEnv { doc: &self.doc, theme: &self.theme, fonts: &self.fonts, geo: &self.geo, sources: &self.sources, size_class: self.viewport.size_class() };
+        let env = tiles::BuildEnv { doc: &self.doc, theme: &self.theme, fonts: &self.fonts, geo: &self.geo, sources: &self.sources, size_class: self.size_class() };
         let mut out = Vec::new();
         for (source, bs) in by_source {
             let keys: std::collections::BTreeSet<u64> = bs.iter().map(|b| points::build_key(&b.spec, b.budget)).collect();
@@ -1030,7 +1051,43 @@ impl Engine {
         Ok(())
     }
 
-    fn retheme(&mut self) {
+    /// The size class layouts choose detail by: the viewport's width in the reader's text size —
+    /// like a CSS media query in `em`, a wide chart read at twice the text size lays out as a
+    /// tablet one, with room for the bigger labels, rather than packing them in.
+    fn size_class(&self) -> &'static str {
+        Viewport { width: self.viewport.width / self.text_scale, ..self.viewport }.size_class()
+    }
+
+    /// The reader's text size (the platform's preference: Dynamic Type, Android's font scale, the
+    /// browser's default font size), as a multiple of the theme's: every `size.*` token scales, so
+    /// labels measured with them grow and the chart lays out again around them — ticks thin, names
+    /// wrap or turn, plots give the labels their room — and moves there like any other change.
+    /// The size class follows (see `size_class`). Clamped to [`TEXT_SCALE_RANGE`]; 1 is the
+    /// theme's own sizes. An input like any other: sessions record it, replays repeat it.
+    pub fn set_text_scale(&mut self, scale: f64) {
+        self.rec(session::Input::TextScale { scale });
+        let s = if scale.is_finite() { scale.clamp(TEXT_SCALE_RANGE.0, TEXT_SCALE_RANGE.1) } else { 1.0 };
+        if s == self.text_scale {
+            return;
+        }
+        let class = self.size_class();
+        self.text_scale = s;
+        if !self.retheme() && self.size_class() != class {
+            self.cache.clear();
+            self.scrub = None;
+            if self.shown.is_some() || self.active.is_some() {
+                self.transition_to_current(None);
+            }
+        }
+    }
+
+    /// The reader's text size now (1: the theme's).
+    pub fn text_scale(&self) -> f64 {
+        self.text_scale
+    }
+
+    /// Re-resolve the theme; true when scenes had to be resolved again (sizes or fonts changed).
+    fn retheme(&mut self) -> bool {
         let before = (self.theme.numbers.clone(), self.theme.fonts.clone(), self.theme.texts.clone());
         self.retheme_inner();
         // Colours late-bind, but sizes, radii, strokes and fonts are read when a scene resolves:
@@ -1042,14 +1099,17 @@ impl Engine {
             if self.shown.is_some() || self.active.is_some() {
                 self.transition_to_current(None);
             }
+            return true;
         }
+        false
     }
 
     fn retheme_inner(&mut self) {
         let name = if self.themes.themes.contains_key(&self.doc.theme.use_) { self.doc.theme.use_.clone() } else { "datars/neutral".into() };
         let chain = self.themes.chain(&name).unwrap_or_default();
         let doc_tokens: BTreeMap<String, TokenValue> = self.doc.theme.tokens.iter().filter_map(|(k, v)| TokenValue::parse(v).ok().map(|t| (k.clone(), t))).collect();
-        let (theme, diags) = datars_theme::resolve(&chain, self.mode, &[&doc_tokens, &self.host_tokens]);
+        let (mut theme, diags) = datars_theme::resolve(&chain, self.mode, &[&doc_tokens, &self.host_tokens]);
+        scale_text_sizes(&mut theme, self.text_scale);
         for d in diags {
             self.diags.push(Diag { message: format!("theme token `{}`: {}", d.token, d.message) });
         }
@@ -1274,7 +1334,8 @@ impl Engine {
         s.extend(self.signals.iter().map(|(k, v)| (k.clone(), v.clone())));
         s.insert("viewport.w".into(), Value::Num(self.viewport.width));
         s.insert("viewport.h".into(), Value::Num(self.viewport.height));
-        s.insert("sizeClass".into(), Value::Str(Arc::from(self.viewport.size_class())));
+        s.insert("sizeClass".into(), Value::Str(Arc::from(self.size_class())));
+        s.insert("textScale".into(), Value::Num(self.text_scale));
         for (name, rate) in &self.clocks {
             let base = match s.get(name) {
                 Some(Value::Num(v)) => *v,
@@ -1355,7 +1416,7 @@ impl Engine {
     /// [`Engine::resolve_fresh`], with cards placed as `pins` say (else where they fit best), and
     /// where they went.
     fn resolve_pinned(&mut self, signals: &BTreeMap<String, Value>, record: bool, pins: Option<&Placements>, focus: Option<&str>) -> (Resolved, Vec<resolve::Origin>, Placements) {
-        let size_class = self.viewport.size_class();
+        let size_class = self.size_class();
         #[cfg(feature = "sandbox")]
         let expander: Option<&dyn Expand> = self.expander.as_ref().map(|e| e as &dyn Expand);
         #[cfg(not(feature = "sandbox"))]
@@ -1514,7 +1575,7 @@ impl Engine {
             return tiles::FillReport::default();
         }
         let cx = tiles::FillCx {
-            env: tiles::BuildEnv { doc: &self.doc, theme: &self.theme, fonts: &self.fonts, geo: &self.geo, sources: &self.sources, size_class: self.viewport.size_class() },
+            env: tiles::BuildEnv { doc: &self.doc, theme: &self.theme, fonts: &self.fonts, geo: &self.geo, sources: &self.sources, size_class: self.size_class() },
             state: &self.tiles,
             bindings: &bindings,
             points: &points,
@@ -1609,6 +1670,9 @@ impl Engine {
         for (k, v) in &self.signals {
             s.inputs.push(session::Input::Signal { name: k.clone(), value: resolve::value_to_json(v) });
         }
+        if self.text_scale != 1.0 {
+            s.inputs.push(session::Input::TextScale { scale: self.text_scale });
+        }
         if self.program.index() != 0 {
             s.inputs.push(session::Input::Goto { index: self.program.index() });
         }
@@ -1666,6 +1730,7 @@ impl Engine {
             }
             I::Playing { on } => self.set_playing(*on),
             I::ReducedMotion { on } => self.set_reduced_motion(*on),
+            I::TextScale { scale } => self.set_text_scale(*scale),
             I::Work { scale } => self.set_work_scale(*scale),
             I::Activate { path } => {
                 self.activate(path);
@@ -2319,7 +2384,7 @@ impl Engine {
         let b = self.point_bindings.borrow().get(&holder).cloned()?;
         let ints: Vec<i64> = path.0[n - 2].parts().iter().filter_map(|p| if let datars_scene::KeyPart::Int(i) = p { Some(*i) } else { None }).collect();
         let (&[z, x, y, ..], Some(datars_scene::KeyPart::Int(row))) = (ints.as_slice(), path.0[n - 1].parts().first()) else { return None };
-        let env = tiles::BuildEnv { doc: &self.doc, theme: &self.theme, fonts: &self.fonts, geo: &self.geo, sources: &self.sources, size_class: self.viewport.size_class() };
+        let env = tiles::BuildEnv { doc: &self.doc, theme: &self.theme, fonts: &self.fonts, geo: &self.geo, sources: &self.sources, size_class: self.size_class() };
         points::fill::label(&env, &mut self.tiles.borrow_mut(), &b, datars_geo::TileId::new(z as u8, x as u32, y as u32), *row as u64)
     }
 

@@ -26,6 +26,8 @@ pub enum Input {
     Seek { pos: f64 },
     Playing { on: bool },
     ReducedMotion { on: bool },
+    /// The reader's text size (`Engine::set_text_scale`).
+    TextScale { scale: f64 },
     Activate { path: String },
     Mode { mode: String },
     Tokens { tokens: BTreeMap<String, serde_json::Value> },
