@@ -310,10 +310,26 @@
         },
         "mode": {
           "default": "snapshot",
-          "description": "`snapshot` (absent keys exit) or `upsert`/`append`.",
+          "description": "`snapshot` (each arrival is the whole table: absent keys exit), `upsert` (arrivals are rows\nmerged by key: a known key's row is replaced in place, a new one joins at the end) or\n`append` (arrivals join at the end; with a key, a known key's row is replaced, as in upsert).",
           "type": "string"
         },
+        "on": {
+          "description": "The column `span` measures (default: the last key column).",
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "span": {
+          "description": "Retention by duration: keep the rows within `span` seconds of the newest, measured on the\ncolumn `on` (dates in days, numbers as millisecond timestamps — as time scales read them).",
+          "format": "double",
+          "type": [
+            "number",
+            "null"
+          ]
+        },
         "window": {
+          "description": "Retention by count: keep the last `window` rows (older ones exit, animated).",
           "format": "uint",
           "minimum": 0,
           "type": [

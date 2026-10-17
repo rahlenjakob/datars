@@ -14,6 +14,7 @@ pub mod expand;
 mod geo;
 mod graph_ops;
 mod layout_ops;
+mod live;
 pub mod obstacles;
 pub mod phrases;
 pub mod pick;
@@ -123,6 +124,10 @@ pub const TEXT_SCALE_RANGE: (f64, f64) = (0.75, 3.0);
 
 /// The longest a hover state takes to fade in or out.
 const HOVER_SECONDS: f64 = 0.2;
+
+/// The shortest a live arrival's transition is capped to (s): shorter reads as a jump — a feed
+/// faster than this should coalesce its updates (the web host's `liveFeed` does).
+const LIVE_MIN_DURATION: f64 = 0.25;
 
 /// What the pointer should look like over the chart ([`Engine::cursor`]): hosts show their
 /// platform's own.
@@ -325,6 +330,8 @@ struct Active {
     /// from the input the first frame would already be that far in — the chart sits still, then
     /// jumps. (A first frame after it would have ended shows it ended.)
     shown: bool,
+    /// Planned for a live source's arrival: capped, when it starts, to the time since the last one.
+    live: bool,
 }
 
 pub struct Engine {
@@ -397,6 +404,15 @@ pub struct Engine {
     /// Sources whose rows came with the bundle (fetched when it was published), not from the host
     /// since: a live one among them refreshes as soon as the chart runs.
     snapshots: BTreeSet<String>,
+    /// Sources the host has provided rows for since the document loaded (a slot's sample until
+    /// then).
+    fed: BTreeSet<String>,
+    /// A live source's rows arrived since the last transition was planned: the transition to them
+    /// is capped to the time between arrivals (`live_anchor`), so a fast feed never queues motion
+    /// behind itself.
+    live_arrival: bool,
+    /// When the last transition to a live arrival started moving (frame time).
+    live_anchor: Option<f64>,
     /// Scrub cache: the transition plan from state i to i + 1.
     scrub: Option<(usize, datars_motion::Plan)>,
     /// Where `seek` left the program part-way between two states, until a step or event moves it:
@@ -511,6 +527,9 @@ impl Engine {
             clock_reads: BTreeMap::new(),
             live_due: BTreeMap::new(),
             snapshots: BTreeSet::new(),
+            fed: BTreeSet::new(),
+            live_arrival: false,
+            live_anchor: None,
             scrub: None,
             seeked: None,
             drag: None,
@@ -542,6 +561,9 @@ impl Engine {
         self.settled_at = None;
         self.live_due.clear();
         self.snapshots.clear();
+        self.fed.clear();
+        self.live_arrival = false;
+        self.live_anchor = None;
         self.scrub = None;
         self.seeked = None;
         self.recording = None;
@@ -1047,15 +1069,30 @@ impl Engine {
             self.invalidate();
             return Ok(());
         }
-        let t = if matches!(decl.from, datars_ir::SourceKind::Slot(_)) {
+        // A live source that merges (`upsert`/`append`) takes the arrival as rows, not the table:
+        // read without its key (a batch may repeat one: the last row wins), then merged into
+        // what is there and retained (see `live`).
+        let merging = live::merges(decl.live.as_ref());
+        let read_as = if merging { datars_ir::Source { key: Vec::new(), ..decl.clone() } } else { decl.clone() };
+        let slot = matches!(decl.from, datars_ir::SourceKind::Slot(_));
+        let mut t = if slot {
             // Wrong data keeps what was showing (the sample, or the last good data) and says why:
             // the columns first (a clearer message than a missing key column), then the keys.
             let raw = tables::parse_bytes(source, bytes, &datars_ir::Source { key: Vec::new(), ..decl.clone() })?;
             tables::check_slot(source, &raw, decl)?;
-            tables::parse_bytes(source, bytes, decl)?
+            tables::parse_bytes(source, bytes, &read_as)?
         } else {
-            tables::parse_bytes(source, bytes, decl)?
+            tables::parse_bytes(source, bytes, &read_as)?
         };
+        if let (true, Some(l)) = (merging, decl.live.as_ref()) {
+            // A slot's sample is a stand-in, not rows to keep: the host's first rows replace it.
+            let old = if slot && !self.fed.contains(source) { None } else { self.sources.get(source).cloned() };
+            t = live::merge(old.as_deref(), t, &decl.key, l)?;
+        }
+        if decl.live.is_some() {
+            self.live_arrival = true;
+        }
+        self.fed.insert(source.to_string());
         self.sources.insert(source.to_string(), Arc::new(t));
         self.requests.retain(|r| !matches!(r, Request::Source { name, .. } | Request::Slot { name, .. } if name == source));
         self.invalidate();
@@ -1996,6 +2033,8 @@ impl Engine {
 
     /// Plan a transition from what's on screen to the current state's scene.
     fn transition_to_current(&mut self, from_state: Option<String>) {
+        // Whether a live arrival asked for this transition (and only this one).
+        let live = std::mem::take(&mut self.live_arrival);
         // Held part-way by `seek` (a scrubber, a scroll story): a new size, theme or signal shows
         // the same position, planned anew. A program moved elsewhere (autoplay) lets it go.
         if let Some(pos) = self.seeked {
@@ -2030,7 +2069,7 @@ impl Engine {
                 };
                 self.prefetch(&plan);
                 let duration = plan.duration().max(0.0);
-                self.active = Some(Active { plan, start: self.clock, duration, to: target, shown: false });
+                self.active = Some(Active { plan, start: self.clock, duration, to: target, shown: false, live });
             }
             _ => {
                 self.shown = Some(target);
@@ -2172,6 +2211,15 @@ impl Engine {
                 a.shown = true;
                 if now - a.start < a.duration {
                     a.start = a.start.max(now);
+                }
+                // A live arrival moves for no longer than the feed takes to send the next one
+                // (the time since the previous arrival started moving), so motion never queues
+                // behind a fast feed — but never so short that it reads as a jump.
+                if a.live {
+                    if let Some(gap) = self.live_anchor.map(|t| now - t).filter(|g| *g > 0.0) {
+                        a.duration = a.duration.min(gap.max(LIVE_MIN_DURATION));
+                    }
+                    self.live_anchor = Some(now);
                 }
             }
         }

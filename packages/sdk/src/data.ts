@@ -7,8 +7,25 @@ export interface SourceOpts {
   /** Column types, applied to what arrives: APIs send numbers and dates as strings. */
   types?: Record<string, "num" | "str" | "bool" | "date">;
   /** Refreshed on the reader's device every `every` seconds (and at once when the chart opens on a
-   * snapshot taken at publish time). */
-  live?: { every?: number; mode?: "snapshot" | "upsert" | "append"; window?: number };
+   * snapshot taken at publish time), or pushed by the host (`every` 0: a socket, `liveFeed`). */
+  live?: LiveOpts;
+}
+
+/** How a live source takes what arrives (docs/06 §Live data). */
+export interface LiveOpts {
+  /** Seconds between refreshes the runtime fetches; 0 (default): the host pushes. */
+  every?: number;
+  /** `snapshot` (default): each arrival is the whole table, absent keys exit. `upsert`: arrivals
+   * are rows merged by key — a known key's row is replaced in place, a new one joins at the end
+   * (the open minute of a price series moves, the next one grows out of it). `append`: rows join
+   * at the end (with a key, a known key's row is replaced, as in upsert). */
+  mode?: "snapshot" | "upsert" | "append";
+  /** Keep the last `window` rows. */
+  window?: number;
+  /** Keep the rows within `span` seconds of the newest, measured on `on` (default: the last key
+   * column; dates in days, numbers as millisecond timestamps). */
+  span?: number;
+  on?: string;
 }
 
 function keys(k?: string | string[]) {

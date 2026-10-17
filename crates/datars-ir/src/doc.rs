@@ -245,11 +245,21 @@ pub struct LiveDecl {
     /// Seconds between refreshes (poll), or 0 for push.
     #[serde(default)]
     pub every: f64,
-    /// `snapshot` (absent keys exit) or `upsert`/`append`.
+    /// `snapshot` (each arrival is the whole table: absent keys exit), `upsert` (arrivals are rows
+    /// merged by key: a known key's row is replaced in place, a new one joins at the end) or
+    /// `append` (arrivals join at the end; with a key, a known key's row is replaced, as in upsert).
     #[serde(default = "snapshot")]
     pub mode: String,
+    /// Retention by count: keep the last `window` rows (older ones exit, animated).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub window: Option<usize>,
+    /// Retention by duration: keep the rows within `span` seconds of the newest, measured on the
+    /// column `on` (dates in days, numbers as millisecond timestamps — as time scales read them).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub span: Option<f64>,
+    /// The column `span` measures (default: the last key column).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub on: Option<String>,
 }
 
 fn snapshot() -> String {

@@ -155,11 +155,12 @@ velocity). One mechanism, the same one steps and filters use.
 
 | Concern | Mechanism |
 |---|---|
-| Transport | the host: poll, SSE, WebSocket, or a native socket; the engine only sees versions (P10) |
-| Update kinds | `snapshot` (keys absent now exit), `upsert`/`delete` by key, `append` |
-| Retention | window by count or duration on the source; old rows exit with animation |
-| Scale domains | per-scale policy: `fixed`, `grow` (animated rescale), `window`, `nice-steps` (rescale only at nice boundaries, so axes don't twitch) |
-| Rate | coalesce to one version per frame; cap transition duration to the update interval; drop intermediate versions under load |
+| Transport | the host: poll (`live.every`), SSE, WebSocket, or a native socket; the engine only sees versions (P10). On the web, `liveFeed` (`@datars/web`) paces, backs off and pauses a push feed |
+| Update kinds | `live.mode`: `snapshot` (each arrival is the table; keys absent now exit), `upsert` (arrivals are rows merged by key: a known key's row is replaced in place, so its mark moves; a new one joins at the end), `append` (rows join at the end; with a key, as upsert). A batch may repeat a key: the last row wins |
+| Retention | `live.window` (the last N rows) and `live.span` (the rows within that many seconds of the newest, on the column `live.on`: dates as days, numbers as millisecond timestamps); old rows exit with animation. Pure functions of the rows — "newest" is the newest row, not the clock |
+| Scale domains | a data domain rounds to nice steps (`nice`), so an axis rescales only when a value crosses a step; `exact: true` on a data domain keeps it as the data says (a session's 09:30–16:00); a literal domain is fixed |
+| Time | a time scale reads dates as days and numbers as days — unless they are timestamps (≥ 10¹⁰: milliseconds), which tick on hours and minutes and label as times of day (12-hour in `en-US`) |
+| Rate | the host coalesces (one version per beat); a live arrival's transition is capped to the time since the previous one started moving (never under 0.25 s), so motion never queues behind the feed |
 | Replay | a recorded stream is a file of versions; a static build can play an election night |
 
 A production data plane (connectors, schedules, fan-out to many viewers) is a hosted service built
