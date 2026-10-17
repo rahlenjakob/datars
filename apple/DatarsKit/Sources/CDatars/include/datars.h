@@ -33,6 +33,8 @@ uint32_t datars_view_seek(DatarsView *v, double pos);
 int32_t datars_view_wheel(DatarsView *v, double x, double y, double delta);
 void datars_view_set_playing(DatarsView *v, int32_t on);
 void datars_view_set_reduced_motion(DatarsView *v, int32_t on);
+/* The reader's text size as a multiple of the theme's (Dynamic Type): labels scale and the chart lays out again. Clamped to 0.75-3. */
+void datars_view_set_text_scale(DatarsView *v, double scale);
 /* The share (0.1-1, default 1) of the per-frame work budgets frames may spend: lower it when frames run long. */
 void datars_view_set_work_scale(DatarsView *v, double scale);
 void datars_view_set_signal_num(DatarsView *v, const uint8_t *name, size_t len, double value);

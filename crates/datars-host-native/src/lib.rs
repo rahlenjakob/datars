@@ -56,6 +56,21 @@ struct App {
     cursor: (f64, f64),
     dark: bool,
     title: String,
+    /// Ctrl/⌘ held (for the text-size keys).
+    mods: winit::keyboard::ModifiersState,
+}
+
+/// The text sizes Ctrl/⌘ + and − step through (desktops have no system-wide text size a window
+/// can follow, so the viewer offers the browser's keys — for text only; the window stays).
+const TEXT_STEPS: [f64; 9] = [0.75, 0.9, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0];
+
+/// The next text size up (`dir` > 0) or down from `now`; `dir` 0: the theme's own.
+pub fn step_text_scale(now: f64, dir: i32) -> f64 {
+    match dir.signum() {
+        0 => 1.0,
+        1 => TEXT_STEPS.iter().copied().find(|s| *s > now + 1e-9).unwrap_or(TEXT_STEPS[TEXT_STEPS.len() - 1]),
+        _ => TEXT_STEPS.iter().rev().copied().find(|s| *s < now - 1e-9).unwrap_or(TEXT_STEPS[0]),
+    }
 }
 
 impl App {
@@ -204,7 +219,23 @@ impl ApplicationHandler<UserEvent> for App {
                     if let Some(w) = self.window.as_ref() { w.request_redraw() }
                 }
             }
+            WindowEvent::ModifiersChanged(m) => self.mods = m.state(),
             WindowEvent::KeyboardInput { event, .. } if event.state == ElementState::Pressed => {
+                // Ctrl/⌘ +, − and 0: a bigger or smaller text size, or the theme's.
+                let command = self.mods.control_key() || self.mods.super_key();
+                let step = match &event.logical_key {
+                    Key::Character(c) if command && (c.as_str() == "+" || c.as_str() == "=") => Some(1),
+                    Key::Character(c) if command && c.as_str() == "-" => Some(-1),
+                    Key::Character(c) if command && c.as_str() == "0" => Some(0),
+                    _ => None,
+                };
+                if let Some(dir) = step {
+                    self.core.engine.set_clock(self.start.elapsed().as_secs_f64());
+                    let s = step_text_scale(self.core.engine.text_scale(), dir);
+                    self.core.engine.set_text_scale(s);
+                    if let Some(w) = self.window.as_ref() { w.request_redraw() }
+                    return;
+                }
                 let ev = match &event.logical_key {
                     Key::Named(NamedKey::ArrowRight) | Key::Named(NamedKey::Space) => Some("next"),
                     Key::Named(NamedKey::ArrowLeft) => Some("prev"),
@@ -346,11 +377,35 @@ pub fn screenshot(source: Source, path: &str, state: usize, dpr: f64, out: &std:
 
 /// Open a window showing a document or bundle; returns when the window closes.
 pub fn run(source: Source, title: &str) -> Result<(), String> {
+    run_with(source, title, 1.0)
+}
+
+/// [`run`] at a text size (`datars-view --text-scale 1.5`); Ctrl/⌘ +/− change it in the window.
+pub fn run_with(source: Source, title: &str, text_scale: f64) -> Result<(), String> {
     let origin = origin_of(&source, title);
-    let core = load(source, &origin)?;
+    let mut core = load(source, &origin)?;
+    core.engine.set_text_scale(text_scale);
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().map_err(|e| e.to_string())?;
     event_loop.set_control_flow(ControlFlow::Wait);
     let proxy = event_loop.create_proxy();
-    let mut app = App { core, proxy, a11y: None, a11y_targets: Vec::new(), origin, window: None, renderer: None, start: Instant::now(), cursor: (0.0, 0.0), dark: false, title: title.to_string() };
+    let mut app = App { core, proxy, a11y: None, a11y_targets: Vec::new(), origin, window: None, renderer: None, start: Instant::now(), cursor: (0.0, 0.0), dark: false, title: title.to_string(), mods: Default::default() };
     event_loop.run_app(&mut app).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::step_text_scale;
+
+    #[test]
+    fn text_size_keys_step_through_the_sizes_and_back() {
+        assert_eq!(step_text_scale(1.0, 1), 1.25);
+        assert_eq!(step_text_scale(1.25, 1), 1.5);
+        assert_eq!(step_text_scale(3.0, 1), 3.0, "the largest stays");
+        assert_eq!(step_text_scale(1.0, -1), 0.9);
+        assert_eq!(step_text_scale(0.75, -1), 0.75);
+        // From a size between steps (a --text-scale), the next one either way.
+        assert_eq!(step_text_scale(1.6, 1), 1.75);
+        assert_eq!(step_text_scale(1.6, -1), 1.5);
+        assert_eq!(step_text_scale(2.5, 0), 1.0);
+    }
 }

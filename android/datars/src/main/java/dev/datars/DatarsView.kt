@@ -25,7 +25,24 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         // "Remove animations" sets the animator scale to 0: honour it as reduced motion.
         val scale = android.provider.Settings.Global.getFloat(context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f)
         Native.setReducedMotion(it, scale == 0f)
+        Native.setTextScale(it, context.resources.configuration.fontScale.toDouble())
         Native.setWorkScale(it, Work.share)
+    }
+
+    /** The chart's text size as a multiple of the theme's: `null` (the default) follows the
+     * reader's font size (Settings › Display › Font size, `Configuration.fontScale`), also when an
+     * activity that handles `fontScale` itself stays up through a change; a number fixes it. */
+    var textScale: Double? = null
+        set(v) { field = v; applyTextSize() }
+
+    private fun applyTextSize() {
+        Native.setTextScale(handle, textScale ?: resources.configuration.fontScale.toDouble())
+        requestFrame()
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        applyTextSize()
     }
     /** The work share this view's engine was last given (see [Work]). */
     private var workTold = Work.share

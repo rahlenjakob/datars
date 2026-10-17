@@ -326,6 +326,11 @@ mod web {
         pub fn set_reduced_motion(&mut self, on: bool) {
             self.core.engine.set_reduced_motion(on);
         }
+        /// The reader's text size, as a multiple of the theme's (the browser's default font size
+        /// over 16 px, or the page's `text-scale`): labels scale and the chart lays out again.
+        pub fn set_text_scale(&mut self, scale: f64) {
+            self.core.engine.set_text_scale(scale);
+        }
         /// Pause or resume autoplay.
         pub fn set_playing(&mut self, on: bool) {
             self.core.engine.set_playing(on);

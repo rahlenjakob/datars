@@ -49,6 +49,9 @@ internal object Native {
     external fun seek(v: Long, pos: Double): Int
     external fun setPlaying(v: Long, on: Boolean)
     external fun setReducedMotion(v: Long, on: Boolean)
+    /** The reader's text size as a multiple of the theme's (the system font scale): labels scale
+     * and the chart lays out again. Clamped to 0.75–3. */
+    external fun setTextScale(v: Long, scale: Double)
     /** The share (0.1–1) of the per-frame work budgets frames may spend: lower when they run long. */
     external fun setWorkScale(v: Long, scale: Double)
     /** Seconds (frame clock) when the next frame is due although nothing moves; NaN if none. */

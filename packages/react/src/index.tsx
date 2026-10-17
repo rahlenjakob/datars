@@ -77,6 +77,9 @@ export interface DatarsViewProps extends Omit<HTMLAttributes<HTMLDivElement>, "c
   /** Reduced motion: `"reduce"` always, `"no-preference"` never (a reader who opted in to the
    * full motion); default: follows `prefers-reduced-motion`. */
   reducedMotion?: "reduce" | "no-preference";
+  /** Text size as a multiple of the theme's (`1`: the theme's own); default: follows the reader's
+   * browser font size. Labels scale and the chart lays out again around them. */
+  textScale?: number | "auto";
   /** The box's height (px or any CSS length). Default: the chart's aspect across the width. */
   height?: number | string;
   /** Width / height, when the chart doesn't say (a `src` bundle before it loads). */
@@ -170,7 +173,7 @@ function changed(prev: Record<string, unknown> | undefined, next: Record<string,
 }
 
 export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function DatarsView(props, ref) {
-  const { chart: chartProp, document: documentProp, src: srcProp, doc: docUrl, state, mode, reducedMotion, height, aspectRatio, signals, tokens, data, lazy = true, runtime, label, attributes, onStateChange, onReady, onError, style, ...rest } = props;
+  const { chart: chartProp, document: documentProp, src: srcProp, doc: docUrl, state, mode, reducedMotion, textScale, height, aspectRatio, signals, tokens, data, lazy = true, runtime, label, attributes, onStateChange, onReady, onError, style, ...rest } = props;
 
   // A chart file edited in dev: the plugin's module hands the new version to views showing it.
   const [update, setUpdate] = useState<{ for: unknown; chart: DatarsChart } | null>(null);
@@ -259,6 +262,7 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
     setAttr(v, "doc", now.src ? undefined : now.docUrl);
     setAttr(v, "mode", p.mode);
     setAttr(v, "reduced-motion", p.reducedMotion);
+    setAttr(v, "text-scale", p.textScale);
     setAttr(v, "aria-label", p.label);
     setAttr(v, "height", Math.round(host.clientHeight) || undefined);
     // Where the reader was (back near the viewport, or a new version of the chart), else the prop.
@@ -344,6 +348,9 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
   useEffect(() => {
     if (el.current) setAttr(el.current, "reduced-motion", reducedMotion);
   }, [reducedMotion]);
+  useEffect(() => {
+    if (el.current) setAttr(el.current, "text-scale", textScale);
+  }, [textScale]);
   useEffect(() => {
     if (el.current) setAttr(el.current, "aria-label", label);
   }, [label]);

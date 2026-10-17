@@ -286,13 +286,16 @@ canvas { transition: opacity .22s ease-out; }
 .perf canvas { display: block; width: 240px; max-width: 100%; height: 36px; margin-top: 6px; }
 .perf button { float: right; margin: -4px -4px 0 8px; padding: 0 4px; pointer-events: auto; background: none; border: 0; color: #fff; font: 14px/1 system-ui, sans-serif; cursor: pointer; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* The reader's default font size (the browser's Font size setting), whatever the page's own CSS
+   says: \`medium\` is that setting. Its width is watched, so a change there reaches the chart. */
+.em { position: absolute; visibility: hidden; pointer-events: none; font-size: medium; width: 1em; height: 0; overflow: hidden; }
 ${TEXT_CSS}`;
 
 /** `HTMLElement`, or (on a server, where there is none) a stand-in so the module still loads. */
 const ElementBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as typeof HTMLElement) : HTMLElement;
 
 export class DatarsView extends ElementBase {
-  static observedAttributes = ["src", "doc", "state", "mode", "height", "no-controls", "reduced-motion"];
+  static observedAttributes = ["src", "doc", "state", "mode", "height", "no-controls", "reduced-motion", "text-scale"];
   /** Runtime files the page supplies (see `runtimeAssets`). */
   static assets = runtimeAssets;
   private root: ShadowRoot;
@@ -363,7 +366,7 @@ export class DatarsView extends ElementBase {
       <div class="stage" part="stage"><div class="poster" part="poster"></div><canvas hidden part="canvas"></canvas>
       <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
       <div class="controls" part="controls" hidden><button data-ev="prev" aria-label="Previous">←</button><button data-ev="next" aria-label="Next">→</button></div>
-      <ul class="sr" role="list" aria-label="Chart content"></ul><div class="sr" aria-live="polite"></div>`;
+      <ul class="sr" role="list" aria-label="Chart content"></ul><div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
     this.stage = this.root.querySelector(".stage")!;
     // The height the page asked for, from the first frame the element is on the page: laid out a
     // frame later, the chart would grow into its space and push the page down.
@@ -418,6 +421,9 @@ export class DatarsView extends ElementBase {
       }).observe(this);
       matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => this.applyMode());
     }
+    // The reader's text size: the probe's width is their default font size in px.
+    this.em = this.root.querySelector<HTMLSpanElement>(".em")!;
+    new ResizeObserver(() => this.applyTextScale()).observe(this.em);
     const texts = this.root.querySelector<HTMLDivElement>(".texts")!;
     this.textLayer = new TextLayer(this.root, texts, (id) => this.view?.face_bytes?.(id));
     const wheel = (e: WheelEvent) => {
@@ -610,6 +616,7 @@ export class DatarsView extends ElementBase {
     if (name === "height") this.reserveHeight();
     if (name === "no-controls") this.showControls();
     if (name === "reduced-motion") this.applyPlayback?.();
+    if (name === "text-scale") this.applyTextScale();
     if (!this.view) return;
     if (name === "mode") this.applyMode();
     if (name === "state") {
@@ -896,6 +903,8 @@ export class DatarsView extends ElementBase {
     for (const [name, value] of this.hostSignals) {
       try { view.set_signal?.(name, JSON.stringify(value)); } catch (e) { console.warn("datars: signal", name, e); }
     }
+    // At the reader's text size from the first frame: never a theme-sized chart that then grows.
+    view.set_text_scale?.((this.textScaleTold = this.textScale));
     this.timed_("poster", () => this.showPoster(view));
     if (!view.ready()) return abandon(); // T0 only: the poster and text are the chart
     // The `state` attribute is where the chart opens (no transition from the first state).
@@ -996,6 +1005,9 @@ export class DatarsView extends ElementBase {
     const want = this.getAttribute("mode") ?? (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     const drawn = /data-mode="(\w+)"/.exec(svg.slice(0, 300))?.[1];
     if (drawn && drawn !== want) return;
+    // Drawn at the theme's text size: for a reader with bigger text, the chart would change under
+    // it as it took over.
+    if (Math.abs(this.textScale - 1) > 0.01) return;
     const show = () => {
       this.posterTimer = 0;
       if (!this.view && this.isConnected && !this.poster.innerHTML) {
@@ -1517,6 +1529,41 @@ export class DatarsView extends ElementBase {
     this.now();
     this.view.seek(Math.min(n, Math.max(0, position)));
     this.kick();
+  }
+
+  private em: HTMLSpanElement | null = null;
+  /** The text size the engine was last given. */
+  private textScaleTold = 1;
+
+  /** The chart's text size as a multiple of the theme's: the `text-scale` attribute when it's a
+   * number (`1`: the theme's own sizes, whatever the reader's setting), else — `auto` or no
+   * attribute — the reader's: the browser's default font size over 16 px (Settings › Appearance ›
+   * Font size; 20 px reads as 1.25). Page zoom isn't text size: it scales the whole chart already.
+   * The engine keeps it between 0.75 and 3. */
+  get textScale(): number {
+    const a = this.getAttribute("text-scale");
+    const n = a === null || a === "" || a === "auto" ? NaN : Number(a);
+    if (Number.isFinite(n) && n > 0) return n;
+    const px = this.em?.getBoundingClientRect().width || (typeof document !== "undefined" ? parseFloat(getComputedStyle(document.documentElement).fontSize) : 16) || 16;
+    return Math.round((px / 16) * 1000) / 1000;
+  }
+
+  set textScale(v: number | "auto" | null) {
+    if (v === null || v === "auto") this.removeAttribute("text-scale");
+    else this.setAttribute("text-scale", String(v));
+  }
+
+  /** A new text size (the reader's setting changed, or the attribute): the chart lays out again
+   * around it, moving there like any other change. */
+  private applyTextScale() {
+    const s = this.textScale;
+    if (!this.view || Math.abs(s - this.textScaleTold) < 1e-3) return;
+    this.textScaleTold = s;
+    this.now();
+    this.view.set_text_scale?.(s);
+    this.textLayer?.hide();
+    this.kick();
+    this.scheduleTexts(400);
   }
 
   /** Whether the chart plays reduced motion now: the `reduced-motion` attribute when it says

@@ -16,6 +16,22 @@ final class DatarsKitTests: XCTestCase {
         XCTAssertNotNil(e.status()["tokens"])
     }
 
+    func testTheReadersTextSizeLaysTheChartOutAgain() {
+        // A bar as wide as a label measures in the theme's text size: at twice the text, it's
+        // twice as wide (the engine re-resolves; the app only says the size).
+        let e = DatarsEngine(allowScript: false)
+        _ = e.loadDocument(json: #"{"datars":1,"size":{"width":300,"height":40},"scene":{"kind":"shape","geom":{"type":"rect","x":0,"y":0,"w":"=measure(\"Monthly income\", token(\"size.label\")) * 2","h":40},"fill":"$accent"}}"#)
+        e.resize(width: 300, height: 40, scale: 1)
+        e.frame(now: 0)
+        let at = { (x: Int) -> UInt8 in let px = e.pixels(); return px.data[(20 * px.width + x) * 4] }
+        XCTAssertEqual(at(100), 0x42, "inside the bar")
+        XCTAssertNotEqual(at(250), 0x42, "past its end")
+        e.setTextScale(2)
+        e.frame(now: 0.1)
+        e.frame(now: 10)
+        XCTAssertEqual(at(250), 0x42, "the bar grew with the text")
+    }
+
     func testDataRequestsAreFulfilledByTheHost() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../../..").standardized
         let doc = try String(contentsOf: root.appendingPathComponent("examples/election/doc.json"), encoding: .utf8)

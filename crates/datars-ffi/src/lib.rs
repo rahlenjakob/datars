@@ -282,6 +282,16 @@ pub extern "C" fn datars_view_set_reduced_motion(v: *mut DatarsView, on: i32) {
     }
 }
 
+/// The reader's text size, as a multiple of the theme's (Dynamic Type, Android's font scale): the
+/// chart's labels scale and it lays out again around them, moving there like any other change.
+/// Clamped to 0.75–3; 1 is the theme's own sizes.
+#[no_mangle]
+pub extern "C" fn datars_view_set_text_scale(v: *mut DatarsView, scale: f64) {
+    if let Some(v) = view(v) {
+        v.core.engine.set_text_scale(scale);
+    }
+}
+
 /// The share of the per-frame work budgets this device's frames may spend (0.1–1, default 1):
 /// points built, tiles decoded and styled, meshes tessellated and uploaded. The budgets are sized
 /// for a desktop; a host whose frames run long (a phone) lowers it, and detail arrives over more
@@ -447,6 +457,19 @@ mod tests {
         assert_eq!(&px[i..i + 3], &[0x42, 0x69, 0xd0], "the accent fill");
         let st = datars_view_status(v);
         datars_string_free(st);
+        datars_view_free(v);
+    }
+
+    /// The text size an app hands in (Dynamic Type, the font scale) reaches the engine, clamped.
+    #[test]
+    fn the_text_size_goes_through_the_c_abi() {
+        let doc = br#"{"datars":1,"size":{"width":120,"height":80},"scene":{"kind":"text","text":"A","at":[0,20],"style":{"size":"$size.label"}}}"#;
+        let v = datars_view_new(0);
+        datars_string_free(datars_view_load_doc(v, doc.as_ptr(), doc.len()));
+        datars_view_set_text_scale(v, 1.5);
+        assert_eq!(view(v).unwrap().core.engine.text_scale(), 1.5);
+        datars_view_set_text_scale(v, 9.0);
+        assert_eq!(view(v).unwrap().core.engine.text_scale(), 3.0);
         datars_view_free(v);
     }
 }
@@ -802,6 +825,10 @@ pub mod android {
     #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_setReducedMotion(_: JNIEnv, _: JClass, v: jlong, on: jboolean) {
         datars_view_set_reduced_motion(v as *mut DatarsView, on as i32)
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_setTextScale(_: JNIEnv, _: JClass, v: jlong, scale: jdouble) {
+        datars_view_set_text_scale(v as *mut DatarsView, scale)
     }
     #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_wakeAt(_: JNIEnv, _: JClass, v: jlong) -> jdouble {

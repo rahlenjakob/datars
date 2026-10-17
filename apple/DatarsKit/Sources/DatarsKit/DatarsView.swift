@@ -138,6 +138,7 @@ open class DatarsChartView: PlatformView {
         layer.addSublayer(metal)
         addSubview(tip)
         NotificationCenter.default.addObserver(self, selector: #selector(motionSettingChanged), name: UIAccessibility.reduceMotionStatusDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(textSizeChanged), name: UIContentSizeCategory.didChangeNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
         #else
@@ -146,6 +147,7 @@ open class DatarsChartView: PlatformView {
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(motionSettingChanged), name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil)
         #endif
         applyMotionSetting()
+        applyTextSize()
         workTold = Work.share
         engine.setWorkScale(workTold)
     }
@@ -179,6 +181,35 @@ open class DatarsChartView: PlatformView {
     }
 
     @objc private func motionSettingChanged() { applyMotionSetting(); renderLoop() }
+
+    /// The chart's text size as a multiple of the theme's: `nil` (the default) follows the
+    /// reader's Dynamic Type setting, live; a number fixes it (1: the theme's own sizes).
+    public var textScale: Double? {
+        didSet { applyTextSize(); renderLoop() }
+    }
+
+    /// The reader's text size: how much Dynamic Type scales body text at this view's size category
+    /// (1 at the default Large, ~0.82 at xSmall, ~3.1 at the largest accessibility size). macOS has
+    /// no system-wide text size, so charts there keep the theme's unless `textScale` says.
+    private var systemTextScale: Double {
+        #if canImport(UIKit)
+        return Double(UIFontMetrics(forTextStyle: .body).scaledValue(for: 17, compatibleWith: traitCollection) / 17)
+        #else
+        return 1
+        #endif
+    }
+
+    private func applyTextSize() { engine.setTextScale(textScale ?? systemTextScale) }
+
+    @objc private func textSizeChanged() { applyTextSize(); renderLoop() }
+
+    #if canImport(UIKit)
+    /// A size category set on this view's traits (or a parent's) counts as the reader's.
+    override open func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        if previous?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory { textSizeChanged() }
+    }
+    #endif
 
     required public init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
 
