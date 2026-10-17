@@ -21,6 +21,8 @@ type Wasm = any;
 const engines = new Map<string, Promise<Wasm>>();
 /** How long a chart's first frame waits for the faces the page's tokens name (see `themeFaces`). */
 const THEME_FACE_WAIT = 1500;
+/** How often the screen readers' mirror (summary, data table) follows a live feed, at most (ms). */
+const MIRROR_DATA_EVERY = 5000;
 /** A chart ready within this many ms of starting never shows its poster (it would only flash). */
 const POSTER_DELAY = 600;
 /** An engine is loaded on this page: charts starting now are ready in a few hundred ms and fade
@@ -335,6 +337,10 @@ export class DatarsView extends ElementBase {
    * (see `describeSoon`). */
   private chromeGen = 0;
   private describedGen = -1;
+  /** Rows arrived since the mirror was built (`noteData`), and when it was. */
+  private dataStale = false;
+  private describedAt = -Infinity;
+  private describeTimer = 0;
   private describeIdle = 0;
   /** On screen (any part of it); frames off screen wait until it is. */
   private onScreen = true;
@@ -619,6 +625,8 @@ export class DatarsView extends ElementBase {
    * Put back, it starts again (`connectedCallback`). */
   disconnectedCallback() {
     this.generation++; // a start still loading gives up
+    clearTimeout(this.describeTimer);
+    this.describeTimer = 0;
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.layoutRaf);
     clearTimeout(this.timer);
@@ -1441,10 +1449,18 @@ export class DatarsView extends ElementBase {
       if (!got) continue;
       this.fetching.add(r.name);
       got
-        .then((b) => { if (this.view !== view) return; view.provide_source(r.name, b); this.kick(); })
+        .then((b) => { if (this.view !== view) return; view.provide_source(r.name, b); this.noteData(); this.kick(); })
         .catch((e) => console.warn("datars: data", r.name, e))
         .finally(() => this.fetching.delete(r.name));
     }
+  }
+
+  /** New rows (the page's, a live refresh): what the mirror says is stale — rebuilt once the
+   * chart settles (see `describeSoon`). */
+  private noteData() {
+    this.dataStale = true;
+    this.chromeGen++;
+    this.describeSoon();
   }
 
   /** The bytes a request asks for — as the page answers it, else fetched — or null for one no
@@ -1572,6 +1588,7 @@ export class DatarsView extends ElementBase {
     const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(typeof data === "string" ? data : JSON.stringify(data));
     if (this.view?.ready()) this.view.provide_source(name, bytes);
     this.hostData.set(name, bytes);
+    this.noteData();
     this.kick();
   }
 
@@ -1812,13 +1829,24 @@ export class DatarsView extends ElementBase {
    * reader needs every labelled mark — a bar's party and value, the title, the axes. */
   private describeSoon() {
     if (this.describedGen === this.chromeGen || this.describeIdle || !this.view?.semantics) return;
+    // Only data changed (a live feed): at most every few seconds — a reader browsing the table
+    // gets today's rows, and the page isn't rebuilding it every beat.
+    const since = performance.now() - this.describedAt;
+    if (this.dataStale && since < MIRROR_DATA_EVERY) {
+      if (!this.describeTimer) this.describeTimer = window.setTimeout(() => { this.describeTimer = 0; this.describeSoon(); }, MIRROR_DATA_EVERY - since);
+      return;
+    }
     const ric: (f: () => void, o?: { timeout: number }) => number = (globalThis as any).requestIdleCallback ?? ((f) => window.setTimeout(f, 60));
     this.describeIdle = ric(() => {
       this.describeIdle = 0;
       const view = this.view;
       if (!view || this.describedGen === this.chromeGen) return;
-      if (view.transitioning?.()) return; // the frame loop asks again when it settles
+      // The frame loop asks again when it settles — but a feed may never let it settle (a beat
+      // shorter than a move): stale data is described mid-motion, every few seconds.
+      if (view.transitioning?.() && !this.dataStale) return;
       this.describedGen = this.chromeGen;
+      this.dataStale = false;
+      this.describedAt = performance.now();
       const brief = view.chrome?.() ?? view.status();
       if (view.summary) brief.summary = view.summary();
       this.fillMirror(brief, view.semantics());
