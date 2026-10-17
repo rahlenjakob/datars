@@ -92,7 +92,7 @@ liveFeed({
 });
 ```
 
-`events(url, parse)` (server-sent events) and `poll(fetchRows, ms)` are the other transports. Millisecond timestamps on a time scale tick on hours and minutes and read as times of day; give a session's domain from data with `exact: true` (`xDomain: { data: "session", fields: ["open", "close"], exact: true }`) and the axis stays the whole session while the line fills it. The [markets article](/articles/markets/) follows stocks this way.
+`events(url, parse)` (server-sent events) and `poll(fetchRows, ms)` are the other transports. Millisecond timestamps on a time scale tick on hours and minutes and read as times of day; give a session's domain from data with `exact: true` (`xDomain: { data: "session", fields: ["open", "close"], exact: true }`) and the axis stays the whole session while the line fills it.
 
 ## Data slots
 

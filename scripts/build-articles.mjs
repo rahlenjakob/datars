@@ -175,7 +175,8 @@ function meta(html) {
 
 if (!existsSync(cli)) throw new Error("build the CLI first: cargo build --release -p datars-cli");
 mkdirSync(out, { recursive: true });
-const articles = readdirSync(src).filter((a) => existsSync(join(src, a, "index.html")) && a.includes(filter)).sort();
+// An article with a HELD file is kept out of the site until it's cleared to publish (the file says why).
+const articles = readdirSync(src).filter((a) => existsSync(join(src, a, "index.html")) && !existsSync(join(src, a, "HELD")) && a.includes(filter)).sort();
 const cards = [];
 for (const a of articles) {
   const t0 = Date.now();
