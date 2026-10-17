@@ -15,7 +15,7 @@ export default doc({
     key: "root",
     layout: { type: "rows", gap: 8, padding: [16, 20, 12, 12] },
     children: [
-      slider({ signal: "rate", min: 0, max: 8, step: 0.5, label: "Yearly return (%)", format: ".1f" }, { key: "control", size: { h: 44 } }),
+      slider({ signal: "rate", min: 0, max: 8, step: 0.5, label: "Yearly return (%)", format: ".1f" }, { key: "control" }),
       plot({ data: "grown", x: "year", y: "balance", yDomain: [0, 12000], format: ",.0f", title: "1,000 saved, after each five years", xLabel: "Years",
         children: [bar({ labels: true, format: ",.0f", fill: "$accent" })] }, { key: "chart" }),
     ],

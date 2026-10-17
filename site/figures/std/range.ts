@@ -13,7 +13,7 @@ export default doc({
   data: { em: data.values({ year: years, t: tonnes }, { key: "year" }) },
   signals: { from: signal.num(2008), to: signal.num(2018) },
   scene: group({ key: "root", layout: { type: "rows", gap: 8, padding: [16, 20, 12, 12] }, children: [
-    range({ lo: "from", hi: "to", min: 2004, max: 2024, step: 1, label: "Years", format: "d" }, { key: "years", size: { h: 44 } }),
+    range({ lo: "from", hi: "to", min: 2004, max: 2024, step: 1, label: "Years", format: "d" }, { key: "years" }),
     plot({ data: "em", x: "year", y: "t", xType: "band", yDomain: [0, 7], children: [bar({ fill: e("d.year >= from && d.year <= to ? \"$accent\" : \"$muted@0.4\"") })] }, { key: "chart" }),
   ] }),
   program: story({ steps: [

@@ -37,7 +37,7 @@ export default doc({
     children: [
       text(e(`"Hours of daylight, " + formatDate(${EPOCH} + day, "%-d %B")`), [0, 0], { key: "title", size: { h: 26 }, style: { font: "font.title", size: "$size.title", ink: "$ink", baseline: "top" }, semantics: { role: "title" } }),
       text(e('sizeClass == "phone" ? "Sunrise to sunset, ranked" : "Sunrise to sunset, ranked. Drag through the year: the north and the south trade places."'), [0, 0], { key: "sub", size: { h: 20 }, style: { size: "$size.label", ink: "$muted", baseline: "top" } }),
-      slider({ signal: "day", min: 1, max: 365, step: 1, label: "Day of the year, 2026", format: ",.0f" }, { key: "slider", size: { h: 44 } }),
+      slider({ signal: "day", min: 1, max: 365, step: 1, label: "Day of the year, 2026", format: ",.0f" }, { key: "slider" }),
       plot({ data: "hours", x: "hours", y: "place", xType: "linear", yType: "band", xDomain: [0, 24], padding: 0.22, format: ".0f",
         children: [bar({ labels: true, format: ".1f", suffix: " h", fill: e('d.lat > 0 ? "$categorical[0]" : "$categorical[1]"') })] }, { key: "chart" }),
     ],
