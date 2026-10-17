@@ -515,7 +515,6 @@ export const dataTable = recipe<TableParams>({
       return { ...c, i, kind, head: c.label ?? c.field ?? (c.spark ? c.spark.y : "") };
     });
     const G = 16, P = 8;
-    const rowH = p.rowHeight ? String(p.rowHeight) : 'round(token("size.body") * 2.3)';
     const sortCols = cols.filter((c) => c.field && c.kind !== "spark");
     // A column's own direction: text A to Z, numbers largest first (unless `descending: false`).
     const down = (c: Col | undefined) => !(c && c.kind === "text") && p.descending;
@@ -556,18 +555,30 @@ export const dataTable = recipe<TableParams>({
     const count = `(${cols.map((c) => `(${vis(c)} ? 1 : 0)`).join(" + ") || "1"})`;
     const room = `(box.w - ${2 * P} - ${G} * max(0, ${count} - 1))`;
     const anyFlex = cols.some(flex);
-    const fixedSum = `(${cols.filter((c) => !flex(c)).map((c) => `(${vis(c)} ? ${nat(c)} : 0)`).join(" + ") || "0"})`;
     const flexCount = `max(1, ${cols.filter(flex).map((c) => `(${vis(c)} ? 1 : 0)`).join(" + ") || "0"})`;
     // Text and bar columns share what the others leave: each starts from a base (a text column's
     // width up to 64 px, a bar column's numbers and a 40 px bar) and gets an equal part of the
     // rest — or gives one up when there's too little, down to 36 px of text (then it clips) or a
     // 24 px bar. With no text or bar column every column takes an equal share when it fits.
     const base = (c: Col) => (c.kind === "bar" ? `(table.max(${T1q}, "__w${c.i}") + 46)` : `min(${nat(c)}, 64)`);
-    const bases = `(${cols.filter(flex).map((c) => `(${vis(c)} ? ${base(c)} : 0)`).join(" + ") || "0"})`;
-    const extra = `((${room} - ${fixedSum} - ${bases}) / ${flexCount})`;
     const share = `(${room} / max(1, ${count}))`;
-    const width = (c: Col) => (flex(c) ? `max(${c.kind === "bar" ? `table.max(${T1q}, "__w${c.i}") + 30` : "36"}, ${base(c)} + ${extra})` : anyFlex || c.width ? nat(c) : `max(${nat(c)}, ${share})`);
-    const T2 = cx.table("table-rows", T1, ...cols.flatMap((c) => [op.derive(`__W${c.i}`, e(width(c))), op.derive(`__V${c.i}`, e(`${vis(c)} ? 1 : 0`))]));
+    // With a reader's bigger text the columns can need more than the box: then the table's text
+    // grows only as far as its columns fit (never below the theme's own size) rather than
+    // running off the side or the bottom — `__K`, the share of the reader's size it keeps. At the theme's size
+    // (or when it fits) it's 1 and nothing changes.
+    const natShown = `(${cols.map((c) => `(${vis(c)} ? ${nat(c)} : 0)`).join(" + ") || "0"})`;
+    // (And as far as its rows fit the height: a header and every row, a line and a bit each.)
+    const tall = p.rowHeight ? `(${p.rowHeight} * (table.count(${T1q}) + 1))` : `(token("size.body") * 2.3 * (table.count(${T1q}) + 1))`;
+    const fitK = `clamp(min(${room} / max(1, ${natShown}), box.h / max(1, ${tall})), 1 / max(1, textScale), 1)`;
+    const K = "d.__K";
+    const scaled = (x: string) => `((${x}) * ${K})`;
+    const widthK = (c: Col) => (flex(c) ? `max(${c.kind === "bar" ? `table.max(${T1q}, "__w${c.i}") * ${K} + 30` : "36"}, ${scaled(base(c))} + ${extraK})` : anyFlex || c.width ? scaled(nat(c)) : `max(${scaled(nat(c))}, ${share})`);
+    const fixedSumK = `(${cols.filter((c) => !flex(c)).map((c) => `(${vis(c)} ? ${scaled(nat(c))} : 0)`).join(" + ") || "0"})`;
+    const basesK = `(${cols.filter(flex).map((c) => `(${vis(c)} ? ${scaled(base(c))} : 0)`).join(" + ") || "0"})`;
+    const extraK = `((${room} - ${fixedSumK} - ${basesK}) / ${flexCount})`;
+    const T2 = cx.table("table-rows", T1, op.derive("__K", e(fitK)), ...cols.flatMap((c) => [op.derive(`__W${c.i}`, e(widthK(c))), op.derive(`__V${c.i}`, e(`${vis(c)} ? 1 : 0`))]));
+    const KT = `table.first(${q(T2)}, "__K")`;
+    const rowH = p.rowHeight ? String(p.rowHeight) : `round(token("size.body") * 2.3 * ${KT})`;
     // Sparklines read one series table (the first spark column's), its x and each column's y
     // copied to columns of their own so the join can't rename them (the rows' own `revenue`).
     const sparks = cols.filter((c) => c.spark);
@@ -584,7 +595,7 @@ export const dataTable = recipe<TableParams>({
       const align = alignOf(c);
       const size = { w: e(`d.__W${c.i}`) };
       const when = c.optional ? e(`d.__V${c.i} == 1`) : undefined;
-      const body = { size: "$size.body", ink: "$ink", baseline: "middle", align } as const;
+      const body = { size: e('token("size.body") * d.__K'), ink: "$ink", baseline: "middle", align } as const;
       const num = (x: Prop[], style: Record<string, unknown>) => (c.prefix || c.suffix ? text(e(cellText(c)), x as [Prop, Prop], { key: "text", style }) : text("", x as [Prop, Prop], { key: "text", number: { value: e(f), format: c.format ?? ",.4~r" }, style }));
       if (c.kind === "text") return group({ key: `c${c.i}`, size, when, clip: "box", children: [text(e(cellText(c)), at(c, align), { key: "text", style: body })] });
       if (c.kind === "number") return group({ key: `c${c.i}`, size, when, children: [num(at(c, align), body)] });
@@ -648,7 +659,7 @@ export const dataTable = recipe<TableParams>({
       const sorted = mine === "false" ? "false" : rev === "false" ? mine : `(${mine} || ${rev})`;
       // Largest (Z) first: its own way on a column that sorts down, reversed on one that sorts up.
       const desc = down(c) ? `!(${rev})` : rev;
-      const lw = `measure(${q(c.head)}, token("size.label"), 600)`;
+      const lw = `measure(${q(c.head)}, token("size.label") * ${KT}, 600)`;
       const ax = align === "end" ? `box.w - ${lw} - 7` : align === "center" ? `box.w / 2 + ${lw} / 2 + 7` : `${lw} + 7`;
       const [deep, flipped] = [down(c) ? "largest first" : "Z to A", down(c) ? "smallest first" : "A to Z"];
       const said = `${sorted} ? ${q(`${c.head}, sorted `)} + (${rev} ? ${q(flipped)} : ${q(deep)}) + ${q(". Reverse the sort")} : ${q(`Sort by ${c.head}`)}`;
@@ -661,7 +672,7 @@ export const dataTable = recipe<TableParams>({
         semantics: clicks ? { role: "control", label: e(said) } : undefined,
         children: [
           ...(clicks ? [shape(geom.rect({ x: -G / 2, y: 0, w: e(`box.w + ${G}`), h: e(rowH) }), { key: "hit", pickable: true, fill: "transparent" })] : []),
-          text(c.head, [align === "end" ? e("box.w") : align === "center" ? e("box.w / 2") : 0, e(mid)], { key: "text", style: { size: "$size.label", weight: 600, ink: e(`${sorted}${clicks ? " || hover()" : ""} ? "$ink" : "$ink-2"`), baseline: "middle", align } }),
+          text(c.head, [align === "end" ? e("box.w") : align === "center" ? e("box.w / 2") : 0, e(mid)], { key: "text", style: { size: e(`token("size.label") * ${KT}`), weight: 600, ink: e(`${sorted}${clicks ? " || hover()" : ""} ? "$ink" : "$ink-2"`), baseline: "middle", align } }),
           ...(sorted === "false" ? [] : [group({
             key: "arrow",
             opacity: e(`${sorted} ? 1 : 0`),

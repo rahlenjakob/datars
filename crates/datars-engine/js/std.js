@@ -4628,7 +4628,6 @@ var dataTable = recipe16({
       return { ...c, i, kind, head: c.label ?? c.field ?? (c.spark ? c.spark.y : "") };
     });
     const G = 16, P = 8;
-    const rowH = p.rowHeight ? String(p.rowHeight) : 'round(token("size.body") * 2.3)';
     const sortCols = cols.filter((c) => c.field && c.kind !== "spark");
     const down = (c) => !(c && c.kind === "text") && p.descending;
     const dirOf = (c, field) => down(c) ? `-${field}` : field;
@@ -4660,14 +4659,21 @@ var dataTable = recipe16({
     const count = `(${cols.map((c) => `(${vis(c)} ? 1 : 0)`).join(" + ") || "1"})`;
     const room = `(box.w - ${2 * P} - ${G} * max(0, ${count} - 1))`;
     const anyFlex = cols.some(flex);
-    const fixedSum = `(${cols.filter((c) => !flex(c)).map((c) => `(${vis(c)} ? ${nat(c)} : 0)`).join(" + ") || "0"})`;
     const flexCount = `max(1, ${cols.filter(flex).map((c) => `(${vis(c)} ? 1 : 0)`).join(" + ") || "0"})`;
     const base = (c) => c.kind === "bar" ? `(table.max(${T1q}, "__w${c.i}") + 46)` : `min(${nat(c)}, 64)`;
-    const bases = `(${cols.filter(flex).map((c) => `(${vis(c)} ? ${base(c)} : 0)`).join(" + ") || "0"})`;
-    const extra = `((${room} - ${fixedSum} - ${bases}) / ${flexCount})`;
     const share = `(${room} / max(1, ${count}))`;
-    const width = (c) => flex(c) ? `max(${c.kind === "bar" ? `table.max(${T1q}, "__w${c.i}") + 30` : "36"}, ${base(c)} + ${extra})` : anyFlex || c.width ? nat(c) : `max(${nat(c)}, ${share})`;
-    const T2 = cx.table("table-rows", T1, ...cols.flatMap((c) => [op11.derive(`__W${c.i}`, e16(width(c))), op11.derive(`__V${c.i}`, e16(`${vis(c)} ? 1 : 0`))]));
+    const natShown = `(${cols.map((c) => `(${vis(c)} ? ${nat(c)} : 0)`).join(" + ") || "0"})`;
+    const tall = p.rowHeight ? `(${p.rowHeight} * (table.count(${T1q}) + 1))` : `(token("size.body") * 2.3 * (table.count(${T1q}) + 1))`;
+    const fitK = `clamp(min(${room} / max(1, ${natShown}), box.h / max(1, ${tall})), 1 / max(1, textScale), 1)`;
+    const K = "d.__K";
+    const scaled = (x) => `((${x}) * ${K})`;
+    const widthK = (c) => flex(c) ? `max(${c.kind === "bar" ? `table.max(${T1q}, "__w${c.i}") * ${K} + 30` : "36"}, ${scaled(base(c))} + ${extraK})` : anyFlex || c.width ? scaled(nat(c)) : `max(${scaled(nat(c))}, ${share})`;
+    const fixedSumK = `(${cols.filter((c) => !flex(c)).map((c) => `(${vis(c)} ? ${scaled(nat(c))} : 0)`).join(" + ") || "0"})`;
+    const basesK = `(${cols.filter(flex).map((c) => `(${vis(c)} ? ${scaled(base(c))} : 0)`).join(" + ") || "0"})`;
+    const extraK = `((${room} - ${fixedSumK} - ${basesK}) / ${flexCount})`;
+    const T2 = cx.table("table-rows", T1, op11.derive("__K", e16(fitK)), ...cols.flatMap((c) => [op11.derive(`__W${c.i}`, e16(widthK(c))), op11.derive(`__V${c.i}`, e16(`${vis(c)} ? 1 : 0`))]));
+    const KT = `table.first(${q2(T2)}, "__K")`;
+    const rowH = p.rowHeight ? String(p.rowHeight) : `round(token("size.body") * 2.3 * ${KT})`;
     const sparks = cols.filter((c) => c.spark);
     const spark = sparks[0]?.spark;
     const series = spark ? cx.table("table-series", spark.data, op11.derive("__sx", e16(fld(spark.x))), ...sparks.map((c) => op11.derive(`__sy${c.i}`, e16(fld(c.spark.y))))) : void 0;
@@ -4682,7 +4688,7 @@ var dataTable = recipe16({
       const align = alignOf(c);
       const size = { w: e16(`d.__W${c.i}`) };
       const when = c.optional ? e16(`d.__V${c.i} == 1`) : void 0;
-      const body = { size: "$size.body", ink: "$ink", baseline: "middle", align };
+      const body = { size: e16('token("size.body") * d.__K'), ink: "$ink", baseline: "middle", align };
       const num = (x, style) => c.prefix || c.suffix ? text14(e16(cellText(c)), x, { key: "text", style }) : text14("", x, { key: "text", number: { value: e16(f), format: c.format ?? ",.4~r" }, style });
       if (c.kind === "text") return group15({ key: `c${c.i}`, size, when, clip: "box", children: [text14(e16(cellText(c)), at2(c, align), { key: "text", style: body })] });
       if (c.kind === "number") return group15({ key: `c${c.i}`, size, when, children: [num(at2(c, align), body)] });
@@ -4735,7 +4741,7 @@ var dataTable = recipe16({
       const [mine, rev] = clicks ? [own(c), reversed(c)] : p.sort && c.field === p.sort ? ["true", "false"] : ["false", "false"];
       const sorted = mine === "false" ? "false" : rev === "false" ? mine : `(${mine} || ${rev})`;
       const desc = down(c) ? `!(${rev})` : rev;
-      const lw = `measure(${q2(c.head)}, token("size.label"), 600)`;
+      const lw = `measure(${q2(c.head)}, token("size.label") * ${KT}, 600)`;
       const ax = align === "end" ? `box.w - ${lw} - 7` : align === "center" ? `box.w / 2 + ${lw} / 2 + 7` : `${lw} + 7`;
       const [deep, flipped] = [down(c) ? "largest first" : "Z to A", down(c) ? "smallest first" : "A to Z"];
       const said2 = `${sorted} ? ${q2(`${c.head}, sorted `)} + (${rev} ? ${q2(flipped)} : ${q2(deep)}) + ${q2(". Reverse the sort")} : ${q2(`Sort by ${c.head}`)}`;
@@ -4748,7 +4754,7 @@ var dataTable = recipe16({
         semantics: clicks ? { role: "control", label: e16(said2) } : void 0,
         children: [
           ...clicks ? [shape15(geom15.rect({ x: -G / 2, y: 0, w: e16(`box.w + ${G}`), h: e16(rowH) }), { key: "hit", pickable: true, fill: "transparent" })] : [],
-          text14(c.head, [align === "end" ? e16("box.w") : align === "center" ? e16("box.w / 2") : 0, e16(mid)], { key: "text", style: { size: "$size.label", weight: 600, ink: e16(`${sorted}${clicks ? " || hover()" : ""} ? "$ink" : "$ink-2"`), baseline: "middle", align } }),
+          text14(c.head, [align === "end" ? e16("box.w") : align === "center" ? e16("box.w / 2") : 0, e16(mid)], { key: "text", style: { size: e16(`token("size.label") * ${KT}`), weight: 600, ink: e16(`${sorted}${clicks ? " || hover()" : ""} ? "$ink" : "$ink-2"`), baseline: "middle", align } }),
           ...sorted === "false" ? [] : [group15({
             key: "arrow",
             opacity: e16(`${sorted} ? 1 : 0`),

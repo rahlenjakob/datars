@@ -110,3 +110,41 @@ fn std_charts_lay_out_again_around_bigger_labels() {
     assert_eq!(tick(&s1) * 2.0, tick(&s2), "{s2}");
     assert!(e.diagnostics().is_empty(), "{:?}", e.diagnostics());
 }
+
+/// A data table wider than its box at the reader's size keeps its columns on the canvas: its
+/// text grows only as far as they fit (not below the theme's size); with room, all the way.
+#[test]
+fn a_table_grows_its_text_only_as_far_as_its_columns_fit() {
+    let table = |w: f64| json!({ "datars": 1, "size": { "width": w, "height": 300 },
+        "data": { "t": { "values": { "shop": ["Harbour", "Old Town", "Market Hall"], "city": ["Portsmouth", "York", "Bristol"], "revenue": [412000, 356000, 298000] }, "key": ["shop"] } },
+        "scene": { "kind": "use", "recipe": "@datars/std/dataTable", "params": { "data": "t", "key": "shop", "columns": [
+            { "field": "shop" }, { "field": "city" }, { "field": "revenue", "format": "$,.0f" }] } } });
+    let size_of = |e: &mut Engine, text: &str| {
+        let s = e.scene().snapshot();
+        s.lines().find(|l| l.contains(&format!("text \"{text}\""))).map(|l| num_after(l, "size=")).unwrap_or(f64::NAN)
+    };
+    let right_edge = |e: &mut Engine| {
+        let scene = e.scene();
+        let mut max: f64 = 0.0;
+        fn walk(n: &datars_scene::Node, xf: datars_math::Affine, max: &mut f64) {
+            let xf = n.common.placed(xf);
+            if let datars_scene::NodeKind::Text(t) = &n.kind {
+                *max = max.max(datars_engine::text_rect(t, &xf).x1());
+            }
+            n.children().iter().for_each(|c| walk(c, xf, max));
+        }
+        walk(&scene.root, datars_math::Affine::IDENTITY, &mut max);
+        max
+    };
+    // Wide: the reader's whole size.
+    let mut e = engine(table(900.0));
+    e.set_text_scale(2.0);
+    assert_eq!(size_of(&mut e, "Harbour"), 26.0);
+    // Narrow: smaller than 2 ×, never smaller than the theme's, and nothing past the edge.
+    let mut e = engine(table(300.0));
+    let base = size_of(&mut e, "Harbour");
+    e.set_text_scale(2.0);
+    let fitted = size_of(&mut e, "Harbour");
+    assert!(fitted > base && fitted < 2.0 * base, "{base} → {fitted}");
+    assert!(right_edge(&mut e) <= 300.5, "the columns fit: {}", right_edge(&mut e));
+}
