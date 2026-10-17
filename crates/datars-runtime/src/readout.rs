@@ -11,8 +11,11 @@ use datars_engine::SemanticItem;
 #[derive(Clone, Debug, PartialEq)]
 pub struct Readout {
     /// `chart` (the whole: first), `heading` (a part: a sub-chart's or a series' name), `text`
-    /// (an axis, a legend, a note), `datum` (a data mark), `button` (something a tap acts on).
+    /// (an axis, a legend, a note), `datum` (a data mark), `button` (something a tap acts on),
+    /// `checkbox`, `switch`, `radio` (a control with a state: `checked`).
     pub kind: &'static str,
+    /// A checkbox's, switch's or radio's state.
+    pub checked: Option<bool>,
     pub label: String,
     /// What the element says after its name: a datum's value ("10,240", "× 24" for repeated
     /// marks), the chart's summary.
@@ -25,7 +28,11 @@ pub struct Readout {
 
 impl Readout {
     pub fn to_json(&self) -> serde_json::Value {
-        serde_json::json!({ "kind": self.kind, "label": self.label, "value": self.value, "rect": self.rect, "path": self.path })
+        let mut v = serde_json::json!({ "kind": self.kind, "label": self.label, "value": self.value, "rect": self.rect, "path": self.path });
+        if let Some(c) = self.checked {
+            v["checked"] = serde_json::json!(c);
+        }
+        v
     }
 }
 
@@ -74,7 +81,7 @@ fn split(label: &str) -> (String, String) {
 
 /// The reading order for a chart named `name` with `summary`, from its semantics `items`.
 pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout> {
-    let mut out = vec![Readout { kind: "chart", label: if name.is_empty() { "Chart".into() } else { name.into() }, value: summary.into(), rect: None, path: String::new() }];
+    let mut out = vec![Readout { kind: "chart", label: if name.is_empty() { "Chart".into() } else { name.into() }, value: summary.into(), rect: None, path: String::new(), checked: None }];
     // Dragged and picked controls are the host's native ones; clicked controls are buttons.
     let shown: Vec<&SemanticItem> = items.iter().filter(|i| i.role != "control" || i.actionable).collect();
     let mut top: Vec<Tree> = Vec::new();
@@ -101,7 +108,18 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
             let (role, label) = (n.item.role.as_str(), n.item.label.trim());
             // What a click acts on — a filtering bar, a switch, a select's box — is a button.
             if n.item.actionable {
-                out.push(Readout { kind: "button", label: label.into(), value: String::new(), rect: rect_of(n.item), path: n.item.path.clone() });
+                // A control with a state is its native kind (a checkbox, a switch, one of a set).
+                let kind = match n.item.kind.as_deref() {
+                    Some("checkbox") => "checkbox",
+                    Some("switch") => "switch",
+                    Some("radio") => "radio",
+                    _ => "button",
+                };
+                if kind != "button" {
+                    out.push(Readout { kind, label: label.into(), value: String::new(), rect: rect_of(n.item), path: n.item.path.clone(), checked: Some(n.item.checked.unwrap_or(false)) });
+                    continue;
+                }
+                out.push(Readout { kind: "button", label: label.into(), value: String::new(), rect: rect_of(n.item), path: n.item.path.clone(), checked: None });
                 continue;
             }
             if is_data(n.item) {
@@ -118,7 +136,7 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
                     }
                 }
                 let (l, v) = split(label);
-                out.push(Readout { kind: "datum", label: l, value: v, rect: rect_of(n.item), path: String::new() });
+                out.push(Readout { kind: "datum", label: l, value: v, rect: rect_of(n.item), path: String::new(), checked: None });
                 continue;
             }
             match role {
@@ -130,7 +148,7 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
                     let title = if label.is_empty() && role == "legend" { "Legend" } else { label };
                     let text = if parts.is_empty() { title.to_string() } else if title.is_empty() { line(&parts) } else { format!("{title}: {}", line(&parts)) };
                     if !text.is_empty() {
-                        out.push(Readout { kind: "text", label: text, value: String::new(), rect: rect_of(n.item), path: String::new() });
+                        out.push(Readout { kind: "text", label: text, value: String::new(), rect: rect_of(n.item), path: String::new(), checked: None });
                     }
                     continue;
                 }
@@ -146,7 +164,7 @@ pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout
                 let text = if role == "annotation" { format!("Note: {label}") } else { label.to_string() };
                 // A series right under its part's heading of the same name: once is enough.
                 if !(kind == "heading" && out.last().is_some_and(|l| l.kind == "heading" && l.label == text)) {
-                    out.push(Readout { kind, label: text, value: String::new(), rect: rect_of(n.item), path: String::new() });
+                    out.push(Readout { kind, label: text, value: String::new(), rect: rect_of(n.item), path: String::new(), checked: None });
                 }
             }
             let group = if matches!(role, "group" | "series") && !label.is_empty() { label } else { group };
@@ -162,7 +180,7 @@ mod tests {
     use super::*;
 
     fn item(role: &str, label: &str, depth: usize) -> SemanticItem {
-        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), actionable: false, value: None }
+        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), actionable: false, value: None, kind: None, checked: None }
     }
 
     #[test]

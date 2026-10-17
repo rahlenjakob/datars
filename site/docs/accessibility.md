@@ -40,6 +40,7 @@ shape(geom.circle({ cx: e("scale.x(d.region)"), cy: e("scale.y(d.sales)"), r: 5 
 | `label` | what it's called — a string or an expression over the row |
 | `value` | its value, when it has one |
 | `link` | a URL it links to: the web runtime lays a real link over it, SVG and PDF keep it |
+| `kind`, `checked` | a control's native kind — `checkbox`, `switch` or `radio` (one of a set) — and its state: each host gives it the platform's own role (`role="switch"` with `aria-checked`, a toggle trait, Android's `Switch`, AccessKit's toggles), which says the state in the reader's words. The label stays the name. The standard library's toggle, checklist, segmented control and select do this. |
 
 Use `role: "decoration"` for things that carry no data — gridlines, a background, orbits drawn for effect — so they stay out of the reader's way. Many recipes also take a `label` parameter to override their default accessible names:
 

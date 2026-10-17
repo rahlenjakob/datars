@@ -1529,6 +1529,8 @@ impl<'a> Resolver<'a> {
                 order: None,
                 value: (!s.value.is_null()).then(|| self.num(&s.value, cx, f64::NAN)),
                 link: (!s.link.is_null()).then(|| Arc::from(self.string(&s.link, cx).as_str())).filter(|l: &Arc<str>| !l.is_empty()),
+                kind: s.kind.as_deref().filter(|k| matches!(*k, "checkbox" | "switch" | "radio")).map(Arc::from),
+                checked: (!s.checked.is_null()).then(|| self.truthy(&s.checked, cx)),
             });
         }
         n.pickable = t.pickable || !t.on.is_empty();

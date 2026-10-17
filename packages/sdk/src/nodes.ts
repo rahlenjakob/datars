@@ -59,7 +59,8 @@ export interface NodeOpts {
    * A text's origin is its `at` (a place name stays at its map point). */
   pin?: boolean;
   /** `link`: a URL this element links to (hosts make it clickable; vector exports keep it). */
-  semantics?: { role: Role; label?: Prop; value?: Prop; link?: Prop };
+  /** `kind` + `checked`: a control's native kind and state (a checkbox, a switch, one of a set). */
+  semantics?: { role: Role; label?: Prop; value?: Prop; link?: Prop; kind?: "checkbox" | "switch" | "radio"; checked?: Prop };
   pickable?: boolean;
   on?: Partial<Record<Intent, Action>>;
   anchors?: { name: string; at: [Prop, Prop] }[];

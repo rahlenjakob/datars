@@ -32,6 +32,17 @@ const doc = {
   ] },
 };
 
+/** The std controls with a state: a switch, checkboxes, a segmented choice. */
+const controlsDoc = {
+  datars: 1, title: "Controls", size: { width: 600, height: 200 },
+  signals: { on: { type: "bool", default: true }, shown: { type: "keyset", default: ["a"] }, q: { type: "str", default: "q1" } },
+  scene: { kind: "group", key: "root", layout: { type: "rows", gap: 8, padding: 8 }, children: [
+    use("toggle", { signal: "on", label: "Averages" }),
+    use("checklist", { signal: "shown", options: ["a", "b"], labels: ["Apples", "Pears"] }),
+    use("segmented", { signal: "q", options: ["q1", "q2"], labels: ["Q1", "Q2"], label: "Quarter" }),
+  ] },
+};
+
 const page = `<!doctype html><meta charset="utf-8"><script type="module" src="/runtime/datars.js"></script>
 <style>body { margin: 40px }</style><button id="before">Before</button>
 <datars-view doc="/doc.json" height="320" style="width:600px"></datars-view>`;
@@ -43,7 +54,9 @@ function serve() {
     const path = decodeURIComponent(new URL(req.url, "http://x").pathname);
     const send = (body, type) => { res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" }); res.end(body); };
     if (path === "/") return send(page, "text/html; charset=utf-8");
+    if (path === "/controls") return send(page.replace("/doc.json", "/controls.json").replace('height="320"', 'height="200"'), "text/html; charset=utf-8");
     if (path === "/doc.json") return send(JSON.stringify(doc), "application/json");
+    if (path === "/controls.json") return send(JSON.stringify(controlsDoc), "application/json");
     const file = normalize(join(dist, path.replace(/^\/runtime\//, "")));
     if (path.startsWith("/runtime/") && file.startsWith(dist) && existsSync(file)) return send(readFileSync(file), types[extname(file)] ?? "application/octet-stream");
     res.writeHead(404).end();
@@ -173,6 +186,36 @@ test("more contrast is the high-contrast mode; forced colours paint the chart's 
     assert.equal(rgb(f.ink), system.ink, `the chart's ink is CanvasText: ${JSON.stringify({ f, system })}`);
     assert.equal(rgb(f.paper), system.paper, "its paper is Canvas");
     assert.equal(rgb(f.muted), system.ink, "muted text too: no grey a contrast theme doesn't have");
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test("a switch, checkboxes and segments are switch, checkbox and radio to a screen reader", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    const ctx = await browser.newContext({ viewport: { width: 800, height: 400 } });
+    const p = await ctx.newPage();
+    await p.goto(`http://127.0.0.1:${server.address().port}/controls`);
+    await p.locator("datars-view .mirror [role=switch]").waitFor({ state: "attached", timeout: 30_000 });
+    const cdp = await ctx.newCDPSession(p);
+    const v = (x) => x?.value ?? "";
+    const read = async () => {
+      const { nodes } = await cdp.send("Accessibility.getFullAXTree");
+      const checked = (n) => v((n.properties ?? []).find((q) => q.name === "checked")?.value);
+      return nodes.filter((n) => ["switch", "checkbox", "radio"].includes(v(n.role))).map((n) => `${v(n.role)} ${v(n.name)} ${checked(n)}`);
+    };
+    let said = [];
+    for (let i = 0; i < 50 && said.length < 5; i++) { said = await read(); await p.waitForTimeout(100); }
+    assert.deepEqual(said, ["switch Averages true", "checkbox Apples true", "checkbox Pears false", "radio Quarter: Q1 true", "radio Quarter: Q2 false"]);
+    // Pressing one (Space on the focused switch) changes the state it says.
+    await p.locator("datars-view .mirror [role=switch]").focus();
+    await p.keyboard.press("Space");
+    await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror [role=switch]")?.getAttribute("aria-checked") === "false", null, { timeout: 10_000 });
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").signals.on), false);
   } finally {
     await browser.close();
     server.close();

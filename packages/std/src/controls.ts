@@ -97,7 +97,8 @@ export const segmented = recipe<SegmentedParams>({
           key: `option:${String(v)}`,
           pickable: true,
           on: { activate: { set: sig, value: v as never } },
-          semantics: { role: "control", label: e(`${p.label ? `${lit(p.label + ": ")} + ` : ""}${say(v, labels, i)} + (${sig} == ${lit(v)} ? ", selected" : "")`) },
+          // One of a set: hosts say "selected" themselves (a radio button, in its group's place).
+          semantics: { role: "control", label: e(`${p.label ? `${lit(p.label + ": ")} + ` : ""}${say(v, labels, i)}`), kind: "radio", checked: e(`${sig} == ${lit(v)}`) },
           children: [
             shape(geom.rect({ x: e(`${i} * ${w}`), y: e(top), w: e(w), h: e(h) }), { key: "hit", pickable: true, fill: "transparent" }),
             shape(geom.rect({ x: e(`${i} * ${w} + 2`), y: e(`${top} + 2`), w: e(`${w} - 4`), h: e(`${h} - 4`), r: 6 }), { key: "hover", fill: "$ink", opacity: e(`hover() && ${sig} != ${lit(v)} ? 0.07 : 0`) }),
@@ -177,7 +178,7 @@ export const select = recipe<SelectParams>({
               key: `option:${String(v)}`,
               pickable: true,
               on: { activate: { set: sig, value: v as never } },
-              semantics: { role: "control", label: e(`${say(v, labels, i)} + (${sig} == ${lit(v)} ? ", selected" : "")`) },
+              semantics: { role: "control", label: e(say(v, labels, i)), kind: "radio", checked: e(`${sig} == ${lit(v)}`) },
               children: (() => {
                 const x = `4 + ${Math.floor(i / perCol)} * ${colW}`;
                 const y = `(${listY} + 4 + ${i % perCol} * ${row})`;
@@ -212,7 +213,8 @@ export const toggle = recipe<ToggleParams>({
       size: { h: e(px(28)) },
       pickable: true,
       on: { activate: { set: sig, value: e(`!${sig}`) } },
-      semantics: { role: "control", label: e(`${lit((p.label || sig) + ": ")} + (${sig} ? "on" : "off")`) },
+      // A switch: hosts say on or off themselves.
+      semantics: { role: "control", label: p.label || sig, kind: "switch", checked: e(sig) },
       children: [
         shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e(px(28)) }), { key: "hit", pickable: true, fill: "transparent" }),
         shape(geom.rect({ x: 0, y: e(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e(`${sig} ? "$accent" : "$rule"`) }),
@@ -256,7 +258,8 @@ export const checklist = recipe<ChecklistParams>({
             key: `option:${String(v)}`,
             pickable: true,
             on: { activate: { toggle: sig, value: String(v) } },
-            semantics: { role: "control", label: e(`${say(v, labels, i)} + (${on(v)} ? ", checked" : ", not checked")`) },
+            // A checkbox: hosts say checked or not themselves.
+            semantics: { role: "control", label: e(say(v, labels, i)), kind: "checkbox", checked: e(on(v)) },
             children: [
               // The box and the gap up to the label are one target (the label is another).
               shape(geom.rect({ x: -3, y: -3, w: 29, h: 24 }), { key: "hit", pickable: true, fill: "transparent" }),

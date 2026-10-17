@@ -546,7 +546,7 @@ mod decor_tests {
         dot.common.opacity = op;
         let mut g = Node::group(Key::name("layer"), vec![dot]);
         if decor {
-            g.semantics = Some(Semantics { role: Role::Decoration, label: String::new(), datum: None, order: None, value: None, link: None });
+            g.semantics = Some(Semantics { role: Role::Decoration, label: String::new(), ..Default::default() });
         }
         Scene::new(100.0, 100.0, g)
     }

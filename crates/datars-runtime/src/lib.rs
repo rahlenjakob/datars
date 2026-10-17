@@ -254,6 +254,10 @@ fn semantic_json(s: datars_engine::SemanticItem) -> serde_json::Value {
     if let Some(x) = s.value {
         v["value"] = serde_json::json!(x);
     }
+    if let Some(k) = &s.kind {
+        v["kind"] = serde_json::json!(k);
+        v["checked"] = serde_json::json!(s.checked.unwrap_or(false));
+    }
     v
 }
 

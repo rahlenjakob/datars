@@ -55,6 +55,18 @@ fn item(e: &mut Engine, label: &str) -> SemanticItem {
     items.iter().find(|i| i.label == label).cloned().unwrap_or_else(|| panic!("no item {label:?} in {:?}", items.iter().map(|i| &i.label).collect::<Vec<_>>()))
 }
 
+/// A control's state as hosts read it: its native kind and whether it's checked.
+fn state(e: &mut Engine, label: &str) -> (Option<String>, Option<bool>) {
+    let i = item(e, label);
+    (i.kind, i.checked)
+}
+
+/// An option of the open select's list (a radio button; the checklist's are checkboxes).
+fn option(e: &mut Engine, label: &str) -> SemanticItem {
+    let items = e.semantic_items();
+    items.iter().find(|i| i.label == label && i.kind.as_deref() == Some("radio")).cloned().unwrap_or_else(|| panic!("no option {label:?}"))
+}
+
 fn click(e: &mut Engine, x: f64, y: f64) {
     e.pointer(Pointer::Down { x, y });
     e.pointer(Pointer::Up { x, y });
@@ -76,10 +88,14 @@ fn str_signal(e: &Engine, s: &str) -> String {
 #[test]
 fn a_segmented_control_sets_its_signal_and_says_which_is_chosen() {
     let mut e = engine();
-    assert!(item(&mut e, "Quarter: Q1, selected").actionable);
+    // One of a set: a radio button whose state hosts say, the label its name alone.
+    assert!(item(&mut e, "Quarter: Q1").actionable);
+    assert_eq!(state(&mut e, "Quarter: Q1"), (Some("radio".into()), Some(true)));
+    assert_eq!(state(&mut e, "Quarter: Q2"), (Some("radio".into()), Some(false)));
     click_item(&mut e, "Quarter: Q2");
     assert_eq!(str_signal(&e, "quarter"), "q2");
-    assert!(e.semantic_items().iter().any(|i| i.label == "Quarter: Q2, selected"));
+    assert_eq!(state(&mut e, "Quarter: Q2").1, Some(true));
+    assert_eq!(state(&mut e, "Quarter: Q1").1, Some(false));
 }
 
 #[test]
@@ -87,26 +103,28 @@ fn a_select_opens_over_the_chart_chooses_and_closes() {
     let mut e = engine();
     // Closed: the box says the choice (by the key's name), and the list isn't there.
     item(&mut e, "Region: The north");
-    assert!(!e.semantic_items().iter().any(|i| i.label == "East"));
+    assert!(!e.semantic_items().iter().any(|i| i.label == "East" && i.kind.as_deref() == Some("radio")));
     click_item(&mut e, "Region: The north");
     // Open: the list floats over what follows (the switch, the checkboxes, …): choosing East there
     // sets it and closes the list.
-    let east = item(&mut e, "East").rect;
+    let east = option(&mut e, "East").rect;
     assert!(east.y > item(&mut e, "Region: The north").rect.y, "the list opens below the box");
     click(&mut e, east.x + 20.0, east.y + east.h / 2.0);
     assert_eq!(str_signal(&e, "region"), "East");
-    assert!(!e.semantic_items().iter().any(|i| i.label == "South"), "closed after choosing");
+    assert!(!e.semantic_items().iter().any(|i| i.label == "South" && i.kind.as_deref() == Some("radio")), "closed after choosing");
     // Open again, click the chart: the list closes and the chart doesn't take the click.
     click_item(&mut e, "Region: East");
     let chart = item(&mut e, "chart").rect;
     click(&mut e, chart.x + chart.w / 2.0, chart.y + chart.h / 2.0);
     assert_eq!(str_signal(&e, "region"), "East", "the click outside only closed the list");
-    assert!(!e.semantic_items().iter().any(|i| i.label == "South"));
+    assert!(!e.semantic_items().iter().any(|i| i.label == "South" && i.kind.as_deref() == Some("radio")));
     // Open, click the chosen option: closes, choice kept.
     click_item(&mut e, "Region: East");
-    click_item(&mut e, "East, selected");
+    let chosen = option(&mut e, "East");
+    assert_eq!(chosen.checked, Some(true), "the chosen option is the checked one of the list");
+    click(&mut e, chosen.rect.x + 20.0, chosen.rect.y + chosen.rect.h / 2.0);
     assert_eq!(str_signal(&e, "region"), "East");
-    assert!(!e.semantic_items().iter().any(|i| i.label == "South"));
+    assert!(!e.semantic_items().iter().any(|i| i.label == "South" && i.kind.as_deref() == Some("radio")));
     // Now the chart takes clicks again.
     click(&mut e, chart.x + chart.w / 2.0, chart.y + chart.h / 2.0);
     assert_eq!(str_signal(&e, "region"), "clicked the chart");
@@ -115,14 +133,19 @@ fn a_select_opens_over_the_chart_chooses_and_closes() {
 #[test]
 fn a_switch_flips_and_checkboxes_toggle_keys() {
     let mut e = engine();
-    click_item(&mut e, "Labels: on");
+    // A switch and checkboxes: their state is theirs to say (the label stays the name).
+    assert_eq!(state(&mut e, "Labels"), (Some("switch".into()), Some(true)));
+    click_item(&mut e, "Labels");
     assert_eq!(e.signal("labels"), Some(Value::Bool(false)));
-    click_item(&mut e, "Labels: off");
+    assert_eq!(state(&mut e, "Labels").1, Some(false));
+    click_item(&mut e, "Labels");
     assert_eq!(e.signal("labels"), Some(Value::Bool(true)));
-    click_item(&mut e, "The north, checked");
-    assert!(e.semantic_items().iter().any(|i| i.label == "The north, not checked"));
+    assert_eq!(state(&mut e, "The north"), (Some("checkbox".into()), Some(true)));
+    click_item(&mut e, "The north");
+    assert_eq!(state(&mut e, "The north").1, Some(false));
     click_item(&mut e, "Show all");
-    assert!(e.semantic_items().iter().any(|i| i.label == "The north, checked"), "the button put it back");
+    assert_eq!(state(&mut e, "The north").1, Some(true), "the button put it back");
+    assert_eq!(state(&mut e, "Show all").0, None, "a button is a button");
 }
 
 #[test]
@@ -147,7 +170,7 @@ fn a_ranges_thumbs_move_their_ends_and_never_cross() {
 #[test]
 fn controls_show_no_tooltips() {
     let mut e = engine();
-    for label in ["Quarter: Q2", "Region: The north", "Labels: on", "Show all"] {
+    for label in ["Quarter: Q2", "Region: The north", "Labels", "Show all"] {
         let r = item(&mut e, label).rect;
         assert_eq!(e.pointer(Pointer::Move { x: r.x + r.w / 2.0, y: r.y + r.h / 2.0 }), None, "{label}");
     }
@@ -204,7 +227,7 @@ fn controls_show_where_the_pointer_is_and_take_a_pointing_hand() {
     assert!(wash(&mut e, &option) > 0.0, "the option under the pointer is washed");
     assert_eq!(e.cursor(), Cursor::Pointer);
     // The chosen option isn't: it's already highlighted.
-    hover(&mut e, "Quarter: Q1, selected");
+    hover(&mut e, "Quarter: Q1");
     assert_eq!(wash(&mut e, &["quarter", "option:q1", "hover"]), 0.0);
     assert_eq!(wash(&mut e, &option), 0.0, "and the other has let go");
 

@@ -88,16 +88,23 @@ pub fn tree(engine: &mut Engine, title: &str, dpr: f64) -> (TreeUpdate, Vec<(Nod
         let id = id_for(&if r.path.is_empty() { format!("{}:{}#{i}", r.kind, r.label) } else { r.path.clone() });
         let mut n = Node::new(match r.kind {
             "button" => Role::Button,
+            "checkbox" => Role::CheckBox,
+            "switch" => Role::Switch,
+            "radio" => Role::RadioButton,
             "heading" => Role::Heading,
             _ => Role::Label,
         });
+        // A checkbox, switch or radio says its state the platform's way.
+        if let Some(c) = r.checked {
+            n.set_toggled(accesskit::Toggled::from(c));
+        }
         // A data mark says its name and its value ("Housing, 10,240").
         if r.value.is_empty() {
             n.set_label(r.label.as_str());
         } else {
             n.set_label(format!("{}, {}", r.label, r.value));
         }
-        if r.kind == "button" {
+        if matches!(r.kind, "button" | "checkbox" | "switch" | "radio") {
             n.add_action(Action::Click);
             targets.push((id, Target::Mark(r.path.clone())));
         }
@@ -182,9 +189,13 @@ mod tests {
         e.frame(0.0);
         let (t, targets) = tree(&mut e, "Toggle", 1.0);
         assert!(!t.nodes.iter().any(|(_, n)| n.role() == Role::Slider), "no slider without one");
-        let switch = t.nodes.iter().find(|(_, n)| n.role() == Role::Button && n.label().is_some_and(|l| l.starts_with("Show averages"))).expect("the switch is a button");
+        let switch = t.nodes.iter().find(|(_, n)| n.role() == Role::Switch && n.label() == Some("Show averages")).expect("the switch is a switch");
+        assert_eq!(switch.1.toggled(), Some(accesskit::Toggled::False), "off, said by the platform");
         assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: switch.0, data: None }));
         assert_eq!(e.signal("on"), Some(datars_engine::SignalValue::Bool(true)));
+        e.frame(1.0);
+        let (t, _) = tree(&mut e, "Toggle", 1.0);
+        assert!(t.nodes.iter().any(|(_, n)| n.role() == Role::Switch && n.toggled() == Some(accesskit::Toggled::True)), "and on after the click");
         // Every non-root node hangs off the tree exactly once.
         let children: usize = t.nodes.iter().map(|(_, n)| n.children().len()).sum();
         assert_eq!(children, t.nodes.len() - 1);

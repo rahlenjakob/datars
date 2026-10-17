@@ -47,7 +47,7 @@ function releaseGl(canvas: HTMLCanvasElement | undefined) {
 }
 
 /** A semantics item as the runtime gives it (`status().semantics`, `chrome().actions`). */
-interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number }
+interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio"; checked?: boolean }
 
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
@@ -1732,6 +1732,7 @@ export class DatarsView extends ElementBase {
       for (const a of s.actions ?? []) {
         const b = [...this.mirror.querySelectorAll<HTMLButtonElement>("button[data-path]")].find((x) => x.dataset.path === a.path);
         if (b && b.textContent !== a.label) b.textContent = a.label;
+        if (b && a.kind) b.setAttribute("aria-checked", String(!!a.checked));
       }
     }
     if (s.semantics) this.describedGen = this.chromeGen;
@@ -1926,10 +1927,16 @@ export class DatarsView extends ElementBase {
     if (current && focusedItem && current.dataset.item === focusedItem) queueMicrotask(() => current.focus());
   }
 
-  /** A native button for a mark or control a click acts on. */
+  /** A native button for a mark or control a click acts on — a checkbox, a switch or a radio
+   * button (`role` and `aria-checked`) when the control says it's one, so its state is announced
+   * by the reader's own words for it. */
   private mirrorButton(item: MirrorItem): HTMLButtonElement {
     const b = document.createElement("button");
     b.textContent = item.label;
+    if (item.kind) {
+      b.setAttribute("role", item.kind);
+      b.setAttribute("aria-checked", String(!!item.checked));
+    }
     b.dataset.path = item.path;
     if (item.rect) b.dataset.rect = item.rect.join(",");
     b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); } });

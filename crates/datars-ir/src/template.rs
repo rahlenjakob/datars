@@ -462,6 +462,13 @@ pub struct TSemantics {
     /// clickable and announce it as a link; vector exports keep it.
     #[serde(default, skip_serializing_if = "Prop::is_null")]
     pub link: Prop,
+    /// A control's native kind, for assistive technology: `checkbox`, `switch` or `radio` (one of
+    /// a set, like a segment) — with `checked`, its state, which hosts announce themselves (the
+    /// label stays the name: "North", not "North, checked").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub checked: Prop,
 }
 
 /// A `tiles` node: which source, and how each tile layer's features become scene nodes.

@@ -145,6 +145,12 @@ pub struct Semantics {
     /// A URL the element links to (hosts make it clickable; vector exports keep it).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub link: Option<Sym>,
+    /// A control's native kind (`checkbox`, `switch`, `radio`) and its state: hosts give it the
+    /// platform's own role, which announces the state.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind: Option<Sym>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub checked: Option<bool>,
 }
 
 impl Semantics {

@@ -196,6 +196,9 @@ pub struct SemanticItem {
     /// The number a data mark stands for (its semantics' `value`): what a host's data table and
     /// the summary's range read.
     pub value: Option<f64>,
+    /// A control's native kind (`checkbox`, `switch`, `radio`) and whether it's checked.
+    pub kind: Option<String>,
+    pub checked: Option<bool>,
 }
 
 /// Where a keyed point is on screen this frame (for host overlays).
@@ -2692,7 +2695,7 @@ impl Engine {
                 }
                 // Pinned content (a map callout) where it's drawn, at screen size.
                 let rect = if n.common.pin { bounds::drawn_bounds(n, parent) } else { bounds::transform_rect(bounds::node_bounds(n), &parent) };
-                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()) });
+                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked });
                 d += 1;
             }
             let inner = match &n.kind {
@@ -2709,7 +2712,7 @@ impl Engine {
                             break;
                         }
                         *budget -= 1;
-                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None });
+                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None, kind: None, checked: None });
                     }
                 }
             }

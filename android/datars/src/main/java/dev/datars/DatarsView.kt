@@ -428,7 +428,9 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private data class A11yItem(val label: String, val role: String, val rect: android.graphics.RectF?, val path: String, val actionable: Boolean,
                                 val signal: String? = null, val min: Double = 0.0, val max: Double = 1.0, val step: Double = 0.0, val value: Double = 0.0,
                                 /** What it says after its name: a data mark's value, the chart's summary. */
-                                val said: String = "")
+                                val said: String = "",
+                                /** A checkbox's, switch's or radio's state (null: none of those). */
+                                val checked: Boolean? = null)
     private var a11y: List<A11yItem> = emptyList()
 
     /** TalkBack reads the chart's content, not a picture, in the runtime's reading order: the
@@ -467,7 +469,8 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             val kind = it.optString("kind")
             // A select is its list above (the drawn box isn't a second one).
             if (kind == "button" && it.optString("label") in selectLabels) continue
-            val item = A11yItem(it.optString("label"), kind, rect(it), it.optString("path"), kind == "button", said = it.optString("value"))
+            val clicks = kind == "button" || kind == "checkbox" || kind == "switch" || kind == "radio"
+            val item = A11yItem(it.optString("label"), kind, rect(it), it.optString("path"), clicks, said = it.optString("value"), checked = if (it.has("checked")) it.optBoolean("checked") else null)
             // The chart first, then its controls, then its content.
             if (kind == "chart") out.add(0, item) else out.add(item)
         }
@@ -534,7 +537,14 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS)
                 }
                 item.actionable -> {
-                    info.className = "android.widget.Button"
+                    // A checkbox, switch or radio as Android's own: TalkBack says its state.
+                    info.className = when (item.role) {
+                        "checkbox" -> "android.widget.CheckBox"
+                        "switch" -> "android.widget.Switch"
+                        "radio" -> "android.widget.RadioButton"
+                        else -> "android.widget.Button"
+                    }
+                    item.checked?.let { info.isCheckable = true; info.isChecked = it }
                     info.isClickable = true
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
                 }

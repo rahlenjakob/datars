@@ -483,13 +483,31 @@ open class DatarsChartView: PlatformView {
         var elements: [Any] = readout.map { r in
             let kind = r["kind"] as? String ?? ""
             let e: UIAccessibilityElement
-            if kind == "button", let path = r["path"] as? String {
+            let checked = r["checked"] as? Bool
+            if ["button", "checkbox", "switch", "radio"].contains(kind), let path = r["path"] as? String {
                 e = DatarsActionable(view: self, path: path)
             } else {
                 e = UIAccessibilityElement(accessibilityContainer: self)
             }
             e.accessibilityLabel = r["label"] as? String
             if let v = r["value"] as? String, !v.isEmpty { e.accessibilityValue = v }
+            // A control with a state, the way VoiceOver says its own: a switch's on or off, a
+            // checkbox's checked, the selected one of a set.
+            if let checked {
+                switch kind {
+                case "switch":
+                    if #available(iOS 17.0, *) {
+                        e.accessibilityTraits.insert(.toggleButton)
+                        e.accessibilityValue = checked ? "1" : "0"
+                    } else {
+                        e.accessibilityValue = checked ? "on" : "off"
+                    }
+                case "radio":
+                    if checked { e.accessibilityTraits.insert(.selected) }
+                default:
+                    e.accessibilityValue = checked ? "checked" : "not checked"
+                }
+            }
             e.accessibilityFrameInContainerSpace = Self.frame(r["rect"]) ?? bounds
             switch kind {
             case "chart": e.accessibilityTraits = [.summaryElement, .header]
@@ -636,9 +654,12 @@ open class DatarsChartView: PlatformView {
         setAccessibilityHelp(readout.first?["value"] as? String)
         setAccessibilityChildren(readout.dropFirst().map { r -> NSAccessibilityElement in
             let kind = r["kind"] as? String ?? ""
-            let e: NSAccessibilityElement = kind == "button" ? DatarsMacActionable(view: self, path: r["path"] as? String ?? "") : NSAccessibilityElement()
+            let presses = ["button", "checkbox", "switch", "radio"].contains(kind)
+            let e: NSAccessibilityElement = presses ? DatarsMacActionable(view: self, path: r["path"] as? String ?? "") : NSAccessibilityElement()
             e.setAccessibilityParent(self)
-            e.setAccessibilityRole(kind == "button" ? .button : .staticText)
+            e.setAccessibilityRole(kind == "checkbox" ? .checkBox : kind == "radio" ? .radioButton : kind == "switch" ? .checkBox : presses ? .button : .staticText)
+            if kind == "switch" { e.setAccessibilitySubrole(.switch) }
+            if let checked = r["checked"] as? Bool { e.setAccessibilityValue(checked ? 1 : 0) }
             e.setAccessibilityLabel(r["label"] as? String)
             if let v = r["value"] as? String, !v.isEmpty { e.setAccessibilityValue(v) }
             e.setAccessibilityFrameInParentSpace(Self.frame(r["rect"]).map { CGRect(x: $0.minX, y: bounds.height - $0.maxY, width: $0.width, height: $0.height) } ?? bounds)
