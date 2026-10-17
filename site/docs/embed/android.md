@@ -104,7 +104,7 @@ The chart reaches TalkBack as its content, not as a picture. The view exposes th
 - engine-drawn switches, checkboxes and segments are `Switch`, `CheckBox` and `RadioButton` nodes with their state; a `select` is a spinner whose double-tap opens Android's own list dialog — the same dialog a tap on it opens for everyone;
 - a brushable plot and a pannable view are nodes with actions: a double-tap starts and keeps a selection (or shows all of a view), scrolling forward and back extends a selection or zooms, a view's scroll left, right, up and down moves it, dismiss cancels;
 - what a tap or an action changed is announced (*"Pears, hidden. Total: 69 kg. Now 2 data points, from 27 to 42."*);
-- the view's content description is the chart's name, and a story step's narration is announced when the chart moves to it.
+- a story's Previous step and Next step are buttons right after the chart, and a step's narration is announced when the chart moves to it.
 
 "Remove animations" (Settings › Accessibility) is honoured as reduced motion: transitions become short crossfades. The setting is read when the view is created.
 
@@ -124,7 +124,7 @@ adb shell am start -n dev.datars.sample/.MainActivity --es url http://127.0.0.1:
 
 `scripts/test-android-sample.sh` does the whole round trip on an emulator: it installs the app, publishes a chart *afterwards*, plays it, republishes it and checks the app shows the new version on relaunch.
 
-> **Status** The library builds into an AAR, its CPU reference's pixel hashes match every other target, and on an Android emulator the sample app draws with OpenGL ES (the emulator's Vulkan can't run on a macOS host) and plays charts published after it was installed — including the world-to-Stockholm map flight with tiles streamed by range. It hasn't run on a physical device yet, and TalkBack's node tree has been checked but not yet driven by TalkBack itself. See the project's [status page]({{src}}/docs/19-status.md).
+> **Status** The library builds into an AAR, its CPU reference's pixel hashes match every other target, and on an Android emulator the sample app draws with OpenGL ES (the emulator's Vulkan can't run on a macOS host) and plays charts published after it was installed — including the world-to-Stockholm map flight with tiles streamed by range. It hasn't run on a physical device yet, and TalkBack itself has been driven on the emulator with real touches — what it says is in the [accessibility guide](/docs/accessibility/#what-talkback-says), and `scripts/test-talkback.sh` repeats it. See the project's [status page]({{src}}/docs/19-status.md).
 
 ## Next
 

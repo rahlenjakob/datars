@@ -32,12 +32,49 @@ The words a host adds around the chart's own — the summary, *"Step 2 of 4"*, *
 | Web (`<datars-view>`, React, Vite, Next) | A focusable `figure` named by the chart; first inside it the summary; then named groups, each run of data marks a `<table>` (name and value columns), axes and legends as a line, native `<input type="range">` and `<select>` for engine-drawn sliders and selects, `role="checkbox" / "switch" / "radio"` with `aria-checked`, buttons for clickable marks, one stop for a brush or a pannable view (`role="application"`, its keys described), real links over linked text. The canvas is hidden from screen readers; chart text lies over it as selectable, findable text, also hidden from them (it's in the content already). A polite live region announces each story step once, and what a click or a key changed. | Browser tests in the repository read each engine's own accessibility tree — Chrome (Chromium), Safari's WebKit and Firefox's Gecko, through Playwright — for the name, summary, tables, roles and states, the keyboard path, a brush from the keyboard, the live region, forced colours (and Chrome for more contrast); a windowed Chrome read through the macOS Accessibility API — what VoiceOver gets. **Not yet** listened to with VoiceOver, NVDA, JAWS or TalkBack driving it, nor in Safari itself (WebKit's engine, not the browser). |
 | iOS, iPadOS (DatarsKit) | VoiceOver elements with their frames, so explore-by-touch finds a bar where it's drawn: the chart first (a summary element), its controls (sliders adjustable, saying *"32,000"*; selects as a menu; switches with the toggle trait), headings in the rotor, data marks with their values, a brush as an adjustable element; double-tap runs a clickable mark; a new step, and what an action changed, are announced. | The elements dumped in the iOS simulator (iPhone 16 Pro), and VoiceOver's actions (activate, increment, decrement, escape) run on the brush there, each announcement recorded; Increase Contrast and Bold Text switched while the chart ran. **Not yet** driven by VoiceOver, nor on a device. |
 | macOS (DatarsKit) | The chart a group with its summary as help, the reading order as its children: check boxes, radio buttons and the switch subrole with their values, buttons that press, a brush or a view that presses, increments and cancels; steps and changes announced; Increase Contrast followed. | Built and unit-tested; **not yet** read with VoiceOver, and Increase Contrast not switched on a Mac. |
-| Android | TalkBack virtual nodes through an `AccessibilityNodeProvider`, in the same order, with screen bounds: headings, values in the content description, `SeekBar` sliders, a `Spinner` per select, `CheckBox`, `Switch` and `RadioButton` nodes with their state, buttons, a brush or a view with click, scroll and dismiss actions; a new step, and what an action changed, are announced. | The node tree dumped with `uiautomator` on an emulator (API 35); TalkBack's actions run on the brush there, each announcement recorded; Contrast, High contrast text and Bold text switched while the chart ran. **Not yet** driven by TalkBack, nor on a device. |
+| Android | TalkBack virtual nodes through an `AccessibilityNodeProvider`, in the same order, with screen bounds, each a stop for TalkBack's swipes and for a finger exploring the screen: the chart with its summary, the story's Previous and Next step, headings, data marks with their values, `SeekBar` sliders saying their value as drawn, a `Spinner` per select, `CheckBox`, `Switch` and `RadioButton` nodes with their state, buttons, a brush or a view adjustable like a slider; a new step, and what an action changed, are announced. | **TalkBack itself** (15.0, on an Android 15 emulator, Google APIs image), driven with real touches — swipes, double-taps, a touch to explore — and what it spoke read from its log: the first 20 stops of the votes, budget, controls and prices examples, a step, a slider, a switch, a checkbox and the brush ([what it said](#what-talkback-says)). `scripts/test-talkback.sh` repeats it. **Not yet** on a device. |
 | Desktop viewer (`datars-view`) | AccessKit (VoiceOver, Narrator/NVDA, Orca): a figure named by the chart with its summary as description, sliders with their drawn value, check boxes, switches and radio buttons with their state, buttons for what a click acts on, a brush or a view with click, increment, decrement and scroll actions, a polite live region for what an action changed. | Unit tests of the tree and its actions; **not yet** with a screen reader. |
 | SVG poster, PDF | The poster is labelled (title, description, roles); a PDF keeps its text as searchable text. Every bundle's text alternative (title, description, each step's narration and data) is readable without any script. | Rendered and inspected at build time; not checked with a screen reader. |
 | Video (`datars video`) | WebVTT captions from each step's narration beside the MP4, and chapters per step. There is no audio description track. | Generated and checked for timing. |
 
 The project's [status page]({{src}}/docs/19-status.md) tracks the gaps in the last column.
+
+## What TalkBack says
+
+TalkBack 15 on an Android 15 emulator, driven by real touches (`scripts/test-talkback.sh`), each line what it spoke after one gesture; "Heading", "Slider", "Check box" and the hints are TalkBack's own words. Abridged:
+
+```text
+votes      open        Vote share by party, Sweden 2022, 8 data points, from 4.6 to 30.3. Heading
+           swipe →     Next step. Button. Double-tap to activate
+           swipe →     Vote share by party, 2022 (%). Heading
+           swipe →     y axis: 0, 5, 10, 15, 20, 25, 30, 35
+           swipe →     share by party. Heading
+           swipe →     Social Democrats, 30.3
+           swipe →     Sweden Democrats, 20.5   … Moderates, 19.1 … Liberals, 4.6
+           swipe →     x axis: Social Democrats, Sweden Democrats, Moderates, … Liberals
+           swipe →     Note: for the Social Democrats, still Sweden's largest party.
+  (on Next step) double-tap   Ranked: eight parties cleared the 4% threshold.
+                 double-tap   Each bar becomes a slice.
+budget     swipe →     32,000. Monthly income (SEK). Slider
+           swipe ↑     33,000. Monthly income (SEK). Slider
+           swipe ↑     34,000. Monthly income (SEK). Slider
+           swipe ↓     33,000. Monthly income (SEK). Slider
+           swipe →     Per month (SEK). Heading  … Housing, 10,240 … Other, 3,840
+controls   swipe →     Highlight: Central. Drop down list
+           swipe →     0. Sales between, from. Slider
+           swipe →     checked. Quarter: Q1. Radio button
+           swipe →     Off. Average line. Switch
+           double-tap  On.
+           swipe →     checked. North. Check box
+           double-tap  Not checked. Now 4 data points, from 18 to 36.
+prices     touch       nothing selected. Drag across the year to zoom in, range selection. Slider.
+                       Double-tap to start a selection or keep it, swipe up or down to extend it
+           swipe ↑     1 to 50. Drag across the year to zoom in, range selection. Slider
+           swipe ↑     1 to 100. …
+           double-tap  Selected 1 to 100. Now 465 data points.
+```
+
+The first run found what a dump of the node tree hadn't: TalkBack skipped every item (they weren't marked focusable for it — swipes said nothing past the chart's name), a slider said its raw number first ("32000.0. Monthly income (SEK): 32,000") and nothing when adjusted, a switch didn't say on or off, a toggle wasn't confirmed, the summary ended "10,240.." , there was no way to step the story, the prices chart said "730 data points" for a year (its detail and overview plots each counted every day), and the brush's hint gave keyboard keys. All fixed; the transcript above is after. Still to judge with people who use TalkBack every day: the prices chart's marks say a day number and a price ("1, 149.5") because that is what the example labels them — a document says "Day 1" by labelling its marks so.
 
 ## Reader settings the charts follow
 
@@ -188,7 +225,7 @@ This mapping is the project's reading of the criteria against what the runtime d
 
 ## Known limitations
 
-- **No screen reader has driven these yet.** The web tree is checked in Chromium, WebKit and Gecko and through the macOS Accessibility API, the native trees and their actions in the simulator and emulator; nobody has yet listened to VoiceOver, TalkBack, NVDA or JAWS read them, and real devices and the Safari browser itself are untested.
+- **One screen reader driven so far: TalkBack**, on an emulator (above). The web tree is checked in Chromium, WebKit and Gecko and through the macOS Accessibility API, the iOS tree and its actions in the simulator; VoiceOver, NVDA and JAWS haven't been driven, and real devices and the Safari browser itself are untested.
 - **Safari's Tab key skips buttons** unless the reader turns on *Press Tab to highlight each item*: in WebKit, Tab goes from the chart to its data, past the story's ← and → buttons (the chart's own arrow keys still step it) and its controls' buttons.
 - **A click's result is said generically**: the clicked mark's new label, parts whose label changed, and how much data is shown now — not "filtered to …" in the chart's own terms. A selection that only changes how marks look, with labels that don't say it, is not announced: say the state in the label (`bar({ label: e("d.party + (coalition.has(d.party) ? ', in the coalition' : '')") })`).
 - **Drags of your own** (a `scrub` on a custom mark, a draggable handle) have no keyboard path; the standard library's brushes, views and sliders do. The desktop viewer offers brushes and views to screen readers (AccessKit actions), not yet to the keyboard alone.

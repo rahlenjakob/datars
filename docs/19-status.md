@@ -130,10 +130,14 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   security setting this environment doesn't change). iOS: VoiceOver elements dumped and operated
   (activate, increment, escape on a brush) in the simulator, Increase Contrast and Bold Text
   followed live (switched in the simulator); macOS: children with press, increment and cancel,
-  Increase Contrast followed (not switched on a Mac); Android: TalkBack virtual nodes dumped with
-  `uiautomator` and operated on the emulator (API 35), Contrast, High contrast text and Bold text
-  followed live (switched there); desktop AccessKit unit-tested, with a polite live region. None
-  yet driven by a screen reader or on a device. Reduced motion everywhere; `prefers-contrast:
+  Increase Contrast followed (not switched on a Mac); Android: **TalkBack itself driven** on the emulator (TalkBack 15, Android 15,
+  Google APIs image) with real touches written to its touchscreen, what it spoke read from its
+  log (`scripts/test-talkback.sh`; the transcript is in the accessibility guide) — which found and
+  fixed: items TalkBack couldn't focus (swipes said nothing past the chart's name), sliders saying
+  their raw number and nothing when adjusted, a switch without on/off, toggles not confirmed, no
+  way to step a story, a doubled full stop, a year counted twice by an overview + detail chart,
+  keyboard hints on a touch screen; Contrast, High contrast text and Bold text followed live; desktop AccessKit unit-tested, with a polite live region. None
+  yet on a device; TalkBack the only screen reader driven. Reduced motion everywhere; `prefers-contrast:
   more` and forced colours on the web; the reader's text size on every host (above); labelled
   SVG posters.
 - **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text (at
