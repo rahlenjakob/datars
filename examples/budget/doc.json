@@ -76,9 +76,6 @@
      "step": 1000,
      "label": "Monthly income (SEK)",
      "format": ",.0f"
-    },
-    "size": {
-     "h": 44
     }
    },
    {

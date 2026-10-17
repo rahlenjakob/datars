@@ -17,7 +17,7 @@ export default doc({
     key: "root",
     layout: { type: "rows", gap: 8, padding: [16, 20, 12, 12] },
     children: [
-      slider({ signal: "income", min: 10000, max: 80000, step: 1000, label: "Monthly income (SEK)", format: ",.0f" }, { size: { h: 44 } }),
+      slider({ signal: "income", min: 10000, max: 80000, step: 1000, label: "Monthly income (SEK)", format: ",.0f" }),
       plot({ data: "amounts", x: "amount", y: "category", xType: "linear", yType: "band", xDomain: [0, 26000], title: "Per month (SEK)", format: ",.0f",
         children: [bar({ labels: true, format: ",.0f", fill: "$accent" })] }, { key: "chart" }),
     ],
