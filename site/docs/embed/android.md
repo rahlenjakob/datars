@@ -53,8 +53,12 @@ The engine is built with the recipe sandbox (for T3 bundles) and the Inter font 
 | `goTo(index)` | Go to a program state (0-based); the transition plays. |
 | `seek(pos)` | Program position as a number (state + fraction toward the next), for scroll-scrubbed stories. |
 | `setPlaying(on)` | Pause or resume autoplay (for example when the view scrolls off screen). |
-| `setDarkMode(dark)` | Dark or light theme mode. The view doesn't follow the system setting on its own. |
+| `setDarkMode(dark)` | Dark or light theme mode. The view doesn't follow the system's dark theme on its own; it does follow the reader's contrast setting (below). |
+| `followsContrast` | Whether the reader's contrast setting raises the chart to its high-contrast mode (default `true`). |
 | `textScale: Double?` | The chart's text size as a multiple of the theme's; `null` (the default) follows the system font size. |
+| `boldText: Boolean?` | Draw the chart's text heavier; `null` (the default) follows Bold text. |
+| `onAnnouncement` | What the reader's last tap, activation or adjustment changed, as TalkBack is told it. |
+| `status()` | State, narration, semantics, the theme's mode and tokens. |
 | `pixelHash()` | The last frame's pixel identity — the same value `datars render --hash` prints for the same state. |
 
 The view renders on demand: at most one frame per vsync while something moves, then nothing until the engine's next scheduled moment (an autoplay hold, a live refresh). Touches reach the chart — taps run interactive marks' click intents, drags brush and pan explorable views — and then your `OnClickListener`.
@@ -97,12 +101,14 @@ The chart reaches TalkBack as its content, not as a picture. The view exposes th
 - every mark with semantics is a node with its name, its value and its bounds on screen, so explore-by-touch finds the bar under your finger; the chart's parts are headings; an axis or a legend is one node;
 - interactive marks are buttons — a double-tap runs their click intent;
 - engine-drawn sliders are seek bars with their range — swipe to step the value, or set it directly;
-- engine-drawn switches, checkboxes, segments and buttons are buttons; a `select` is a spinner whose double-tap opens Android's own list dialog — the same dialog a tap on it opens for everyone;
+- engine-drawn switches, checkboxes and segments are `Switch`, `CheckBox` and `RadioButton` nodes with their state; a `select` is a spinner whose double-tap opens Android's own list dialog — the same dialog a tap on it opens for everyone;
+- a brushable plot and a pannable view are nodes with actions: a double-tap starts and keeps a selection (or shows all of a view), scrolling forward and back extends a selection or zooms, a view's scroll left, right, up and down moves it, dismiss cancels;
+- what a tap or an action changed is announced (*"Pears, hidden. Total: 69 kg. Now 2 data points, from 27 to 42."*);
 - the view's content description is the chart's name, and a story step's narration is announced when the chart moves to it.
 
 "Remove animations" (Settings › Accessibility) is honoured as reduced motion: transitions become short crossfades. The setting is read when the view is created.
 
-The reader's **font size** (Settings › Display › Font size) lays the chart out again with bigger labels — at creation, and when it changes while an activity that handles `fontScale` itself stays up. `view.textScale = 1.0` keeps the theme's sizes; `null` follows the setting.
+The reader's **font size** (Settings › Display › Font size) lays the chart out again with bigger labels — at creation, and when it changes while an activity that handles `fontScale` itself stays up. `view.textScale = 1.0` keeps the theme's sizes; `null` follows the setting. **Bold text** (Android 12+) draws the chart's text heavier, and **Contrast** at medium or high (Android 14+, Settings › Accessibility › Color and motion) — or **High contrast text** where the system lets apps read it — puts the chart in its high-contrast mode, both live.
 
 ## Try the sample app
 

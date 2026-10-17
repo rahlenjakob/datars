@@ -177,6 +177,7 @@ Theme tokens: `map.label`, `map.label-halo`
 | `format` | string |  | Number format for labels (d3-format). |
 | `label` | string |  | Axis title: under the end of a horizontal axis; above the top of a vertical one, over its labels (a plot draws `yLabel` above its top-left corner instead, in a row of its own). |
 | `line` | bool | `true` | Draw the domain line. |
+| `name` | string |  | What a screen reader calls the axis when its title is drawn elsewhere (a plot's `yLabel`, in a row above the plot): "Seats: 0, 50, 100" rather than "y axis: 0, 50, 100". Defaults to `label`, else "x axis" / "y axis". |
 | `orient` | enum | `"left"` |  |
 | `prefix` | string |  | Before each number label ('$'). |
 | `scale` | string | `"y"` | The scale to draw. |

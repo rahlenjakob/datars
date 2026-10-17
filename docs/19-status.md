@@ -114,27 +114,39 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
 - **Accessibility:** a chart's name (its title) and summary (its description, how many data
   points, their range, how many without data) on every host, in the document's language (English
   and Swedish phrase tables, `datars_engine::phrases`); one reading order from the runtime
-  (`readout`): headings, axes and legends as a line each, marks with their values, repeated marks
-  counted, marks without data as one line, buttons, and the std controls' native kinds
-  (checkbox, switch, radio with their state). Web: the summary first inside the figure, data
-  tables, one Tab stop into the data and arrow keys through it with the mark outlined and named,
-  native inputs, `role="checkbox" / "switch" / "radio"`, step narration announced once; checked in
-  Chrome's accessibility tree by browser tests and read through the macOS Accessibility API (what
-  VoiceOver gets) in a windowed Chrome — VoiceOver itself not driven (its AppleScript control is a
-  system security setting this environment doesn't change). iOS VoiceOver elements dumped in the
-  simulator; macOS children with press actions; Android TalkBack virtual nodes dumped with
-  `uiautomator` on the emulator; desktop AccessKit unit-tested. None yet driven by a screen reader
-  or on a device. Reduced motion everywhere; `prefers-contrast: more` and forced colours on the
-  web; the reader's text size on every host (above); labelled SVG posters.
+  (`readout`): headings, axes and legends as a line each (an axis by its title when it has one),
+  marks with their values, repeated marks counted, marks without data as one line, buttons, the
+  std controls' native kinds (checkbox, switch, radio with their state), and a brushable plot or
+  a pannable view as one stop the keyboard operates (`Engine::key`: Enter, the arrows, Escape;
+  +, −, 0). What a click, tap or key changed is said politely (`Engine::take_announcement`: the
+  clicked mark's new label, parts whose label changed, the data shown now). Web: the summary first
+  inside the figure, data tables, one Tab stop into the data and arrow keys through it with the
+  mark outlined and named, native inputs, `role="checkbox" / "switch" / "radio"`, brush and view
+  stops (`role="application"`), a polite live region; checked by browser tests in the
+  accessibility trees of Chromium, WebKit and Gecko (Playwright) — the same results in all three,
+  except that WebKit's Tab skips buttons (Safari's default) and Firefox's tree, as Playwright reads
+  it, leaves `checked=false` out — and read through the macOS Accessibility API (what VoiceOver gets) in a windowed
+  Chrome. VoiceOver itself not driven (its AppleScript control, `SCREnableAppleScript`, is a system
+  security setting this environment doesn't change). iOS: VoiceOver elements dumped and operated
+  (activate, increment, escape on a brush) in the simulator, Increase Contrast and Bold Text
+  followed live (switched in the simulator); macOS: children with press, increment and cancel,
+  Increase Contrast followed (not switched on a Mac); Android: TalkBack virtual nodes dumped with
+  `uiautomator` and operated on the emulator (API 35), Contrast, High contrast text and Bold text
+  followed live (switched there); desktop AccessKit unit-tested, with a polite live region. None
+  yet driven by a screen reader or on a device. Reduced motion everywhere; `prefers-contrast:
+  more` and forced colours on the web; the reader's text size on every host (above); labelled
+  SVG posters.
 - **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text (at
-  the height the web grows a chart to) and counts labels cut off, overlapping, clipped, or on the
-  data without a halo; `datars test` keeps each example's count as a ratchet. Over the examples,
-  the std reference and gallery figures (126 documents), 122 remain of 1182 + 242 found (58 of the
-  fixed were turned names the check had counted by their line spacing); the examples have 13, all
-  at 2 × on a phone. The check also found a layout bug at 1 × (axis names turned across bars when
-  the final scales changed the plot area), fixed. Open: a Gantt group heading taller than its row
-  at 2 ×, crowded dense networks and multi-panel figures at 2 × on a phone, and the site's
-  hand-placed SDK diagrams (most of the 2,321 left in the whole site corpus of 202 documents).
+  the height the web grows a chart to) and counts labels cut off, overlapping, clipped (by their
+  letters: the end of a word counts, a descender doesn't), or on the data without a halo; `datars
+  test` keeps each example's count as a ratchet. Over the examples, the std reference and gallery
+  figures (126 documents), 115 remain of 1182 + 242 found; the examples have 13, all at 2 × on a
+  phone. Rows more than their box holds now shrink their fixed-size plots (down to half) before
+  anything runs off the end, so a plot's axis stays under its marks. Reference-line labels move
+  to a clear place where one exists (inflation's "Target 2%" at the left end at 1 and 1.5 ×); on
+  a phone at 2 × the data is under every place along its line, so it keeps a halo. Open: crowded
+  dense networks and multi-panel figures at 2 × on a phone, and the site's hand-placed SDK
+  diagrams (most of the 2,321 left in the whole site corpus of 202 documents).
 - **Selectable chart text (web):** done — transparent text spans over the canvas (select, copy,
   find-in-page); `aria-hidden`, since the semantics mirror is what screen readers read.
 - **Tooltips:** hover on the web and desktop; tap on touch screens (web, iOS, Android), placed above

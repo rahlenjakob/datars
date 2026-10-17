@@ -68,10 +68,14 @@ chart.targetState = 2            // go to a state now, or as soon as the chart h
 | `renderLoop()` | Draw now, and keep drawing while something moves. Call it after changing the engine directly. |
 | `updateAccessibility()` | Rebuild the VoiceOver elements (the view does this itself after loads, taps and data). |
 | `textScale: Double?` | The chart's text size as a multiple of the theme's; `nil` (the default) follows Dynamic Type, live. |
+| `mode: DatarsEngine.Mode` | The app's look, `.light` (default) or `.dark`. While the reader asks for more contrast (Increase Contrast), the chart is in its high-contrast mode instead. |
+| `followsContrast: Bool` | Whether Increase Contrast raises the chart to its high-contrast mode (default `true`). |
+| `boldText: Bool?` | Draw the chart's text heavier; `nil` (the default) follows Bold Text, live. |
+| `onAnnouncement: ((String) -> Void)?` | What the reader's last tap, activation or adjustment changed, as VoiceOver is told it — for an app that also shows it. |
 
 On macOS the view follows the mouse: marks show their labels as tooltips, controls show where the pointer is (`hover()`), and the cursor is the one the engine asks for (`engine.cursor`) — a pointing hand over what a click acts on, an open hand over a view that pans, a crosshair over a brushable area.
 
-The view renders on demand: a display link runs only while something moves, and a one-shot timer wakes it for autoplay holds and live refreshes. It follows **Reduce Motion** by itself: transitions become short crossfades. It follows **Dynamic Type** too: a bigger text size lays the chart out again with bigger labels, as the setting changes (macOS has no system text size: `textScale` sets one).
+The view renders on demand: a display link runs only while something moves, and a one-shot timer wakes it for autoplay holds and live refreshes. It follows **Reduce Motion** by itself: transitions become short crossfades. It follows **Dynamic Type** too: a bigger text size lays the chart out again with bigger labels, as the setting changes (macOS has no system text size: `textScale` sets one). **Increase Contrast** (iOS and macOS) puts the chart in its high-contrast mode and **Bold Text** (iOS) draws its text heavier, both live.
 
 ## Mode, brand and state from Swift
 
@@ -79,7 +83,7 @@ The view renders on demand: a display link runs only while something moves, and 
 
 ```swift
 let engine = chart.engine
-engine.setMode(.dark)                                   // .light, .dark, .highContrast
+chart.mode = .dark                                      // the app's look; Increase Contrast raises it
 engine.setTokens(["accent": "#0f766e", "radius.bar": 7]) // brand overrides; locked tokens are kept
 engine.send("next")                                     // program events: next, prev, back, goto:<state>
 engine.goto(3)
@@ -89,7 +93,10 @@ chart.renderLoop()
 
 | Call | What it does |
 |---|---|
-| `setMode(_:)` | Light, dark or high contrast. The view doesn't follow the system appearance on its own — pass it the trait collection's or SwiftUI's colour scheme. |
+| `setMode(_:)` | Light, dark or high contrast, directly. The view doesn't follow the system appearance on its own: set `DatarsChartView.mode` from the trait collection's or SwiftUI's colour scheme (the view then still follows Increase Contrast). |
+| `setBoldText(_:)` | Heavier text (`DatarsChartView.boldText` does it for you, following Bold Text). |
+| `key(path:key:)` | A key on a brushable area or a pannable view (a `readout` item of kind `brush` or `pan`): `Enter`, `Escape`, `ArrowLeft` … `+`, `-`, `0` — for apps with their own keyboard handling. |
+| `takeAnnouncement()` | What the last tap, activation or key changed, in words, once. |
 | `setTokens(_:)` | Theme token overrides: your app's brand on a downloaded chart. Each call replaces the previous overrides. |
 | `send(_:)`, `goto(_:)` | Move the program. |
 | `seek(_:)` | Program position as a number (state + fraction toward the next) — scroll-scrubbed stories inside a `ScrollView`. |
@@ -116,7 +123,7 @@ struct BrandedChart: UIViewRepresentable {
     }
 
     func updateUIView(_ chart: DatarsChartView, context: Context) {
-        chart.engine.setMode(colorScheme == .dark ? .dark : .light)
+        chart.mode = colorScheme == .dark ? .dark : .light
         chart.engine.setTokens(["accent": "#0f766e"])
         chart.renderLoop()
     }
@@ -153,7 +160,9 @@ The chart reaches VoiceOver as its content, not as a picture:
 - a story step's narration is announced when the chart moves to it;
 - interactive marks are buttons — a double-tap runs their click intent;
 - engine-drawn sliders are adjustable elements — swipe up or down to change the value, which they say as drawn (*"32,000"*);
-- engine-drawn switches, checkboxes, segments and buttons are buttons; a `select` is the system's menu button — a tap on it opens the iOS menu of its options (with a check on the chosen one) instead of the chart's drawn list;
+- engine-drawn switches (the toggle-button trait), checkboxes and segments say their state; a `select` is the system's menu button — a tap on it opens the iOS menu of its options (with a check on the chosen one) instead of the chart's drawn list;
+- a brushable plot is an adjustable element (*"Spot price, range selection: nothing selected"*): a double-tap starts a selection and keeps it, swiping up and down extends it and takes it back, the escape gesture cancels; a pannable view zooms by swiping up and down and moves with a three-finger swipe;
+- what a tap, an activation or an adjustment changed is announced, queued behind what VoiceOver is saying (*"Pears, hidden. Total: 69 kg. Now 2 data points, from 27 to 42."*);
 - on macOS, the chart is a group (its summary as help) whose children are the same elements; clickable marks press.
 
 See [accessibility](/docs/accessibility/) for what the semantics contain and how to check them with `datars semantics`.
