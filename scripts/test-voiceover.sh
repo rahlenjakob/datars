@@ -10,13 +10,8 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 PORT="${PORT:-8795}"
 OUT=out/voiceover && mkdir -p "$OUT"
-SITE=out/voiceover-site && rm -rf "$SITE" && mkdir -p "$SITE/runtime"
-cp -R packages/web/dist/* "$SITE/runtime/"
-for c in budget votes prices; do cp "examples/$c/doc.json" "$SITE/$c.json"; done
-node scripts/doc-to-json.mjs site/charts/controls.ts > "$SITE/controls.json"
-for c in budget votes prices controls; do
-  printf '<!doctype html><html lang="en"><meta charset="utf-8"><title>%s</title><script type="module" src="/runtime/datars.js"></script><h1>%s</h1><p>Before the chart</p><datars-view doc="/%s.json" height="460" style="width:720px"></datars-view><p>After the chart</p></html>' $c $c $c > "$SITE/$c.html"
-done
+SITE=out/voiceover-site
+bash scripts/build-a11y-pages.sh "$SITE" >/dev/null
 target/release/datars serve "$SITE" --port "$PORT" >/dev/null 2>&1 & SERVER=$!
 trap 'kill $SERVER 2>/dev/null; osascript -e "tell application \"Safari\" to close every window" >/dev/null 2>&1 || true' EXIT
 osa() { perl -e 'alarm 20; exec @ARGV' osascript -e "$1" 2>&1; }
