@@ -125,10 +125,11 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   web; the reader's text size on every host (above); labelled SVG posters.
 - **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text;
   `datars test` keeps each example's count as a ratchet. Over the examples, the std reference and
-  gallery figures (126 documents), 289 unreadable labels remain of 1182 found — none in the
-  examples at 1 ×, most of the rest at 2 × on a phone (dense networks, a phone-sized dashboard,
-  tables wider than the screen). Content taller than a fixed-height chart at large text still
-  runs off its bottom.
+  gallery figures (126 documents), 122 unreadable labels remain of 1182 found (58 of the fixed
+  were turned names the check had counted by their line spacing); the examples have 11, all at
+  2 × on a phone. Open: slope and timeline labels at a phone's edge at 2 ×, Gantt names a narrow
+  column clips, content taller than a fixed-height chart at large text (it runs off the bottom),
+  and the site's hand-placed SDK diagrams (most of the 2,228 left in the whole site corpus).
 - **Selectable chart text (web):** done — transparent text spans over the canvas (select, copy,
   find-in-page); `aria-hidden`, since the semantics mirror is what screen readers read.
 - **Tooltips:** hover on the web and desktop; tap on touch screens (web, iOS, Android), placed above
