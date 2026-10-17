@@ -87,10 +87,10 @@ export default doc({
     last: { from: "cur", ops: [op.aggregate([], { t: ["last", "t"], p: ["last", "p"] })] },
     // The price axis covers the session's prices and the reference (the previous close), so the
     // dashed line is always on it.
-    // It moves in steps of a quarter percent of the reference: a session's first minutes (a range
+    // It moves in steps of a tenth of a percent of the reference: a session's first minutes (a range
     // of a few dollars) would otherwise rescale the axis with nearly every trade.
     ylim: { from: "m", ops: [
-      op.derive("q", e("d.ref * 0.0025")),
+      op.derive("q", e("d.ref * 0.001")),
       op.derive("lo", e(`floor((${HAS} ? min(d.ref, table.min('cur', 'p')) : d.ref) / d.q) * d.q`)),
       op.derive("hi", e(`max(d.lo + d.q, ceil((${HAS} ? max(d.ref, table.max('cur', 'p')) : d.ref) / d.q) * d.q)`)),
     ] },
