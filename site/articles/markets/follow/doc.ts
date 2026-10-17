@@ -87,9 +87,12 @@ export default doc({
     last: { from: "cur", ops: [op.aggregate([], { t: ["last", "t"], p: ["last", "p"] })] },
     // The price axis covers the session's prices and the reference (the previous close), so the
     // dashed line is always on it.
+    // It moves in steps of a quarter percent of the reference: a session's first minutes (a range
+    // of a few dollars) would otherwise rescale the axis with nearly every trade.
     ylim: { from: "m", ops: [
-      op.derive("lo", e(`${HAS} ? min(d.ref, table.min('cur', 'p')) : d.ref * 0.995`)),
-      op.derive("hi", e(`${HAS} ? max(d.ref, table.max('cur', 'p')) : d.ref * 1.005`)),
+      op.derive("q", e("d.ref * 0.0025")),
+      op.derive("lo", e(`floor((${HAS} ? min(d.ref, table.min('cur', 'p')) : d.ref) / d.q) * d.q`)),
+      op.derive("hi", e(`max(d.lo + d.q, ceil((${HAS} ? max(d.ref, table.max('cur', 'p')) : d.ref) / d.q) * d.q)`)),
     ] },
   },
   // A minute's price glides to its next trade; a new market morphs in. The feed's pace caps it.
@@ -116,34 +119,36 @@ export default doc({
         key: "head",
         size: { h: e(`${BASE} + ${sz(34)}`) },
         semantics: { role: "title", label: e(`${HAS} ? ${M("name")} + ', ' + ${PRICE} + ', ' + (${CHG} < 0 ? 'down ' : 'up ') + format(abs(${PCT}), '.2f') + ' percent. ' + ${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")}) : ${M("name")} + ': ' + empty`) },
-        children: [
-          text(e(`measure(${NAME_FULL}, ${sz(13)}, 600) > box.w ? ${M("name")} : ${NAME_FULL}`), [0, e(sz(14))], { key: "name", style: { size: e(sz(13)), weight: 600, ink: "$ink-2" } }),
-          text("", [0, e(`${sz(20)} + ${FIG}`)], {
-            key: "price",
-            number: { value: e(LAST), format: e(M("fmt")) },
-            style: { size: e(FIG), weight: 700 },
-            when: e(HAS),
-          }),
-          // The day's change: a triangle, the amount and the share — beside the price, or under it
-          // when they don't fit side by side (a phone, a reader's bigger text).
-          group({
-            key: "change",
-            when: e(HAS),
-            children: [
-              shape(geom.path(e(`${CHG} < 0
-                ? 'M' + ${CX} + ' ' + (${BY} - ${CS} * 0.62) + ' L' + (${CX} + ${CS} * 0.6) + ' ' + (${BY} - ${CS} * 0.62) + ' L' + (${CX} + ${CS} * 0.3) + ' ' + (${BY} - ${CS} * 0.1) + ' Z'
-                : 'M' + ${CX} + ' ' + (${BY} - ${CS} * 0.1) + ' L' + (${CX} + ${CS} * 0.6) + ' ' + (${BY} - ${CS} * 0.1) + ' L' + (${CX} + ${CS} * 0.3) + ' ' + (${BY} - ${CS} * 0.62) + ' Z'`)),
-                { key: "arrow", fill: e(INK) }),
-              // Numbers that count to their new values (a changed string would crossfade, two
-              // figures over each other for a moment, every beat).
-              text("", [e(AX), e(BY)], { key: "amount", number: { value: e(CHG), format: "+$,.2f" }, style: { size: e(CS), weight: 600, ink: e(INK) } }),
-              text("(", [e(`${AX} + ${AW} + ${CS} * 0.45`), e(BY)], { key: "open", style: { size: e(CS), weight: 600, ink: e(INK) } }),
-              text("", [e(`${AX} + ${AW} + ${CS} * 0.45 + measure('(', ${CS}, 600)`), e(BY)], { key: "share", number: { value: e(PCT), format: "+.2f" }, style: { size: e(CS), weight: 600, ink: e(INK) } }),
-              text("%)", [e(`${AX} + ${AW} + ${CS} * 0.45 + measure('(' + format(${PCT}, '+.2f'), ${CS}, 600)`), e(BY)], { key: "close", style: { size: e(CS), weight: 600, ink: e(INK) } }),
-            ],
-          }),
-          text(e(`${HAS} ? ${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")}) : empty`), [0, e(`${BASE} + ${sz(24)}`)], { key: "ref", style: { size: e(sz(13)), ink: "$muted" } }),
-        ],
+        // One market's header: keyed by the market (a repeat over its one row), so a new market
+        // crossfades in — its price is another number, not one to count to.
+        children: [repeat("m", group({ children: [
+              text(e(`measure(${NAME_FULL}, ${sz(13)}, 600) > box.w ? ${M("name")} : ${NAME_FULL}`), [0, e(sz(14))], { key: "name", style: { size: e(sz(13)), weight: 600, ink: "$ink-2" } }),
+              text("", [0, e(`${sz(20)} + ${FIG}`)], {
+                key: "price",
+                number: { value: e(LAST), format: e(M("fmt")) },
+                style: { size: e(FIG), weight: 700 },
+                when: e(HAS),
+              }),
+              // The day's change: a triangle, the amount and the share — beside the price, or under it
+              // when they don't fit side by side (a phone, a reader's bigger text).
+              group({
+                key: "change",
+                when: e(HAS),
+                children: [
+                  shape(geom.path(e(`${CHG} < 0
+                    ? 'M' + ${CX} + ' ' + (${BY} - ${CS} * 0.62) + ' L' + (${CX} + ${CS} * 0.6) + ' ' + (${BY} - ${CS} * 0.62) + ' L' + (${CX} + ${CS} * 0.3) + ' ' + (${BY} - ${CS} * 0.1) + ' Z'
+                    : 'M' + ${CX} + ' ' + (${BY} - ${CS} * 0.1) + ' L' + (${CX} + ${CS} * 0.6) + ' ' + (${BY} - ${CS} * 0.1) + ' L' + (${CX} + ${CS} * 0.3) + ' ' + (${BY} - ${CS} * 0.62) + ' Z'`)),
+                    { key: "arrow", fill: e(INK) }),
+                  // Numbers that count to their new values (a changed string would crossfade, two
+                  // figures over each other for a moment, every beat).
+                  text("", [e(AX), e(BY)], { key: "amount", number: { value: e(CHG), format: "+$,.2f" }, style: { size: e(CS), weight: 600, ink: e(INK) } }),
+                  text("(", [e(`${AX} + ${AW} + ${CS} * 0.6`), e(BY)], { key: "open", style: { size: e(CS), weight: 600, ink: e(INK) } }),
+                  text("", [e(`${AX} + ${AW} + ${CS} * 0.6 + measure('(', ${CS}, 600)`), e(BY)], { key: "share", number: { value: e(PCT), format: "+.2f" }, style: { size: e(CS), weight: 600, ink: e(INK) } }),
+                  text("%)", [e(`${AX} + ${AW} + ${CS} * 0.6 + measure('(' + format(${PCT}, '+.2f'), ${CS}, 600)`), e(BY)], { key: "close", style: { size: e(CS), weight: 600, ink: e(INK) } }),
+                ],
+              }),
+              text(e(`${HAS} ? ${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")}) : empty`), [0, e(`${BASE} + ${sz(24)}`)], { key: "ref", style: { size: e(sz(13)), ink: "$muted" } }),
+        ] }))],
       }),
       // The session's chart once the market has prices; until then, what the page is waiting for.
       group({

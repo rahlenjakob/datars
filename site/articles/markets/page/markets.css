@@ -14,9 +14,14 @@
   }
 }
 
+/* On a phone the chart is taller than wide: the header and status take their room, and the
+   session's line keeps a real height under them. */
+figure[data-story="follow"] .chart { --phone-aspect: 1.45; }
+
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
 
 .tools { display: flex; justify-content: center; min-height: 36px; margin: 16px auto 0; }
+#replay { visibility: hidden; }
 .tools button, .keys button[type="submit"] {
   height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--soft); background: transparent; color: var(--ink);
   font: 600 13.5px/1 var(--ui); cursor: pointer; transition: background .15s, color .15s, border-color .15s;

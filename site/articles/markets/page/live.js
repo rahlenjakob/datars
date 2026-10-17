@@ -139,6 +139,7 @@ function showRecorded(data) {
 let replaying = null;
 async function replay() {
   if (replaying) { replaying.stop(); return; }
+  if (state.feed === "live") return;
   const data = await recordedRows();
   const sym = state.feed === "recorded" ? state.sym : "BTC";
   const run = `replay-${Date.now()}`;
@@ -319,6 +320,10 @@ function stopAll() { while (feeds.length) feeds.pop().feed.stop(); }
 
 async function start(keys) {
   stopAll();
+  replaying?.stop();
+  // The replay is the recorded day's: shown only without a key (its room is kept either way, so
+  // nothing moves; markets.css hides it until this script says).
+  if (replayButton) replayButton.style.visibility = keys.finnhub || keys.twelvedata ? "hidden" : "visible";
   if (keys.finnhub || keys.twelvedata) {
     // Stocks are what a key is for: a reader who just came to follow them starts on Apple.
     set({ feed: "live", sym: state.feed === "live" && bySym[state.sym] ? state.sym : "AAPL", status: "Connecting…", source: "" });
