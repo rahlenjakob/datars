@@ -94,7 +94,7 @@ Mounting charts as they come near the viewport keeps a long article light: each 
 |---|---|---|
 | `src` | URL | The chart: a manifest (`…/c/<alias>`) or a single `.datars` file. |
 | `doc` | URL | A raw document (JSON) instead — for development; loads the full engine. |
-| `height` | px | The height to reserve and draw at. The chart fills the element's width. |
+| `height` | px | The height to reserve and draw at. The chart fills the element's width. With a reader's bigger text (past the theme's size), a chart whose text would run off the bottom grows to fit — never shrinks below this. |
 | `mode` | `light`, `dark`, `high-contrast` | The theme mode. Without it the chart follows the reader, live: `high-contrast` when they ask for more contrast (`prefers-contrast: more`) or the system forces its colours, else `prefers-color-scheme`. |
 | `text-scale` | number, `auto` | Text size as a multiple of the theme's (`1`: its own). Without it (or `auto`) the chart follows the reader's browser font size, live — labels grow and the chart lays out again around them. |
 | `state` | number | Go to this program state (0-based); the transition plays. |

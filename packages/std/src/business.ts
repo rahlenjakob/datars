@@ -777,7 +777,9 @@ export const gantt = recipe<GanttParams>({
         // touch the one above is left out — the bar still says it, to a pointer and a screen reader.
         group({ key: "labels", size: { w: e(`min(box.w * 0.34, table.max(${q(Tl)}, "__lw"))`) }, clip: "box", declutter: true, children: [repeat(T, text(e(`String(${fld(p.task)})`), [e(`d.__kind == "group" ? 0 : ${indent}`), e(cyv)], {
           key: e("d.__id"),
-          style: { size: e('d.__kind == "group" ? token("size.body") : token("size.label")'), weight: e('d.__kind == "group" ? 600 : 400'), ink: e('d.__kind == "group" ? "$ink" : "$ink-2"'), baseline: "middle" },
+          // A name wider than the column wraps in it (to a second line where the row has room;
+          // a name that then touches the next is left out, as above) rather than being cut.
+          style: { size: e('d.__kind == "group" ? token("size.body") : token("size.label")'), weight: e('d.__kind == "group" ? 600 : 400'), ink: e('d.__kind == "group" ? "$ink" : "$ink-2"'), baseline: "middle", maxWidth: e(`box.w - (d.__kind == "group" ? 0 : ${indent})`) },
           semantics: { role: "decoration" },
         }))] }),
         group({ key: "center", layout: { type: "rows", gap: 6 }, children: [
@@ -853,7 +855,9 @@ export const timeline = recipe<TimelineParams>({
     const L = cx.table("timeline", p.data,
       op.derive("__x", e(`scale.x(${D})`)),
       op.derive("__w", e(`max(measure(${labelText}, ${body}), measure(${dateText}, ${small})) + 4`)),
-      op.derive("__a", e("d.__x + d.__w > box.w ? d.__x - d.__w : d.__x")),
+      // Right of its stem; left of it near the right edge; and where neither side has the room
+      // (a phone, a reader's big text), as far right as keeps it in the box.
+      op.derive("__a", e("d.__x + d.__w <= box.w ? d.__x : d.__x - d.__w >= 0 ? d.__x - d.__w : max(0, box.w - d.__w)")),
       op.lanes({ start: e("d.__a"), end: e("d.__a + d.__w"), gap: 10, max: e(`max(1, floor((box.h - ${2 * stem + 4} - ${eraGap}) / ${laneH}))`) }));
     const Lq = q(L);
     const maxLane = `max(0, table.max(${Lq}, "lane"))`;
@@ -863,8 +867,8 @@ export const timeline = recipe<TimelineParams>({
     // The label block's edge nearest the axis, and its far edge.
     const edge = `(${up} ? ${axisY} - ${gapUp} - ${stem} - ${level} * ${laneH} : ${axisY} + ${gapDown} + ${stem} + ${level} * ${laneH})`;
     const block = `(${laneH} - 8)`;
-    const flip = "(d.__x + d.__w > box.w)";
-    const tx = `(${flip} ? d.__x - 4 : d.__x + 4)`;
+    const flip = "(d.__x + d.__w > box.w && d.__x - d.__w >= 0)";
+    const tx = `(${flip} ? d.__x - 4 : d.__a + 4)`;
     const align = e(`${flip} ? "end" : "start"`);
     const dot = p.color ? e(`scale.color(${fld(p.color)})`) : "$ink";
     const scales: Record<string, ScaleDecl> = { x: { type: time ? "time" : "linear", domain: { data: extent, fields: ["__t0", "__t1"] }, range: "width", nice: false } };
@@ -891,7 +895,7 @@ export const timeline = recipe<TimelineParams>({
           text(e(eraName), [e(`${es} + 5`), e(`${eraY} + ${eraH / 2}`)], { key: "name", when: e(`measure(${eraName}, ${small}, 600) + 10 <= ${ee} - ${es}`), style: { size: "$size.small", weight: 600, ink: "$ink-2", baseline: "middle" }, halo: ["$paper", 2] }),
         ] }))] }) : null,
         group({ key: "labels", children: [repeat(L, group({ when: placed, children: [
-          shape(geom.rect({ x: e(`${flip} ? d.__x - d.__w : d.__x + 1`), y: e(`${up} ? ${edge} - ${block} : ${edge}`), w: e("d.__w - 1"), h: e(block) }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
+          shape(geom.rect({ x: e(`${flip} ? d.__x - d.__w : d.__a + 1`), y: e(`${up} ? ${edge} - ${block} : ${edge}`), w: e("d.__w - 1"), h: e(block) }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
           text(e(dateText), [e(tx), e(`${up} ? ${edge} - ${body} * 1.3 : ${edge}`)], { key: "date", style: { size: "$size.small", weight: 600, ink: "$muted", align, baseline: e(`${up} ? "bottom" : "top"`) } }),
           text(e(labelText), [e(tx), e(`${up} ? ${edge} : ${edge} + ${small} * 1.3`)], { key: "label", style: { size: "$size.body", ink: "$ink", align, baseline: e(`${up} ? "bottom" : "top"`) } }),
         ] }))] }),

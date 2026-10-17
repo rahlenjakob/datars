@@ -2730,6 +2730,31 @@ impl Engine {
         out
     }
 
+    /// How tall the chart needs to be for its text to stay on the canvas, when that's taller than
+    /// the viewport: the foot of the lowest text, plus a little air — `None` when everything fits.
+    /// Bigger text can make fixed-size content (rows of controls, a list of goals) taller than the
+    /// box a page gave it; a host that may grow the chart asks this (the web runtime does, past the
+    /// theme's text size), instead of letting the text run off the bottom.
+    pub fn content_height(&mut self) -> Option<f64> {
+        fn walk(n: &datars_scene::Node, parent: datars_math::Affine, opacity: f64, foot: &mut f64) {
+            let opacity = opacity * n.common.opacity;
+            if !n.common.visible || opacity < 0.35 {
+                return;
+            }
+            let xf = n.common.placed(parent);
+            match &n.kind {
+                datars_scene::NodeKind::Text(t) if !t.text.trim().is_empty() && t.bounds.w > 0.0 => *foot = foot.max(bounds::text_rect(t, &xf).y1()),
+                // (What's in a view is placed by its camera, and clipped: not the page's height.)
+                datars_scene::NodeKind::View { .. } => {}
+                _ => n.children().iter().for_each(|c| walk(c, xf, opacity, foot)),
+            }
+        }
+        let scene = self.scene();
+        let mut foot = 0.0f64;
+        walk(&scene.root, datars_math::Affine::IDENTITY, 1.0, &mut foot);
+        (foot > self.viewport.height + 1.0).then(|| (foot + 4.0).ceil())
+    }
+
     /// The chart's accessible name: the document's title, else its root's label (a recipe's title).
     pub fn accessible_name(&mut self) -> String {
         if !self.doc.title.trim().is_empty() {

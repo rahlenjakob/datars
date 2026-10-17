@@ -602,8 +602,11 @@ export class DatarsView extends ElementBase {
       if (this.pressed?.text) return this.scheduleTexts(120);
       this.textLayer.update(this.view.text_layer());
       // The mirror too: a step's buttons (a sortable table's headers) are there once it settles.
-      const actions = this.view.chrome?.().actions;
+      // And the height: text laid out in its fonts (they may have arrived since) may need more.
+      const brief = this.view.chrome?.();
+      const actions = brief?.actions;
       if (actions && actionsKey(actions) !== this.mirrorActions) this.syncChrome();
+      else if (brief) this.growForText(brief);
     }, ms);
   }
 
@@ -1114,10 +1117,27 @@ export class DatarsView extends ElementBase {
     this.kick();
   }
 
+  /** Taller than the page asked, for the reader's bigger text (see `growForText`): the width and
+   * text size it was for, and the height. */
+  private grown = { key: "", h: 0 };
+
+  /** A reader's bigger text can make a chart's fixed-size content — rows of controls, a list of
+   * goals, a stack of tiles — taller than the height the page gave it: rather than letting its
+   * text run off the bottom, the element grows to fit (only past the theme's text size, so a
+   * page's layout holds for every other reader). */
+  private growForText(s: Record<string, any>) {
+    const want = Number(s.contentHeight);
+    const key = `${this.size.w}|${this.textScale}`;
+    if (!(this.textScale > 1.001) || !(want > this.size.h + 1) || (this.grown.key === key && this.grown.h >= want)) return;
+    this.grown = { key, h: Math.ceil(want) };
+    this.layout();
+  }
+
   private layout() {
     const w = this.clientWidth || 800;
     const aspect = this.view ? 0 : 0.6;
-    const h = Number(this.getAttribute("height")) || Math.round(w * (aspect || 0.6));
+    const asked = Number(this.getAttribute("height")) || Math.round(w * (aspect || 0.6));
+    const h = this.grown.key === `${w}|${this.textScale}` ? Math.max(asked, this.grown.h) : asked;
     this.stage.style.height = `${h}px`;
     // A new size lays the chart out again: its text moves.
     if (w !== this.size.w || h !== this.size.h) this.textLayer?.hide();
@@ -1642,6 +1662,8 @@ export class DatarsView extends ElementBase {
     this.textLayer?.hide();
     this.kick();
     this.scheduleTexts(400);
+    // (Taller text may need a taller chart: the status says.)
+    this.syncChrome();
   }
 
   /** Whether the chart plays reduced motion now: the `reduced-motion` attribute when it says
@@ -1737,6 +1759,7 @@ export class DatarsView extends ElementBase {
     }
     if (s.semantics) this.describedGen = this.chromeGen;
     this.announce(s);
+    this.growForText(s);
   }
 
   /** The step the live region last announced. */

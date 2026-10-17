@@ -93,7 +93,9 @@ finger, a tap's pinned until the next tap, a scroll or a step. Apps can show it 
   Hosts follow the platform: the browser's default font size (`<datars-view>`, `text-scale`
   overrides), Dynamic Type (DatarsKit), `Configuration.fontScale` (Android), Ctrl/⌘ +/− in the
   desktop viewer; all live. Literal text sizes in a document stay as written; posters and video
-  are at the theme's size. `datars labels` checks charts at 1, 1.5 and 2 ×.
+  are at the theme's size. Fixed-size content that bigger text makes taller than the chart's box
+  grows the box on the web (`content_height`; never past the page's height at the theme's size),
+  rather than scrolling inside the page. `datars labels` checks charts at 1, 1.5 and 2 ×.
 - The web runtime has no font compiled in (bundles bring theirs; raw documents fetch the default
   family from the runtime package's `fonts/`). Native runtimes compile Inter in by default
   (`bundled-fonts`) so their raw-document development mode draws text; apps that only play bundles

@@ -148,3 +148,17 @@ fn a_table_grows_its_text_only_as_far_as_its_columns_fit() {
     assert!(fitted > base && fitted < 2.0 * base, "{base} → {fitted}");
     assert!(right_edge(&mut e) <= 300.5, "the columns fit: {}", right_edge(&mut e));
 }
+
+/// Fixed-size content taller than the box at the reader's size says how tall it needs to be;
+/// at the theme's size (it fits) it says nothing.
+#[test]
+fn content_taller_than_the_box_says_its_height() {
+    let rows: Vec<serde_json::Value> = ["Sales", "Members", "Shops"].iter().map(|l| json!({ "kind": "use", "key": l, "recipe": "@datars/std/progress", "params": { "value": 0.5, "label": l, "showGoal": true }, "size": { "h": "auto" } })).collect();
+    let mut e = engine(json!({ "datars": 1, "size": { "width": 640, "height": 200 }, "scene": { "kind": "group", "key": "root", "layout": { "type": "rows", "gap": 14, "padding": 12 }, "children": rows } }));
+    assert_eq!(e.content_height(), None);
+    e.set_text_scale(2.0);
+    let h = e.content_height().expect("taller than 200 px at 2 ×");
+    assert!(h > 250.0, "{h}");
+    e.resize(640.0, h, 1.0);
+    assert_eq!(e.content_height(), None, "and fits at that height");
+}

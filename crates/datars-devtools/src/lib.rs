@@ -290,8 +290,9 @@ pub struct LabelAudit {
     pub issues: LabelIssues,
 }
 
-/// Every state of a chart at every reading: labels cut off, drawn over one another, or clipped by
-/// their box. The engine is left at the last reading.
+/// Every state of a chart at every reading: labels cut off, drawn over one another, clipped by
+/// their box, or on the data — past the theme's text size at the height the web runtime grows the
+/// chart to (`Engine::content_height`). The engine is left at the last reading.
 pub fn audit_labels(engine: &mut Engine, readings: &[Reading]) -> Vec<LabelAudit> {
     let names = engine.state_names();
     let mut out = Vec::new();
@@ -299,7 +300,18 @@ pub fn audit_labels(engine: &mut Engine, readings: &[Reading]) -> Vec<LabelAudit
         engine.resize(r.width, r.height, 1.0);
         engine.set_text_scale(r.text_scale);
         for (i, state) in names.iter().enumerate() {
-            let issues = label_issues(&engine.scene_for_state(i));
+            // Past the theme's text size the web runtime grows a chart whose text would run off
+            // its bottom (`Engine::content_height`): read it as that reader gets it.
+            let mut scene = engine.scene_for_state(i);
+            if r.text_scale > 1.0 {
+                engine.goto(i);
+                if let Some(h) = engine.content_height() {
+                    engine.resize(r.width, h, 1.0);
+                    scene = engine.scene_for_state(i);
+                    engine.resize(r.width, r.height, 1.0);
+                }
+            }
+            let issues = label_issues(&scene);
             out.push(LabelAudit { reading: *r, state: state.clone(), issues });
         }
     }

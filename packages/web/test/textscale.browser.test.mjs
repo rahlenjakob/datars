@@ -26,6 +26,13 @@ const doc = {
     { kind: "shape", key: "bar", geom: { type: "rect", x: 20, y: 100, w: "=measure(\"Monthly income\", token(\"size.label\")) * 3", h: 30 }, fill: "$accent", semantics: { role: "datum", label: "Bar" } }] },
 };
 
+/** Fixed-size rows (three labelled progress bars, a line under each) in a short box. */
+const rowsDoc = {
+  datars: 1, size: { width: 640, height: 200 },
+  scene: { kind: "group", key: "root", layout: { type: "rows", gap: 14, padding: 12 }, children: ["Sales", "Members", "Shops"].map((label, i) => (
+    { kind: "use", key: label, recipe: "@datars/std/progress", params: { value: 0.3 + i * 0.2, label, showGoal: true }, size: { h: "auto" } })) },
+};
+
 const page = (attrs) => `<!doctype html><meta charset="utf-8"><script type="module" src="/runtime/datars.js"></script>
 <style>body { margin: 0 }</style><datars-view doc="/doc.json" height="200" style="width:640px" ${attrs}></datars-view>`;
 
@@ -38,6 +45,8 @@ function serve() {
     const send = (body, type) => { res.writeHead(200, { "Content-Type": type, "Cache-Control": "no-store" }); res.end(body); };
     if (path === "/") return send(page(url.searchParams.get("attrs") ?? ""), "text/html; charset=utf-8");
     if (path === "/doc.json") return send(JSON.stringify(doc), "application/json");
+    if (path === "/rows.json") return send(JSON.stringify(rowsDoc), "application/json");
+    if (path === "/rows") return send(page(url.searchParams.get("attrs") ?? "").replace("/doc.json", "/rows.json"), "text/html; charset=utf-8");
     const file = normalize(join(dist, path.replace(/^\/runtime\//, "")));
     if (path.startsWith("/runtime/") && file.startsWith(dist) && existsSync(file)) return send(readFileSync(file), types[extname(file)] ?? "application/octet-stream");
     res.writeHead(404).end();
@@ -123,6 +132,29 @@ test("text size: the browser's default font size, live, and the text-scale attri
       await p.waitForTimeout(1600);
       assert.equal((await sizes(p)).scale, 2);
     }
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test("a chart grows for the reader's bigger text instead of letting it run off the bottom", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    const height = async (attrs) => {
+      const p = await (await browser.newContext({ viewport: { width: 700, height: 900 } })).newPage();
+      await p.goto(`${origin}/rows?attrs=${encodeURIComponent(attrs)}`);
+      await p.waitForFunction(() => document.querySelector("datars-view")?.dataset.renderer, null, { timeout: 30_000 });
+      await p.waitForTimeout(1500);
+      return p.evaluate(() => { const el = document.querySelector("datars-view"); return [el.getBoundingClientRect().height, el.status?.contentHeight]; });
+    };
+    assert.equal(Math.round((await height('text-scale="1"'))[0]), 200, "the page's height at the theme's size");
+    const [big, want] = await height('text-scale="2"');
+    assert.ok(big > 260, `taller for 2 × text: ${big}`);
+    assert.equal(want, null, "and now its text fits");
   } finally {
     await browser.close();
     server.close();

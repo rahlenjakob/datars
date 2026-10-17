@@ -230,6 +230,7 @@ impl Core {
         let actions = self.actions();
         serde_json::json!({
             "name": self.engine.accessible_name(),
+            "contentHeight": self.engine.content_height(),
             "state": self.engine.state(),
             "index": self.engine.state_index(),
             "states": self.engine.state_names(),

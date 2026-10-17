@@ -84,7 +84,7 @@ Readers who make text bigger — the browser's font size, Dynamic Type, Android'
 | Android | Settings › Display › Font size (`Configuration.fontScale`) | `view.textScale` |
 | Desktop viewer | Ctrl/⌘ +, − and 0 | `datars-view --text-scale 1.5` |
 
-The engine keeps it between 0.75 and 3. Size classes are judged in the reader's text — an 800 px chart at 2 × lays out as a phone one — so a document that chooses less detail on phones chooses it for big text too. Text your document sizes with the theme's tokens (`"$size.label"`, `token("size.label")`) follows; a literal size stays as you wrote it. Check a chart the way such a reader gets it with `datars render doc.ts --text-scale 2`, or all of them with `datars labels`.
+The engine keeps it between 0.75 and 3. Content of fixed size — rows of controls, a list of goals — can need more height with bigger text than the page gave the chart: on the web the element then grows to fit (`Engine::content_height` says how tall), rather than letting its text run off the bottom or making the chart scroll inside the page; at the theme's size the page's height always holds. Apps on iOS and Android lay their views out themselves and can read the same height from the status (`contentHeight`). Size classes are judged in the reader's text — an 800 px chart at 2 × lays out as a phone one — so a document that chooses less detail on phones chooses it for big text too. Text your document sizes with the theme's tokens (`"$size.label"`, `token("size.label")`) follows; a literal size stays as you wrote it. Check a chart the way such a reader gets it with `datars render doc.ts --text-scale 2`, or all of them with `datars labels`.
 
 ## Reduced motion
 

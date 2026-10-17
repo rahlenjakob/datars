@@ -1171,11 +1171,28 @@ function slopeText(p, side) {
   if (!p.values) return name;
   return side === "start" ? `${name} + "  " + ${written("d.start", p)}` : `${written("d.end", p)} + "  " + ${name}`;
 }
+function slopeWidths(cx, p, name) {
+  return cx.table(
+    name,
+    slopeTable(cx, p, `${name}-rows`),
+    op4.derive("w0", e6(`measure(${slopeText(p, "start")}, token("size.label"))`)),
+    op4.derive("w1", e6(`measure(${slopeText(p, "end")}, token("size.label"))`)),
+    op4.derive("v0", e6(`measure(${written("d.start", p)}, token("size.label"))`))
+  );
+}
+function slopeCompact(p, widths) {
+  if (!p.values || p.labels !== "both") return "false";
+  const W = JSON.stringify(widths);
+  return `(table.max(${W}, "w0") + table.max(${W}, "w1") + 28 > viewport.w * 0.6)`;
+}
 function slopeRoom(cx, p) {
   if (p.labels === "none") return {};
-  const tbl = cx.table("slope-widths", slopeTable(cx, p, "slope-rows"), op4.derive("w0", e6(`measure(${slopeText(p, "start")}, token("size.label"))`)), op4.derive("w1", e6(`measure(${slopeText(p, "end")}, token("size.label"))`)));
-  const room = (w) => e6(`min(box.w * 0.34, table.max(${JSON.stringify(tbl)}, "${w}") + 14)`);
-  return { start: p.labels === "end" ? void 0 : room("w0"), end: p.labels === "start" ? void 0 : room("w1") };
+  const tbl = slopeWidths(cx, p, "slope-widths");
+  const T = JSON.stringify(tbl);
+  const compact = slopeCompact(p, tbl);
+  const start = e6(`min(box.w * 0.34, (${compact} ? table.max(${T}, "v0") : table.max(${T}, "w0")) + 14)`);
+  const end = e6(`min(box.w * (${p.labels === "end" ? "true" : compact} ? 0.6 : 0.34), table.max(${T}, "w1") + 14)`);
+  return { start: p.labels === "end" ? void 0 : start, end: p.labels === "start" ? void 0 : end };
 }
 var slope = recipe6({
   id: "@datars/std/slope",
@@ -1216,7 +1233,9 @@ var slope = recipe6({
       op4.spread({ position: e6("scale.y(d.end)"), gap: e6(gap), min: 0, max: e6("box.h"), as: "ly1" })
     );
     const labelInk = hl ? e6(`${on} ? "$ink-2" : "$muted"`) : "$ink-2";
-    const side = (s) => text5(e6(slopeText(p, s)), [e6(s === "start" ? `${x0} - ${p.r + 6}` : `${x1} + ${p.r + 6}`), e6(s === "start" ? "d.ly0" : "d.ly1")], {
+    const compact = slopeCompact(p, slopeWidths(cx, p, "slope-widths"));
+    const startText = p.values && p.labels === "both" ? `(${compact} ? ${written("d.start", p)} : ${slopeText(p, "start")})` : slopeText(p, "start");
+    const side = (s) => text5(e6(s === "start" ? startText : slopeText(p, s)), [e6(s === "start" ? `${x0} - ${p.r + 6}` : `${x1} + ${p.r + 6}`), e6(s === "start" ? "d.ly0" : "d.ly1")], {
       style: { size: "$size.label", ink: labelInk, weight: hl ? e6(`${on} ? 600 : 400`) : void 0, align: s === "start" ? "end" : "start", baseline: "middle" }
     });
     const dot2 = (xe, v, key) => shape6(geom6.circle({ cx: e6(xe), cy: e6(`scale.y(${v})`), r: p.r }), { key, fill: ink, opacity: fade, semantics: { role: "decoration" } });
@@ -4869,7 +4888,9 @@ var gantt = recipe16({
         // touch the one above is left out — the bar still says it, to a pointer and a screen reader.
         group15({ key: "labels", size: { w: e16(`min(box.w * 0.34, table.max(${q2(Tl)}, "__lw"))`) }, clip: "box", declutter: true, children: [repeat12(T, text14(e16(`String(${fld(p.task)})`), [e16(`d.__kind == "group" ? 0 : ${indent}`), e16(cyv)], {
           key: e16("d.__id"),
-          style: { size: e16('d.__kind == "group" ? token("size.body") : token("size.label")'), weight: e16('d.__kind == "group" ? 600 : 400'), ink: e16('d.__kind == "group" ? "$ink" : "$ink-2"'), baseline: "middle" },
+          // A name wider than the column wraps in it (to a second line where the row has room;
+          // a name that then touches the next is left out, as above) rather than being cut.
+          style: { size: e16('d.__kind == "group" ? token("size.body") : token("size.label")'), weight: e16('d.__kind == "group" ? 600 : 400'), ink: e16('d.__kind == "group" ? "$ink" : "$ink-2"'), baseline: "middle", maxWidth: e16(`box.w - (d.__kind == "group" ? 0 : ${indent})`) },
           semantics: { role: "decoration" }
         }))] }),
         group15({ key: "center", layout: { type: "rows", gap: 6 }, children: [
@@ -4935,7 +4956,9 @@ var timeline = recipe16({
       p.data,
       op11.derive("__x", e16(`scale.x(${D})`)),
       op11.derive("__w", e16(`max(measure(${labelText}, ${body}), measure(${dateText}, ${small})) + 4`)),
-      op11.derive("__a", e16("d.__x + d.__w > box.w ? d.__x - d.__w : d.__x")),
+      // Right of its stem; left of it near the right edge; and where neither side has the room
+      // (a phone, a reader's big text), as far right as keeps it in the box.
+      op11.derive("__a", e16("d.__x + d.__w <= box.w ? d.__x : d.__x - d.__w >= 0 ? d.__x - d.__w : max(0, box.w - d.__w)")),
       op11.lanes({ start: e16("d.__a"), end: e16("d.__a + d.__w"), gap: 10, max: e16(`max(1, floor((box.h - ${2 * stem + 4} - ${eraGap}) / ${laneH}))`) })
     );
     const Lq = q2(L);
@@ -4945,8 +4968,8 @@ var timeline = recipe16({
     const up = "(d.lane % 2 == 0)", level = "floor(d.lane / 2)";
     const edge = `(${up} ? ${axisY} - ${gapUp} - ${stem} - ${level} * ${laneH} : ${axisY} + ${gapDown} + ${stem} + ${level} * ${laneH})`;
     const block = `(${laneH} - 8)`;
-    const flip = "(d.__x + d.__w > box.w)";
-    const tx = `(${flip} ? d.__x - 4 : d.__x + 4)`;
+    const flip = "(d.__x + d.__w > box.w && d.__x - d.__w >= 0)";
+    const tx = `(${flip} ? d.__x - 4 : d.__a + 4)`;
     const align = e16(`${flip} ? "end" : "start"`);
     const dot2 = p.color ? e16(`scale.color(${fld(p.color)})`) : "$ink";
     const scales = { x: { type: time ? "time" : "linear", domain: { data: extent, fields: ["__t0", "__t1"] }, range: "width", nice: false } };
@@ -4970,7 +4993,7 @@ var timeline = recipe16({
           text14(e16(eraName), [e16(`${es} + 5`), e16(`${eraY} + ${eraH / 2}`)], { key: "name", when: e16(`measure(${eraName}, ${small}, 600) + 10 <= ${ee} - ${es}`), style: { size: "$size.small", weight: 600, ink: "$ink-2", baseline: "middle" }, halo: ["$paper", 2] })
         ] }))] }) : null,
         group15({ key: "labels", children: [repeat12(L, group15({ when: placed, children: [
-          shape15(geom15.rect({ x: e16(`${flip} ? d.__x - d.__w : d.__x + 1`), y: e16(`${up} ? ${edge} - ${block} : ${edge}`), w: e16("d.__w - 1"), h: e16(block) }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
+          shape15(geom15.rect({ x: e16(`${flip} ? d.__x - d.__w : d.__a + 1`), y: e16(`${up} ? ${edge} - ${block} : ${edge}`), w: e16("d.__w - 1"), h: e16(block) }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
           text14(e16(dateText), [e16(tx), e16(`${up} ? ${edge} - ${body} * 1.3 : ${edge}`)], { key: "date", style: { size: "$size.small", weight: 600, ink: "$muted", align, baseline: e16(`${up} ? "bottom" : "top"`) } }),
           text14(e16(labelText), [e16(tx), e16(`${up} ? ${edge} : ${edge} + ${small} * 1.3`)], { key: "label", style: { size: "$size.body", ink: "$ink", align, baseline: e16(`${up} ? "bottom" : "top"`) } })
         ] }))] }),

@@ -179,12 +179,33 @@ function slopeText(p: SlopeParams, side: "start" | "end"): string {
 type Room = number | { expr: string };
 type Rooms = { start?: Room; end?: Room };
 
+/** The labels' measured widths: named at both ends (`w0`, `w1`) and the start's value alone (`v0`). */
+function slopeWidths(cx: Cx, p: SlopeParams, name: string): string {
+  return cx.table(name, slopeTable(cx, p, `${name}-rows`),
+    op.derive("w0", e(`measure(${slopeText(p, "start")}, token("size.label"))`)),
+    op.derive("w1", e(`measure(${slopeText(p, "end")}, token("size.label"))`)),
+    op.derive("v0", e(`measure(${written("d.start", p)}, token("size.label"))`)));
+}
+
+/** Named at both ends, the labels would take more than the chart can spare (a phone, a reader's
+ * big text): the names go to the end only, the start keeps its values. Judged on the viewport, so
+ * the frame's room and the labels agree. */
+function slopeCompact(p: SlopeParams, widths: string): string {
+  if (!p.values || p.labels !== "both") return "false";
+  const W = JSON.stringify(widths);
+  return `(table.max(${W}, "w0") + table.max(${W}, "w1") + 28 > viewport.w * 0.6)`;
+}
+
 /** Room a slope's labels need beside the plot area: as wide as the widest (measured), per side. */
 function slopeRoom(cx: Cx, p: SlopeParams): Rooms {
   if (p.labels === "none") return {};
-  const tbl = cx.table("slope-widths", slopeTable(cx, p, "slope-rows"), op.derive("w0", e(`measure(${slopeText(p, "start")}, token("size.label"))`)), op.derive("w1", e(`measure(${slopeText(p, "end")}, token("size.label"))`)));
-  const room = (w: string) => e(`min(box.w * 0.34, table.max(${JSON.stringify(tbl)}, "${w}") + 14)`);
-  return { start: p.labels === "end" ? undefined : room("w0"), end: p.labels === "start" ? undefined : room("w1") };
+  const tbl = slopeWidths(cx, p, "slope-widths");
+  const T = JSON.stringify(tbl);
+  const compact = slopeCompact(p, tbl);
+  const start = e(`min(box.w * 0.34, (${compact} ? table.max(${T}, "v0") : table.max(${T}, "w0")) + 14)`);
+  // (Named only at the end — compact, or asked for — the end has room to spare: more of the box.)
+  const end = e(`min(box.w * (${p.labels === "end" ? "true" : compact} ? 0.6 : 0.34), table.max(${T}, "w1") + 14)`);
+  return { start: p.labels === "end" ? undefined : start, end: p.labels === "start" ? undefined : end };
 }
 
 export const slope = recipe<SlopeParams>({
@@ -220,7 +241,10 @@ export const slope = recipe<SlopeParams>({
       op.spread({ position: e("scale.y(d.start)"), gap: e(gap), min: 0, max: e("box.h"), as: "ly0" }),
       op.spread({ position: e("scale.y(d.end)"), gap: e(gap), min: 0, max: e("box.h"), as: "ly1" }));
     const labelInk = hl ? e(`${on} ? "$ink-2" : "$muted"`) : "$ink-2";
-    const side = (s: "start" | "end") => text(e(slopeText(p, s)), [e(s === "start" ? `${x0} - ${p.r + 6}` : `${x1} + ${p.r + 6}`), e(s === "start" ? "d.ly0" : "d.ly1")], {
+    // (Compact — no room for names at both ends — the start says only its value.)
+    const compact = slopeCompact(p, slopeWidths(cx, p, "slope-widths"));
+    const startText = p.values && p.labels === "both" ? `(${compact} ? ${written("d.start", p)} : ${slopeText(p, "start")})` : slopeText(p, "start");
+    const side = (s: "start" | "end") => text(e(s === "start" ? startText : slopeText(p, s)), [e(s === "start" ? `${x0} - ${p.r + 6}` : `${x1} + ${p.r + 6}`), e(s === "start" ? "d.ly0" : "d.ly1")], {
       style: { size: "$size.label", ink: labelInk, weight: hl ? e(`${on} ? 600 : 400`) : undefined, align: s === "start" ? "end" : "start", baseline: "middle" },
     });
     const dot = (xe: string, v: string, key: string) => shape(geom.circle({ cx: e(xe), cy: e(`scale.y(${v})`), r: p.r }), { key, fill: ink, opacity: fade, semantics: { role: "decoration" } });
