@@ -3130,7 +3130,7 @@ var range = recipe11({
       key,
       pickable: true,
       on: { drag: scrub(key === "lo" ? lo : hi, { step: p.step, ...key === "lo" ? { max: e11(hi) } : { min: e11(lo) } }) },
-      semantics: { role: "control", label: e11(`\`${p.label || "Range"} ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
+      semantics: { role: "control", label: e11(`\`${p.label || "Range"}, ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
       children: [
         key === "lo" ? shape11(geom11.rect({ x: e11(`${x(lo)} - 16`), y: e11(`${px(30)} - 18`), w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }) : shape11(geom11.rect({ x: e11(`${x(hi)} - ${half}`), y: e11(`${px(30)} - 18`), w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
         shape11(geom11.circle({ cx: e11(x(key === "lo" ? lo : hi)), cy: y, r: 15 }), { key: "halo", fill: "$accent", opacity: WASH(0.18) }),

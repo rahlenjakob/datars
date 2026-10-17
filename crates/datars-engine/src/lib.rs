@@ -461,6 +461,15 @@ pub const BOLD_TEXT_BOOST: f64 = 200.0;
 /// The theme number the boost travels in to text resolution.
 pub(crate) const BOLD_TEXT_TOKEN: &str = "text.weight-boost";
 
+/// What a set of instances' labels says, to tell two sets that say the same (an area under its
+/// line, over the same points) apart from the rest: how many, the first, the middle and the last.
+type LabelsKey = (usize, String, String, String);
+
+fn labels_key(ls: &[String]) -> LabelsKey {
+    let at = |i: usize| ls.get(i).cloned().unwrap_or_default();
+    (ls.len(), at(0), at(ls.len() / 2), at(ls.len().saturating_sub(1)))
+}
+
 /// The theme's text sizes (its `size.*` tokens: `size.small`, `size.label`, `size.body`,
 /// `size.title`, and any a theme adds) at the reader's text size.
 fn scale_text_sizes(theme: &mut ResolvedTheme, scale: f64) {
@@ -2790,7 +2799,7 @@ impl Engine {
         let scene = self.scene();
         let mut out = Vec::new();
         #[allow(clippy::too_many_arguments)]
-        fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut usize) {
+        fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut (usize, BTreeSet<LabelsKey>)) {
             // What can't be seen isn't read out (a layer faded out over another).
             let acc = pick::seen(n, acc);
             if acc <= pick::INVISIBLE {
@@ -2816,19 +2825,21 @@ impl Engine {
                 walk(c, &here, d, inner, acc, act, out, budget);
             }
             if let datars_scene::NodeKind::Instances(i) = &n.kind {
-                if let Some(ls) = &i.labels {
+                // (Marks that say what other marks already said — an area under its line, the
+                // same points — are read once.)
+                if let Some(ls) = i.labels.as_ref().filter(|ls| budget.1.insert(labels_key(ls))) {
                     for (k, l) in ls.iter().enumerate().filter(|(k, _)| acc * i.opacity_at(*k) > pick::INVISIBLE) {
-                        if *budget == 0 {
+                        if budget.0 == 0 {
                             break;
                         }
-                        *budget -= 1;
+                        budget.0 -= 1;
                         out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None, kind: None, checked: None, missing: false });
                     }
                 }
             }
         }
         // Actionable only: no instance's label (they have no intents of their own) is ever made.
-        let mut budget = if only_actionable { 0 } else { MAX_INSTANCE_ITEMS };
+        let mut budget = (if only_actionable { 0 } else { MAX_INSTANCE_ITEMS }, BTreeSet::new());
         walk(&scene.root, &KeyPath::default(), 0, datars_math::Affine::IDENTITY, 1.0, &actionable, &mut out, &mut budget);
         // What a pointer drags (a brush, a pannable view), for the keyboard (`Engine::key`).
         if draggable {
@@ -2928,7 +2939,7 @@ impl Engine {
     /// How many data marks the current scene draws (role datum or region, and labelled instances),
     /// as a reader can see them.
     pub(crate) fn data_count(&mut self) -> usize {
-        fn walk(n: &datars_scene::Node, acc: f64) -> usize {
+        fn walk(n: &datars_scene::Node, acc: f64, seen: &mut BTreeSet<LabelsKey>) -> usize {
             let acc = pick::seen(n, acc);
             if acc <= pick::INVISIBLE {
                 return 0;
@@ -2939,13 +2950,14 @@ impl Engine {
                 _ => 0,
             };
             let inst = match &n.kind {
-                datars_scene::NodeKind::Instances(i) => i.labels.as_ref().map(|ls| (0..ls.len()).filter(|k| acc * i.opacity_at(*k) > pick::INVISIBLE).count()).unwrap_or(0),
+                // (Counted once when another set of marks says the same: an area and its line.)
+                datars_scene::NodeKind::Instances(i) => i.labels.as_ref().filter(|ls| seen.insert(labels_key(ls))).map(|ls| (0..ls.len()).filter(|k| acc * i.opacity_at(*k) > pick::INVISIBLE).count()).unwrap_or(0),
                 _ => 0,
             };
-            own + inst + n.children().iter().map(|c| walk(c, acc)).sum::<usize>()
+            own + inst + n.children().iter().map(|c| walk(c, acc, seen)).sum::<usize>()
         }
         let scene = self.scene();
-        walk(&scene.root, 1.0)
+        walk(&scene.root, 1.0, &mut BTreeSet::new())
     }
 
     /// Run the `activate` intent of the node at `path` (as `SemanticItem::path` spells it) — the

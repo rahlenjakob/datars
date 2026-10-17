@@ -81,3 +81,19 @@ fn an_axis_is_called_by_its_title_even_when_the_title_is_drawn_above_the_plot() 
     let axes: Vec<String> = e.semantic_items().into_iter().filter(|i| i.role == "axis").map(|i| i.label).collect();
     assert_eq!(axes, vec!["y axis", "x axis"]);
 }
+
+#[test]
+fn an_area_under_its_line_is_not_read_or_counted_twice() {
+    // (TalkBack on the prices example heard "730 data points" for a year of days: the area and
+    // the line over it each listed every day.)
+    let doc = json!({ "datars": 1, "size": { "width": 400, "height": 240 },
+        "data": { "t": { "values": { "day": [1, 2, 3, 4], "price": [10, 12, 9, 14] }, "key": ["day"] } },
+        "scene": { "kind": "use", "recipe": "@datars/std/plot", "params": { "data": "t", "x": "day", "y": "price", "xType": "linear",
+            "children": [{ "kind": "use", "recipe": "@datars/std/area", "params": {} }, { "kind": "use", "recipe": "@datars/std/line", "params": {} }] } } });
+    let mut e = engine(doc);
+    // (A line's points carry no value of their own: no range.)
+    assert_eq!(e.accessible_summary(), "4 data points.");
+    let days: Vec<String> = e.semantic_items().into_iter().filter(|i| i.role == "datum").map(|i| i.label).collect();
+    assert_eq!(days.len(), 4, "{days:?}");
+}
+

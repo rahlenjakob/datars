@@ -26,6 +26,7 @@ const EN: Table = &[
     ("brush", "range selection"),
     ("brush-none", "nothing selected"),
     ("brush-hint", "Enter starts a selection, the arrow keys extend it, Shift and the arrow keys move it, Enter keeps it, Escape cancels"),
+    ("brush-hint-touch", "Double-tap to start a selection or keep it, swipe up or down to extend it"),
     ("brush-range", "{lo} to {hi}"),
     ("brush-start", "Selecting {range}"),
     ("brush-done", "Selected {range}"),
@@ -33,6 +34,7 @@ const EN: Table = &[
     ("brush-clear", "Selection cleared"),
     ("pan", "pan and zoom"),
     ("pan-hint", "The arrow keys move the view, plus and minus zoom, 0 shows all of it"),
+    ("pan-hint-touch", "Swipe up or down to zoom, double-tap to show all of it"),
     ("pan-left", "Moved left"),
     ("pan-right", "Moved right"),
     ("pan-up", "Moved up"),
@@ -40,6 +42,12 @@ const EN: Table = &[
     ("pan-reset", "All of it"),
     ("zoom", "Zoom {z} ×"),
     ("now", "Now {what}"),
+    ("on", "On"),
+    ("off", "Off"),
+    ("previous-step", "Previous step"),
+    ("next-step", "Next step"),
+    ("checked", "Checked"),
+    ("unchecked", "Not checked"),
 ];
 
 const SV: Table = &[
@@ -62,6 +70,7 @@ const SV: Table = &[
     ("brush", "intervallval"),
     ("brush-none", "inget valt"),
     ("brush-hint", "Enter börjar ett val, piltangenterna utökar det, Skift och piltangenterna flyttar det, Enter behåller det, Escape avbryter"),
+    ("brush-hint-touch", "Dubbeltryck för att börja ett val eller behålla det, svep uppåt eller nedåt för att utöka det"),
     ("brush-range", "{lo} till {hi}"),
     ("brush-start", "Väljer {range}"),
     ("brush-done", "Valt {range}"),
@@ -69,6 +78,7 @@ const SV: Table = &[
     ("brush-clear", "Valet togs bort"),
     ("pan", "panorera och zooma"),
     ("pan-hint", "Piltangenterna flyttar vyn, plus och minus zoomar, 0 visar allt"),
+    ("pan-hint-touch", "Svep uppåt eller nedåt för att zooma, dubbeltryck för att visa allt"),
     ("pan-left", "Flyttade åt vänster"),
     ("pan-right", "Flyttade åt höger"),
     ("pan-up", "Flyttade uppåt"),
@@ -76,6 +86,12 @@ const SV: Table = &[
     ("pan-reset", "Allt"),
     ("zoom", "Zoom {z} ×"),
     ("now", "Nu {what}"),
+    ("on", "På"),
+    ("off", "Av"),
+    ("previous-step", "Föregående steg"),
+    ("next-step", "Nästa steg"),
+    ("checked", "Markerad"),
+    ("unchecked", "Inte markerad"),
 ];
 
 const LANGUAGES: &[(&str, Table)] = &[("en", EN), ("sv", SV)];

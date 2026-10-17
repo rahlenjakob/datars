@@ -151,8 +151,8 @@ fn a_switch_flips_and_checkboxes_toggle_keys() {
 #[test]
 fn a_ranges_thumbs_move_their_ends_and_never_cross() {
     let mut e = engine();
-    let lo = item(&mut e, "Sales from: 10").rect;
-    let hi = item(&mut e, "Sales to: 40").rect;
+    let lo = item(&mut e, "Sales, from: 10").rect;
+    let hi = item(&mut e, "Sales, to: 40").rect;
     let y = lo.y + lo.h / 2.0;
     // Drag the low thumb far past the high one: it stops there.
     e.pointer(Pointer::Down { x: lo.x + lo.w / 2.0, y });

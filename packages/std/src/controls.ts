@@ -301,7 +301,7 @@ export const range = recipe<RangeParams>({
       key,
       pickable: true,
       on: { drag: scrub(key === "lo" ? lo : hi, { step: p.step, ...(key === "lo" ? { max: e(hi) } : { min: e(lo) }) }) },
-      semantics: { role: "control", label: e(`\`${p.label || "Range"} ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
+      semantics: { role: "control", label: e(`\`${p.label || "Range"}, ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
       children: [
         key === "lo"
           ? shape(geom.rect({ x: e(`${x(lo)} - 16`), y: e(`${px(30)} - 18`), w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" })
