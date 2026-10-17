@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Watching a market, minute by minute · datars</title>
+<meta name="description" content="A price chart that moves as trades happen, for any reader with a free data key of their own — and for everyone else, a whole day of bitcoin and ether trading, recorded and ready to replay.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Crect x='3' y='14' width='5.5' height='11' rx='1.6' fill='%234f7cff'/%3E%3Crect x='11.25' y='8' width='5.5' height='17' rx='1.6' fill='%23f5b53d'/%3E%3Crect x='19.5' y='3' width='5.5' height='22' rx='1.6' fill='%23ff6b5b'/%3E%3C/svg%3E">
+<link rel="preload" href="../../fonts/Inter-Regular.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="preload" href="../../fonts/Inter-SemiBold.ttf" as="font" type="font/ttf" crossorigin>
+<link rel="stylesheet" href="../articles.css">
+<link rel="stylesheet" href="markets.css">
+<script type="module" src="../articles.js"></script>
+<script type="module" src="live.js"></script>
+</head>
+<body>
+<nav class="bar"><a class="home" href="../../">datars</a><span class="crumb">/</span><a href="../">Articles</a></nav>
+<header class="masthead">
+  <p class="kicker">Markets · Live</p>
+  <h1>Watching a market, minute by minute</h1>
+  <p class="dek">The chart below moves as trades happen: one price a minute, the newest one still settling. Bring a free data key and it follows Apple, Microsoft, Nvidia, the S&amp;P 500 and bitcoin live. Without one, it shows a whole day of bitcoin and ether trading, recorded.</p>
+  <p class="byline"><span>By the <b>datars graphics desk</b></span><time datetime="2026-10-17">Oct. 17, 2026</time></p>
+</header>
+<main>
+<figure class="figure" data-story="follow" data-cover="0">
+  <figcaption>The last trade of each minute in the chosen market's session: 9:30 a.m. to 4 p.m. in New York for stocks, the whole day in UTC for bitcoin and ether, which trade around the clock. The dashed line is where the day started from: the previous close, or the price at midnight UTC.<span class="credit">Source: Binance Vision (recorded day, CC BY-NC-SA 4.0); live prices from Finnhub or Twelve Data, with the reader's own key</span></figcaption>
+  <div class="tools">
+    <button type="button" id="replay" aria-pressed="false">Replay the day</button>
+    <p class="sr" id="markets-said" aria-live="polite"></p>
+  </div>
+  <form class="keys" id="keys" autocomplete="off">
+    <p class="keys-head"><strong>Follow stocks live with a free key of your own.</strong> Stock exchanges license their prices, and free plans allow personal use only, so this page can't show them to everyone: your browser asks the provider directly, with your key.</p>
+    <div class="keys-row">
+      <label class="provider"><span>Provider</span>
+        <select name="provider">
+          <option value="finnhub">Finnhub · live trades</option>
+          <option value="twelvedata">Twelve Data · the whole session</option>
+        </select>
+      </label>
+      <label class="key"><span>Key</span><input name="key" type="password" spellcheck="false" autocomplete="off" placeholder="Paste your key"></label>
+      <button type="submit">Follow live</button>
+    </div>
+    <p class="keys-note"><span id="keys-note">Without a key, the chart shows bitcoin and ether on the last full day recorded.</span> <button type="button" class="link" id="keys-forget">Forget my keys</button></p>
+    <p class="keys-get">Free keys: <a href="https://finnhub.io/register" rel="noopener">Finnhub</a> · <a href="https://twelvedata.com/register" rel="noopener">Twelve Data</a>. Your key stays in this browser (its local storage) and is sent only to that provider.</p>
+  </form>
+</figure>
+
+<div class="prose">
+  <h2>What you're watching</h2>
+  <p>Each point is the last price paid in one minute. The newest point is still open: it moves with every trade until its minute is over, and then the next one grows out of the end of the line.</p>
+  <p>The horizontal axis is the whole session, from the opening bell to the close, so the line fills the chart from left to right as the day goes on instead of scrolling past. The price axis moves only in round steps, when a trade breaks through one. The dashed line is the reference for the day's change: yesterday's closing price for a stock, the price at midnight UTC for a cryptocurrency. Above it, the line and the change are green; below it, red.</p>
+  <p>Stocks trade on weekdays from 9:30 a.m. to 4 p.m. in New York, except on market holidays. Outside those hours the chart shows the last session and says the market is closed. Bitcoin and ether never close.</p>
+
+  <h2>Why it needs your key</h2>
+  <p>Stock prices belong to the exchanges that publish them, and the companies that resell them for free do so on one condition: the data is for your own use. None of the free services we looked at allows a public website to show its prices to every visitor, or to store a copy for them.</p>
+  <p>So this page doesn't. If you paste a key, your browser asks the provider for prices itself and draws them for you alone. The key never leaves your browser except to go to that provider, and "Forget my keys" removes it.</p>
+  <p>Finnhub sends every trade as it happens, over a connection that stays open, but its free plan has no history for the day: the line starts when you open the page. Twelve Data sends the whole session so far, minute by minute, and then a new minute every minute. With both keys, the history comes from one and the trades from the other.</p>
+
+  <h2>The recorded day</h2>
+  <p>Without a key, the chart shows a full day of bitcoin and ether trading on Binance, the largest crypto exchange, from the daily files it publishes for anyone to use under a Creative Commons licence. It isn't live, and the chart says so. Press "Replay the day" to watch it arrive the way live prices do, 30 minutes a second.</p>
+</div>
+</main>
+<footer class="about">
+  <h2>About the data</h2>
+  <p>The recorded day is Binance Vision's one-minute price history for BTC/USDT and ETH/USDT (data.binance.vision), licensed CC BY-NC-SA 4.0. The price drawn for each minute is its close; the day's reference is the first minute's open. It is in U.S. dollar–pegged tether, which trades within a fraction of a percent of the dollar.</p>
+  <p>Live prices come from Finnhub (finnhub.io: trades over a WebSocket, and a quote with the previous close) or Twelve Data (twelvedata.com: one-minute bars and a quote), with the reader's own key and under that reader's own terms of use. The status line under the chart says whether prices are arriving in real time, measured from each trade's own timestamp, or how far behind they are. Stocks are drawn for the regular session only. Times are New York time for stocks and UTC for cryptocurrencies.</p>
+  <p>How the sources compare, and why these were chosen, is in the article's <code>README.md</code>. This is not investment advice.</p>
+</footer>
+</body>
+</html>

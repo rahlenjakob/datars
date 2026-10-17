@@ -1,0 +1,46 @@
+/* The markets page: the house style (../articles.css), in the reader's light or dark (a page kept
+   open to watch prices is as likely read at night; the chart follows, see articles.js), and the
+   controls under the chart: replay, and the key form. Everything here has its size before any
+   script runs, so nothing moves when the page's script fills it in. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #121417;
+    --ink: #eceef0;
+    --muted: #9aa0a8;
+    --accent: #f0794f;
+    --card: #1b1e22;
+    --line: #33373d;
+  }
+}
+
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+
+.tools { display: flex; justify-content: center; min-height: 36px; margin: 16px auto 0; }
+.tools button, .keys button[type="submit"] {
+  height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--soft); background: transparent; color: var(--ink);
+  font: 600 13.5px/1 var(--ui); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+}
+.tools button:hover, .keys button[type="submit"]:hover { border-color: var(--accent); }
+.tools button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--page); }
+.tools button::before { content: "▶\FE0E"; display: inline-block; width: 1.2em; font-size: 10px; vertical-align: 1px; }
+.tools button[aria-pressed="true"]::before { content: "■\FE0E"; }
+
+.keys { max-width: var(--column); margin: 22px auto 0; padding: 18px 20px; border: 1px solid var(--line); border-radius: 4px; font: 14.5px/1.5 var(--ui); color: var(--muted); }
+.keys p { margin: 0; }
+.keys strong { color: var(--ink); font-weight: 600; }
+.keys-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px 12px; margin: 14px 0 10px; }
+.keys label { display: flex; flex-direction: column; gap: 4px; font: 600 12px/1.2 var(--ui); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.keys label.key { flex: 1 1 220px; }
+.keys select, .keys input {
+  height: 36px; padding: 0 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--page); color: var(--ink);
+  font: 400 14.5px/1 var(--ui); letter-spacing: 0; text-transform: none;
+}
+.keys input { width: 100%; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 13.5px; }
+.keys select:focus-visible, .keys input:focus-visible, .keys button:focus-visible, .tools button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.keys button[type="submit"] { background: var(--ink); border-color: var(--ink); color: var(--page); }
+.keys button[type="submit"]:hover { background: var(--accent); border-color: var(--accent); }
+/* Two lines' room whatever it says (the script fills it in): the form below never moves. */
+.keys-note { min-height: 3em; color: var(--ink); }
+.keys .link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; visibility: hidden; }
+.keys-get { margin-top: 6px !important; font-size: 13px; }

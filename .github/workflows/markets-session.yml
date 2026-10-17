@@ -1,0 +1,39 @@
+# The markets article's no-key data (site/articles/markets/follow/session.json): yesterday's
+# bitcoin and ether, one price a minute, from Binance Vision's public daily files (CC BY-NC-SA 4.0).
+# A commit to main rebuilds the site with it (pages.yml).
+#
+# Manual only (Actions → markets-session → Run workflow) until the schedule below is switched on;
+# switch it on only once the site's owner is content with the data's non-commercial licence
+# (site/articles/markets/README.md). No stock prices are ever fetched here: no free stock feed
+# allows a public site to republish them.
+name: markets-session
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "The UTC day to record (YYYY-MM-DD; default yesterday)"
+        required: false
+  # schedule:
+  #   - cron: "40 2 * * *" # 02:40 UTC: Binance Vision publishes the day before by then
+permissions:
+  contents: write
+concurrency:
+  group: markets-session
+  cancel-in-progress: false
+jobs:
+  record:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node site/articles/markets/data/session.mjs ${{ github.event.inputs.date }}
+      - name: Commit the new day, if it changed
+        run: |
+          if git diff --quiet -- site/articles/markets/follow/session.json; then echo "unchanged"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/articles/markets/follow/session.json
+          git commit -m "Markets: the recorded day is now $(node -p 'require("./site/articles/markets/follow/session.json").recorded')"
+          git push

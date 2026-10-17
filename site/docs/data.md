@@ -63,9 +63,36 @@ A URL source with `live` is fetched again on a schedule, and each new snapshot a
 data: { count: data.url("count.json", { key: "party", live: { every: 2 } }) },   // seconds
 ```
 
-Each refresh replaces the table, matched by key. `datars publish` copies the current snapshot next to the chart so the poster and first frame have data. To try a feed locally, put numbered snapshots in a folder named after the file — `count.json.d/001.json`, `002.json`, … — and `datars serve` replays them one every two seconds as `count.json` (the [election example]({{src}}/examples/election/doc.ts) does this).
+Each refresh replaces the table, matched by key (a *snapshot*; feeds that send only what's new are below). `datars publish` copies the current snapshot next to the chart so the poster and first frame have data. To try a feed locally, put numbered snapshots in a folder named after the file — `count.json.d/001.json`, `002.json`, … — and `datars serve` replays them one every two seconds as `count.json` (the [election example]({{src}}/examples/election/doc.ts) does this).
 
-> **Note** `live` also accepts `mode` and `window` fields in the document format; today every refresh is a snapshot, and those two are not acted on yet.
+### Feeds that send rows
+
+A trade feed, a sensor, a chat sends what is *new*, not the whole table again. `mode: "upsert"` takes each arrival as rows merged by key: a known key's row is replaced where it stands, so its mark moves; a new key joins at the end, so a line grows out of its last point. `append` adds rows at the end (with a key, a known key is replaced as in upsert). A batch may repeat a key: its last row wins. Retention keeps the source small — `window` (the last N rows) and `span` (the rows within that many seconds of the newest, on the column `on`):
+
+```ts
+data: {
+  prices: data.url("session.json", {
+    key: ["sym", "t"],                 // one row per market and minute: the open minute moves
+    live: { mode: "upsert", span: 6.5 * 3600, on: "t" },
+  }),
+},
+```
+
+With `every` left out, nothing is fetched on a schedule: the host pushes. On the web, `liveFeed` from `@datars/web` does what every such page needs — one version a beat however fast the feed (the engine also caps each move to the time between arrivals), back-off from 1 s to a minute on errors, the connection closed while the tab is hidden or the chart is off the screen, and every row given again to a chart that mounts anew:
+
+```js
+import { liveFeed, socket } from "@datars/web";
+liveFeed({
+  source: "prices", view: () => slot.querySelector("datars-view"), watch: slot, pace: 1000,
+  connect: socket("wss://feed.example/trades", {
+    open: (ws) => ws.send('{"subscribe":"AAPL"}'),
+    message: (m) => m.trades?.map((t) => ({ sym: t.s, t: Math.floor(t.time / 60000) * 60000, p: t.price })),
+  }),
+  onStatus: (s) => status.textContent = s.state,   // connecting, live, retrying, paused
+});
+```
+
+`events(url, parse)` (server-sent events) and `poll(fetchRows, ms)` are the other transports. Millisecond timestamps on a time scale tick on hours and minutes and read as times of day; give a session's domain from data with `exact: true` (`xDomain: { data: "session", fields: ["open", "close"], exact: true }`) and the axis stays the whole session while the line fills it. The [markets article](/articles/markets/) follows stocks this way.
 
 ## Data slots
 

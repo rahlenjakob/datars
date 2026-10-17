@@ -39,7 +39,9 @@ data: {
 
 {{sdk:SourceOpts}}
 
-Types are inferred when you don't give them: numbers, booleans, ISO dates (as days since 1970-01-01 in expressions), else text; zero-padded codes stay text. `live.mode` and `live.window` are recorded but not acted on yet: every refresh replaces the table (see [live sources](/docs/data/#live-sources)).
+{{sdk:LiveOpts}}
+
+Types are inferred when you don't give them: numbers, booleans, ISO dates (as days since 1970-01-01 in expressions), else text; zero-padded codes stay text. A live source's `mode` says what an arrival is: the whole table (`snapshot`), or rows to merge by key (`upsert`, `append`), kept by `window` and `span` (see [live sources](/docs/data/#live-sources)).
 
 ## Derived tables
 

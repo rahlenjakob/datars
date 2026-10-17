@@ -1,6 +1,6 @@
 # Articles
 
-Ten data stories, as pages of the site, in one house style: a newspaper graphics feature with a
+Eleven data stories, as pages of the site, in one house style: a newspaper graphics feature with a
 serif for reading and headlines, a sans for everything around the text, one accent colour, and the
 sources under every figure. Each article is a folder:
 
@@ -15,6 +15,10 @@ sources under every figure. Each article is a folder:
 - `<story>/doc.ts` — every chart, a datars document in TypeScript on `@datars/sdk` and
   `@datars/std`, with its data files and map tiles next to it (or in the article's `data/` when
   several charts share them). A story from another article is named by its path (`../warming/spiral`).
+- `page/` (optional) — the page's own files, copied next to its `index.html`: a script that feeds
+  a live chart, its styles. `{{env:DATARS_PUBLIC_…}}` in them is filled from the build's
+  environment (public by name: it reaches every reader). A story's data files read by relative
+  URL are published next to its "Chart code".
 - `theme.ts` — the chart theme its stories use: every article re-exports the shared house theme,
   `editorial.ts` (over `datars/neutral`), so the charts and the pages match.
 
@@ -31,5 +35,8 @@ opens every page in headless Chrome and checks that it loads cleanly and every c
 The data and its sources are named on each page, under the figures and in its "About the data";
 `oil-2020/SOURCES.md` documents the markets story's files. Where a figure is rounded, approximate or
 drawn for the page (the map of Westeros), the page says so. `us-debt` is live: its first chart
-asks the Treasury's API for the latest figures when the page opens (`us-debt/SOURCES.md`). Map data ©
+asks the Treasury's API for the latest figures when the page opens (`us-debt/SOURCES.md`).
+`markets` follows prices as trades arrive: with the reader's own free key (Finnhub, Twelve Data),
+else a recorded day of crypto trading; `markets/README.md` compares the free sources and their
+terms. Map data ©
 OpenStreetMap contributors (ODbL) and Natural Earth (public domain).

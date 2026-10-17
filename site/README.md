@@ -41,7 +41,7 @@ the site links there only as "how it works".
 | `/gallery/` | Every chart type (each std recipe's live figure, from `{{std:cards}}`, family by family) and every story, filtered together; the lab (`#lab=<alias>`) steps, scrubs, restyles, remixes and writes the embed code for any of them. Charts three screens away give their engines back and start again when near (`gallery.js`, `gallery.css`) | `pages/gallery.html` |
 | `/gallery/documents/` | Every chart's TypeScript, tiers, tokens, films and exports — the lab fetches it on first use | `pages/gallery/documents.html` |
 | `/themes/` | The theme studio: edit every token of a theme (presets, a brand colour, colours and expressions, generated palettes, Google Fonts, sizes, shapes, maps, cards) on ten live charts in light, dark and high contrast, with the theme's checks, and export it as TypeScript, JSON or a runtime layer | `pages/themes.html`, `studio.js` (the editor; a hidden `<datars-view>` resolves the theme per mode), `scripts/site/studio.mjs` (its markup); the charts are `figures/studio/` |
-| `/articles/` | Ten data stories in one house style, every chart live (`scripts/build-articles.mjs`) | `articles/` |
+| `/articles/` | Eleven data stories in one house style, every chart live (`scripts/build-articles.mjs`) | `articles/` |
 | `/performance/` | Measured numbers, the method, the tools | `pages/performance.html` + `perf/*.json` |
 | `/why/` | What datars does, what it costs, when to pick it | `pages/why.html` |
 | `/under-the-hood/` | How it works, layer by layer: document, bundle, runtime, resolve, motion, maps, rendering, determinism, tests, platforms, delivery | `pages/under-the-hood.html` |

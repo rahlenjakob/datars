@@ -15,7 +15,7 @@
 //   node scripts/build-articles.mjs [--out out/pages] [filter]     (build-site.mjs runs it)
 import { build } from "esbuild";
 import { execFileSync } from "node:child_process";
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { embedLocalRecipes } from "./local-recipes.mjs";
@@ -93,6 +93,15 @@ async function publish(article, story) {
   rmSync(to, { recursive: true, force: true });
   execFileSync(cli, ["publish", staged, "--alias", alias, "--to", to], { stdio: ["ignore", "ignore", "inherit"] });
   copyFileSync(file, join(to, "doc.ts"));
+  // The data files the code reads by relative URL, beside it: the code runs as published, and a
+  // page's own script can start from the same rows (a live chart's feed, a replay).
+  for (const s of Object.values(doc.data ?? {})) {
+    const f = typeof s?.url === "string" && !/^[a-z]+:/i.test(s.url) ? join(dir, s.url) : null;
+    if (f && existsSync(f) && !existsSync(join(to, s.url))) {
+      mkdirSync(dirname(join(to, s.url)), { recursive: true });
+      copyFileSync(f, join(to, s.url));
+    }
+  }
   const states = doc.program?.states ?? [];
   const drivers = JSON.stringify(doc.program?.drivers ?? []);
   const info = {
@@ -185,6 +194,20 @@ for (const a of articles) {
   const source = readFileSync(join(src, a, "index.html"), "utf8");
   const { html, stories } = await fill(a, source, /color-scheme:\s*dark/.test(source));
   writeFileSync(join(dir, "index.html"), html);
+  // The page's own files (its script, styles, what it fetches): `page/`, next to its index.html.
+  // `{{env:DATARS_PUBLIC_…}}` in them is that variable from the build's environment (empty when
+  // unset) — public by name: whatever is put there is published to every reader.
+  const own = join(src, a, "page");
+  if (existsSync(own)) {
+    for (const f of readdirSync(own, { recursive: true }).map(String)) {
+      const from = join(own, f);
+      if (!statSync(from).isFile()) continue;
+      mkdirSync(dirname(join(dir, f)), { recursive: true });
+      if (/\.(js|css|html|json)$/.test(f)) {
+        writeFileSync(join(dir, f), readFileSync(from, "utf8").replace(/\{\{env:(DATARS_PUBLIC_[A-Z0-9_]+)\}\}/g, (_, k) => (process.env[k] ?? "").replace(/[^A-Za-z0-9._-]/g, "")));
+      } else copyFileSync(from, join(dir, f));
+    }
+  }
   const m = meta(html);
   // The cover: the story the page marks `data-cover`, else its first figure; a still of one state.
   const cover = stories.find((s) => /\bdata-cover\b/.test(s.attrs)) ?? stories.find((s) => s.el === "figure") ?? stories[0];
