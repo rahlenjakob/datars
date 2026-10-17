@@ -336,9 +336,10 @@ impl<'a> Resolver<'a> {
                 self.dodge_chosen.borrow_mut().insert(d.path.clone(), a);
             }
         }
+        let canvas = Rect::new(0.0, 0.0, width, height);
+        keep_off_data(&mut nodes, canvas, self.fonts);
         let mut texts = Vec::new();
         nodes.iter().for_each(|n| text_quads(n, Affine::IDENTITY, &mut texts, false));
-        let canvas = Rect::new(0.0, 0.0, width, height);
         for n in &mut nodes {
             contain(n, Affine::IDENTITY, canvas, false, &texts, self.fonts);
         }
@@ -847,10 +848,29 @@ impl<'a> Resolver<'a> {
                 found.insert(id.clone(), r);
             }
         }
-        // Pass 2: final scales; layout again (axis sizes may change with the final ranges).
-        let scope = Rc::new(crate::scales::build_scope(self, &t.scales, cx, Some(&found)));
-        let fcx = Cx { scope: scope.clone(), ..cx.clone() };
-        let boxes = self.layout_children(t, children, &fcx, own, path);
+        // Pass 2: final scales; layout again (axis sizes may change with the final ranges). When
+        // they do — narrower bands turn an axis's names, and its taller labels leave the plot area
+        // less height — the boxes the ranges were built over have moved: build the scales over
+        // the new boxes and lay out again (a few times at most; it settles in one or two), so
+        // the marks and the axes agree on where the plot area is.
+        let mut scope = Rc::new(crate::scales::build_scope(self, &t.scales, cx, Some(&found)));
+        let mut boxes = self.layout_children(t, children, &Cx { scope: scope.clone(), ..cx.clone() }, own, path);
+        for _ in 0..3 {
+            let fcx = Cx { scope: scope.clone(), ..cx.clone() };
+            let mut again: BTreeMap<String, Rect> = BTreeMap::new();
+            for id in &wanted {
+                if let Some(r) = self.find_box(children, &boxes, &fcx, id) {
+                    again.insert(id.clone(), r);
+                }
+            }
+            let moved = again.iter().any(|(k, r)| found.get(k).is_none_or(|f| (f.x - r.x).abs() > 0.5 || (f.y - r.y).abs() > 0.5 || (f.w - r.w).abs() > 0.5 || (f.h - r.h).abs() > 0.5));
+            if !moved {
+                break;
+            }
+            found = again;
+            scope = Rc::new(crate::scales::build_scope(self, &t.scales, cx, Some(&found)));
+            boxes = self.layout_children(t, children, &Cx { scope: scope.clone(), ..cx.clone() }, own, path);
+        }
         (scope, boxes)
     }
 
@@ -1324,17 +1344,18 @@ impl<'a> Resolver<'a> {
         }
         let size = if st.size.is_null() { self.theme.number("size.label").unwrap_or(11.0) } else { self.num(&st.size, cx, 11.0) };
         let ink = self.ink(&st.ink, cx).unwrap_or_else(|| Ink::token("ink"));
-        let align = match self.string(&st.align, cx).as_str() {
+        let align_of = |p: &Prop| match self.string(p, cx).as_str() {
             "middle" | "center" => Align::Middle,
             "end" | "right" => Align::End,
             _ => Align::Start,
         };
-        let baseline = match self.string(&st.baseline, cx).as_str() {
+        let baseline_of = |p: &Prop| match self.string(p, cx).as_str() {
             "middle" => Baseline::Middle,
             "top" | "hanging" => Baseline::Top,
             "bottom" => Baseline::Bottom,
             _ => Baseline::Alphabetic,
         };
+        let (align, baseline) = (align_of(&st.align), baseline_of(&st.baseline));
         let max_width = (!st.max_width.is_null()).then(|| self.num(&st.max_width, cx, f64::INFINITY));
         let style = TextStyle { family: Arc::from(family.as_str()), weight, size, ink, align, baseline, max_width, line_height: 1.25 };
         let origin = Vec2::new(self.num(&t.at[0], cx, 0.0), self.num(&t.at[1], cx, 0.0));
@@ -1352,6 +1373,14 @@ impl<'a> Resolver<'a> {
         let wrap = !st.contain.is_null() && self.string(&st.contain, cx) == "wrap";
         node.contain = wrap || (!st.contain.is_null() && self.truthy(&st.contain, cx));
         node.wrap_to_fit = wrap;
+        node.places = t
+            .alternatives
+            .iter()
+            .map(|a| {
+                let at = Vec2::new(self.num(&a.at[0], cx, 0.0), self.num(&a.at[1], cx, 0.0));
+                (at, if a.align.is_null() { align } else { align_of(&a.align) }, if a.baseline.is_null() { baseline } else { baseline_of(&a.baseline) })
+            })
+            .collect();
         if let Some([dx, dy]) = &t.offset {
             node.offset = Vec2::new(self.num(dx, cx, 0.0), self.num(dy, cx, 0.0));
         }
@@ -1794,6 +1823,72 @@ fn text_quads(n: &Node, parent: Affine, out: &mut Vec<[Vec2; 4]>, core: bool) {
             children.iter().for_each(|c| text_quads(c, inner, out, core));
         }
         _ => n.children().iter().for_each(|c| text_quads(c, xf, out, core)),
+    }
+}
+
+/// Texts with other places to go (`TText::alternatives`) take the first one off the data — no
+/// stroke through them, no filled mark under most of them, inside the canvas, clear of other
+/// text — else stay where they were, given a halo so they still read over what's there.
+fn keep_off_data(nodes: &mut [Node], canvas: Rect, fonts: &datars_text::FontDb) {
+    fn any_places(n: &Node) -> bool {
+        matches!(&n.kind, NodeKind::Text(t) if !t.places.is_empty()) || n.children().iter().any(any_places)
+    }
+    if !nodes.iter().any(any_places) {
+        return;
+    }
+    let data = crate::obstacles::Obstacles::collect(nodes);
+    let mut texts = Vec::new();
+    nodes.iter().for_each(|n| text_quads(n, Affine::IDENTITY, &mut texts, true));
+    fn walk(n: &mut Node, parent: Affine, canvas: Rect, data: &crate::obstacles::Obstacles, texts: &[[Vec2; 4]], fonts: &datars_text::FontDb) {
+        let xf = n.common.placed(parent);
+        match &mut n.kind {
+            NodeKind::Text(t) if !t.places.is_empty() => {
+                let own = crate::bounds::text_core(t, &xf);
+                let first = (t.origin, t.style.align, t.style.baseline);
+                let places: Vec<_> = std::iter::once(first).chain(std::mem::take(&mut t.places)).collect();
+                let clear = |t: &datars_scene::TextNode| {
+                    let q = crate::bounds::text_core(t, &xf);
+                    let r = q.iter().fold(Rect::empty(), |acc, p| acc.include(*p));
+                    // (A place for a label is clear of the data altogether: under a mark it'd
+                    // need that mark's ink.)
+                    let cover = data.cover_quad(&q);
+                    canvas.inset(-0.5).contains(Vec2::new(r.x, r.y)) && canvas.inset(-0.5).contains(Vec2::new(r.x1(), r.y1()))
+                        && !cover.stroked && cover.filled < 0.25
+                        && !texts.iter().any(|o| *o != own && crate::bounds::quads_overlap(o, &q, -1.0))
+                };
+                for (i, (at, align, baseline)) in places.iter().enumerate() {
+                    if i > 0 {
+                        t.origin = *at;
+                        t.style.align = *align;
+                        t.style.baseline = *baseline;
+                        datars_text::layout(fonts, t);
+                    }
+                    if clear(t) {
+                        return;
+                    }
+                }
+                // Nowhere clear: where it was meant to be, over a halo.
+                t.origin = first.0;
+                t.style.align = first.1;
+                t.style.baseline = first.2;
+                datars_text::layout(fonts, t);
+                if t.halo.is_none() {
+                    t.halo = Some((datars_theme::Ink::token("paper"), 3.0));
+                }
+            }
+            NodeKind::View { viewport, camera, children, .. } => {
+                let inner = xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y)));
+                children.iter_mut().for_each(|c| walk(c, inner, canvas, data, texts, fonts));
+            }
+            _ => {
+                if let Some(kids) = n.children_mut() {
+                    kids.iter_mut().for_each(|c| walk(c, xf, canvas, data, texts, fonts));
+                }
+            }
+        }
+    }
+    for n in nodes {
+        walk(n, Affine::IDENTITY, canvas, &data, &texts, fonts);
     }
 }
 

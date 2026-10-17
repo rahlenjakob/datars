@@ -79,8 +79,19 @@ export const rule = recipe<RuleParams>({
         shape(g, { stroke: { paint: p.ink, width: 1, dash: p.dashed ? [4, 3] : undefined } }),
         p.label
           ? p.axis === "y"
-            ? text(p.label, [e("box.w"), e(`(${pos.expr}) - 4`)], { style: { size: "$size.label", ink: p.ink, align: "end" } })
-            : text(p.label, [e(`${flip} ? (${pos.expr}) - 4 : (${pos.expr}) + 4`), 10], { style: { size: "$size.label", ink: p.ink, align: e(`${flip} ? "end" : "start"`) } })
+            // Above the line at its right end — or, where the data is there, below it, or at the
+            // left end; with the data everywhere, where it was, over a halo.
+            ? text(p.label, [e("box.w"), e(`(${pos.expr}) - 4`)], { style: { size: "$size.label", ink: p.ink, align: "end" }, alternatives: [
+              { at: [e("box.w"), e(`(${pos.expr}) + 4`)], baseline: "top" },
+              { at: [0, e(`(${pos.expr}) - 4`)], align: "start" },
+              { at: [0, e(`(${pos.expr}) + 4`)], align: "start", baseline: "top" },
+            ] })
+            // Beside the line at the top — or at the bottom, or the other side.
+            : text(p.label, [e(`${flip} ? (${pos.expr}) - 4 : (${pos.expr}) + 4`), 10], { style: { size: "$size.label", ink: p.ink, align: e(`${flip} ? "end" : "start"`) }, alternatives: [
+              { at: [e(`${flip} ? (${pos.expr}) - 4 : (${pos.expr}) + 4`), e("box.h - 4")], baseline: "bottom" },
+              { at: [e(`${flip} ? (${pos.expr}) + 4 : (${pos.expr}) - 4`), 10], align: e(`${flip} ? "start" : "end"`) },
+              { at: [e(`${flip} ? (${pos.expr}) + 4 : (${pos.expr}) - 4`), e("box.h - 4")], align: e(`${flip} ? "start" : "end"`), baseline: "bottom" },
+            ] })
           : null,
       ],
     });
@@ -109,7 +120,11 @@ export const span = recipe<SpanParams>({
       semantics: { role: "annotation", label: p.label ?? "" },
       children: [
         shape(g, { fill: p.ink, opacity: p.opacity }),
-        p.label ? text(p.label, p.axis === "x" ? [e(`min(${a}, ${b}) + 4`), 12] : [4, e(`min(${a}, ${b}) + 12`)], { style: { size: "$size.label", ink: "$muted" } }) : null,
+        // At the band's top-left corner — or its other corners where the data is there; over a
+        // halo when it's everywhere.
+        p.label ? text(p.label, p.axis === "x" ? [e(`min(${a}, ${b}) + 4`), 12] : [4, e(`min(${a}, ${b}) + 12`)], { style: { size: "$size.label", ink: "$muted" }, alternatives: p.axis === "x"
+          ? [{ at: [e(`min(${a}, ${b}) + 4`), e("box.h - 4")], baseline: "bottom" }, { at: [e(`max(${a}, ${b}) - 4`), 12], align: "end" }, { at: [e(`max(${a}, ${b}) - 4`), e("box.h - 4")], align: "end", baseline: "bottom" }]
+          : [{ at: [e("box.w - 4"), e(`min(${a}, ${b}) + 12`)], align: "end" }, { at: [4, e(`max(${a}, ${b}) - 4`)] }, { at: [e("box.w - 4"), e(`max(${a}, ${b}) - 4`)], align: "end" }] }) : null,
       ],
     });
   },

@@ -55,6 +55,7 @@ Maps with an [automatic basemap](/docs/maps/#where-the-tiles-come-from) show at 
 | `legibility/label-collisions` | overlapping labels |
 | `legibility/offscreen` | labels cut off at the canvas edge |
 | `legibility/clipped` | labels their box's clip cuts |
+| `legibility/on-data` | labels a data line runs through, or that straddle a filled mark's edge, with no halo |
 | `encoding/too-many-colours` | more categorical colours than a reader can tell apart |
 | `a11y/semantics` | interactive elements without an accessible label |
 | `maps/attribution` | vector tiles drawn without the OpenStreetMap credit |
@@ -71,7 +72,7 @@ warning  identity/row-keys source `sales` has no key: rows are identified by pos
 
 Lint exits with an error code when it finds errors, so it fits in CI.
 
-`datars labels` reads a chart the way readers on other screens get it: every state at a phone (390 px), a tablet (768) and a wide column (1200), each at the theme's text size and at 1.5 and 2 × — the sizes readers choose in their browser or phone settings — and counts the labels cut off, drawn over one another or clipped by their box, per reading. Give it documents or whole folders; `--widths` and `--text-scale` take other lists, `--verbose` names the labels, `--json` is for tools.
+`datars labels` reads a chart the way readers on other screens get it: every state at a phone (390 px), a tablet (768) and a wide column (1200), each at the theme's text size and at 1.5 and 2 × — the sizes readers choose in their browser or phone settings — and counts the labels cut off, drawn over one another, clipped by their box or sitting on the data (a line through them, half on a bar) without a halo, per reading. Give it documents or whole folders; `--widths` and `--text-scale` take other lists, `--verbose` names the labels, `--json` is for tools.
 
 ## Look at it
 

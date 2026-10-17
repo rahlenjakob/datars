@@ -162,11 +162,16 @@ export function shape(g: Geom, opts: NodeOpts & { fill?: Prop; stroke?: StrokeOp
 
 export interface TextStyleOpts { font?: string; size?: Prop; weight?: Prop; ink?: Prop; align?: Prop; baseline?: Prop; maxWidth?: Prop; /** Nudged back inside the canvas if it would cross an edge; `"wrap"`: first wrapped to the room it has before the edge. */ contain?: Prop }
 
-/** Text at `at`. `offset` shifts it in screen px (a label beside a point, at any camera zoom). */
-export function text(content: Prop, at: [Prop, Prop], opts: NodeOpts & { style?: TextStyleOpts; halo?: [Prop, Prop]; number?: { value: Prop; format?: Prop }; rotate?: Prop; offset?: [Prop, Prop] } = {}): Template {
-  const { style, halo, number, rotate, offset, ...rest } = opts;
+/** Another place for a text: where, and how it hangs from there (default: as the text does). */
+export interface TextPlace { at: [Prop, Prop]; align?: Prop; baseline?: Prop }
+
+/** Text at `at`. `offset` shifts it in screen px (a label beside a point, at any camera zoom).
+ * `alternatives`: other places, tried in order when where it is would sit on the data (a line
+ * through it, a filled mark under most of it) or on other text; none clear: it stays, with a halo. */
+export function text(content: Prop, at: [Prop, Prop], opts: NodeOpts & { style?: TextStyleOpts; halo?: [Prop, Prop]; number?: { value: Prop; format?: Prop }; rotate?: Prop; offset?: [Prop, Prop]; alternatives?: TextPlace[] } = {}): Template {
+  const { style, halo, number, rotate, offset, alternatives, ...rest } = opts;
   const st = style ? clean({ font: style.font, size: style.size, weight: style.weight, ink: style.ink, align: style.align, baseline: style.baseline, max_width: style.maxWidth, contain: style.contain }) : {};
-  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset });
+  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset, alternatives: alternatives?.length ? alternatives : undefined });
 }
 
 export type RepeatFrom = string | { groups: string; by: string } | { ticks: string; count?: Prop } | { legend: string } | { count: Prop };

@@ -133,6 +133,10 @@ pub struct TextNode {
     /// at words), and is nudged only if that isn't enough (`contain: "wrap"`).
     #[serde(default, skip_serializing_if = "is_false")]
     pub wrap_to_fit: bool,
+    /// Other places to try when this one sits on the data (the engine chooses after layout and
+    /// empties this): origin, alignment and baseline each.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub places: Vec<(Vec2, Align, Baseline)>,
 }
 
 fn is_false(v: &bool) -> bool {
@@ -142,7 +146,7 @@ fn is_false(v: &bool) -> bool {
 impl TextNode {
     /// An unshaped text node; the engine's text stage fills `runs` and `bounds`.
     pub fn new(text: impl Into<String>, origin: Vec2, style: TextStyle) -> TextNode {
-        TextNode { text: text.into(), origin, style, runs: Vec::new(), bounds: Rect::default(), halo: None, screen_size: true, offset: Vec2::ZERO, number: None, rotate: 0.0, contain: false, wrap_to_fit: false }
+        TextNode { text: text.into(), origin, style, runs: Vec::new(), bounds: Rect::default(), halo: None, screen_size: true, offset: Vec2::ZERO, number: None, rotate: 0.0, contain: false, wrap_to_fit: false, places: Vec::new() }
     }
     pub fn is_shaped(&self) -> bool {
         !self.runs.is_empty() || self.text.is_empty()

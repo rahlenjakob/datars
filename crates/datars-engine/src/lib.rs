@@ -14,6 +14,7 @@ pub mod expand;
 mod geo;
 mod graph_ops;
 mod layout_ops;
+pub mod obstacles;
 pub mod pick;
 pub mod points;
 pub mod program;

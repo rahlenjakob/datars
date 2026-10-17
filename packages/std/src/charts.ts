@@ -270,7 +270,8 @@ export const sankey = recipe<SankeyParams>({
         // would touch an earlier one is left out (its node still says it, to a pointer and a reader).
         group({ key: "nodes", declutter: true, children: [repeat(nodes, group({ children: [
           shape(geom.rect({ x: e("d.x0"), y: e("d.y0"), w: e("d.x1 - d.x0"), h: e("d.y1 - d.y0") }), { key: "node", fill: e("scale.color(d.name)"), semantics: { role: "datum", label: e("`${d.name}: ${d.value}`") } }),
-          text(e("d.name"), [e("d.x0 < box.w / 2 ? d.x1 + 6 : d.x0 - 6"), e("(d.y0 + d.y1) / 2")], { key: "label", style: { size: "$size.label", align: e('d.x0 < box.w / 2 ? "start" : "end"'), baseline: "middle" } }),
+          // Over the flows beside the node: a halo keeps the name readable across them.
+          text(e("d.name"), [e("d.x0 < box.w / 2 ? d.x1 + 6 : d.x0 - 6"), e("(d.y0 + d.y1) / 2")], { key: "label", style: { size: "$size.label", align: e('d.x0 < box.w / 2 ? "start" : "end"'), baseline: "middle" }, halo: ["$paper", 2.5] }),
         ] }))] }),
       ],
     });

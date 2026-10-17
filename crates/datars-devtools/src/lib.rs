@@ -118,6 +118,8 @@ pub struct DrawnLabel {
     pub clip: Option<Rect>,
     /// Inside a view with a camera (a map): what its clip cuts is panned out of sight, on purpose.
     pub in_camera: bool,
+    /// Drawn over a halo, or in an ink chosen against what's under it (`on(…)`): legible over data.
+    pub guarded: bool,
 }
 
 /// Every text the scene draws, where it lands on the canvas: through transforms, pins, views and
@@ -157,7 +159,8 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
                     let lead = (local.h * 0.12).max(0.0);
                     (corners(m, local), q(local), q(Rect::new(local.x, local.y + lead, local.w, (local.h - 2.0 * lead).max(0.0))))
                 };
-                out.push(DrawnLabel { text: t.text.clone(), rect, quad, core, opacity, clip, in_camera: cam });
+                let guarded = t.halo.as_ref().is_some_and(|(_, w)| *w >= 1.5) || matches!(t.style.ink, datars_theme::Ink::On { .. });
+                out.push(DrawnLabel { text: t.text.clone(), rect, quad, core, opacity, clip, in_camera: cam, guarded });
             }
             NodeKind::View { viewport, camera, clip: clips, children } => {
                 let inner = xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y)));
@@ -183,12 +186,15 @@ pub struct LabelIssues {
     /// Labels a box clips part of (a column too narrow for its names): the reader sees a piece.
     /// Not counted under a map's camera, whose edge cuts labels as the reader pans.
     pub clipped: Vec<String>,
+    /// Labels on the data: a line of a mark through their letters, or a filled mark under most of
+    /// them — without a halo, or an ink chosen for that fill, to keep them legible.
+    pub on_data: Vec<String>,
 }
 
 impl LabelIssues {
     /// Everything a reader can't read.
     pub fn count(&self) -> usize {
-        self.cut.len() + self.overlapping.len() + self.clipped.len()
+        self.cut.len() + self.overlapping.len() + self.clipped.len() + self.on_data.len()
     }
 }
 
@@ -207,6 +213,12 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
         })
         .collect();
     let mut out = LabelIssues::default();
+    let data = datars_engine::obstacles::Obstacles::collect(std::slice::from_ref(&scene.root));
+    for (_, l) in labels.iter().filter(|(_, l)| !l.guarded && !l.in_camera) {
+        if !data.is_empty() && data.cover_quad(&l.core).hurts() {
+            out.on_data.push(l.text.clone());
+        }
+    }
     for (r, l) in &labels {
         let inside = r.intersects(&canvas);
         let crosses = r.x < -1.5 || r.y < -1.5 || r.x1() > scene.width + 1.5 || r.y1() > scene.height + 1.5;
@@ -328,6 +340,9 @@ pub fn lint_scene(scene: &Scene, state: &str) -> Vec<Finding> {
     if let Some((a, b)) = labels.overlapping.first() {
         let n = labels.overlapping.len();
         out.push(f("legibility/label-collisions", if n > 5 { "warning" } else { "info" }, format!("{state}: {n} overlapping labels (\"{a}\" overlaps \"{b}\")"), "give labels priorities, thin them, or use a legend"));
+    }
+    for t in &labels.on_data {
+        out.push(f("legibility/on-data", "info", format!("{state}: label \"{t}\" sits on the data (a line through it, or a filled mark under it)"), "give it `alternatives` (other places to try), a halo, or an ink chosen for the fill (`on(…)`)"));
     }
     for t in &labels.clipped {
         out.push(f("legibility/clipped", "warning", format!("{state}: label \"{t}\" is partly hidden by its box's clip"), "give the box room for its labels, wrap them (maxWidth), or thin them"));

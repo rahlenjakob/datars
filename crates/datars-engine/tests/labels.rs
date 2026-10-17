@@ -258,3 +258,54 @@ fn a_wrapping_label_takes_the_room_before_the_edge() {
     let (t, r) = laid(serde_json::json!(true));
     assert!(t.origin.x < 230.0 && r.x1() <= 298.5 && r.h < 20.0, "nudged in on one line: {r:?}");
 }
+
+/// A text with `alternatives` takes the first place off the data (no line through it, no
+/// filled mark under it); with every place on the data, it stays and gets a halo.
+#[test]
+fn a_label_with_other_places_keeps_off_the_data() {
+    let doc = |line_y: f64| serde_json::json!({ "datars": 1, "size": { "width": 400, "height": 200 }, "scene": { "kind": "group", "key": "root", "children": [
+        { "kind": "shape", "key": "line", "geom": { "type": "segment", "x1": 0, "y1": line_y, "x2": 400, "y2": line_y }, "stroke": { "paint": "$mark", "width": 2 },
+          "semantics": { "role": "series", "label": "values" } },
+        { "kind": "text", "key": "note", "text": "Target 2%", "at": [396, 96], "style": { "size": 11, "align": "end" },
+          "alternatives": [{ "at": [396, 104], "baseline": "top" }, { "at": [4, 96], "align": "start" }] }
+    ] } });
+    let note = |line_y: f64| {
+        let mut e = Engine::new();
+        e.load(datars_ir::Doc::from_json(&doc(line_y).to_string()).unwrap());
+        let s = e.scene();
+        match &s.root.children()[1].kind { NodeKind::Text(t) => t.clone(), _ => unreachable!() }
+    };
+    // The line runs where the text's letters would be (just above y = 96): it goes below.
+    let t = note(92.0);
+    assert_eq!((t.origin.x, t.origin.y), (396.0, 104.0), "below the line");
+    assert!(t.halo.is_none() && t.places.is_empty());
+    // A line clear of it: it stays where it was.
+    let t = note(150.0);
+    assert_eq!((t.origin.x, t.origin.y), (396.0, 96.0));
+    // Lines through every place: where it was, over a halo.
+    let mut d = doc(92.0);
+    d["scene"]["children"].as_array_mut().unwrap().push(serde_json::json!({ "kind": "shape", "key": "line2", "geom": { "type": "segment", "x1": 0, "y1": 110, "x2": 400, "y2": 110 }, "stroke": { "paint": "$mark", "width": 2 }, "semantics": { "role": "series", "label": "more" } }));
+    let mut e = Engine::new();
+    e.load(datars_ir::Doc::from_json(&d.to_string()).unwrap());
+    let s = e.scene();
+    let t = match &s.root.children()[1].kind { NodeKind::Text(t) => t.clone(), _ => unreachable!() };
+    assert!(t.origin.x == 4.0 || t.halo.is_some(), "the left end is clear, else a halo: {:?} {:?}", t.origin, t.halo);
+}
+
+/// The plot area the marks are scaled to is the one the axes are laid out around: when the
+/// final scales make an axis taller (names that turn in narrower bands), the ranges follow.
+#[test]
+fn bars_end_where_the_axis_is() {
+    let parties = ["Social Democrats", "Sweden Democrats", "Moderates", "Left", "Centre", "Christian Democrats", "Greens", "Liberals"];
+    let s = scene((520.0, 440.0), serde_json::json!({ "v": { "values": { "party": parties, "share": [30.3, 20.5, 19.1, 6.8, 6.7, 5.3, 5.1, 4.6] }, "key": ["party"] } }),
+        serde_json::json!({ "data": "v", "x": "party", "y": "share", "title": "Vote share", "children": [{ "kind": "use", "recipe": "@datars/std/bar", "params": {} }] }));
+    let snap = s.snapshot();
+    let axis_y = snap.lines().find(|l| l.contains("group (\"axis-x\",)")).and_then(|l| l.split("transform=[").nth(1)).and_then(|t| t.split(']').next()).and_then(|t| t.split(' ').nth(5)).and_then(|v| v.parse::<f64>().ok()).unwrap();
+    let bottoms: Vec<f64> = snap.lines().filter(|l| l.contains(" rect x=") && l.contains("role=datum")).map(|l| {
+        let n = |k: &str| l.split(k).nth(1).and_then(|r| r.split(' ').next()).and_then(|v| v.parse::<f64>().ok()).unwrap();
+        n(" y=") + n(" h=")
+    }).collect();
+    assert_eq!(bottoms.len(), 8, "{snap}");
+    // (The axis stands the rows' 6 px gap under the plot area.)
+    assert!(bottoms.iter().all(|b| (b - (axis_y - 6.0)).abs() < 1.0), "every bar ends at the plot area's foot, over the axis at {axis_y}: {bottoms:?}");
+}

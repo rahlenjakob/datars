@@ -189,7 +189,15 @@ var rule = recipe3({
       semantics: { role: "annotation", label: p.label ?? (isExprValue(p.value) ? e3(`${JSON.stringify(`${p.axis} = `)} + ${valueSource(p.value)}`) : `${p.axis} = ${valueName(p.value)}`) },
       children: [
         shape3(g, { stroke: { paint: p.ink, width: 1, dash: p.dashed ? [4, 3] : void 0 } }),
-        p.label ? p.axis === "y" ? text2(p.label, [e3("box.w"), e3(`(${pos.expr}) - 4`)], { style: { size: "$size.label", ink: p.ink, align: "end" } }) : text2(p.label, [e3(`${flip} ? (${pos.expr}) - 4 : (${pos.expr}) + 4`), 10], { style: { size: "$size.label", ink: p.ink, align: e3(`${flip} ? "end" : "start"`) } }) : null
+        p.label ? p.axis === "y" ? text2(p.label, [e3("box.w"), e3(`(${pos.expr}) - 4`)], { style: { size: "$size.label", ink: p.ink, align: "end" }, alternatives: [
+          { at: [e3("box.w"), e3(`(${pos.expr}) + 4`)], baseline: "top" },
+          { at: [0, e3(`(${pos.expr}) - 4`)], align: "start" },
+          { at: [0, e3(`(${pos.expr}) + 4`)], align: "start", baseline: "top" }
+        ] }) : text2(p.label, [e3(`${flip} ? (${pos.expr}) - 4 : (${pos.expr}) + 4`), 10], { style: { size: "$size.label", ink: p.ink, align: e3(`${flip} ? "end" : "start"`) }, alternatives: [
+          { at: [e3(`${flip} ? (${pos.expr}) - 4 : (${pos.expr}) + 4`), e3("box.h - 4")], baseline: "bottom" },
+          { at: [e3(`${flip} ? (${pos.expr}) + 4 : (${pos.expr}) - 4`), 10], align: e3(`${flip} ? "start" : "end"`) },
+          { at: [e3(`${flip} ? (${pos.expr}) + 4 : (${pos.expr}) - 4`), e3("box.h - 4")], align: e3(`${flip} ? "start" : "end"`), baseline: "bottom" }
+        ] }) : null
       ]
     });
   }
@@ -215,7 +223,9 @@ var span = recipe3({
       semantics: { role: "annotation", label: p.label ?? "" },
       children: [
         shape3(g, { fill: p.ink, opacity: p.opacity }),
-        p.label ? text2(p.label, p.axis === "x" ? [e3(`min(${a}, ${b}) + 4`), 12] : [4, e3(`min(${a}, ${b}) + 12`)], { style: { size: "$size.label", ink: "$muted" } }) : null
+        // At the band's top-left corner — or its other corners where the data is there; over a
+        // halo when it's everywhere.
+        p.label ? text2(p.label, p.axis === "x" ? [e3(`min(${a}, ${b}) + 4`), 12] : [4, e3(`min(${a}, ${b}) + 12`)], { style: { size: "$size.label", ink: "$muted" }, alternatives: p.axis === "x" ? [{ at: [e3(`min(${a}, ${b}) + 4`), e3("box.h - 4")], baseline: "bottom" }, { at: [e3(`max(${a}, ${b}) - 4`), 12], align: "end" }, { at: [e3(`max(${a}, ${b}) - 4`), e3("box.h - 4")], align: "end", baseline: "bottom" }] : [{ at: [e3("box.w - 4"), e3(`min(${a}, ${b}) + 12`)], align: "end" }, { at: [4, e3(`max(${a}, ${b}) - 4`)] }, { at: [e3("box.w - 4"), e3(`max(${a}, ${b}) - 4`)], align: "end" }] }) : null
       ]
     });
   }
@@ -2440,7 +2450,8 @@ var sankey = recipe9({
         // would touch an earlier one is left out (its node still says it, to a pointer and a reader).
         group9({ key: "nodes", declutter: true, children: [repeat8(nodes, group9({ children: [
           shape9(geom9.rect({ x: e9("d.x0"), y: e9("d.y0"), w: e9("d.x1 - d.x0"), h: e9("d.y1 - d.y0") }), { key: "node", fill: e9("scale.color(d.name)"), semantics: { role: "datum", label: e9("`${d.name}: ${d.value}`") } }),
-          text8(e9("d.name"), [e9("d.x0 < box.w / 2 ? d.x1 + 6 : d.x0 - 6"), e9("(d.y0 + d.y1) / 2")], { key: "label", style: { size: "$size.label", align: e9('d.x0 < box.w / 2 ? "start" : "end"'), baseline: "middle" } })
+          // Over the flows beside the node: a halo keeps the name readable across them.
+          text8(e9("d.name"), [e9("d.x0 < box.w / 2 ? d.x1 + 6 : d.x0 - 6"), e9("(d.y0 + d.y1) / 2")], { key: "label", style: { size: "$size.label", align: e9('d.x0 < box.w / 2 ? "start" : "end"'), baseline: "middle" }, halo: ["$paper", 2.5] })
         ] }))] })
       ]
     });
@@ -4956,7 +4967,7 @@ var timeline = recipe16({
         E ? group15({ key: "eras", children: [repeat12(E, group15({ semantics: { role: "annotation", label: e16(`${eraName} + ": " + ${dateOf(fld(p.eraStart))} + " \u2013 " + ${dateOf(fld(p.eraEnd))}`) }, children: [
           shape15(geom15.rect({ x: e16(es), y: e16(eraY), w: e16(`max(1, ${ee} - ${es})`), h: eraH, r: 2 }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
           shape15(geom15.rect({ x: e16(es), y: e16(eraY), w: e16(`max(1, ${ee} - ${es})`), h: eraH, r: 2 }), { key: "span", fill: e16(`scale.era(${fld(p.eraColor ?? p.eraLabel)})`), opacity: e16("hover() ? 0.45 : 0.3"), pickable: true }),
-          text14(e16(eraName), [e16(`${es} + 5`), e16(`${eraY} + ${eraH / 2}`)], { key: "name", when: e16(`measure(${eraName}, ${small}, 600) + 10 <= ${ee} - ${es}`), style: { size: "$size.small", weight: 600, ink: "$ink-2", baseline: "middle" } })
+          text14(e16(eraName), [e16(`${es} + 5`), e16(`${eraY} + ${eraH / 2}`)], { key: "name", when: e16(`measure(${eraName}, ${small}, 600) + 10 <= ${ee} - ${es}`), style: { size: "$size.small", weight: 600, ink: "$ink-2", baseline: "middle" }, halo: ["$paper", 2] })
         ] }))] }) : null,
         group15({ key: "labels", children: [repeat12(L, group15({ when: placed, children: [
           shape15(geom15.rect({ x: e16(`${flip} ? d.__x - d.__w : d.__x + 1`), y: e16(`${up} ? ${edge} - ${block} : ${edge}`), w: e16("d.__w - 1"), h: e16(block) }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),

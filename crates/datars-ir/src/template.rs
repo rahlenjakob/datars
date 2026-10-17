@@ -320,6 +320,22 @@ pub struct TText {
     /// Shift from `at` in screen px (labels beside points under a zooming camera).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub offset: Option<[Prop; 2]>,
+    /// Other places for the text, tried in order when where it is would sit on the data (a line
+    /// through it, a filled mark under most of it) or on other text: the first clear one wins;
+    /// with none clear it stays and gets a halo (a reference line's label, a note).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub alternatives: Vec<TTextPlace>,
+}
+
+/// One more place a text may go: where, and how it hangs from there.
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct TTextPlace {
+    pub at: [Prop; 2],
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub align: Prop,
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub baseline: Prop,
 }
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

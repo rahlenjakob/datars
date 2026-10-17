@@ -100,9 +100,9 @@ function shape(g, opts = {}) {
   return node("shape", rest, { geom: g, fill, stroke: stroke(st), markers });
 }
 function text(content, at, opts = {}) {
-  const { style, halo, number, rotate, offset, ...rest } = opts;
+  const { style, halo, number, rotate, offset, alternatives, ...rest } = opts;
   const st = style ? clean({ font: style.font, size: style.size, weight: style.weight, ink: style.ink, align: style.align, baseline: style.baseline, max_width: style.maxWidth, contain: style.contain }) : {};
-  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset });
+  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset, alternatives: alternatives?.length ? alternatives : void 0 });
 }
 function repeat(from, template) {
   return clean({ kind: "repeat", from, template });

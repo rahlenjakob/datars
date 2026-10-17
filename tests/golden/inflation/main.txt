@@ -41,7 +41,7 @@ scene 720.00×380.00 background=$paper
                   · … 6 more
             group ("rule-y-2",) role=annotation "Target 2%"
               ("#0",) segment (0.00, 223.22)→(662.39, 223.22) stroke=$ink-2/1.00
-              ("#1",) text "Target 2%" at (662.39, 219.22) size=11.00 ink=$ink-2
+              ("#1",) text "Target 2%" at (0.00, 219.22) size=11.00 ink=$ink-2
             group ("note-2022 spike",) role=annotation "2022 spike"
               ("connector",) segment (579.59, 11.16)→(539.59, 31.16) stroke=$ink/1.00
               ("dot",) ellipse c=(579.59, 11.16) r=(3.00, 3.00) fill=$ink

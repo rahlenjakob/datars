@@ -1369,6 +1369,13 @@
     },
     "TText": {
       "properties": {
+        "alternatives": {
+          "description": "Other places for the text, tried in order when where it is would sit on the data (a line\nthrough it, a filled mark under most of it) or on other text: the first clear one wins;\nwith none clear it stays and gets a halo (a reference line's label, a note).",
+          "items": {
+            "$ref": "#/$defs/TTextPlace"
+          },
+          "type": "array"
+        },
         "at": {
           "items": {
             "$ref": "#/$defs/Prop"
@@ -1424,6 +1431,29 @@
       },
       "required": [
         "text",
+        "at"
+      ],
+      "type": "object"
+    },
+    "TTextPlace": {
+      "description": "One more place a text may go: where, and how it hangs from there.",
+      "properties": {
+        "align": {
+          "$ref": "#/$defs/Prop"
+        },
+        "at": {
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "baseline": {
+          "$ref": "#/$defs/Prop"
+        }
+      },
+      "required": [
         "at"
       ],
       "type": "object"

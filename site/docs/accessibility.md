@@ -131,6 +131,7 @@ doc({
 | `legibility/label-collisions` | labels that overlap |
 | `legibility/offscreen` | labels cut off at the canvas edge |
 | `legibility/clipped` | labels their box's clip cuts (a column too narrow for its names) |
+| `legibility/on-data` | labels on the data: a line of a mark through their letters, or straddling a filled mark's edge — without a halo or an ink chosen for the fill |
 | `encoding/too-many-colours` | more categorical colours than a reader can tell apart |
 
 `datars lint doc.ts --size 390x600` lints the layout a phone gets. `datars labels doc.ts` (or a folder of documents) reads every state at a phone, a tablet and a wide column, each at 1, 1.5 and 2 × text, and lists the labels a reader couldn't read there — the repository runs it over its examples in `datars test`, where an example getting harder to read fails.

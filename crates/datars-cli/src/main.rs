@@ -60,7 +60,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   budgets   [--update]                                                          bundle + runtime sizes (gzip) against budgets.json
   profile   <doc> [--dpr 2] [--timeline] [--cpu] [--json]                      states cold/warm, then every transition stepped at 60 fps: stall, per-frame engine + GPU raster
   dev       <doc.ts|doc.json> [--port 8788]                                     live page: rebuild on save, diagnostics, lint, states
-  labels    <doc|dir>… [--widths 390,768,1200] [--text-scale 1,1.5,2] [--verbose]   labels a reader can't read (cut off, overlapping, clipped) at each width and text size
+  labels    <doc|dir>… [--widths 390,768,1200] [--text-scale 1,1.5,2] [--verbose]   labels a reader can't read (cut off, overlapping, clipped, on the data) at each width and text size
   lint      <doc> [--size WxH[,WxH]]                                            identity, encoding, legibility, accessibility, theme checks (in those boxes)
   explain   <doc> --key '(\"SE\",)' [--state N]                             why an element exists: recipes, template, data row, expression values
   data      profile <file.csv|file.json>                                        column types, missing values, ranges, candidate keys, hints
@@ -1101,7 +1101,7 @@ fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
     let mut results = results;
     results.sort_by(|x, y| x.0.cmp(&y.0));
     let verbose = a.flags.contains_key("verbose");
-    let mut by_reading: BTreeMap<String, (usize, usize, usize)> = BTreeMap::new();
+    let mut by_reading: BTreeMap<String, (usize, usize, usize, usize)> = BTreeMap::new();
     let mut rows = Vec::new();
     let (mut total, mut failed) = (0usize, 0usize);
     for (path, r) in &results {
@@ -1120,9 +1120,10 @@ fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
                     k.0 += x.issues.overlapping.len();
                     k.1 += x.issues.cut.len();
                     k.2 += x.issues.clipped.len();
+                    k.3 += x.issues.on_data.len();
                     if x.issues.count() > 0 {
                         rows.push(serde_json::json!({ "doc": path, "width": x.reading.width, "height": x.reading.height, "textScale": x.reading.text_scale, "state": x.state,
-                            "overlapping": x.issues.overlapping, "cut": x.issues.cut, "clipped": x.issues.clipped }));
+                            "overlapping": x.issues.overlapping, "cut": x.issues.cut, "clipped": x.issues.clipped, "onData": x.issues.on_data }));
                     }
                 }
                 if !json && (n > 0 || verbose) {
@@ -1132,6 +1133,7 @@ fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
                             let mut what: Vec<String> = x.issues.overlapping.iter().map(|(p, q)| format!("\"{p}\" / \"{q}\"")).collect();
                             what.extend(x.issues.cut.iter().map(|t| format!("cut \"{t}\"")));
                             what.extend(x.issues.clipped.iter().map(|t| format!("clipped \"{t}\"")));
+                            what.extend(x.issues.on_data.iter().map(|t| format!("on data \"{t}\"")));
                             println!("        {} [{}]: {}", x.reading.name(), x.state, what.join(", "));
                         }
                     }
@@ -1142,9 +1144,9 @@ fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
     if json {
         println!("{}", serde_json::json!({ "documents": results.len(), "failed": failed, "issues": total, "rows": rows }));
     } else {
-        println!("\n{:<24} {:>8} {:>8} {:>8}", "reading", "overlap", "cut", "clipped");
-        for (k, (o, c, cl)) in &by_reading {
-            println!("{k:<24} {o:>8} {c:>8} {cl:>8}");
+        println!("\n{:<24} {:>8} {:>8} {:>8} {:>8}", "reading", "overlap", "cut", "clipped", "on data");
+        for (k, (o, c, cl, od)) in &by_reading {
+            println!("{k:<24} {o:>8} {c:>8} {cl:>8} {od:>8}");
         }
         println!("\n{} documents ({} failed to load) · {} unreadable labels", results.len(), failed, total);
     }

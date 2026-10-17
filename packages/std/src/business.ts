@@ -888,7 +888,7 @@ export const timeline = recipe<TimelineParams>({
         E ? group({ key: "eras", children: [repeat(E, group({ semantics: { role: "annotation", label: e(`${eraName} + ": " + ${dateOf(fld(p.eraStart))} + " – " + ${dateOf(fld(p.eraEnd))}`) }, children: [
           shape(geom.rect({ x: e(es), y: e(eraY), w: e(`max(1, ${ee} - ${es})`), h: eraH, r: 2 }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
           shape(geom.rect({ x: e(es), y: e(eraY), w: e(`max(1, ${ee} - ${es})`), h: eraH, r: 2 }), { key: "span", fill: e(`scale.era(${fld(p.eraColor ?? p.eraLabel)})`), opacity: e("hover() ? 0.45 : 0.3"), pickable: true }),
-          text(e(eraName), [e(`${es} + 5`), e(`${eraY} + ${eraH / 2}`)], { key: "name", when: e(`measure(${eraName}, ${small}, 600) + 10 <= ${ee} - ${es}`), style: { size: "$size.small", weight: 600, ink: "$ink-2", baseline: "middle" } }),
+          text(e(eraName), [e(`${es} + 5`), e(`${eraY} + ${eraH / 2}`)], { key: "name", when: e(`measure(${eraName}, ${small}, 600) + 10 <= ${ee} - ${es}`), style: { size: "$size.small", weight: 600, ink: "$ink-2", baseline: "middle" }, halo: ["$paper", 2] }),
         ] }))] }) : null,
         group({ key: "labels", children: [repeat(L, group({ when: placed, children: [
           shape(geom.rect({ x: e(`${flip} ? d.__x - d.__w : d.__x + 1`), y: e(`${up} ? ${edge} - ${block} : ${edge}`), w: e("d.__w - 1"), h: e(block) }), { key: "paper", fill: "$paper", semantics: { role: "decoration" } }),
