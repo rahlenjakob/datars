@@ -7,8 +7,8 @@
     },
     {
       "name": "icons",
-      "scene": "b412c46ea5fce50c",
-      "pixels": "7d185e7714f3b1f1"
+      "scene": "cfe129c151356d64",
+      "pixels": "c983533dbce55bcc"
     },
     {
       "name": "grid",
@@ -20,13 +20,13 @@
     {
       "from": "bars",
       "to": "icons",
-      "sweep": "94829e3518fa1f5f",
+      "sweep": "294be88eb2e47f1d",
       "samples": 64
     },
     {
       "from": "icons",
       "to": "grid",
-      "sweep": "a7373216a21c868a",
+      "sweep": "f5ab2d05db14e79e",
       "samples": 64
     }
   ]

@@ -1191,6 +1191,7 @@ Theme tokens: `ink-2`
 | `ink` | ink | `"$mark"` | The icons' ink without `color`. |
 | `layout` | enum | `"rows"` | `rows`: a row per category, labelled; `grid`: every unit in one grid (`columns` × `rows`), coloured by category. |
 | `legend` | bool | `true` | `grid`: a legend of the categories (with their icons) below. |
+| `note` | bool | `true` | `rows` with `per`: say what one icon stands for under the rows (off when the page says it). |
 | `per` | number | `1` | What one icon stands for (values are rounded to whole icons). |
 | `rows` | number | `10` | `grid`: icons down. |
 | `unit` | string |  | After the value (` people`). |

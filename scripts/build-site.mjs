@@ -86,6 +86,8 @@ const CHARTS = {
   inflation: { src: "examples/inflation/doc.json", min: 280 },
   scatter: { src: "examples/scatter/doc.json", min: 300 },
   business: { src: "examples/business/doc.json", min: 280 },
+  commute: { src: "examples/commute/doc.json", min: 300, phone: 1.4 },
+  mood: { src: "examples/mood/doc.json", min: 300, phone: 1.2 },
   serif: { src: "examples/serif/doc.json", min: 280 },
   spending: { src: "examples/spending/doc.json", min: 280, files: { "examples/spending/web/user.json": "data/spending/this.json", "examples/spending/web/other.json": "data/spending/other.json" } },
   election: { src: "examples/election/doc.json", min: 300, files: { "examples/election/count.json.d": "data/election" } },
@@ -189,6 +191,19 @@ function stageDoc(alias, src) {
     }
   };
   fonts(doc.theme);
+  // Icons and pictures a document names by a relative path (`assets/badge.svg`) are read at build
+  // time and shipped in the bundle: stage them next to the staged document, at the same path.
+  const assets = (v) => {
+    if (Array.isArray(v)) v.forEach(assets);
+    else if (v && typeof v === "object") Object.values(v).forEach(assets);
+    else if (typeof v === "string" && /^[\w./-]+\.(svg|png)$/i.test(v) && !v.startsWith("/") && !v.includes("..")) {
+      const from = resolve(dirname(file), v);
+      if (!existsSync(from)) return;
+      mkdirSync(dirname(join(stage, "c", v)), { recursive: true });
+      copyFileSync(from, join(stage, "c", v));
+    }
+  };
+  assets(doc.scene);
   // An automatic basemap is found next to the document: stage its archive and lockfile with it.
   const staged = join(stage, "c", `${alias}.json`);
   for (const [name, s] of Object.entries(doc.data ?? {})) {
@@ -485,6 +500,9 @@ function stdList() {
   }).join("");
 }
 
+/** Recipes that draw icons or curved text: the gallery's "Icons & curved text" filter finds them. */
+const ICON_RECIPES = new Set(["pictogram", "gauge", "legend", "annotate"]);
+
 /** A recipe family's slug (the chart reference's heading ids): "Parts of a whole and flows" →
  * "parts-of-a-whole-and-flows". */
 const familySlug = (h) => h.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
@@ -502,7 +520,7 @@ function stdCards() {
     const cards = here.map((n) => {
       const doc = std[`@datars/std/${n}`].doc ?? "";
       const a = figureAlias(n);
-      return `<article class="g-card g-type" id="${a}" data-kind="types" data-families="${fam}" data-tags="" data-words="${escapeAttr(`${n} ${h} ${doc}`)}"><div class="chart" data-chart="${a}"></div><div class="g-text"><p class="g-kicker">${escapeHtml(h)}</p><h3><code>${escapeHtml(n)}</code></h3><p>${inline(firstSentence(doc))}</p><div class="g-foot"><span class="g-meta"><a href="/docs/std/${n}/">Reference</a> · <a href="/features/charts/#play=${n}">Playground</a></span><button type="button" class="g-open" data-lab="${a}" aria-label="Open ${escapeAttr(n)} in the lab">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div></div></article>`;
+      return `<article class="g-card g-type" id="${a}" data-kind="types" data-families="${fam}" data-tags="${ICON_RECIPES.has(n) ? "icons" : ""}" data-words="${escapeAttr(`${n} ${h} ${doc}`)}"><div class="chart" data-chart="${a}"></div><div class="g-text"><p class="g-kicker">${escapeHtml(h)}</p><h3><code>${escapeHtml(n)}</code></h3><p>${inline(firstSentence(doc))}</p><div class="g-foot"><span class="g-meta"><a href="/docs/std/${n}/">Reference</a> · <a href="/features/charts/#play=${n}">Playground</a></span><button type="button" class="g-open" data-lab="${a}" aria-label="Open ${escapeAttr(n)} in the lab">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div></div></article>`;
     }).join("");
     return `<section class="g-group g-family" id="${fam}" data-group="types" data-family="${fam}"><div class="wrap"><header class="g-group-head"><h3 class="g-fam-h">${escapeHtml(h)} <small>${here.length}</small></h3>${blurb ? `<p>${escapeHtml(blurb)}</p>` : ""}</header><div class="g-grid g-grid-types">${cards}</div></div></section>`;
   }).join("\n");

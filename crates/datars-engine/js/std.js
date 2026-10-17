@@ -2445,7 +2445,8 @@ var pictogram = recipe9({
     format: t9.string(",.0f", "The value's number format (rows)."),
     unit: t9.string(void 0, "After the value (` people`)."),
     gap: t9.number(0.18, "Space between icons, as a share of their size."),
-    legend: t9.bool(true, "`grid`: a legend of the categories (with their icons) below.")
+    legend: t9.bool(true, "`grid`: a legend of the categories (with their icons) below."),
+    note: t9.bool(true, "`rows` with `per`: say what one icon stands for under the rows (off when the page says it).")
   },
   tokens: ["mark", "ink", "ink-2", "muted", "size.label", "categorical"],
   expand(p, cx) {
@@ -2495,11 +2496,12 @@ var pictogram = recipe9({
     const n = `max(1, table.count(${JSON.stringify(p.data)}))`;
     const most = `max(1, table.max(${JSON.stringify(u)}, "__unit") + 1)`;
     const avail = `max(20, box.w - ${labelW} - ${valueW} - 14)`;
-    const minStep = 'max(14, token("size.label") * 1.3)';
-    const perLine = `max(1, min(${most}, floor(${avail} / ${minStep})))`;
-    const lines = `ceil(${most} / ${perLine})`;
     const room = `(box.h - ${p.per !== 1 ? 28 : 0})`;
-    const step = `max(4, min(${avail} / ${perLine}, 40, ${room} / (${n} * ${lines} * 1.15 + ${n} * 0.4)))`;
+    const sized = (k) => `min(${avail} / ceil(${most} / ${k}), 40, ${room} / (${n} * ${(k * 1.15 + 0.4).toFixed(2)}))`;
+    const lines = `(${sized(2)} > ${sized(1)} * 1.5 ? 2 : 1)`;
+    const best = `(${lines} == 2 ? ${sized(2)} : ${sized(1)})`;
+    const perLine = `max(1, ceil(${most} / ${lines}))`;
+    const step = `max(4, ${best})`;
     const rowH = `max(${lines} * ${step} * 1.15, token("size.label") * 2) + ${step} * 0.4`;
     const r = `${step} * ${((1 - Math.min(0.6, Math.max(0, p.gap))) / 2).toFixed(3)}`;
     const top = `scale.row(${fld(p.category)}) + ${step} * 0.2`;
@@ -2522,7 +2524,7 @@ var pictogram = recipe9({
             text8(e9(`format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(`${labelW} + 14 + (${own} - ${last} * ${perLine}) * ${step}`), e9(`${top} + (${last} + 0.5) * ${step} * 1.15`)], { key: "value", style: { size: "$size.label", ink: "$ink-2", baseline: "middle" } })
           ]
         })),
-        per !== 1 ? text8(e9(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(labelW + " + 8"), e9(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null
+        per !== 1 && p.note !== false ? text8(e9(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(labelW + " + 8"), e9(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null
       ]
     });
   }

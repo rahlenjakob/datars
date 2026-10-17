@@ -23,7 +23,7 @@ export default doc({
       group({ key: "page", layout: { type: "rows", gap: 8 }, children: [
       group({ key: "body", size: { h: "fill" }, children: [
         plot({ data: "trips", x: "mode", y: "thousands", color: "mode", title: "Commuters by mode (thousands)", children: [bar({ labels: true })] }, { key: "chart", when: e('shape == "bars"') }),
-        pictogram({ data: "trips", value: "thousands", category: "mode", icons, per: 2, unit: "k" }, { key: "chart", when: e('shape == "icons"') }),
+        pictogram({ data: "trips", value: "thousands", category: "mode", icons, per: 2, unit: "k", note: false }, { key: "chart", when: e('shape == "icons"') }),
         pictogram({ data: "trips", value: "thousands", category: "mode", icons, layout: "grid", columns: 10, rows: 10 }, { key: "chart", when: e('shape == "grid"') }),
       ] }),
       ] }),

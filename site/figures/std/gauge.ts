@@ -16,18 +16,19 @@ const dials = (state: string, o: Record<string, unknown> = {}) => group({
 
 export default doc({
   title: "A tea shop's service in three dials",
-  description: "Customer satisfaction, orders on time and stock available as dials filled to their values; then on red, amber and green bands with needles; then as half circles.",
+  description: "Customer satisfaction, orders on time and stock available as dials filled to their values; then on red, amber and green bands with needles; then as half circles; then with each band named along the arc.",
   size: [640, 240],
   scene: group({
     key: "root",
     layout: { type: "stack", padding: [16, 20, 12, 12] },
-    children: [dials("default"), dials("bands", status), dials("half", { ...status, arc: 180 })],
+    children: [dials("default"), dials("bands", status), dials("half", { ...status, arc: 180 }), dials("named", { ...status, arc: 180, names: ["Poor", "Fair", "Good"], needleStyle: "line" })],
   }),
   program: story({
     steps: [
       step("default", { title: "gauge({ value, label })", text: "An arc from 0 to 100, filled to the value, which reads in the middle." }),
       step("bands", { title: "bands: [70, 90, 100], inks", text: "Poor, fair and good ranges along the arc, and a needle at the value." }),
       step("half", { title: "arc: 180", text: "A half-circle dial." }),
+      step("named", { title: "names, needleStyle: \"line\"", text: "Each band named along its arc, a line for a needle." }),
     ],
   }),
 });

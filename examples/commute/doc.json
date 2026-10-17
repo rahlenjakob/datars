@@ -104,7 +104,8 @@
           "Walk": "footprints"
          },
          "per": 2,
-         "unit": "k"
+         "unit": "k",
+         "note": false
         },
         "key": "chart",
         "when": {

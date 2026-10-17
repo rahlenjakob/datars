@@ -140,6 +140,20 @@ font.strong    Newsreader    600 ../../assets/fonts/Newsreader-SemiBold.ttf   Ne
 font.title     Newsreader    600 ../../assets/fonts/Newsreader-SemiBold.ttf   Newsreader-600, OFL-1.1
 ```
 
+## Icons
+
+An icon token says which drawing means *up*, *warning* or *pin*, so a brand can swap the whole vocabulary for its own without touching a chart:
+
+```ts
+tokens: {
+  "icon.warning": "icons/brand-warning.svg",   // a project file
+  "icon.up": "lucide:trending-up",             // another icon from the default set
+  "size.icon": 18,
+}
+```
+
+A chart says `icon("$icon.warning", …)`. The built-in theme defines `icon.up`, `icon.down`, `icon.info`, `icon.warning`, `icon.check`, `icon.close` and `icon.pin`, and `size.icon` (16), the size an icon is drawn at when the chart doesn't say — a size token, so it grows with the reader's text size. Icons are painted in inks: a theme or mode switch repaints them like everything else. See [Icons, pictures and curved text](/docs/icons/).
+
 ## Light, dark and high contrast
 
 Every theme holds three modes. Base tokens apply first, then the active mode's, in the order the themes extend each other — like the CSS cascade. A brand that only sets `accent` keeps the built-in theme's tuned dark surfaces and gets its accent in all three modes.

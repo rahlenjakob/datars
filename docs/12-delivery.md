@@ -206,6 +206,28 @@ interaction or runtime text 13–30 KB more (every face covers the full set). Su
 chart, so they aren't shared between charts; a shared per-script subset of the default family is
 the next step if many small charts share an origin.
 
+## Icons and pictures
+
+Icons and pictures travel the way fonts do, and for the same reasons: a chart must draw the same
+everywhere (P1), and no runtime fetches what a chart needs from a CDN.
+
+- **Acquired at build time.** The build step resolves every state, answers the engine's `icon:` and
+  `image:` requests — the default set from the toolchain (`datars:icons/lucide/…`, compiled into the
+  CLI, never into the web runtime), project files next to the document, `https://` URLs once into
+  the cache — and resolves again until nothing is missing (`settle_assets`).
+- **Subset to what the chart draws.** One `icons` chunk holds the drawings of the icons the chart
+  draws (`{ "lucide:car": { "vb": […], "layers": […] }, … }`, exact: it reads back to the same
+  paths), shipped with T2/T3 — T1's baked scenes already hold their icons' shapes. Each picture is
+  an `image` chunk (the file as shipped), with every playable tier. The 2,121-icon set never ships.
+- **Credited.** The manifest's `assets` lists each set with its version, licence and the icons drawn
+  (`{ "kind": "icons", "from": "datars:icons/lucide", "licence": "ISC", "names": ["car", …] }`) and
+  each picture or project icon by where it came from; project files have no licence on record, and
+  the build says so (make sure you may publish them).
+- **Sealed.** A runtime that opens a bundle asks for no icon or picture: what the bundle doesn't
+  carry draws nothing and says so (a diagnostic), it is never fetched. `datars dev` writes the
+  icons a document draws into the document it serves (`doc.icons`), so the dev page's runtime
+  doesn't fetch them either.
+
 ## Host integration
 
 The host app keeps control of what surrounds the chart and can talk to it:

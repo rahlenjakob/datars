@@ -1,7 +1,7 @@
 ---
 title: Nodes
 titleTag: Nodes — SDK reference · datars docs
-description: The scene builders of @datars/sdk — group, shape and every geom kind, text, repeat, instances, view, tiles and use — with live figures of geometry, strokes, text, layouts, repeats, instances and cameras.
+description: The scene builders of @datars/sdk — group, shape and every geom kind, text, icon, image, repeat, instances, view, tiles and use — with live figures of geometry, strokes, text, layouts, repeats, instances and cameras.
 lede: A scene is a tree of nodes. Each builder returns a plain JSON template — literal where it can be, expressions where it depends on data — that the engine resolves into marks every frame. Options that every node takes are on [Node options and scales](/docs/sdk/options/).
 ---
 
@@ -48,7 +48,7 @@ shape(geom.rect({
 | {{sig:geom.polyline}} | a line through the rows of table `from` (`"@group"` inside a grouped repeat); `curve`: `"linear"` (default), `"monotone"`, `"catmull-rom"` (or `"smooth"`), `"step"`, `"step-before"`, `"step-after"`; `closed` joins the ends |
 | {{sig:geom.area}} | the band between `y0` and `y1` through the rows of `from` |
 | {{sig:geom.path}} | SVG path data — literal, or an expression that builds it (a sankey ribbon, a geodesic) |
-| {{sig:geom.symbol}} | a symbol of radius `size` at `x, y`: `"circle"`, `"square"`, `"diamond"`, `"triangle"`, `"cross"`, `"star"` |
+| {{sig:geom.symbol}} | a symbol of radius `size` at `x, y`: `"circle"`, `"square"`, `"diamond"`, `"triangle"`, `"cross"`, `"star"` — or an icon (`"lucide:star"`, `"$icon.pin"`, a `.svg`) in the shape's fill |
 | {{sig:geom.feature}} | a region of a geo source by id, projected through the enclosing `coord: { type: "geo" }` |
 
 <figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-shape-geoms" data-phone-ratio="1.39" data-caption></div></div><figcaption>Every geometry kind, one per cell, each placed with expressions over its cell's box (<code>box.w</code>, <code>box.h</code>) so the figure re-lays itself out on a phone. The feature is an inline GeoJSON polygon through an equirectangular projection. <a href="{{src}}/site/figures/sdk/shape-geoms.ts">Figure source</a></figcaption>{{alt:sdk-shape-geoms}}</figure>
@@ -93,6 +93,37 @@ text("Target 2%", [e("box.w"), e("scale.y(2) - 4")], { style: { align: "end" }, 
 ```
 
 Text sized with the theme's tokens follows the reader's text size; see [Accessibility](/docs/accessibility/#reader-settings-the-charts-follow).
+
+## Icons and pictures
+
+{{sdk:icon}}
+
+An icon from the default set (Lucide: `"heart"`, `"lucide:heart"`), a theme token (`"$icon.up"`), a project SVG, a URL, or inline markup or path data — drawn in the node's `ink`, a multi-colour file's other colours in `inks`. Decorative unless it has a `label`. The whole story — sources, inks, what SVG is read, how icons travel with a bundle — is in [Icons, pictures and curved text](/docs/icons/).
+
+```ts
+icon("arrow-up", [x, y], { size: 14, ink: "$positive", rotate: 45, label: "Rising" })
+icon("logos/brand.svg", [0, 0], { anchor: "top-left", size: 32, inks: ["$ink", "$accent"] })
+```
+
+<figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-icon-sources" data-phone-ratio="1.2" data-caption></div></div><figcaption>Six sources, then the same icons repainted through their inks. <a href="{{src}}/site/figures/sdk/icon-sources.ts">Figure source</a></figcaption>{{alt:sdk-icon-sources}}</figure>
+
+{{sdk:IconSource}}
+
+{{sdk:IconOpts}}
+
+{{sdk:image}}
+
+A PNG drawn into a rect as `fit` says; `alt` makes it read by screen readers, else it's decorative.
+
+<figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-image-fit" data-phone-ratio="1.6" data-caption></div></div><figcaption>One picture, four fits. <a href="{{src}}/site/figures/sdk/image-fit.ts">Figure source</a></figcaption>{{alt:sdk-image-fit}}</figure>
+
+{{sdk:ImageOpts}}
+
+{{sdk:TextPath}}
+
+<figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-text-path" data-phone-ratio="0.8" data-caption></div></div><figcaption>Text along a ring and a wave. <a href="{{src}}/site/figures/sdk/text-path.ts">Figure source</a></figcaption>{{alt:sdk-text-path}}</figure>
+
+{{sdk:Marker}}
 
 ## Repeats
 

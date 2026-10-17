@@ -212,7 +212,7 @@ export const waffle = recipe<WaffleParams>({
 
 // ---- pictogram (isotype) ---------------------------------------------------------------------------
 
-export interface PictogramParams { data: string; value: string; category: string; icon: string; icons: Record<string, string>; per: number; layout: "rows" | "grid"; columns: number; rows: number; color: boolean; ink: string; format: string; unit: string; gap: number; legend: boolean }
+export interface PictogramParams { data: string; value: string; category: string; icon: string; icons: Record<string, string>; per: number; layout: "rows" | "grid"; columns: number; rows: number; color: boolean; ink: string; format: string; unit: string; gap: number; legend: boolean; note: boolean }
 
 /** An expression picking the icon for a category: the map's entry, else `fallback`. */
 function iconFor(field: string, icons: Record<string, string>, fallback: string): string {
@@ -234,6 +234,7 @@ export const pictogram = recipe<PictogramParams>({
     format: t.string(",.0f", "The value's number format (rows)."), unit: t.string(undefined, "After the value (` people`)."),
     gap: t.number(0.18, "Space between icons, as a share of their size."),
     legend: t.bool(true, "`grid`: a legend of the categories (with their icons) below."),
+    note: t.bool(true, "`rows` with `per`: say what one icon stands for under the rows (off when the page says it)."),
   },
   tokens: ["mark", "ink", "ink-2", "muted", "size.label", "categorical"],
   expand(p, cx) {
@@ -287,11 +288,15 @@ export const pictogram = recipe<PictogramParams>({
     const n = `max(1, table.count(${JSON.stringify(p.data)}))`;
     const most = `max(1, table.max(${JSON.stringify(u)}, "__unit") + 1)`;
     const avail = `max(20, box.w - ${labelW} - ${valueW} - 14)`;
-    const minStep = 'max(14, token("size.label") * 1.3)';
-    const perLine = `max(1, min(${most}, floor(${avail} / ${minStep})))`;
-    const lines = `ceil(${most} / ${perLine})`;
+    // The icons as big as the box allows: on one line per row, or wrapped to two when that makes
+    // them much bigger (a narrow, tall box: a phone). Every row is as tall as the longest one's lines.
     const room = `(box.h - ${p.per !== 1 ? 28 : 0})`;
-    const step = `max(4, min(${avail} / ${perLine}, 40, ${room} / (${n} * ${lines} * 1.15 + ${n} * 0.4)))`;
+    const sized = (k: number) => `min(${avail} / ceil(${most} / ${k}), 40, ${room} / (${n} * ${(k * 1.15 + 0.4).toFixed(2)}))`;
+    // (Two lines only for icons half as big again: rows of uneven length read best on one.)
+    const lines = `(${sized(2)} > ${sized(1)} * 1.5 ? 2 : 1)`;
+    const best = `(${lines} == 2 ? ${sized(2)} : ${sized(1)})`;
+    const perLine = `max(1, ceil(${most} / ${lines}))`;
+    const step = `max(4, ${best})`;
     const rowH = `max(${lines} * ${step} * 1.15, token("size.label") * 2) + ${step} * 0.4`;
     const r = `${step} * ${((1 - Math.min(0.6, Math.max(0, p.gap))) / 2).toFixed(3)}`;
     const top = `scale.row(${fld(p.category)}) + ${step} * 0.2`;
@@ -315,7 +320,7 @@ export const pictogram = recipe<PictogramParams>({
             text(e(`format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(`${labelW} + 14 + (${own} - ${last} * ${perLine}) * ${step}`), e(`${top} + (${last} + 0.5) * ${step} * 1.15`)], { key: "value", style: { size: "$size.label", ink: "$ink-2", baseline: "middle" } }),
           ],
         })),
-        per !== 1 ? text(e(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(labelW + " + 8"), e(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null,
+        per !== 1 && p.note !== false ? text(e(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(labelW + " + 8"), e(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null,
       ],
     });
   },

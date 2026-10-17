@@ -44,7 +44,6 @@ scene 720.00×440.00 background=$paper
           group ("Walk",) role=series "Walk: 7k (one icon: 2)"
             ("name",) text "Walk" at (150.00, 159.43) size=11.00 ink=$ink
             ("value",) text "7k" at (255.43, 159.43) size=11.00 ink=$ink-2
-          ("per",) text "One icon: 2k" at (158.00, 193.14) size=10.00 ink=$muted
     group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
       group ("box:two thousand commuters: each bar is its people.",) transform=[1.00 0.00 0.00 1.00 445.50 315.37] role=annotation "two thousand commuters: each bar is its people."
         ("backdrop",) rect x=0.00 y=0.00 w=230.00 h=84.13 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
