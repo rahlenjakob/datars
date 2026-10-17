@@ -52,7 +52,7 @@ function releaseGl(canvas: HTMLCanvasElement | undefined) {
 }
 
 /** A semantics item as the runtime gives it (`status().semantics`, `chrome().actions`). */
-interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio"; checked?: boolean; missing?: boolean }
+interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio" | "brush" | "pan"; checked?: boolean; missing?: boolean }
 
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
@@ -1284,6 +1284,7 @@ export class DatarsView extends ElementBase {
     if (release) this.pressAt = null;
     this.now();
     const label: string | undefined = this.view.pointer(kind, x, y);
+    if (release) this.sayChange();
     // The engine says what the pointer can do here: a hand over what a click acts on, grab over a
     // view that pans, a crosshair over a brushable area.
     if (e.pointerType !== "touch") {
@@ -1783,6 +1784,9 @@ export class DatarsView extends ElementBase {
       // The buttons say the state now (a label that follows it: "…, in the coalition"), before
       // the rest of the tree catches up.
       for (const a of s.actions ?? []) {
+        // (A brush's or a view's stop says what it holds in its name.)
+        const d = a.kind === "brush" || a.kind === "pan" ? [...this.mirror.querySelectorAll<HTMLElement>("[role=application][data-path]")].find((x) => x.dataset.path === a.path) : null;
+        if (d) { if (d.getAttribute("aria-label") !== a.label) d.setAttribute("aria-label", a.label); continue; }
         const b = [...this.mirror.querySelectorAll<HTMLButtonElement>("button[data-path]")].find((x) => x.dataset.path === a.path);
         if (b && b.textContent !== a.label) b.textContent = a.label;
         if (b && a.kind) b.setAttribute("aria-checked", String(!!a.checked));
@@ -1984,6 +1988,13 @@ export class DatarsView extends ElementBase {
           render(n.kids, g, label, label);
           continue;
         }
+        if (n.item.actionable && (n.item.kind === "brush" || n.item.kind === "pan")) {
+          const d = this.mirrorDrag(n.item);
+          into.appendChild(d);
+          if (n.item.path === focusedPath) queueMicrotask(() => d.focus());
+          render(n.kids, into, caption, groupLabel);
+          continue;
+        }
         if (n.item.actionable) {
           // A control the engine draws (a toggle, a button): a native button.
           const b = this.mirrorButton(n.item);
@@ -2032,8 +2043,51 @@ export class DatarsView extends ElementBase {
     }
     b.dataset.path = item.path;
     if (item.rect) b.dataset.rect = item.rect.join(",");
-    b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); } });
+    b.addEventListener("click", () => { if (this.view?.activate(item.path)) { this.kick(); this.syncChrome(); this.noteSignals(); this.sayChange(); } });
     return b;
+  }
+
+  /** What a pointer drags — a brushable area, a pannable view — for the keyboard: one stop that
+   * takes the keys the engine knows for it (`key`: Enter, the arrows, Escape; +, −, 0), named by
+   * the part it's in and what it holds, its keys described. Screen readers pass the keys through
+   * (`role="application"`), as they do for any widget with keys of its own. */
+  private mirrorDrag(item: MirrorItem): HTMLElement {
+    const d = document.createElement("div");
+    d.setAttribute("role", "application");
+    d.tabIndex = 0;
+    d.setAttribute("aria-label", item.label);
+    const hint = document.createElement("span");
+    hint.id = `hint-${item.kind}-${Math.abs([...item.path].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7))}`;
+    hint.textContent = this.ph(`${item.kind}-hint`);
+    d.setAttribute("aria-describedby", hint.id);
+    d.appendChild(hint);
+    d.dataset.path = item.path;
+    if (item.rect) d.dataset.rect = item.rect.join(",");
+    d.addEventListener("keydown", (e) => {
+      if (!this.view?.key || e.metaKey || e.ctrlKey || e.altKey) return;
+      const key = (e.shiftKey && e.key.startsWith("Arrow") ? "Shift+" : "") + e.key;
+      if (!this.view.key(item.path, key)) return;
+      e.preventDefault();
+      e.stopPropagation(); // not also a step of the story (Escape, the arrows)
+      this.now();
+      this.kick();
+      this.syncChrome();
+      this.noteSignals();
+      this.sayChange();
+    });
+    return d;
+  }
+
+  /** What the reader's last click, activation or key changed, said by the live region — politely,
+   * once (`take_announcement`): "Pears, hidden. Total: 69 kg. Now 2 data points…". The same words
+   * twice in a row are said twice. */
+  private sayChange() {
+    const said: string | undefined = this.view?.take_announcement?.();
+    if (!said) return;
+    if (this.live.textContent === said) {
+      this.live.textContent = "";
+      requestAnimationFrame(() => { this.live.textContent = said; });
+    } else this.live.textContent = said;
   }
 
   /** A run of data marks as a table: a row per mark, its name and — when its label says one

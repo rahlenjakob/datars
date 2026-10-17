@@ -15,6 +15,8 @@ pub enum Target {
     Mark(String),
     /// An engine-drawn control: its signal and range.
     Control { signal: String, min: f64, max: f64, step: f64, value: f64 },
+    /// A brushable area or a pannable view (`brush` / `pan`): its key path (for `Engine::key`).
+    Drag { path: String, kind: &'static str },
 }
 
 /// A stable id for a key path (FNV-1a), so a screen reader keeps its place across updates.
@@ -36,12 +38,16 @@ fn rect(r: datars_math::Rect, dpr: f64) -> Rect {
 /// runtime's reading order under it ([`datars_runtime::readout`]): engine-drawn sliders as
 /// adjustable sliders, headings, lines of text (an axis, a legend, a note), data marks with their
 /// values, buttons for what a click acts on (a switch, a filtering bar, a select's box).
-pub fn tree(engine: &mut Engine, title: &str, dpr: f64) -> (TreeUpdate, Vec<(NodeId, Target)>) {
+///
+/// `said` is what the reader's last interaction changed (`Engine::take_announcement`): a polite
+/// live region under the figure says it.
+pub fn tree(engine: &mut Engine, title: &str, dpr: f64, said: &str) -> (TreeUpdate, Vec<(NodeId, Target)>) {
     let vp = engine.viewport();
     let items = engine.semantic_items();
     let name = engine.accessible_name();
     let summary = engine.accessible_summary();
-    let readout = datars_runtime::readout::readout(&name, &summary, &items);
+    let locale = engine.doc().locale.clone();
+    let readout = datars_runtime::readout::readout_in(&locale, &name, &summary, &items);
     let mut nodes: Vec<(NodeId, Node)> = Vec::new();
     let mut targets = Vec::new();
     let whole = Rect { x0: 0.0, y0: 0.0, x1: vp.width * dpr, y1: vp.height * dpr };
@@ -92,8 +98,26 @@ pub fn tree(engine: &mut Engine, title: &str, dpr: f64) -> (TreeUpdate, Vec<(Nod
             "switch" => Role::Switch,
             "radio" => Role::RadioButton,
             "heading" => Role::Heading,
+            "brush" | "pan" => Role::Group,
             _ => Role::Label,
         });
+        // What a pointer drags, for a screen reader's actions: Click starts (and keeps) a
+        // selection or shows all of a view, Increment and Decrement extend it or zoom, the scroll
+        // actions move a view; how, said as its description.
+        if matches!(r.kind, "brush" | "pan") {
+            let kind: &'static str = if r.kind == "brush" { "brush" } else { "pan" };
+            n.set_role_description(datars_engine::phrases::phrase(&locale, kind, &[]));
+            n.set_description(datars_engine::phrases::phrase(&locale, &format!("{kind}-hint"), &[]));
+            for a in [Action::Click, Action::Increment, Action::Decrement] {
+                n.add_action(a);
+            }
+            if kind == "pan" {
+                for a in [Action::ScrollLeft, Action::ScrollRight, Action::ScrollUp, Action::ScrollDown] {
+                    n.add_action(a);
+                }
+            }
+            targets.push((id, Target::Drag { path: r.path.clone(), kind }));
+        }
         // A checkbox, switch or radio says its state the platform's way.
         if let Some(c) = r.checked {
             n.set_toggled(accesskit::Toggled::from(c));
@@ -114,6 +138,13 @@ pub fn tree(engine: &mut Engine, title: &str, dpr: f64) -> (TreeUpdate, Vec<(Nod
         kids.push(id);
         nodes.push((id, n));
     }
+    // What the last interaction changed, said politely (not cutting the reader off).
+    let live = id_for("live");
+    let mut l = Node::new(Role::Label);
+    l.set_live(accesskit::Live::Polite);
+    l.set_value(said);
+    kids.push(live);
+    nodes.push((live, l));
     figure.set_children(kids);
     root.set_children(vec![figure_id]);
     nodes.insert(0, (figure_id, figure));
@@ -126,6 +157,20 @@ pub fn act(engine: &mut Engine, targets: &[(NodeId, Target)], req: &ActionReques
     let Some((_, t)) = targets.iter().find(|(id, _)| *id == req.target_node) else { return false };
     match (t, req.action) {
         (Target::Mark(path), Action::Click) => engine.activate(path),
+        (Target::Drag { path, kind }, a) => {
+            let brush = *kind == "brush";
+            match a {
+                Action::Click => engine.key(path, if brush { "Enter" } else { "0" }),
+                Action::Increment if brush => engine.key(path, "ArrowRight") || engine.key(path, "Enter"),
+                Action::Increment => engine.key(path, "+"),
+                Action::Decrement => engine.key(path, if brush { "ArrowLeft" } else { "-" }),
+                Action::ScrollLeft => engine.key(path, "ArrowLeft"),
+                Action::ScrollRight => engine.key(path, "ArrowRight"),
+                Action::ScrollUp => engine.key(path, "ArrowUp"),
+                Action::ScrollDown => engine.key(path, "ArrowDown"),
+                _ => false,
+            }
+        }
         (Target::Control { signal, min, max, step, value }, a) => {
             let step = if *step > 0.0 { *step } else { (max - min) / 20.0 };
             let v = match (a, &req.data) {
@@ -157,7 +202,7 @@ mod tests {
     fn sliders_are_adjustable_and_marks_are_buttons() {
         // budget: an engine-drawn slider over bars.
         let mut e = load("budget");
-        let (t, targets) = tree(&mut e, "Budget", 2.0);
+        let (t, targets) = tree(&mut e, "Budget", 2.0, "");
         let slider = t.nodes.iter().find(|(_, n)| n.role() == Role::Slider).expect("a slider");
         assert_eq!(slider.1.numeric_value(), Some(32000.0));
         assert_eq!(slider.1.max_numeric_value(), Some(80000.0));
@@ -176,7 +221,7 @@ mod tests {
 
         // dashboard: bars that filter on click are buttons, and clicking one filters.
         let mut e = load("dashboard");
-        let (t, targets) = tree(&mut e, "Dashboard", 1.0);
+        let (t, targets) = tree(&mut e, "Dashboard", 1.0, "");
         let south = t.nodes.iter().find(|(_, n)| n.role() == Role::Button && n.label().is_some_and(|l| l.starts_with("South"))).expect("a button");
         assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: south.0, data: None }));
         assert_eq!(e.signal("selected"), Some(datars_engine::SignalValue::Str("South".into())));
@@ -187,17 +232,35 @@ mod tests {
             "scene":{"kind":"use","recipe":"@datars/std/toggle","params":{"signal":"on","label":"Show averages"}}}"#;
         let mut e = datars_headless::load_at(doc, None).unwrap();
         e.frame(0.0);
-        let (t, targets) = tree(&mut e, "Toggle", 1.0);
+        let (t, targets) = tree(&mut e, "Toggle", 1.0, "");
         assert!(!t.nodes.iter().any(|(_, n)| n.role() == Role::Slider), "no slider without one");
         let switch = t.nodes.iter().find(|(_, n)| n.role() == Role::Switch && n.label() == Some("Show averages")).expect("the switch is a switch");
         assert_eq!(switch.1.toggled(), Some(accesskit::Toggled::False), "off, said by the platform");
         assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: switch.0, data: None }));
         assert_eq!(e.signal("on"), Some(datars_engine::SignalValue::Bool(true)));
         e.frame(1.0);
-        let (t, _) = tree(&mut e, "Toggle", 1.0);
+        let (t, _) = tree(&mut e, "Toggle", 1.0, "");
         assert!(t.nodes.iter().any(|(_, n)| n.role() == Role::Switch && n.toggled() == Some(accesskit::Toggled::True)), "and on after the click");
         // Every non-root node hangs off the tree exactly once.
         let children: usize = t.nodes.iter().map(|(_, n)| n.children().len()).sum();
         assert_eq!(children, t.nodes.len() - 1);
+    }
+
+    #[test]
+    fn a_brush_is_operable_and_says_what_it_selected() {
+        // prices: the overview plot is brushable.
+        let mut e = load("prices");
+        let (t, targets) = tree(&mut e, "Prices", 1.0, "");
+        let brush = t.nodes.iter().find(|(_, n)| n.role() == Role::Group && n.role_description() == Some("range selection")).expect("the brush");
+        assert!(brush.1.label().is_some_and(|l| l.contains("nothing selected")), "{:?}", brush.1.label());
+        for action in [Action::Click, Action::Increment, Action::Click] {
+            assert!(act(&mut e, &targets, &ActionRequest { action, target_tree: TreeId::ROOT, target_node: brush.0, data: None }));
+        }
+        let said = e.take_announcement().unwrap_or_default();
+        assert!(said.starts_with("Selected 1 to 100."), "{said}");
+        e.frame(1.0);
+        let (t, _) = tree(&mut e, "Prices", 1.0, &said);
+        let live = t.nodes.iter().find(|(_, n)| n.live() == Some(accesskit::Live::Polite)).expect("a live region");
+        assert_eq!(live.1.value(), Some(said.as_str()));
     }
 }

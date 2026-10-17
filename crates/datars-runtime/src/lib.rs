@@ -151,6 +151,18 @@ impl Core {
         self.engine.pointer(p)
     }
 
+    /// A key on a brushable area or a pannable view (a readout item of kind `brush` or `pan`, by
+    /// its path): whether it used it (`Engine::key`).
+    pub fn key(&mut self, path: &str, key: &str) -> bool {
+        self.engine.key(path, key)
+    }
+
+    /// What the last click, activation or key changed, in words, once: hosts announce it
+    /// politely (`Engine::take_announcement`).
+    pub fn take_announcement(&mut self) -> Option<String> {
+        self.engine.take_announcement()
+    }
+
     /// Wheel/pinch zoom at (x, y); true if an explorable view took it.
     pub fn wheel(&mut self, x: f64, y: f64, delta: f64) -> bool {
         self.engine.wheel(datars_math::Vec2::new(x, y), delta)

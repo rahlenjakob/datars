@@ -174,6 +174,22 @@ public final class DatarsEngine {
         return withBytes(Data(path.utf8)) { p, n in datars_view_activate(view, p, n) } != 0
     }
 
+    /// A key on a brushable area or a pannable view (a readout item of kind `brush` or `pan`):
+    /// `Enter`, `Escape`, `ArrowLeft` … (`Shift+ArrowLeft`), `+`, `-`, `0`. Whether it used it.
+    @discardableResult
+    public func key(path: String, key: String) -> Bool {
+        sync()
+        return withBytes(Data(path.utf8)) { p, n in withBytes(Data(key.utf8)) { k, kn in datars_view_key(view, p, n, k, kn) } } != 0
+    }
+
+    /// What the last tap, activation or key changed, in words, once (nil when nothing to say):
+    /// announce it politely.
+    public func takeAnnouncement() -> String? {
+        guard let p = datars_view_take_announcement(view) else { return nil }
+        defer { datars_string_free(p) }
+        return String(cString: p)
+    }
+
     /// Set a numeric signal (app state, or a native control bound to an engine-drawn one).
     public func setSignal(_ name: String, _ value: Double) {
         sync()
@@ -196,6 +212,8 @@ public final class DatarsEngine {
     /// chart lays out again around them, moving there. Clamped to 0.75–3. `DatarsView` follows
     /// the system's text size by itself.
     public func setTextScale(_ scale: Double) { sync(); datars_view_set_text_scale(view, scale) }
+    /// The reader's Bold Text setting: every text drawn heavier (regular as semibold, bold as bold).
+    public func setBoldText(_ on: Bool) { sync(); datars_view_set_bold_text(view, on ? 1 : 0) }
     /// The share (0.1–1, default 1) of the per-frame work budgets frames may spend: points built,
     /// tiles decoded and styled, meshes tessellated. Lower it when frames run long; `DatarsView`
     /// does this by itself.

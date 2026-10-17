@@ -66,6 +66,9 @@ open class DatarsChartView: PlatformView {
     #if canImport(UIKit)
     /// Every tap on the chart: the label of what it landed on (nil: nothing), and where. Touch has
     /// no hover, so a tap is how a reader asks what a mark is — a line's value anywhere along it.
+    /// What the reader's last tap, activation or adjustment changed, as VoiceOver is told it
+    /// ("Pears, hidden. Now 2 data points…"): for an app that also shows it.
+    public var onAnnouncement: ((String) -> Void)?
     public var onTap: ((_ label: String?, _ at: CGPoint) -> Void)?
     /// Show what a tap lands on in a small label above the finger, until the next tap or the next
     /// step (default). Off, apps show `onTap`'s label their own way.
@@ -139,15 +142,20 @@ open class DatarsChartView: PlatformView {
         addSubview(tip)
         NotificationCenter.default.addObserver(self, selector: #selector(motionSettingChanged), name: UIAccessibility.reduceMotionStatusDidChangeNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(textSizeChanged), name: UIContentSizeCategory.didChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(contrastChanged), name: UIAccessibility.darkerSystemColorsStatusDidChangeNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(boldTextChanged), name: UIAccessibility.boldTextStatusDidChangeNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(didEnterBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(willEnterForeground), name: UIApplication.willEnterForegroundNotification, object: nil)
         #else
         wantsLayer = true
         layer?.addSublayer(metal)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(motionSettingChanged), name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(contrastChanged), name: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification, object: nil)
         #endif
         applyMotionSetting()
         applyTextSize()
+        applyMode()
+        applyBoldText()
         workTold = Work.share
         engine.setWorkScale(workTold)
     }
@@ -203,11 +211,67 @@ open class DatarsChartView: PlatformView {
 
     @objc private func textSizeChanged() { applyTextSize(); renderLoop() }
 
+    /// The chart's look as the app chooses it (`light` or `dark`; set it here rather than on the
+    /// engine, so the reader's contrast setting can raise it). While the reader asks for more
+    /// contrast — Increase Contrast on iOS and macOS — the chart is in its high-contrast mode
+    /// instead, live, unless `followsContrast` is off.
+    public var mode: DatarsEngine.Mode = .light {
+        didSet { applyMode(); renderLoop() }
+    }
+
+    /// Whether the system's Increase Contrast raises the chart to its high-contrast mode (default).
+    public var followsContrast = true {
+        didSet { applyMode(); renderLoop() }
+    }
+
+    /// The reader asks for more contrast: Increase Contrast (`isDarkerSystemColorsEnabled`, or the
+    /// traits' high contrast), on the Mac `accessibilityDisplayShouldIncreaseContrast`.
+    private var systemWantsContrast: Bool {
+        #if canImport(UIKit)
+        return UIAccessibility.isDarkerSystemColorsEnabled || traitCollection.accessibilityContrast == .high
+        #else
+        return NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast
+        #endif
+    }
+
+    /// The mode last given to the engine (nil: none yet — an app that sets the engine's mode itself
+    /// keeps it until the reader's contrast setting or `mode` changes).
+    private var modeTold: DatarsEngine.Mode?
+
+    private func applyMode() {
+        let m: DatarsEngine.Mode = followsContrast && systemWantsContrast ? .highContrast : mode
+        // (At the start, the engine is already light: nothing to say, nothing recorded.)
+        if m == modeTold || (modeTold == nil && m == .light) { return }
+        modeTold = m
+        engine.setMode(m)
+    }
+
+    @objc private func contrastChanged() { applyMode(); renderLoop() }
+
+    /// Draw the chart's text heavier: `nil` (the default) follows the reader's Bold Text setting
+    /// (iOS), live; `true` or `false` fixes it. The Mac has no such setting.
+    public var boldText: Bool? {
+        didSet { applyBoldText(); renderLoop() }
+    }
+
+    private func applyBoldText() {
+        #if canImport(UIKit)
+        let on = boldText ?? (UIAccessibility.isBoldTextEnabled || traitCollection.legibilityWeight == .bold)
+        #else
+        let on = boldText ?? false
+        #endif
+        engine.setBoldText(on)
+    }
+
+    @objc private func boldTextChanged() { applyBoldText(); renderLoop() }
+
     #if canImport(UIKit)
     /// A size category set on this view's traits (or a parent's) counts as the reader's.
     override open func traitCollectionDidChange(_ previous: UITraitCollection?) {
         super.traitCollectionDidChange(previous)
         if previous?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory { textSizeChanged() }
+        if previous?.accessibilityContrast != traitCollection.accessibilityContrast { contrastChanged() }
+        if previous?.legibilityWeight != traitCollection.legibilityWeight { boldTextChanged() }
     }
     #endif
 
@@ -453,6 +517,7 @@ open class DatarsChartView: PlatformView {
         }
         renderLoop()
         updateAccessibility()
+        sayChange()
     }
 
     /// A tap's label above the finger (it covers what's below it), within the view; nothing: hidden.
@@ -484,7 +549,9 @@ open class DatarsChartView: PlatformView {
             let kind = r["kind"] as? String ?? ""
             let e: UIAccessibilityElement
             let checked = r["checked"] as? Bool
-            if ["button", "checkbox", "switch", "radio"].contains(kind), let path = r["path"] as? String {
+            if ["brush", "pan"].contains(kind), let path = r["path"] as? String {
+                e = DatarsDragElement(view: self, path: path, kind: kind, hint: (a["phrases"] as? [String: String])?["\(kind)-hint"])
+            } else if ["button", "checkbox", "switch", "radio"].contains(kind), let path = r["path"] as? String {
                 e = DatarsActionable(view: self, path: path)
             } else {
                 e = UIAccessibilityElement(accessibilityContainer: self)
@@ -550,6 +617,14 @@ open class DatarsChartView: PlatformView {
         if !text.isEmpty { UIAccessibility.post(notification: .announcement, argument: text) }
     }
 
+    /// What the reader's last tap, activation or adjustment changed, said once and politely —
+    /// queued behind what VoiceOver is saying, not cutting it off ("Pears, hidden. Total: 69 kg.").
+    func sayChange() {
+        guard let text = engine.takeAnnouncement(), !text.isEmpty else { return }
+        onAnnouncement?(text)
+        UIAccessibility.post(notification: .announcement, argument: NSAttributedString(string: text, attributes: [.accessibilitySpeechQueueAnnouncement: true]))
+    }
+
     /// One menu button per select, over its box: the options with a check on the chosen one; a
     /// choice sets the signal. Rebuilt only when a select changes (an open menu isn't torn down).
     private func updatePickers(_ selects: [[String: Any]]) {
@@ -605,6 +680,15 @@ open class DatarsChartView: PlatformView {
         _ = engine.pointer(.up, x: p.x, y: p.y)
         showCursor()
         renderLoop()
+        sayChange()
+    }
+
+    /// What the reader's last click, press or adjustment changed, said once (at medium priority:
+    /// after what VoiceOver is saying).
+    func sayChange() {
+        guard let text = engine.takeAnnouncement(), !text.isEmpty else { return }
+        onAnnouncement?(text)
+        NSAccessibility.post(element: self, notification: .announcementRequested, userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.medium.rawValue])
     }
 
     // Hover: controls show where the pointer is, marks their tooltips' labels, and the pointer
@@ -656,9 +740,11 @@ open class DatarsChartView: PlatformView {
         setAccessibilityChildren(readout.dropFirst().map { r -> NSAccessibilityElement in
             let kind = r["kind"] as? String ?? ""
             let presses = ["button", "checkbox", "switch", "radio"].contains(kind)
-            let e: NSAccessibilityElement = presses ? DatarsMacActionable(view: self, path: r["path"] as? String ?? "") : NSAccessibilityElement()
+            let drags = ["brush", "pan"].contains(kind)
+            let e: NSAccessibilityElement = drags ? DatarsMacDrag(view: self, path: r["path"] as? String ?? "", kind: kind) : presses ? DatarsMacActionable(view: self, path: r["path"] as? String ?? "") : NSAccessibilityElement()
             e.setAccessibilityParent(self)
-            e.setAccessibilityRole(kind == "checkbox" ? .checkBox : kind == "radio" ? .radioButton : kind == "switch" ? .checkBox : presses ? .button : .staticText)
+            e.setAccessibilityRole(kind == "checkbox" ? .checkBox : kind == "radio" ? .radioButton : kind == "switch" ? .checkBox : drags ? .group : presses ? .button : .staticText)
+            if drags { e.setAccessibilityHelp((a["phrases"] as? [String: String])?["\(kind)-hint"]) }
             if kind == "switch" { e.setAccessibilitySubrole(.switch) }
             if let checked = r["checked"] as? Bool { e.setAccessibilityValue(checked ? 1 : 0) }
             e.setAccessibilityLabel(r["label"] as? String)
@@ -706,8 +792,35 @@ final class DatarsMacActionable: NSAccessibilityElement {
         guard let chart, chart.engine.activate(path: path) else { return false }
         chart.needsDisplay = true
         chart.updateAccessibility()
+        chart.sayChange()
         return true
     }
+}
+
+/// A brushable area or a pannable view on the Mac: press starts (and keeps) a selection, or shows
+/// all of a view; increment and decrement extend a selection, or zoom; cancel puts it back.
+final class DatarsMacDrag: NSAccessibilityElement {
+    weak var chart: DatarsChartView?
+    let path: String
+    let kind: String
+    init(view: DatarsChartView, path: String, kind: String) {
+        chart = view
+        self.path = path
+        self.kind = kind
+        super.init()
+    }
+    @discardableResult
+    private func key(_ k: String) -> Bool {
+        guard let chart, chart.engine.key(path: path, key: k) else { return false }
+        chart.needsDisplay = true
+        chart.updateAccessibility()
+        chart.sayChange()
+        return true
+    }
+    override func accessibilityPerformPress() -> Bool { key(kind == "brush" ? "Enter" : "0") }
+    override func accessibilityPerformIncrement() -> Bool { kind == "pan" ? key("+") : (key("ArrowRight") || key("Enter")) }
+    override func accessibilityPerformDecrement() -> Bool { key(kind == "pan" ? "-" : "ArrowLeft") }
+    override func accessibilityPerformCancel() -> Bool { key("Escape") }
 }
 #endif
 
@@ -726,7 +839,52 @@ final class DatarsActionable: UIAccessibilityElement {
         guard let chart, chart.engine.activate(path: path) else { return false }
         chart.renderLoop()
         chart.updateAccessibility()
+        chart.sayChange()
         return true
+    }
+}
+
+/// What a finger drags — a brushable area, a pannable view — for VoiceOver. A brush: a double tap
+/// starts a selection (and keeps it), swiping up or down extends it, the escape gesture (a
+/// two-finger scrub) cancels. A view: swiping up or down zooms, a three-finger swipe moves it.
+/// Each says what it did (`Engine::key`, the runtime's words).
+final class DatarsDragElement: UIAccessibilityElement {
+    weak var chart: DatarsChartView?
+    let path: String
+    let kind: String
+    init(view: DatarsChartView, path: String, kind: String, hint: String?) {
+        chart = view
+        self.path = path
+        self.kind = kind
+        super.init(accessibilityContainer: view)
+        accessibilityTraits = .adjustable
+        accessibilityHint = hint
+    }
+    @discardableResult
+    private func key(_ k: String) -> Bool {
+        guard let chart, chart.engine.key(path: path, key: k) else { return false }
+        chart.renderLoop()
+        chart.updateAccessibility()
+        chart.sayChange()
+        return true
+    }
+    override func accessibilityActivate() -> Bool { kind == "brush" ? key("Enter") : key("0") }
+    override func accessibilityIncrement() {
+        if kind == "pan" { key("+"); return }
+        // Swiping up before a selection is under way starts one.
+        if !key("ArrowRight") { key("Enter") }
+    }
+    override func accessibilityDecrement() { key(kind == "pan" ? "-" : "ArrowLeft") }
+    override func accessibilityPerformEscape() -> Bool { key("Escape") }
+    override func accessibilityScroll(_ direction: UIAccessibilityScrollDirection) -> Bool {
+        guard kind == "pan" else { return false }
+        switch direction {
+        case .left: return key("ArrowRight") // content follows the fingers: a swipe left shows what's right
+        case .right: return key("ArrowLeft")
+        case .up: return key("ArrowDown")
+        case .down: return key("ArrowUp")
+        default: return false
+        }
     }
 }
 

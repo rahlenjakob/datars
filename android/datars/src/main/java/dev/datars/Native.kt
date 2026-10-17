@@ -45,6 +45,11 @@ internal object Native {
     external fun provideRange(v: Long, name: String, offset: Long, bytes: ByteArray): Boolean
     /** Run the click intent of the mark at `path` (a semantics item's path). */
     external fun activate(v: Long, path: String): Boolean
+    /** A key on a brushable area or a pannable view (a readout item of kind `brush` or `pan`):
+     * `Enter`, `Escape`, `ArrowLeft` … (`Shift+ArrowLeft`), `+`, `-`, `0`. Whether it used it. */
+    external fun key(v: Long, path: String, key: String): Boolean
+    /** What the last tap, activation or key changed, in words, once (null: nothing to say). */
+    external fun takeAnnouncement(v: Long): String?
     external fun setSignalNum(v: Long, name: String, value: Double)
     /** A signal set to a JSON value (what a native picker chose); false when it doesn't parse. */
     external fun setSignalJson(v: Long, name: String, json: String): Boolean
@@ -55,6 +60,9 @@ internal object Native {
     /** The reader's text size as a multiple of the theme's (the system font scale): labels scale
      * and the chart lays out again. Clamped to 0.75–3. */
     external fun setTextScale(v: Long, scale: Double)
+    /** The reader's bold text (Settings › Display › Bold text, `Configuration.fontWeightAdjustment`):
+     * every text drawn heavier. */
+    external fun setBoldText(v: Long, on: Boolean)
     /** The share (0.1–1) of the per-frame work budgets frames may spend: lower when they run long. */
     external fun setWorkScale(v: Long, scale: Double)
     /** Seconds (frame clock) when the next frame is due although nothing moves; NaN if none. */

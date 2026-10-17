@@ -27,6 +27,7 @@ struct SampleApp: App {
 
     /// What VoiceOver gets, printed: every accessibility element of the chart view, in order.
     func dumpAccessibility(_ view: DatarsChartView) {
+        view.onAnnouncement = { print("DATARS-SAID \($0)"); fflush(stdout) }
         view.onLoad = { [weak view] in
             DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
                 guard let view else { return }
@@ -44,7 +45,35 @@ struct SampleApp: App {
                     print("DATARS-AX \(i) [\(t.joined(separator: ","))] \"\(o?.accessibilityLabel ?? "")\" value=\"\(o?.accessibilityValue ?? "")\" frame=\(Int(f.minX)),\(Int(f.minY)),\(Int(f.width)),\(Int(f.height))")
                 }
                 print("DATARS-AX-DONE")
+                // `DATARS_AX_ACT="206:activate,206:increment"`: what VoiceOver's gestures do to those
+                // elements (activate, increment, decrement, escape), and what each then says.
+                for step in (ProcessInfo.processInfo.environment["DATARS_AX_ACT"] ?? "").split(separator: ",") {
+                    // The element by its index, or the first whose label has these words.
+                    let parts = step.split(separator: ":")
+                    let find = { () -> Int? in Int(parts[0]) ?? (view.accessibilityElements ?? []).firstIndex { (($0 as? NSObject)?.accessibilityLabel ?? "").contains(parts[0]) } }
+                    guard parts.count == 2, let i = find(), let el = (view.accessibilityElements ?? [])[safe: i] as? NSObject else { continue }
+                    switch parts[1] {
+                    case "activate": _ = el.accessibilityActivate()
+                    case "increment": el.accessibilityIncrement()
+                    case "decrement": el.accessibilityDecrement()
+                    case "escape": _ = el.accessibilityPerformEscape()
+                    default: break
+                    }
+                    let now = find().flatMap { (view.accessibilityElements ?? [])[safe: $0] as? NSObject }
+                    print("DATARS-ACT \(step) → \"\(now?.accessibilityLabel ?? "")\" value=\"\(now?.accessibilityValue ?? "")\"")
+                }
                 fflush(stdout)
+                // Then the reader's settings as the chart follows them, every two seconds for a
+                // minute (Increase Contrast, Bold Text, the text size, changed while it runs).
+                var left = 30
+                Timer.scheduledTimer(withTimeInterval: 2, repeats: true) { t in
+                    left -= 1
+                    if left <= 0 { t.invalidate() }
+                    let theme = view.engine.status()["tokens"] as? [String: Any]
+                    let tokens = theme?["tokens"] as? [String: Any]
+                    print("DATARS-SETTINGS mode=\(theme?["mode"] ?? "?") ink=\(tokens?["ink"] ?? "?") boost=\(tokens?["text.weight-boost"] ?? 0) label=\(tokens?["size.label"] ?? "?")")
+                    fflush(stdout)
+                }
             }
         }
     }
@@ -67,4 +96,8 @@ struct SampleApp: App {
             }
         }
     }
+}
+
+extension Array {
+    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
 }

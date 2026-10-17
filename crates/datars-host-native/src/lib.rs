@@ -48,6 +48,8 @@ struct App {
     /// The screen-reader bridge (AccessKit), and what each of its nodes stands for.
     a11y: Option<accesskit_winit::Adapter>,
     a11y_targets: Vec<(accesskit::NodeId, a11y::Target)>,
+    /// What the reader's last interaction changed, in the live region.
+    said: String,
     /// Where relative data URLs and atlases resolve (the document's directory, or its URL).
     origin: Origin,
     window: Option<Arc<Window>>,
@@ -121,7 +123,10 @@ impl App {
     /// Give screen readers the current semantics (only while one is listening).
     fn update_a11y(&mut self) {
         let (Some(adapter), Some(w)) = (self.a11y.as_mut(), self.window.as_ref()) else { return };
-        let (tree, targets) = a11y::tree(&mut self.core.engine, &self.title, w.scale_factor());
+        if let Some(t) = self.core.take_announcement() {
+            self.said = t;
+        }
+        let (tree, targets) = a11y::tree(&mut self.core.engine, &self.title, w.scale_factor(), &self.said);
         self.a11y_targets = targets;
         adapter.update_if_active(|| tree);
     }
@@ -388,7 +393,7 @@ pub fn run_with(source: Source, title: &str, text_scale: f64) -> Result<(), Stri
     let event_loop = EventLoop::<UserEvent>::with_user_event().build().map_err(|e| e.to_string())?;
     event_loop.set_control_flow(ControlFlow::Wait);
     let proxy = event_loop.create_proxy();
-    let mut app = App { core, proxy, a11y: None, a11y_targets: Vec::new(), origin, window: None, renderer: None, start: Instant::now(), cursor: (0.0, 0.0), dark: false, title: title.to_string(), mods: Default::default() };
+    let mut app = App { core, proxy, a11y: None, a11y_targets: Vec::new(), said: String::new(), origin, window: None, renderer: None, start: Instant::now(), cursor: (0.0, 0.0), dark: false, title: title.to_string(), mods: Default::default() };
     event_loop.run_app(&mut app).map_err(|e| e.to_string())
 }
 

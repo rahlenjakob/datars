@@ -43,6 +43,63 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
         super.onConfigurationChanged(newConfig)
         applyTextSize()
+        applyBoldText()
+    }
+
+    /** Draw the chart's text heavier: `null` (the default) follows the reader's Bold text setting
+     * (Settings › Display, `Configuration.fontWeightAdjustment`, Android 12+), live; a value fixes it. */
+    var boldText: Boolean? = null
+        set(v) { field = v; applyBoldText() }
+
+    private fun applyBoldText() {
+        val system = android.os.Build.VERSION.SDK_INT >= 31 && resources.configuration.fontWeightAdjustment > 0
+        Native.setBoldText(handle, boldText ?: system)
+        requestFrame()
+    }
+
+    /** Whether the reader's contrast setting raises the chart to its high-contrast mode (default):
+     * Settings › Accessibility › Contrast at medium or high (Android 14+, `UiModeManager.contrast`)
+     * or High contrast text (where the system lets apps read it). Live. */
+    var followsContrast = true
+        set(v) { field = v; applyMode() }
+    private var dark = false
+
+    /** The reader asks for more contrast. */
+    private fun wantsContrast(): Boolean {
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            val ui = context.getSystemService(android.app.UiModeManager::class.java)
+            if (ui != null && ui.contrast >= 0.5f) return true
+        }
+        return runCatching { android.provider.Settings.Secure.getInt(context.contentResolver, "high_text_contrast_enabled", 0) == 1 }.getOrDefault(false)
+    }
+
+    /** The mode last given to the engine (-1: none yet; the engine starts light). */
+    private var modeTold = -1
+
+    private fun applyMode() {
+        val m = if (followsContrast && wantsContrast()) 2 else if (dark) 1 else 0
+        if (m == modeTold || (modeTold < 0 && m == 0)) return
+        modeTold = m
+        Native.setMode(handle, m)
+        requestFrame()
+    }
+
+    private val contrastObserver = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) { applyMode() }
+    }
+    private var contrastListener: Any? = null
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        runCatching { context.contentResolver.registerContentObserver(android.provider.Settings.Secure.getUriFor("high_text_contrast_enabled"), false, contrastObserver) }
+        if (android.os.Build.VERSION.SDK_INT >= 34) {
+            val ui = context.getSystemService(android.app.UiModeManager::class.java)
+            val l = android.app.UiModeManager.ContrastChangeListener { applyMode() }
+            ui?.addContrastChangeListener(context.mainExecutor, l)
+            contrastListener = l
+        }
+        applyMode()
+        applyBoldText()
     }
     /** The work share this view's engine was last given (see [Work]). */
     private var workTold = Work.share
@@ -283,7 +340,9 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
     /** "Vulkan 4×MSAA" while frames go to the GPU, null on CPU pixels. */
     fun gpuBackend(): String? = Native.gpuBackend(handle)
 
-    fun setDarkMode(dark: Boolean) { Native.setMode(handle, if (dark) 1 else 0); requestFrame() }
+    /** The app's light or dark look; while the reader asks for more contrast (`followsContrast`),
+     * the chart is in its high-contrast mode instead. */
+    fun setDarkMode(dark: Boolean) { this.dark = dark; applyMode() }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         applySize()
@@ -395,7 +454,7 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 val raw = input { Native.pointer(handle, if (tap) 4 else 2, x, y) }
                 val label = raw?.let { runCatching { org.json.JSONTokener(it).nextValue() as? String }.getOrNull() }
                 if (tap) { onTap?.invoke(label, e.x, e.y); showTip(label, e.x, e.y) }
-                renderFrame(); updateAccessibility(); performClick()
+                renderFrame(); updateAccessibility(); sayChange(); performClick()
             }
             else -> { downAt = null; input { Native.pointer(handle, 3, x, y) } }
         }
@@ -430,7 +489,9 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                                 /** What it says after its name: a data mark's value, the chart's summary. */
                                 val said: String = "",
                                 /** A checkbox's, switch's or radio's state (null: none of those). */
-                                val checked: Boolean? = null)
+                                val checked: Boolean? = null,
+                                /** How to operate a brush or a pannable view, in the chart's language. */
+                                val hint: String = "")
     private var a11y: List<A11yItem> = emptyList()
 
     /** TalkBack reads the chart's content, not a picture, in the runtime's reading order: the
@@ -469,8 +530,9 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             val kind = it.optString("kind")
             // A select is its list above (the drawn box isn't a second one).
             if (kind == "button" && it.optString("label") in selectLabels) continue
-            val clicks = kind == "button" || kind == "checkbox" || kind == "switch" || kind == "radio"
-            val item = A11yItem(it.optString("label"), kind, rect(it), it.optString("path"), clicks, said = it.optString("value"), checked = if (it.has("checked")) it.optBoolean("checked") else null)
+            val clicks = kind == "button" || kind == "checkbox" || kind == "switch" || kind == "radio" || kind == "brush" || kind == "pan"
+            val hint = if (kind == "brush" || kind == "pan") s.optJSONObject("phrases")?.optString("$kind-hint") ?: "" else ""
+            val item = A11yItem(it.optString("label"), kind, rect(it), it.optString("path"), clicks, said = it.optString("value"), checked = if (it.has("checked")) it.optBoolean("checked") else null, hint = hint)
             // The chart first, then its controls, then its content.
             if (kind == "chart") out.add(0, item) else out.add(item)
         }
@@ -482,6 +544,23 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     /** The step TalkBack last heard about. */
     private var announced = -1
+
+    /** What the reader's last tap, activation or adjustment changed, said once ("Pears, hidden.
+     * Total: 69 kg."). */
+    private fun sayChange() {
+        val text = Native.takeAnnouncement(handle)
+        if (text.isNullOrEmpty()) return
+        onAnnouncement?.invoke(text)
+        @Suppress("DEPRECATION")
+        announceForAccessibility(text)
+    }
+
+    /** What the reader's last tap, activation or adjustment changed, as TalkBack is told it: for an
+     * app that also shows it. */
+    var onAnnouncement: ((String) -> Unit)? = null
+
+    /** State, narration, semantics, the theme's mode and tokens, diagnostics. */
+    fun status(): JSONObject = JSONObject(Native.status(handle) ?: "{}")
 
     /** A new step, said once: its narration (title and text), else where the reader is ("Step 2 of
      * 4"). Not the first state: the chart's name and summary say what it is. */
@@ -537,6 +616,23 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SET_PROGRESS)
                 }
+                item.role == "brush" || item.role == "pan" -> {
+                    // What a finger drags, for TalkBack: a double-tap starts (and keeps) a selection
+                    // or shows all of a view; scrolling forward and back extends a selection or
+                    // zooms; a view's scroll left, right, up and down moves it; dismiss cancels.
+                    info.className = "android.view.View"
+                    if (item.hint.isNotEmpty() && android.os.Build.VERSION.SDK_INT >= 26) info.hintText = item.hint
+                    info.isClickable = true
+                    listOf(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK,
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD,
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD,
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_DISMISS).forEach { info.addAction(it) }
+                    if (item.role == "pan" && android.os.Build.VERSION.SDK_INT >= 23) listOf(
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_LEFT,
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_RIGHT,
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_UP,
+                        android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_DOWN).forEach { info.addAction(it) }
+                }
                 item.actionable -> {
                     // A checkbox, switch or radio as Android's own: TalkBack says its state.
                     info.className = when (item.role) {
@@ -561,7 +657,17 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         override fun performAction(virtualViewId: Int, action: Int, arguments: android.os.Bundle?): Boolean {
             val item = a11y.getOrNull(virtualViewId) ?: return false
             val step = if (item.step > 0) item.step else (item.max - item.min) / 20
+            val drag = item.role == "brush" || item.role == "pan"
+            fun key(k: String) = input { Native.key(handle, item.path, k) }
             val done = when {
+                drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK -> key(if (item.role == "brush") "Enter" else "0")
+                drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> if (item.role == "pan") key("+") else (key("ArrowRight") || key("Enter"))
+                drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> key(if (item.role == "pan") "-" else "ArrowLeft")
+                drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_DISMISS -> key("Escape")
+                drag && action == android.R.id.accessibilityActionScrollLeft -> key("ArrowLeft")
+                drag && action == android.R.id.accessibilityActionScrollRight -> key("ArrowRight")
+                drag && action == android.R.id.accessibilityActionScrollUp -> key("ArrowUp")
+                drag && action == android.R.id.accessibilityActionScrollDown -> key("ArrowDown")
                 action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK && item.role == "select" -> pickers.firstOrNull { it.label == item.label }?.let { openPicker(it); true } ?: false
                 action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK && item.actionable -> input { Native.activate(handle, item.path) }
                 item.signal != null && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> { input { Native.setSignalNum(handle, item.signal, minOf(item.max, item.value + step)) }; true }
@@ -572,14 +678,20 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                 }
                 else -> false
             }
-            if (done) { renderFrame(); updateAccessibility() }
+            if (done) { renderFrame(); updateAccessibility(); sayChange() }
             return done
         }
     }
 
     override fun getAccessibilityNodeProvider(): android.view.accessibility.AccessibilityNodeProvider = provider
 
-    override fun onDetachedFromWindow() { tipPopup?.dismiss(); super.onDetachedFromWindow() }
+    override fun onDetachedFromWindow() {
+        tipPopup?.dismiss()
+        runCatching { context.contentResolver.unregisterContentObserver(contrastObserver) }
+        if (android.os.Build.VERSION.SDK_INT >= 34) (contrastListener as? android.app.UiModeManager.ContrastChangeListener)?.let { context.getSystemService(android.app.UiModeManager::class.java)?.removeContrastChangeListener(it) }
+        contrastListener = null
+        super.onDetachedFromWindow()
+    }
 
     protected fun finalize() { Native.viewFree(handle) }
 

@@ -54,8 +54,9 @@ pub enum BoundAction {
 /// How brushed pixels (node-local) become data.
 #[derive(Clone, Debug, PartialEq)]
 pub enum BrushMap {
-    /// A sampled inverse of a continuous scale: exact for linear, close for log/time.
-    Continuous { px: Vec<f64>, v: Vec<f64> },
+    /// A sampled inverse of a continuous scale: exact for linear, close for log/time (`time`:
+    /// the values are dates, as days).
+    Continuous { px: Vec<f64>, v: Vec<f64>, time: bool },
     /// Band centres and their keys.
     Bands { centers: Vec<(f64, String)> },
 }
@@ -70,12 +71,12 @@ impl BrushMap {
         let n = 256;
         let px: Vec<f64> = (0..=n).map(|i| r0 + (r1 - r0) * i as f64 / n as f64).collect();
         let v = px.iter().map(|p| s.invert(*p)).collect();
-        BrushMap::Continuous { px, v }
+        BrushMap::Continuous { px, v, time: s.time }
     }
 
     /// The data value at local pixel `p` (continuous scales).
     pub fn value(&self, p: f64) -> f64 {
-        let BrushMap::Continuous { px, v } = self else { return f64::NAN };
+        let BrushMap::Continuous { px, v, .. } = self else { return f64::NAN };
         if px.len() < 2 {
             return f64::NAN;
         }
@@ -1361,6 +1362,10 @@ impl<'a> Resolver<'a> {
         let (family, mut weight) = self.font(&st.font);
         if !st.weight.is_null() {
             weight = self.num(&st.weight, cx, weight as f64) as u16;
+        }
+        // The reader's Bold Text: heavier, whatever the weight was.
+        if let Some(boost) = self.theme.number(crate::BOLD_TEXT_TOKEN) {
+            weight = (weight as f64 + boost).clamp(1.0, 900.0) as u16;
         }
         let size = if st.size.is_null() { self.theme.number("size.label").unwrap_or(11.0) } else { self.num(&st.size, cx, 11.0) };
         let ink = self.ink(&st.ink, cx).unwrap_or_else(|| Ink::token("ink"));

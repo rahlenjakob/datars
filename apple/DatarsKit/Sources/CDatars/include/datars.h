@@ -35,6 +35,8 @@ void datars_view_set_playing(DatarsView *v, int32_t on);
 void datars_view_set_reduced_motion(DatarsView *v, int32_t on);
 /* The reader's text size as a multiple of the theme's (Dynamic Type): labels scale and the chart lays out again. Clamped to 0.75-3. */
 void datars_view_set_text_scale(DatarsView *v, double scale);
+/* The reader's Bold Text setting: 1 draws every text heavier (regular as semibold, semibold and bold as bold). */
+void datars_view_set_bold_text(DatarsView *v, int32_t on);
 /* The share (0.1-1, default 1) of the per-frame work budgets frames may spend: lower it when frames run long. */
 void datars_view_set_work_scale(DatarsView *v, double scale);
 void datars_view_set_signal_num(DatarsView *v, const uint8_t *name, size_t len, double value);
@@ -42,6 +44,10 @@ void datars_view_set_signal_num(DatarsView *v, const uint8_t *name, size_t len, 
  * chose for an engine-drawn select. Returns 0 when the JSON doesn't parse. */
 int32_t datars_view_set_signal_json(DatarsView *v, const uint8_t *name, size_t len, const uint8_t *json, size_t json_len);
 int32_t datars_view_activate(DatarsView *v, const uint8_t *path, size_t len);
+/* A key on a brushable area or a pannable view (a readout item of kind "brush" or "pan", by its path): "Enter", "Escape", "ArrowLeft" … ("Shift+ArrowLeft"), "+", "-", "0". Returns 1 if the area used it. */
+int32_t datars_view_key(DatarsView *v, const uint8_t *path, size_t len, const uint8_t *key, size_t key_len);
+/* What the last tap, activation or key changed, in words (NULL when nothing to say), once: announce it politely. Free with datars_string_free. */
+char *datars_view_take_announcement(DatarsView *v);
 double datars_view_wake_at(DatarsView *v);
 int32_t datars_view_animating(DatarsView *v);
 void datars_view_set_clock(DatarsView *v, double now);

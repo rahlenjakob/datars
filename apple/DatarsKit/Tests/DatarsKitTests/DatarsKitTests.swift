@@ -144,6 +144,35 @@ final class DatarsKitTests: XCTestCase {
     }
     #endif
 
+    func testABrushTakesKeysAndSaysWhatItDid() {
+        let e = DatarsEngine(allowScript: false)
+        _ = e.loadDocument(json: #"{"datars":1,"size":{"width":200,"height":100},"scene":{"kind":"group","key":"area","scales":{"x":{"type":"linear","domain":[0,100],"range":[0,200]}},"on":{"brush":{"brush":"sel"}},"children":[{"kind":"shape","key":"bg","geom":{"type":"rect","x":0,"y":0,"w":200,"h":100},"fill":"$surface"}]}}"#)
+        e.resize(width: 200, height: 100, scale: 1)
+        e.frame(now: 0)
+        let readout = e.accessibility()["readout"] as? [[String: Any]] ?? []
+        let brush = readout.first { ($0["kind"] as? String) == "brush" }
+        XCTAssertEqual(brush?["value"] as? String, "nothing selected")
+        let path = brush?["path"] as? String ?? ""
+        XCTAssertNil(e.takeAnnouncement())
+        XCTAssertTrue(e.key(path: path, key: "Enter"))
+        XCTAssertTrue(e.key(path: path, key: "ArrowRight"))
+        XCTAssertTrue(e.key(path: path, key: "Enter"))
+        XCTAssertEqual(e.takeAnnouncement(), "Selected 0 to 20.")
+    }
+
+    func testBoldTextDrawsHeavier() {
+        let e = DatarsEngine(allowScript: false)
+        _ = e.loadDocument(json: #"{"datars":1,"size":{"width":300,"height":40},"scene":{"kind":"text","text":"Monthly income","at":[4,30],"style":{"size":20}}}"#)
+        e.resize(width: 300, height: 40, scale: 1)
+        e.frame(now: 0)
+        let ink = { () -> Int in let px = e.pixels(); var n = 0; for i in stride(from: 0, to: px.data.count, by: 4) where px.data[i] < 128 { n += 1 }; return n }
+        let regular = ink()
+        e.setBoldText(true)
+        e.frame(now: 0.1)
+        e.frame(now: 10)
+        XCTAssertGreaterThan(ink(), regular, "more ink: heavier letters")
+    }
+
     func testInteractiveMarksCanBeActivatedWithoutAPointer() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../../..").standardized
         let doc = try String(contentsOf: root.appendingPathComponent("examples/dashboard/doc.json"), encoding: .utf8)

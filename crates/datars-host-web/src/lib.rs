@@ -322,6 +322,15 @@ mod web {
         pub fn activate(&mut self, path: &str) -> bool {
             self.core.engine.activate(path)
         }
+        /// A key on a brushable area or a pannable view, by its semantics path (`Engine::key`):
+        /// whether it used it.
+        pub fn key(&mut self, path: &str, key: &str) -> bool {
+            self.core.engine.key(path, key)
+        }
+        /// What the last click, activation or key changed, in words, once (`Engine::take_announcement`).
+        pub fn take_announcement(&mut self) -> Option<String> {
+            self.core.engine.take_announcement()
+        }
         /// Reduced motion (`prefers-reduced-motion`): transitions become short crossfades.
         pub fn set_reduced_motion(&mut self, on: bool) {
             self.core.engine.set_reduced_motion(on);

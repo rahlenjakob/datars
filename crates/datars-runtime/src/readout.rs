@@ -12,7 +12,9 @@ use datars_engine::SemanticItem;
 pub struct Readout {
     /// `chart` (the whole: first), `heading` (a part: a sub-chart's or a series' name), `text`
     /// (an axis, a legend, a note), `datum` (a data mark), `button` (something a tap acts on),
-    /// `checkbox`, `switch`, `radio` (a control with a state: `checked`).
+    /// `checkbox`, `switch`, `radio` (a control with a state: `checked`), `brush` (a range to
+    /// select with the keyboard) and `pan` (a view to move and zoom): keys go to
+    /// `Engine::key` by `path`.
     pub kind: &'static str,
     /// A checkbox's, switch's or radio's state.
     pub checked: Option<bool>,
@@ -124,8 +126,17 @@ pub fn readout_in(locale: &str, name: &str, summary: &str, items: &[SemanticItem
                     Some("checkbox") => "checkbox",
                     Some("switch") => "switch",
                     Some("radio") => "radio",
+                    Some("brush") => "brush",
+                    Some("pan") => "pan",
                     _ => "button",
                 };
+                // A brushable area or a pannable view: keys by its path (`Engine::key`); what it
+                // holds as its value ("2017 to 2019", "nothing selected").
+                if kind == "brush" || kind == "pan" {
+                    let (l, v) = split(label);
+                    out.push(Readout { kind, label: l, value: v, rect: rect_of(n.item), path: n.item.path.clone(), checked: None });
+                    continue;
+                }
                 if kind != "button" {
                     out.push(Readout { kind, label: label.into(), value: String::new(), rect: rect_of(n.item), path: n.item.path.clone(), checked: Some(n.item.checked.unwrap_or(false)) });
                     continue;

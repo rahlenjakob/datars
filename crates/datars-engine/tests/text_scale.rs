@@ -162,3 +162,38 @@ fn content_taller_than_the_box_says_its_height() {
     e.resize(640.0, h, 1.0);
     assert_eq!(e.content_height(), None, "and fits at that height");
 }
+
+/// The weight and width of the text keyed `key` in the settled scene.
+fn text_of(e: &mut Engine, key: &str) -> (u16, f64) {
+    fn find(n: &datars_scene::Node, key: &str) -> Option<(u16, f64)> {
+        if let datars_scene::NodeKind::Text(t) = &n.kind {
+            if format!("{:?}", n.key).contains(&format!("\"{key}\"")) {
+                return Some((t.style.weight, t.bounds.w));
+            }
+        }
+        n.children().iter().find_map(|c| find(c, key))
+    }
+    find(&e.scene().root, key).unwrap_or_else(|| panic!("no text {key}"))
+}
+
+fn weight_of(e: &mut Engine, key: &str) -> u16 {
+    text_of(e, key).0
+}
+
+#[test]
+fn bold_text_draws_every_text_heavier_and_lays_out_again() {
+    let mut d = doc();
+    d["scene"]["children"][2]["style"]["weight"] = json!(700);
+    let mut e = engine(d);
+    let (regular, before) = text_of(&mut e, "label");
+    assert_eq!((regular, weight_of(&mut e, "note")), (400, 700));
+    e.start_recording();
+    e.set_bold_text(true);
+    assert_eq!((weight_of(&mut e, "label"), weight_of(&mut e, "note")), (600, 900), "regular as semibold; bold capped");
+    let s = e.take_recording().unwrap();
+    assert!(text_of(&mut e, "label").1 > before, "measured in the heavier face: wider");
+    let mut r = Engine::replay(&s, |_, _| {}).unwrap();
+    assert_eq!(weight_of(&mut r, "label"), 600, "a session replays it");
+    e.set_bold_text(false);
+    assert_eq!(weight_of(&mut e, "label"), 400);
+}

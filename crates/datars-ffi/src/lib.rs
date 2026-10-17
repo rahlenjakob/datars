@@ -252,6 +252,22 @@ pub extern "C" fn datars_view_activate(v: *mut DatarsView, path: *const u8, len:
     view(v).map_or(0, |v| v.core.engine.activate(&s(path, len)) as i32)
 }
 
+/// A key on a brushable area or a pannable view (a readout item of kind `brush` or `pan`, by its
+/// path): `Enter`, `Escape`, `ArrowLeft` … (`Shift+ArrowLeft`), `+`, `-`, `0`. Returns 1 if the
+/// area used it — VoiceOver's adjust and activate, TalkBack's scroll and click map onto these.
+#[no_mangle]
+pub extern "C" fn datars_view_key(v: *mut DatarsView, path: *const u8, len: usize, key: *const u8, key_len: usize) -> i32 {
+    view(v).map_or(0, |v| v.core.key(&s(path, len), &s(key, key_len)) as i32)
+}
+
+/// What the last tap, activation or key changed, in words (null when nothing to say), once: hosts
+/// announce it politely. Free with `datars_string_free`.
+#[no_mangle]
+pub extern "C" fn datars_view_take_announcement(v: *mut DatarsView) -> *mut c_char {
+    let Some(v) = view(v) else { return std::ptr::null_mut() };
+    v.core.take_announcement().and_then(|t| CString::new(t).ok()).map(|c| c.into_raw()).unwrap_or(std::ptr::null_mut())
+}
+
 /// Set a numeric signal (a native control bound to an engine-drawn one, app state).
 #[no_mangle]
 pub extern "C" fn datars_view_set_signal_num(v: *mut DatarsView, name: *const u8, len: usize, value: f64) {
@@ -289,6 +305,15 @@ pub extern "C" fn datars_view_set_reduced_motion(v: *mut DatarsView, on: i32) {
 pub extern "C" fn datars_view_set_text_scale(v: *mut DatarsView, scale: f64) {
     if let Some(v) = view(v) {
         v.core.engine.set_text_scale(scale);
+    }
+}
+
+/// The reader's Bold Text setting (iOS, Android's font weight adjustment): 1 draws every text
+/// heavier — regular as semibold, semibold and bold as bold — and lays the chart out again.
+#[no_mangle]
+pub extern "C" fn datars_view_set_bold_text(v: *mut DatarsView, on: i32) {
+    if let Some(v) = view(v) {
+        v.core.engine.set_bold_text(on != 0);
     }
 }
 
@@ -479,6 +504,23 @@ mod tests {
         assert_eq!(view(v).unwrap().core.engine.text_scale(), 1.5);
         datars_view_set_text_scale(v, 9.0);
         assert_eq!(view(v).unwrap().core.engine.text_scale(), 3.0);
+        datars_view_free(v);
+    }
+
+    #[test]
+    fn a_brush_takes_keys_and_says_what_it_did_through_the_c_abi() {
+        let doc = br#"{"datars":1,"size":{"width":200,"height":100},"scene":{"kind":"group","key":"area","scales":{"x":{"type":"linear","domain":[0,100],"range":[0,200]}},"on":{"brush":{"brush":"sel"}},"children":[{"kind":"shape","key":"bg","geom":{"type":"rect","x":0,"y":0,"w":200,"h":100},"fill":"$surface"}]}}"#;
+        let v = datars_view_new(0);
+        datars_string_free(datars_view_load_doc(v, doc.as_ptr(), doc.len()));
+        datars_view_resize(v, 200.0, 100.0, 1.0);
+        datars_view_frame(v, 0.0);
+        let (path, enter) = ("(\"area\",)", "Enter");
+        assert!(datars_view_take_announcement(v).is_null(), "nothing yet");
+        assert_eq!(datars_view_key(v, path.as_ptr(), path.len(), enter.as_ptr(), enter.len()), 1);
+        let said = datars_view_take_announcement(v);
+        // SAFETY: a CString from this crate.
+        assert_eq!(unsafe { std::ffi::CStr::from_ptr(said) }.to_str().unwrap(), "Selecting 0 to 10.");
+        datars_string_free(said);
         datars_view_free(v);
     }
 }
@@ -794,6 +836,16 @@ pub mod android {
         (datars_view_activate(v as *mut DatarsView, p.as_ptr(), p.len()) != 0) as jboolean
     }
     #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_key(mut env: JNIEnv, _: JClass, v: jlong, path: JString, key: JString) -> jboolean {
+        let (p, k) = (jstr(&mut env, &path), jstr(&mut env, &key));
+        (datars_view_key(v as *mut DatarsView, p.as_ptr(), p.len(), k.as_ptr(), k.len()) != 0) as jboolean
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_takeAnnouncement(mut env: JNIEnv, _: JClass, v: jlong) -> jstring {
+        let r = datars_view_take_announcement(v as *mut DatarsView);
+        to_j(&mut env, r)
+    }
+    #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_setSignalNum(mut env: JNIEnv, _: JClass, v: jlong, name: JString, value: jdouble) {
         let n = jstr(&mut env, &name);
         datars_view_set_signal_num(v as *mut DatarsView, n.as_ptr(), n.len(), value)
@@ -843,6 +895,10 @@ pub mod android {
     #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_setTextScale(_: JNIEnv, _: JClass, v: jlong, scale: jdouble) {
         datars_view_set_text_scale(v as *mut DatarsView, scale)
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_setBoldText(_: JNIEnv, _: JClass, v: jlong, on: jboolean) {
+        datars_view_set_bold_text(v as *mut DatarsView, on as i32)
     }
     #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_wakeAt(_: JNIEnv, _: JClass, v: jlong) -> jdouble {

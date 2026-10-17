@@ -13,6 +13,7 @@ mod env;
 pub mod expand;
 mod geo;
 mod graph_ops;
+mod keyboard;
 mod layout_ops;
 mod live;
 pub mod obstacles;
@@ -391,6 +392,8 @@ pub struct Engine {
     reduced_motion: bool,
     /// The reader's text size, as a multiple of the theme's (`Engine::set_text_scale`).
     text_scale: f64,
+    /// The reader asked for bolder text (`Engine::set_bold_text`).
+    bold_text: bool,
     /// Clock signals (name, rate per second), and the seconds they have run: time accumulates only
     /// while a settled scene reads them, so a transition never makes them jump.
     clocks: Vec<(String, f64)>,
@@ -419,6 +422,10 @@ pub struct Engine {
     /// a resize, a theme or a signal shows that position again, not the state it's on.
     seeked: Option<f64>,
     drag: Option<Drag>,
+    /// A selection being made with the keyboard (`Engine::key`).
+    key_brush: Option<keyboard::KeyBrush>,
+    /// What the last interaction changed, in words, until a host takes it.
+    announcement: Option<String>,
     /// The element under the pointer that `hover()` asked about (the innermost), if any.
     hovered: Option<KeyPath>,
     /// What the pointer over the chart should look like, as the last pointer input left it.
@@ -447,6 +454,12 @@ pub struct Engine {
     narration_drawn: std::cell::Cell<Option<bool>>,
     range_fetch: Option<Box<RangeFetch>>,
 }
+
+/// How much heavier text is drawn for a reader who asked for bold text (`Engine::set_bold_text`):
+/// 400 → 600, 600 → 800 (bold, where that's the heaviest face).
+pub const BOLD_TEXT_BOOST: f64 = 200.0;
+/// The theme number the boost travels in to text resolution.
+pub(crate) const BOLD_TEXT_TOKEN: &str = "text.weight-boost";
 
 /// The theme's text sizes (its `size.*` tokens: `size.small`, `size.label`, `size.body`,
 /// `size.title`, and any a theme adds) at the reader's text size.
@@ -521,6 +534,7 @@ impl Engine {
             playing: true,
             reduced_motion: false,
             text_scale: 1.0,
+            bold_text: false,
             clocks: Vec::new(),
             clock_time: 0.0,
             clock_last: None,
@@ -533,6 +547,8 @@ impl Engine {
             scrub: None,
             seeked: None,
             drag: None,
+            key_brush: None,
+            announcement: None,
             hovered: None,
             cursor: Cursor::Default,
             recording: None,
@@ -1134,6 +1150,24 @@ impl Engine {
         self.text_scale
     }
 
+    /// The reader's Bold Text setting (iOS, Android's font weight): every text is drawn heavier —
+    /// regular as semibold, semibold and bold as bold (the weight a theme or a text gives, plus
+    /// [`BOLD_TEXT_BOOST`], capped at 900, matched to the nearest face the chart carries). Labels
+    /// are measured in the heavier weight, so the chart lays out again around them.
+    pub fn set_bold_text(&mut self, on: bool) {
+        self.rec(session::Input::BoldText { on });
+        if on == self.bold_text {
+            return;
+        }
+        self.bold_text = on;
+        self.retheme();
+    }
+
+    /// Whether text is drawn heavier for the reader (`set_bold_text`).
+    pub fn bold_text(&self) -> bool {
+        self.bold_text
+    }
+
     /// Re-resolve the theme; true when scenes had to be resolved again (sizes or fonts changed).
     fn retheme(&mut self) -> bool {
         let before = (self.theme.numbers.clone(), self.theme.fonts.clone(), self.theme.texts.clone());
@@ -1158,6 +1192,10 @@ impl Engine {
         let doc_tokens: BTreeMap<String, TokenValue> = self.doc.theme.tokens.iter().filter_map(|(k, v)| TokenValue::parse(v).ok().map(|t| (k.clone(), t))).collect();
         let (mut theme, diags) = datars_theme::resolve(&chain, self.mode, &[&doc_tokens, &self.host_tokens]);
         scale_text_sizes(&mut theme, self.text_scale);
+        if self.bold_text {
+            // Read by every text's resolution (its weight, the token's or its own, plus this).
+            theme.numbers.insert(BOLD_TEXT_TOKEN.into(), BOLD_TEXT_BOOST);
+        }
         for d in diags {
             self.diags.push(Diag { message: format!("theme token `{}`: {}", d.token, d.message) });
         }
@@ -1721,6 +1759,9 @@ impl Engine {
         if self.text_scale != 1.0 {
             s.inputs.push(session::Input::TextScale { scale: self.text_scale });
         }
+        if self.bold_text {
+            s.inputs.push(session::Input::BoldText { on: true });
+        }
         if self.program.index() != 0 {
             s.inputs.push(session::Input::Goto { index: self.program.index() });
         }
@@ -1779,9 +1820,13 @@ impl Engine {
             I::Playing { on } => self.set_playing(*on),
             I::ReducedMotion { on } => self.set_reduced_motion(*on),
             I::TextScale { scale } => self.set_text_scale(*scale),
+            I::BoldText { on } => self.set_bold_text(*on),
             I::Work { scale } => self.set_work_scale(*scale),
             I::Activate { path } => {
                 self.activate(path);
+            }
+            I::Key { path, key } => {
+                self.key(path, key);
             }
             I::Mode { mode } => self.set_mode(match mode.as_str() {
                 "dark" => Mode::Dark,
@@ -2334,6 +2379,12 @@ impl Engine {
                             resolve::BoundAction::Brush { .. } => Cursor::Crosshair,
                             _ => Cursor::Pointer,
                         };
+                        // A brushed range is said, as the keyboard's is.
+                        if let resolve::BoundAction::Brush { signal, map, .. } = &d.action {
+                            if let Some(range) = self.brush_range(signal, map) {
+                                self.announcement = Some(format!("{}.", phrases::phrase(&self.doc.locale, "brush-done", &[("range", &range)])));
+                            }
+                        }
                         return None;
                     }
                     if let resolve::BoundAction::Brush { signal, .. } = &d.action {
@@ -2427,7 +2478,7 @@ impl Engine {
     fn activate_at(&mut self, resolved: &Resolved, path: &KeyPath) {
         if let Some(acts) = resolved.actions.iter().filter(|(p, _)| path.0.starts_with(&p.0)).max_by_key(|(p, _)| p.0.len()).map(|(_, a)| a.clone()) {
             if let Some(a) = acts.get("activate") {
-                self.run_action(a);
+                self.reported(Some(format!("{path}")), |e| e.run_action(a));
             }
         }
     }
@@ -2508,6 +2559,10 @@ impl Engine {
     /// the inverse of its node's transform (root → local) and its area in local units.
     fn drag_areas(&self, scene: &Scene) -> Vec<(KeyPath, resolve::BoundAction, datars_math::Affine, datars_math::Rect)> {
         let Some(resolved) = self.shown.as_ref() else { return Vec::new() };
+        Self::drag_areas_in(resolved, scene)
+    }
+
+    fn drag_areas_in(resolved: &Resolved, scene: &Scene) -> Vec<(KeyPath, resolve::BoundAction, datars_math::Affine, datars_math::Rect)> {
         let mut out = Vec::new();
         for (path, acts) in &resolved.actions {
             let act = acts.get("brush").or_else(|| acts.get("explore")).or_else(|| acts.values().find(|a| matches!(a, resolve::BoundAction::Brush { .. } | resolve::BoundAction::Explore { .. } | resolve::BoundAction::Scrub { .. })));
@@ -2727,7 +2782,9 @@ impl Engine {
 
     fn semantic_walk(&mut self, only_actionable: bool) -> Vec<SemanticItem> {
         let actionable: std::collections::BTreeSet<KeyPath> = self.shown.as_ref().map(|r| r.actions.iter().filter(|(_, a)| a.contains_key("activate")).map(|(p, _)| p.clone()).collect()).unwrap_or_default();
-        if only_actionable && actionable.is_empty() {
+        let target = self.resolve_now();
+        let draggable = target.actions.iter().any(|(_, a)| a.values().any(|a| matches!(a, BoundAction::Brush { .. } | BoundAction::Explore { .. })));
+        if only_actionable && actionable.is_empty() && !draggable {
             return Vec::new();
         }
         let scene = self.scene();
@@ -2773,6 +2830,10 @@ impl Engine {
         // Actionable only: no instance's label (they have no intents of their own) is ever made.
         let mut budget = if only_actionable { 0 } else { MAX_INSTANCE_ITEMS };
         walk(&scene.root, &KeyPath::default(), 0, datars_math::Affine::IDENTITY, 1.0, &actionable, &mut out, &mut budget);
+        // What a pointer drags (a brush, a pannable view), for the keyboard (`Engine::key`).
+        if draggable {
+            self.drag_items(&target, &scene, &mut out);
+        }
         if only_actionable {
             out.retain(|i| i.actionable);
         }
@@ -2824,40 +2885,49 @@ impl Engine {
             let end = if description.ends_with(['.', '!', '?', '…']) { "" } else { "." };
             parts.push(format!("{description}{end}"));
         }
-        let data: Vec<&SemanticItem> = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && !i.missing).collect();
-        let missing = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && i.missing).count();
-        if !data.is_empty() {
-            let loc = self.doc.locale.clone();
-            let num = |v: f64, f: &str| datars_text::format::number(v, f, &loc);
-            // Every mark, also past the items the description lists one by one (a parliament's
-            // seats, a year of days): counted as drawn.
-            let n = self.data_count().saturating_sub(missing).max(data.len());
-            let mut s = phrases::counted(&loc, "points", n, &num(n as f64, ",.0f"));
-            let series: BTreeSet<&str> = items.iter().filter(|i| i.role == "series" && !i.label.is_empty()).map(|i| i.label.as_str()).collect();
-            if series.len() > 1 {
-                s.push_str(&phrases::phrase(&loc, "series", &[("n", &series.len().to_string())]));
-            }
-            // The range only when every mark says its value: a range over some of them (a chart's
-            // bars, not its lines) would mislead.
-            let values: Vec<f64> = data.iter().filter_map(|i| i.value).collect();
-            if values.len() >= 2 && values.len() == data.len() && n == data.len() {
-                let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
-                let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
-                if lo < hi {
-                    s.push_str(&phrases::phrase(&loc, "range", &[("lo", &num(lo, ",.4~r")), ("hi", &num(hi, ",.4~r"))]));
-                }
-            }
-            if missing > 0 {
-                s.push_str(&phrases::phrase(&loc, "missing", &[("n", &num(missing as f64, ",.0f"))]));
-            }
+        if let Some(s) = self.data_sentence(&items) {
             parts.push(format!("{s}."));
         }
         parts.join(" ")
     }
 
+    /// How much data `items` show and its range — "8 data points, from 3.5 to 27.6" — in the
+    /// document's language; `None` with no data marks.
+    pub(crate) fn data_sentence(&mut self, items: &[SemanticItem]) -> Option<String> {
+        let data: Vec<&SemanticItem> = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && !i.missing).collect();
+        let missing = items.iter().filter(|i| (i.role == "datum" || i.role == "region") && i.missing).count();
+        if data.is_empty() {
+            return None;
+        }
+        let loc = self.doc.locale.clone();
+        let num = |v: f64, f: &str| datars_text::format::number(v, f, &loc);
+        // Every mark, also past the items the description lists one by one (a parliament's
+        // seats, a year of days): counted as drawn.
+        let n = self.data_count().saturating_sub(missing).max(data.len());
+        let mut s = phrases::counted(&loc, "points", n, &num(n as f64, ",.0f"));
+        let series: BTreeSet<&str> = items.iter().filter(|i| i.role == "series" && !i.label.is_empty()).map(|i| i.label.as_str()).collect();
+        if series.len() > 1 {
+            s.push_str(&phrases::phrase(&loc, "series", &[("n", &series.len().to_string())]));
+        }
+        // The range only when every mark says its value: a range over some of them (a chart's
+        // bars, not its lines) would mislead.
+        let values: Vec<f64> = data.iter().filter_map(|i| i.value).collect();
+        if values.len() >= 2 && values.len() == data.len() && n == data.len() {
+            let lo = values.iter().copied().fold(f64::INFINITY, f64::min);
+            let hi = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
+            if lo < hi {
+                s.push_str(&phrases::phrase(&loc, "range", &[("lo", &num(lo, ",.4~r")), ("hi", &num(hi, ",.4~r"))]));
+            }
+        }
+        if missing > 0 {
+            s.push_str(&phrases::phrase(&loc, "missing", &[("n", &num(missing as f64, ",.0f"))]));
+        }
+        Some(s)
+    }
+
     /// How many data marks the current scene draws (role datum or region, and labelled instances),
     /// as a reader can see them.
-    fn data_count(&mut self) -> usize {
+    pub(crate) fn data_count(&mut self) -> usize {
         fn walk(n: &datars_scene::Node, acc: f64) -> usize {
             let acc = pick::seen(n, acc);
             if acc <= pick::INVISIBLE {
@@ -2884,7 +2954,7 @@ impl Engine {
         self.rec(session::Input::Activate { path: path.to_string() });
         let Some(resolved) = self.shown.clone() else { return false };
         let Some(a) = resolved.actions.iter().find(|(p, a)| format!("{p}") == path && a.contains_key("activate")).and_then(|(_, a)| a.get("activate").cloned()) else { return false };
-        self.run_action(&a);
+        self.reported(Some(path.to_string()), |e| e.run_action(&a));
         true
     }
 }

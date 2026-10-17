@@ -28,7 +28,11 @@ pub enum Input {
     ReducedMotion { on: bool },
     /// The reader's text size (`Engine::set_text_scale`).
     TextScale { scale: f64 },
+    /// The reader's Bold Text setting (`Engine::set_bold_text`).
+    BoldText { on: bool },
     Activate { path: String },
+    /// A key on a keyboard-operable area (`Engine::key`).
+    Key { path: String, key: String },
     Mode { mode: String },
     Tokens { tokens: BTreeMap<String, serde_json::Value> },
     /// The host's share of the per-frame work budgets (`Engine::set_work_scale`).
