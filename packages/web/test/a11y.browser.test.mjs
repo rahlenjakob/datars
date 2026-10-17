@@ -218,9 +218,14 @@ test("a switch, checkboxes and segments are switch, checkbox and radio to a scre
     assert.deepEqual(said, ["switch Averages true", "checkbox Apples true", "checkbox Pears false", "radio Quarter: Q1 true", "radio Quarter: Q2 false"]);
     // Pressing one (Space on the focused switch) changes the state it says.
     await p.locator("datars-view .mirror [role=switch]").focus();
+    await p.evaluate(() => { window.__switch = document.querySelector("datars-view").shadowRoot.activeElement; });
     await p.keyboard.press("Space");
     await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror [role=switch]")?.getAttribute("aria-checked") === "false", null, { timeout: 10_000 });
     assert.equal(await p.evaluate(() => document.querySelector("datars-view").signals.on), false);
+    // The mirror is updated in place, not rebuilt: the switch is the same element, and keeps the
+    // keyboard (a screen reader on it stays there — VoiceOver in Safari lost its place before).
+    await p.waitForTimeout(1500);
+    assert.equal(await p.evaluate(() => { const a = document.querySelector("datars-view").shadowRoot.activeElement; return `${a?.getAttribute("role")} ${a === window.__switch ? "kept" : "replaced"}`; }), "switch kept");
     // The element's `readout` is the same order and states, for a page to show or test.
     let readout = null;
     for (let i = 0; i < 50 && !readout?.some((r) => r.kind === "switch" && r.checked === false); i++) {

@@ -1793,6 +1793,11 @@ export class DatarsView extends ElementBase {
       }
     }
     if (s.semantics) this.describedGen = this.chromeGen;
+    // A story's ends: there's no step before the first or after the last, and a screen reader says
+    // so ("dimmed") — the buttons keep the keyboard (aria-disabled, not disabled).
+    const index = s.index ?? 0, count = s.states?.length ?? 0;
+    this.root.querySelector('[data-ev="prev"]')?.setAttribute("aria-disabled", String(index <= 0));
+    this.root.querySelector('[data-ev="next"]')?.setAttribute("aria-disabled", String(index >= count - 1));
     this.announce(s);
     this.growForText(s);
   }
@@ -1868,21 +1873,76 @@ export class DatarsView extends ElementBase {
    * and outlined on the chart as the keyboard moves; clickable marks are buttons. The chart's
    * name goes on the element itself (`aria-label`), its summary first inside it. */
   private fillMirror(s: Record<string, any>, items: MirrorItem[]) {
+    // Built aside, then merged into the mirror on the page (`morph`): the elements that stay what
+    // they were (a switch whose state flipped, a slider whose value moved) are the same elements,
+    // so a screen reader on one stays there. (Rebuilt from scratch, VoiceOver in Safari lost its
+    // place after every toggle — its element was gone — and landed on the figure.)
+    const live = this.mirror;
+    this.mirror = document.createElement("div");
+    try {
+      this.buildMirror(s, items);
+    } finally {
+      const fresh = this.mirror;
+      this.mirror = live;
+      DatarsView.morph(live, fresh);
+    }
+  }
+
+  /** What identifies a mirror element across rebuilds: its kind, role and what it stands for. */
+  private static mirrorKey(e: Element): string {
+    const d = (e as HTMLElement).dataset ?? {};
+    return [e.tagName, e.getAttribute("role") ?? "", d.path ?? "", d.signal ?? "", d.ev ?? "", d.options ?? ""].join("\u0000");
+  }
+
+  /** Make `live`'s children what `fresh`'s are, keeping the elements that stand for the same thing
+   * (their attributes and text updated) and moving in the rest. */
+  private static morph(live: Element, fresh: Element) {
+    // Each fresh element takes the first live one that stands for the same thing (in order),
+    // updated; the rest are new. Then the live list is put in the fresh order, moving only what
+    // is out of place (a moved element would lose the keyboard).
+    const pool = new Map<string, Element[]>();
+    for (const l of live.children) {
+      const k = DatarsView.mirrorKey(l);
+      pool.set(k, [...(pool.get(k) ?? []), l]);
+    }
+    const out: Node[] = [...fresh.childNodes].map((f) => {
+      if (!(f instanceof Element)) return f;
+      const l = pool.get(DatarsView.mirrorKey(f))?.shift();
+      if (!l) return f;
+      for (const a of [...l.attributes]) if (!f.hasAttribute(a.name)) l.removeAttribute(a.name);
+      for (const a of [...f.attributes]) if (l.getAttribute(a.name) !== a.value) l.setAttribute(a.name, a.value);
+      // (A slider's value, but not under the reader's own hand.)
+      if (l instanceof HTMLInputElement && f instanceof HTMLInputElement && l.value !== f.value && (l.getRootNode() as ShadowRoot).activeElement !== l) l.value = f.value;
+      if (l instanceof HTMLElement && f instanceof HTMLElement && l.tabIndex !== f.tabIndex) l.tabIndex = f.tabIndex;
+      DatarsView.morph(l, f);
+      return l;
+    });
+    out.forEach((n, i) => {
+      if (live.childNodes[i] !== n) live.insertBefore(n, live.childNodes[i] ?? null);
+    });
+    while (live.childNodes.length > out.length) live.lastChild!.remove();
+  }
+
+  private buildMirror(s: Record<string, any>, items: MirrorItem[]) {
     // Where the keyboard is, read before the mirror is rebuilt: rebuilding mustn't lose it.
     const active = this.root.activeElement as HTMLElement | null;
     const focused = active?.dataset?.signal, focusedPath = active?.dataset?.path, focusedItem = active?.dataset?.item;
-    this.mirror.innerHTML = "";
     // Engine-drawn controls as native ones: keyboards and screen readers can operate them.
     const controls = (s.controls ?? []) as any[];
     if (controls.length) {
-      const ul = document.createElement("ul");
+      // A named group, not a list: VoiceOver in Safari read a list's marker ("•") as a stop of its
+      // own before each control, and "end of list" after.
+      const ul = document.createElement("div");
+      ul.setAttribute("role", "group");
       ul.setAttribute("aria-label", this.ph("controls"));
       for (const c of controls) {
-        const li = document.createElement("li");
+        const li = document.createElement("div");
         if (c.kind === "select") {
           // A select as a real one: its options, the chosen one, the same signal.
           const sel = this.nativeSelect(c);
-          sel.setAttribute("aria-label", c.label);
+          // Its name (the label without the chosen option, which the select says itself).
+          const chosen = /:\s*(.+)$/.exec(c.label);
+          sel.setAttribute("aria-label", chosen ? c.label.slice(0, c.label.lastIndexOf(":")).trim() : c.label);
           if (c.rect) sel.dataset.rect = c.rect.join(",");
           li.appendChild(sel);
           ul.appendChild(li);
@@ -1891,9 +1951,10 @@ export class DatarsView extends ElementBase {
         }
         const input = document.createElement("input");
         Object.assign(input, { type: "range", min: String(c.min), max: String(c.max), step: c.step > 0 ? String(c.step) : "any", value: String(c.value) });
-        input.setAttribute("aria-label", c.label);
-        // What the drawn control says ("32,000"), not the raw number.
+        // Its name, then what the drawn control says ("32,000") as its value — not the raw number,
+        // and not the value twice (VoiceOver read "32,000 Monthly income (SEK): 32,000 slider").
         const said = /:\s*(.+)$/.exec(c.label)?.[1];
+        input.setAttribute("aria-label", said ? c.label.slice(0, c.label.lastIndexOf(":")).trim() : c.label);
         if (said) input.setAttribute("aria-valuetext", said);
         input.dataset.signal = c.signal;
         if (c.rect) input.dataset.rect = c.rect.join(",");
@@ -2160,6 +2221,8 @@ export class DatarsView extends ElementBase {
   private nativeSelect(c: { signal: string; current: unknown; options: { value: unknown; label: string }[] }): HTMLSelectElement {
     const sel = document.createElement("select");
     sel.dataset.signal = c.signal;
+    // (Its options are part of what it is: a select with others is another select.)
+    sel.dataset.options = JSON.stringify(c.options.map((o) => o.value));
     c.options.forEach((o, i) => {
       const opt = document.createElement("option");
       opt.value = String(i);
