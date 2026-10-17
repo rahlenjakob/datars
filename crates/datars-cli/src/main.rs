@@ -76,6 +76,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   states    <doc>                                                               list program states
   check     <doc>                                                               diagnostics (incl. fonts with no source)
   fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
+  icons     [word…] | --slots <file.svg>                                        search the default icon set (Lucide); a file's colours, by ink slot
   semantics <doc> [--state N]                                                   the accessibility tree
   bundle    <doc> [--out f.datars] [--sign key]                                 publish: document → bundle (T0–T3 variants)
   bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays
@@ -226,7 +227,7 @@ fn fonts() -> datars_build::fonts::acquire::Fonts {
 fn load(json: &str, dir: Option<&Path>) -> Result<datars_engine::Engine, String> {
     let f = fonts();
     let fetch = datars_build::fonts::acquire::fetch_with(&f, dir);
-    datars_headless::load_at_with(json, dir, &fetch)
+    datars_headless::load_at_with_assets(json, dir, &fetch, Some(datars_build::fonts::acquire::asset_fetch(dir)))
 }
 
 fn state_index(engine: &datars_engine::Engine, s: Option<&String>) -> usize {
@@ -368,6 +369,9 @@ fn run(a: Args) -> Result<(), String> {
     }
     if a.cmd == "labels" {
         return labels_cmd(&a, json);
+    }
+    if a.cmd == "icons" {
+        return icons_cmd(&a, json);
     }
     if a.cmd == "lint" {
         let path = a.pos.first().ok_or("a document path is required")?;
@@ -1149,6 +1153,44 @@ fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
             println!("{k:<24} {o:>8} {c:>8} {cl:>8} {od:>8}");
         }
         println!("\n{} documents ({} failed to load) · {} unreadable labels", results.len(), failed, total);
+    }
+    Ok(())
+}
+
+/// `datars icons heart` — the default set's icons whose names or tags say it, best first;
+/// `datars icons --slots logo.svg` — what an SVG draws: its ink slots (the colours it said, in the
+/// order `inks` takes them), its box, and what the reader skipped.
+fn icons_cmd(a: &Args, json: bool) -> Result<(), String> {
+    if let Some(file) = a.flags.get("slots") {
+        let src = std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
+        let icon = datars_icon::parse_svg(&src)?;
+        let vb = icon.view_box;
+        if json {
+            println!("{}", serde_json::json!({ "viewBox": [vb.x, vb.y, vb.w, vb.h], "layers": icon.layers.len(), "slots": icon.slots, "title": icon.title, "notes": icon.notes }));
+        } else {
+            println!("{file}: {} layers in a {} × {} box", icon.layers.len(), vb.w, vb.h);
+            if icon.slots.is_empty() {
+                println!("  one ink: currentColor (the node's `ink`)");
+            }
+            for (i, s) in icon.slots.iter().enumerate() {
+                println!("  inks[{i}]  was {s}");
+            }
+            for n in &icon.notes {
+                println!("  note: {n}");
+            }
+        }
+        return Ok(());
+    }
+    let set = datars_icon::set::bundled(datars_icon::DEFAULT_SET).ok_or("the default icon set isn't compiled into this build")?;
+    let q = a.pos.join(" ");
+    let hits: Vec<&str> = if q.trim().is_empty() { set.names().collect() } else { set.search(&q) };
+    if json {
+        println!("{}", serde_json::json!({ "set": set.name, "version": set.version, "licence": set.licence, "icons": hits }));
+    } else {
+        for h in hits.iter().take(if q.is_empty() { usize::MAX } else { 40 }) {
+            println!("{h}");
+        }
+        println!("\n{} of {} {} {} icons ({}) · use as \"{}\" or \"{}:{}\"", hits.len().min(if q.is_empty() { usize::MAX } else { 40 }), set.len(), set.name, set.version, set.licence, hits.first().unwrap_or(&"heart"), set.name, hits.first().unwrap_or(&"heart"));
     }
     Ok(())
 }

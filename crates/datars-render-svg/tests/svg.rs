@@ -63,7 +63,7 @@ fn scene() -> DisplayList {
         Op::Instances(instances(Proto::Rect, Affine::translate(120.0, 100.0).mul(Affine::scale(1.5, 1.0)))),
         Op::Instances(instances(Proto::Rect, Affine::rotate(0.3))),
         Op::Glyphs { font: Arc::from("A&B <\"x\">"), size: 10.0, glyphs, origin: Vec2::new(20.0, 150.0), scale: 1.0, rotate: 0.0, color: RED, halo: Some((Color::WHITE, 2.0)), text: Some(Arc::from("A & <b>")) },
-        Op::Image { asset: Arc::from("photo.png"), rect: Rect::new(0.0, 0.0, 10.0, 10.0), xf: Affine::IDENTITY, opacity: 1.0 },
+        Op::Image { asset: Arc::from("photo.png"), rect: Rect::new(0.0, 0.0, 10.0, 10.0), xf: Affine::IDENTITY, opacity: 1.0, image: None },
     ];
     DisplayList { width: 200.0, height: 160.5, background: Color::rgb8(251, 248, 241), ops }
 }
@@ -290,4 +290,31 @@ fn well_formedness_checker_rejects_broken_xml() {
     assert!(well_formed("<a/><b/>").is_err());
     assert!(well_formed("<a><b/>").is_err());
     assert!(well_formed("<a x=\"1 &amp; 2\"><b/>text</a>").is_ok());
+}
+
+#[test]
+fn icons_are_drawn_once_and_used_per_instance_and_pictures_are_inline() {
+    use datars_scene::{IconGlyph, IconInk, IconLayer};
+    let glyph = IconGlyph {
+        name: Arc::from("test:sq"),
+        layers: vec![IconLayer { path: Arc::new(PathData::rect(Rect::new(-1.0, -1.0, 2.0, 2.0))), fill: Some(IconInk::Current), rule: FillRule::NonZero, stroke: None, opacity: 1.0 }],
+        inks: Vec::new(),
+        aspect: 1.0,
+    };
+    let mut inst = instances(Proto::Icon { icon: Arc::new(glyph) }, Affine::IDENTITY);
+    inst.fill = vec![Color::rgb8(255, 0, 0); inst.x.len()].into();
+    let png = [0x89, b'P', b'N', b'G', 1, 2, 3];
+    let raster = datars_render::Raster { width: 1, height: 1, premul: Arc::from([0u8, 0, 0, 255].as_slice()), encoded: Arc::from(png.as_slice()), hash: 7 };
+    let list = DisplayList {
+        width: 100.0,
+        height: 100.0,
+        background: Color::WHITE,
+        ops: vec![Op::Instances(inst.clone()), Op::Image { asset: Arc::from("p.png"), rect: Rect::new(0.0, 0.0, 10.0, 10.0), xf: Affine::IDENTITY, opacity: 0.5, image: Some(Arc::new(raster)) }],
+    };
+    let svg = to_svg(&list, &NoGlyphs);
+    well_formed(&svg).unwrap();
+    assert_eq!(svg.matches("fill=\"currentColor\"").count(), 1, "the drawing once, in <defs>:\n{svg}");
+    assert_eq!(svg.matches("<use href=").count(), inst.x.len(), "a <use> per instance");
+    assert!(svg.contains("color=\"#ff0000\""), "each in its colour");
+    assert!(svg.contains("<image ") && svg.contains("href=\"data:image/png;base64,iVBORwECAw==\"") && svg.contains("opacity=\"0.5\""), "{svg}");
 }

@@ -137,6 +137,11 @@ pub struct TextNode {
     /// empties this): origin, alignment and baseline each.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub places: Vec<(Vec2, Align, Baseline)>,
+    /// Set along a path (a curved label): each glyph's place — `[x, y, turn, advance]`, its origin
+    /// relative to the node's `origin`, its turn in radians, its advance in px — in run order. Empty: the
+    /// text was longer than its path, and is left out.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub along: Option<Arc<[[f32; 4]]>>,
 }
 
 fn is_false(v: &bool) -> bool {
@@ -146,7 +151,7 @@ fn is_false(v: &bool) -> bool {
 impl TextNode {
     /// An unshaped text node; the engine's text stage fills `runs` and `bounds`.
     pub fn new(text: impl Into<String>, origin: Vec2, style: TextStyle) -> TextNode {
-        TextNode { text: text.into(), origin, style, runs: Vec::new(), bounds: Rect::default(), halo: None, screen_size: true, offset: Vec2::ZERO, number: None, rotate: 0.0, contain: false, wrap_to_fit: false, places: Vec::new() }
+        TextNode { text: text.into(), origin, style, runs: Vec::new(), bounds: Rect::default(), halo: None, screen_size: true, offset: Vec2::ZERO, number: None, rotate: 0.0, contain: false, wrap_to_fit: false, places: Vec::new(), along: None }
     }
     pub fn is_shaped(&self) -> bool {
         !self.runs.is_empty() || self.text.is_empty()

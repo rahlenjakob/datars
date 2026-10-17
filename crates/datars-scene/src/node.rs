@@ -1,4 +1,5 @@
 use crate::geom::{Geom, SymbolKind};
+use crate::icon::IconGlyph;
 use crate::key::{Key, KeyPath, Sym};
 use crate::paint::{Paint, Stroke};
 use crate::text::TextNode;
@@ -165,14 +166,17 @@ pub struct Anchor {
     pub at: Vec2,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum Marker {
     Arrow { size: f64 },
     Dot { r: f64 },
+    /// An icon at the end, turned with the line (its +x along the line's direction), `size` px
+    /// across — drawn in the stroke's paint.
+    Icon { icon: Arc<IconGlyph>, size: f64 },
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct Markers {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub start: Option<Marker>,
@@ -217,6 +221,9 @@ pub enum Proto {
     Symbol { symbol: SymbolKind },
     /// Rectangles: per-instance `w`/`h` columns; `x`/`y` are the top-left corner.
     Rect,
+    /// An icon centred on `x`/`y`, `size` its half box (like a symbol's radius), painted in the
+    /// instance's fill where the icon says `currentColor`.
+    Icon { icon: Arc<IconGlyph> },
 }
 
 /// One prototype × N keyed instances with per-instance columns (the path to 10⁶ marks).
@@ -334,6 +341,12 @@ impl Instances {
                 self.w.as_ref().and_then(|w| w.get(i)).copied().unwrap_or(1.0),
                 self.h.as_ref().and_then(|h| h.get(i)).copied().unwrap_or(1.0),
             ),
+            // Its box (what hit tests and bounds use).
+            Proto::Icon { icon } => {
+                let (hx, hy) = icon.half_extent();
+                let s = self.size_at(i);
+                Geom::rect(self.x[i] - hx * s, self.y[i] - hy * s, 2.0 * hx * s, 2.0 * hy * s)
+            }
         }
     }
 }

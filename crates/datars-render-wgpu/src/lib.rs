@@ -195,6 +195,8 @@ pub struct Renderer {
     frame: u64,
     stats: Stats,
     policy: CachePolicy,
+    /// Pictures uploaded, by content hash: their texture, its binding, and the frame last drawn.
+    images: std::collections::BTreeMap<u64, (wgpu::Texture, wgpu::BindGroup, u64)>,
 }
 
 impl Renderer {
@@ -247,6 +249,7 @@ impl Renderer {
             frame: 0,
             stats: Stats::default(),
             policy: CachePolicy::default(),
+            images: std::collections::BTreeMap::new(),
         };
         r.gpu.take_errors()?;
         Ok(r)

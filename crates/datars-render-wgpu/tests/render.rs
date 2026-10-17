@@ -833,3 +833,51 @@ fn a_path_drawn_in_chunks_shows_no_seams_between_them() {
         assert_eq!(img.px(x, y), [0, 0, 255, 255], "({x}, {y}): an edge between squares");
     }
 }
+
+/// A two-layer icon (a filled square in the instance's colour, a stroked diagonal in slot 0) at
+/// two points: what every backend draws the same way.
+fn icon_instances(c: Color, slot: Color) -> InstancesOp {
+    use datars_scene::{IconGlyph, IconInk, IconLayer, IconStroke};
+    let sq = PathData::rect(Rect::new(-1.0, -1.0, 2.0, 2.0));
+    let diag = PathData::polyline(&[Vec2::new(-1.0, 1.0), Vec2::new(1.0, -1.0)]);
+    let glyph = IconGlyph {
+        name: Arc::from("test:square"),
+        layers: vec![
+            IconLayer { path: Arc::new(sq), fill: Some(IconInk::Current), rule: FillRule::NonZero, stroke: None, opacity: 1.0 },
+            IconLayer { path: Arc::new(diag), fill: None, rule: FillRule::NonZero, stroke: Some(IconStroke { ink: IconInk::Slot(0), width: 0.2, cap: Cap::Butt, join: Join::Miter }), opacity: 1.0 },
+        ],
+        inks: vec![datars_theme::Ink::Color(slot)],
+        aspect: 1.0,
+    };
+    InstancesOp { proto: Proto::Icon { icon: Arc::new(glyph) }, ..symbols(SymbolKind::Circle, &[(20.0, 20.0), (60.0, 20.0)], 10.0, c) }
+}
+
+#[test]
+fn icon_instances_draw_their_layers_in_their_inks() {
+    let Some(mut r) = renderer(80, 40, 1.0) else { return };
+    let img = render(&mut r, &list(80.0, 40.0, vec![Op::Instances(icon_instances(red(), blue()))]));
+    assert_px(&img, 14, 14, RED, 2); // the square, in the instance's colour
+    assert_px(&img, 54, 14, RED, 2);
+    let d = img.px(20, 20); // the diagonal across its middle, in slot 0's ink (edges anti-aliased)
+    assert!(d[2] > 150 && d[0] < 100, "{d:?}");
+    assert_px(&img, 40, 20, WHITE, 2); // between the two
+}
+
+#[test]
+fn a_picture_fills_its_rect_from_its_texels() {
+    let Some(mut r) = renderer(40, 20, 1.0) else { return };
+    // 2 × 1: red then green, drawn into 40 × 20.
+    let mut png = Vec::new();
+    {
+        let mut e = png::Encoder::new(&mut png, 2, 1);
+        e.set_color(png::ColorType::Rgba);
+        e.write_header().unwrap().write_image_data(&[255, 0, 0, 255, 0, 255, 0, 255]).unwrap();
+    }
+    let raster = Arc::new(datars_render::Raster::decode(&png).unwrap());
+    let op = Op::Image { asset: Arc::from("p.png"), rect: Rect::new(0.0, 0.0, 40.0, 20.0), xf: Affine::IDENTITY, opacity: 1.0, image: Some(raster) };
+    let img = render(&mut r, &list(40.0, 20.0, vec![op]));
+    assert_px(&img, 3, 10, RED, 3);
+    assert_px(&img, 36, 10, GREEN, 3);
+    let mid = img.px(20, 10);
+    assert!(mid[0] > 80 && mid[1] > 80, "blended between the texels: {mid:?}");
+}

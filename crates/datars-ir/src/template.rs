@@ -176,10 +176,21 @@ pub enum TKind {
         #[serde(default)]
         params: serde_json::Value,
     },
+    /// A picture (a raster logo, a photo): `asset` names the file (a path relative to the
+    /// document, an `https://` URL; PNG), drawn into `rect` (`[x, y, w, h]`) as `fit` says. The
+    /// build step ships the file in the bundle; the engine never fetches it (P10).
     Image {
-        asset: String,
+        asset: Prop,
         rect: [Prop; 4],
+        /// `contain` (the default: all of it, its aspect kept, centred), `cover` (fills the rect,
+        /// cut to it), `fill` (stretched to the rect), `none` (its own size, centred, cut).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        fit: Option<String>,
     },
+    /// An icon (docs/04-primitives.md §Icons): a vector drawing from the default set
+    /// (`"heart"`, `"lucide:heart"`), a theme icon token (`"$icon.up"`), a project SVG or an
+    /// `https://` URL, or inline SVG markup — drawn `size` px at `at`, in `ink`.
+    Icon(TIcon),
     /// Features of a vector-tile source, streamed for what the enclosing view shows: the engine
     /// picks the tiles covering the view at a zoom matching the camera, and draws each tile layer's
     /// features through a template in the enclosing `geo` coordinate system. Resolved late — per
@@ -193,6 +204,36 @@ impl Default for TKind {
     }
 }
 
+
+/// An `icon` node. Decorative unless it has `semantics` (a label: an icon that stands for a word).
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct TIcon {
+    /// Which icon: a name (`heart`, `lucide:heart`), `$icon.<token>`, a file or URL ending in
+    /// `.svg`, inline markup (`<svg …>`), or path data (`{ "d": "M…", "viewBox": [0, 0, 24, 24],
+    /// "stroke": 2 }`, filled — or stroked that wide — in `ink`). May be an expression.
+    pub icon: Prop,
+    /// The anchor point (by default the icon's centre; see `anchor`).
+    pub at: [Prop; 2],
+    /// The side of the square box the icon fits in, px (default: the theme's `size.icon`, else
+    /// 16). Not `size`, which is the node's layout size.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub icon_size: Prop,
+    /// The ink of `currentColor` (and of a one-colour file). Default `$ink`.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub ink: Prop,
+    /// Inks for the file's other colours, by slot (the order it first uses them); unset slots
+    /// take `$categorical[i]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inks: Vec<Prop>,
+    /// Degrees clockwise, about `at`.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub rotate: Prop,
+    /// Where `at` is on the box: `center` (default), `top`, `bottom`, `left`, `right`,
+    /// `top-left`, `top-right`, `bottom-left`, `bottom-right`.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub anchor: Prop,
+}
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -325,6 +366,32 @@ pub struct TText {
     /// with none clear it stays and gets a halo (a reference line's label, a note).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub alternatives: Vec<TTextPlace>,
+    /// Set along a path instead of a straight line (curved labels on arcs and circles): each
+    /// glyph sits on the path, turned with it. `at` is then ignored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<TTextPath>,
+}
+
+/// The line a text follows: SVG path data, or an arc. Measured like any text; a text longer than
+/// its path is left out (and said so by `datars labels`) rather than run off its end.
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct TTextPath {
+    /// SVG path data (literal or an expression).
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub d: Prop,
+    /// An arc instead: `[cx, cy, r, a0, a1]`, angles in radians clockwise from 12 o'clock (as
+    /// `geom.arc`). Text runs from `a0` towards `a1`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arc: Option<[Prop; 5]>,
+    /// Where along the path the text's `align` point goes, as a share of its length (default by
+    /// `align`: 0 for start, 0.5 middle, 1 end).
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub offset: Prop,
+    /// Keep the text reading left to right: on a path that runs right to left (the lower half of
+    /// a circle) it's set along the path reversed. Default true.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub upright: Prop,
 }
 
 /// One more place a text may go: where, and how it hangs from there.
@@ -399,9 +466,17 @@ pub enum RepeatFrom {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct TInstances {
     pub from: String,
-    /// `circle | square | diamond | triangle | cross | star | rect`
+    /// `circle | square | diamond | triangle | cross | star | rect | icon`
     #[serde(default = "circle")]
     pub proto: String,
+    /// `proto: icon`: which icon every instance draws (as an `icon` node's `icon`; evaluated
+    /// once, not per row), in its row's `fill` — thousands of one icon as one node (pictograms,
+    /// unit charts, map markers). `r` is half the icon's box.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub icon: Prop,
+    /// `proto: icon`: inks for the icon's other colours, by slot.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inks: Vec<Prop>,
     /// Per-instance key (an expression over the row). Separate from the node's own `key`: the
     /// instances node keeps one identity, each instance another.
     #[serde(default, skip_serializing_if = "Prop::is_null")]

@@ -85,9 +85,16 @@ impl<'a> Canvas<'a> {
             Op::Glyphs { font, size, glyphs, origin, scale, rotate, color, halo, .. } => {
                 self.glyphs(font, *size, glyphs, *origin, *scale, *rotate, *color, *halo)
             }
+            // Icons draw as the fills and strokes they're made of, instance by instance.
+            Op::Instances(i) if matches!(i.proto, datars_scene::Proto::Icon { .. }) => {
+                for o in i.icon_ops() {
+                    self.op(&o);
+                }
+            }
             Op::Instances(i) => self.instances(i),
-            // Images are not supported yet: they draw nothing (documented in the crate docs).
-            Op::Image { .. } => {}
+            Op::Image { rect, xf, opacity, image: Some(img), .. } => self.image(img, *rect, xf, *opacity),
+            // Not arrived yet: nothing (no stand-in that would then jump).
+            Op::Image { image: None, .. } => {}
             Op::PushClip { path, xf, rule } => self.push_clip(&path.path, xf, *rule),
             Op::PopClip => self.pop_clip(),
             Op::PushLayer { opacity, blend } => self.push_layer(*opacity, *blend),
@@ -147,6 +154,13 @@ impl<'a> Canvas<'a> {
         let Some(shader) = Shader::new(paint, &dev, opacity) else { return };
         let Some(polys) = self.flatten_visible(path, &dev, 1.0) else { return };
         self.fill_polys(&polys, rule, &shader);
+    }
+
+    fn image(&mut self, img: &std::sync::Arc<datars_render::Raster>, rect: Rect, xf: &Affine, opacity: f32) {
+        let dev = self.device(xf);
+        let Some(shader) = Shader::image(img, rect, &dev, opacity) else { return };
+        let Some(polys) = self.flatten_visible(&PathData::rect(rect), &dev, 1.0) else { return };
+        self.fill_polys(&polys, FillRule::NonZero, &shader);
     }
 
     fn fill_polys(&mut self, polys: &[(Vec<Vec2>, bool)], rule: FillRule, shader: &Shader) {

@@ -33,6 +33,21 @@ Mono, Fraunces). They are downloaded at build time into a local cache and are no
 repository. They are published under the OFL (**to confirm** per family), and the subsets that
 ship in the site's bundles carry their licence records.
 
+## Icons
+
+The default icon set is [Lucide](https://lucide.dev) 1.49.0, vendored from the `lucide-static`
+npm package by `scripts/vendor-icons.mjs` into `assets/icons/lucide/icons.json` (every icon's
+elements as written, the shared root once), with its licence file next to it
+(`assets/icons/lucide/LICENSE`). It is compiled into the CLI and native tools (the `bundled`
+feature of `datars-icon`), never into the web runtime. Published bundles carry only the icons a
+chart draws, in their `icons` chunk, and record the set and its licence in the manifest's
+`assets`.
+
+| Set | Files | Copyright | Licence |
+|---|---|---|---|
+| Lucide 1.49.0 | `assets/icons/lucide/icons.json` | © 2026 Lucide Icons and Contributors | ISC, `assets/icons/lucide/LICENSE` |
+| (within Lucide) the icons derived from Feather, listed in the licence file | the same | © 2013-present Cole Bemis | MIT, in the same file |
+
 ## Code
 
 ### QuickJS (compiled in, not vendored)

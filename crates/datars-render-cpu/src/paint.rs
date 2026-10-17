@@ -16,6 +16,9 @@ pub enum Shader {
     Solid([u8; 4]),
     Linear { lut: Box<[[u8; 4]; LUT]>, t0: f64, tx: f64, ty: f64 },
     Radial { lut: Box<[[u8; 4]; LUT]>, inv: Affine, c: Vec2, inv_r: f64 },
+    /// A picture: device pixel centres map back to texels (`inv`), sampled bilinearly, times
+    /// `opacity` (0–256).
+    Image { raster: std::sync::Arc<datars_render::Raster>, inv: Affine, opacity: u32 },
 }
 
 impl Shader {
@@ -73,7 +76,26 @@ impl Shader {
                 let q = inv.apply(Vec2::new(x as f64 + 0.5, y as f64 + 0.5)) - *c;
                 lut[index(q.len() * inv_r)]
             }
+            Shader::Image { raster, inv, opacity } => {
+                let q = inv.apply(Vec2::new(x as f64 + 0.5, y as f64 + 0.5));
+                let p = raster.sample(q.x, q.y);
+                if *opacity >= 256 {
+                    p
+                } else {
+                    p.map(|v| ((v as u32 * opacity + 128) >> 8) as u8)
+                }
+            }
         }
+    }
+
+    /// A picture drawn stretched into `rect` (local units) through `xf` (local → device).
+    pub fn image(raster: &std::sync::Arc<datars_render::Raster>, rect: datars_math::Rect, xf: &Affine, opacity: f32) -> Option<Shader> {
+        let op = (unit(opacity) * 256.0).round() as u32;
+        if op == 0 || raster.width == 0 || raster.height == 0 || rect.w == 0.0 || rect.h == 0.0 {
+            return None;
+        }
+        let tex = xf.mul(Affine::translate(rect.x, rect.y)).mul(Affine::scale(rect.w / raster.width as f64, rect.h / raster.height as f64));
+        Some(Shader::Image { raster: raster.clone(), inv: tex.inverse()?, opacity: op })
     }
 }
 

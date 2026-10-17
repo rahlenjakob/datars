@@ -60,7 +60,7 @@ fn call(name: &str, a: &Value) -> Result<Value, String> {
         let dir = std::path::Path::new(doc_path).parent().filter(|d| !d.as_os_str().is_empty()).unwrap_or(std::path::Path::new("."));
         // Automatic basemaps (`tiles: "auto"`) are made before anything draws them.
         datars_build::auto::ensure_default(&json, dir)?;
-        datars_headless::load_at_with(&json, Some(dir), &datars_build::fonts::acquire::fetch_with(&fonts, Some(dir)))
+        datars_headless::load_at_with_assets(&json, Some(dir), &datars_build::fonts::acquire::fetch_with(&fonts, Some(dir)), Some(datars_build::fonts::acquire::asset_fetch(Some(dir))))
     };
     Ok(match name {
         "check" => {

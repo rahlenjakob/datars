@@ -25,6 +25,7 @@ datars-test = { workspace = true, features = ["gpu"] }
 datars-build.workspace = true
 datars-bundle.workspace = true
 datars-scene.workspace = true
+datars-icon = { workspace = true, features = ["bundled"] }
 datars-math.workspace = true
 flate2.workspace = true
 datars-ir = { workspace = true, features = ["schema"] }

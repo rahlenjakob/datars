@@ -8,7 +8,10 @@
 //!   copyable (Latin-1 text; other scripts stay outlines only).
 //! - Layers (`PushLayer`) become transparency groups, composited with their opacity and blend
 //!   mode — the same compositing the CPU reference does; clips nest with `q … W n … Q`.
-//! - Gradients become axial/radial shadings; instances expand to their paths.
+//! - Gradients become axial/radial shadings; instances expand to their paths (icons to their
+//!   layers' fills and strokes).
+//! - Pictures become image XObjects (RGB, Flate-compressed, with their alpha as a soft mask),
+//!   each written once however many times it's drawn.
 //!
 //! Deterministic: fixed number formatting, objects in creation order, compressed with fixed
 //! settings — the same list gives the same bytes on every machine.
@@ -47,6 +50,8 @@ struct Writer<'a> {
     gstates: Vec<((u32, u32, Blend), String)>,
     patterns: Vec<(String, usize)>,
     xobjects: Vec<(String, usize)>,
+    /// Pictures written: (content hash, resource name, object id).
+    images: Vec<(u64, String, usize)>,
     /// Open layers: (opacity, blend).
     layers: Vec<(f32, Blend)>,
     width: f64,
@@ -266,6 +271,41 @@ impl Writer<'_> {
     }
 }
 
+impl Writer<'_> {
+    /// A picture stretched into `rect` through `xf`: its XObject (written once), then drawn.
+    fn image(&mut self, img: &datars_render::Raster, rect: datars_math::Rect, xf: &Affine, opacity: f32) {
+        if opacity <= 0.0 || rect.w == 0.0 || rect.h == 0.0 {
+            return;
+        }
+        let name = match self.images.iter().find(|(h, ..)| *h == img.hash) {
+            Some((_, name, _)) => name.clone(),
+            None => {
+                // Straight RGB from the premultiplied texels, and the alpha as a grey soft mask.
+                let n_px = (img.width * img.height) as usize;
+                let (mut rgb, mut alpha) = (Vec::with_capacity(n_px * 3), Vec::with_capacity(n_px));
+                for p in img.premul.as_chunks::<4>().0 {
+                    let a = p[3] as u32;
+                    let un = |c: u8| (c as u32 * 255 + a / 2).checked_div(a).map_or(0, |v| v.min(255) as u8);
+                    rgb.extend_from_slice(&[un(p[0]), un(p[1]), un(p[2])]);
+                    alpha.push(p[3]);
+                }
+                let dims = format!("/Type /XObject /Subtype /Image /Width {} /Height {} /BitsPerComponent 8", img.width, img.height);
+                let mask = self.object(Writer::stream(&format!("{dims} /ColorSpace /DeviceGray"), &alpha));
+                let id = self.object(Writer::stream(&format!("{dims} /ColorSpace /DeviceRGB /SMask {mask} 0 R"), &rgb));
+                let name = format!("Im{}", self.images.len());
+                self.images.push((img.hash, name.clone(), id));
+                name
+            }
+        };
+        // Image space is the unit square, its first row at the top (v = 1): onto the rect, y down.
+        let m = xf.mul(Affine([rect.w, 0.0, 0.0, -rect.h, rect.x, rect.y + rect.h]));
+        let [a, b, c, d, e, f] = m.0;
+        let g = (opacity < 1.0).then(|| self.gstate(opacity, opacity, Blend::Normal));
+        let gs = g.map(|g| format!("/{g} gs ")).unwrap_or_default();
+        let _ = writeln!(self.out(), "q {gs}{} {} {} {} {} {} cm /{name} Do Q", n(a), n(b), n(c), n(d), n(e), n(f));
+    }
+}
+
 /// The display list as a one-page PDF.
 pub fn to_pdf(list: &DisplayList, glyphs: &dyn GlyphSource) -> Vec<u8> {
     to_pdf_pages(std::slice::from_ref(list), glyphs)
@@ -275,7 +315,7 @@ pub fn to_pdf(list: &DisplayList, glyphs: &dyn GlyphSource) -> Vec<u8> {
 /// size of its list. Graphics states, gradients, groups and the search-text font are resources
 /// shared by every page. One list gives exactly the bytes of [`to_pdf`].
 pub fn to_pdf_pages(lists: &[DisplayList], glyphs: &dyn GlyphSource) -> Vec<u8> {
-    let mut w = Writer { glyphs, stack: vec![String::new()], objects: Vec::new(), gstates: Vec::new(), patterns: Vec::new(), xobjects: Vec::new(), layers: Vec::new(), width: 0.0, height: 0.0, uses_text: false };
+    let mut w = Writer { glyphs, stack: vec![String::new()], objects: Vec::new(), gstates: Vec::new(), patterns: Vec::new(), xobjects: Vec::new(), images: Vec::new(), layers: Vec::new(), width: 0.0, height: 0.0, uses_text: false };
     let catalog = w.reserve();
     let pages = w.reserve();
     let mut written = Vec::with_capacity(lists.len());
@@ -293,7 +333,7 @@ pub fn to_pdf_pages(lists: &[DisplayList], glyphs: &dyn GlyphSource) -> Vec<u8> 
     };
     let gs: Vec<String> = w.gstates.iter().map(|((f, s, b), name)| format!("/{name} << /ca {} /CA {} /BM /{} >>", n(*f as f64 / 1000.0), n(*s as f64 / 1000.0), blend_name(*b))).collect();
     let pats: Vec<String> = w.patterns.iter().map(|(name, id)| format!("/{name} {id} 0 R")).collect();
-    let xos: Vec<String> = w.xobjects.iter().map(|(name, id)| format!("/{name} {id} 0 R")).collect();
+    let xos: Vec<String> = w.xobjects.iter().map(|(name, id)| format!("/{name} {id} 0 R")).chain(w.images.iter().map(|(_, name, id)| format!("/{name} {id} 0 R"))).collect();
     let font = if w.uses_text { "/Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >> >>" } else { "" };
     let resources = format!("<< /ExtGState << {} >> /Pattern << {} >> /XObject << {} >> {font} >>", gs.join(" "), pats.join(" "), xos.join(" "));
     // One dictionary for every page and group: an indirect object, written once.
@@ -347,6 +387,15 @@ fn draw_page(w: &mut Writer, list: &DisplayList) -> usize {
             Op::Fill { path, xf, paint, rule, opacity } => w.fill(&path.path.transform(xf), paint, *rule, *opacity),
             Op::Stroke { path, xf, style, paint, opacity } => w.stroke(&path.path.transform(xf), style, paint, *opacity),
             Op::Glyphs { font, size, glyphs: g, origin, scale, rotate, color, halo, text } => w.glyphs(font, *size, g, *origin, *scale, *rotate, *color, *halo, text.as_deref()),
+            Op::Instances(i) if matches!(i.proto, datars_scene::Proto::Icon { .. }) => {
+                for o in i.icon_ops() {
+                    match o {
+                        Op::Fill { path, xf, paint, rule, opacity } => w.fill(&path.path.transform(&xf), &paint, rule, opacity),
+                        Op::Stroke { path, xf, style, paint, opacity } => w.stroke(&path.path.transform(&xf), &style, &paint, opacity),
+                        _ => {}
+                    }
+                }
+            }
             Op::Instances(i) => {
                 for k in 0..i.len() {
                     let p = i.instance_path(k);
@@ -358,6 +407,7 @@ fn draw_page(w: &mut Writer, list: &DisplayList) -> usize {
                     }
                 }
             }
+            Op::Image { rect, xf, opacity, image: Some(img), .. } => w.image(img, *rect, xf, *opacity),
             Op::Image { .. } => {}
             Op::PushClip { path, xf, rule } => {
                 clips += 1;
@@ -441,5 +491,17 @@ mod tests {
         assert_eq!(text.matches("/ca 0.5").count(), 1, "graphics states are shared between pages");
         assert_eq!(to_pdf_pages(&lists[..1], &NoGlyphs), to_pdf(&lists[0], &NoGlyphs), "one list: the same bytes as to_pdf");
         assert_eq!(to_pdf_pages(&lists, &NoGlyphs), pdf, "deterministic");
+    }
+
+    #[test]
+    fn a_picture_is_an_image_xobject_written_once() {
+        let raster = std::sync::Arc::new(datars_render::Raster { width: 2, height: 1, premul: std::sync::Arc::from([255u8, 0, 0, 255, 0, 0, 128, 128].as_slice()), encoded: std::sync::Arc::from([0u8].as_slice()), hash: 9 });
+        let img = |x: f64| Op::Image { asset: std::sync::Arc::from("p.png"), rect: datars_math::Rect::new(x, 0.0, 20.0, 10.0), xf: Affine::IDENTITY, opacity: 1.0, image: Some(raster.clone()) };
+        let list = DisplayList { width: 100.0, height: 50.0, background: Color::WHITE, ops: vec![img(0.0), img(40.0)] };
+        let pdf = to_pdf(&list, &NoGlyphs);
+        let text = String::from_utf8_lossy(&pdf);
+        assert_eq!(text.matches("/Subtype /Image").count(), 2, "the picture and its soft mask, once");
+        assert!(text.contains("/SMask") && text.contains("/Width 2 /Height 1"));
+        assert!(text.contains("/XObject << /Im0"), "a resource the page draws");
     }
 }

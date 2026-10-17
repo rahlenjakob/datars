@@ -85,6 +85,9 @@ var geom = {
   polyline: (g) => clean({ type: "polyline", ...g }),
   area: (g) => clean({ type: "area", ...g }),
   path: (d) => clean({ type: "path", d }),
+  /** A symbol at (x, y), `size` its radius: `circle` (default), `square`, `diamond`, `triangle`,
+   * `cross`, `star` — or an icon (`lucide:heart`, `$icon.up`, a `.svg` file; see `icon()`), drawn
+   * in the shape's fill in a box `2 × size` across. */
   symbol: (g) => clean({ type: "symbol", ...g }),
   /** A feature of a geo source by id — or, with no arguments inside a `tiles` layer template, the
    * current tile feature's own geometry. */
@@ -100,17 +103,27 @@ function shape(g, opts = {}) {
   return node("shape", rest, { geom: g, fill, stroke: stroke(st), markers });
 }
 function text(content, at, opts = {}) {
-  const { style, halo, number, rotate, offset, alternatives, ...rest } = opts;
+  const { style, halo, number, rotate, offset, alternatives, path, ...rest } = opts;
   const st = style ? clean({ font: style.font, size: style.size, weight: style.weight, ink: style.ink, align: style.align, baseline: style.baseline, max_width: style.maxWidth, contain: style.contain }) : {};
-  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset, alternatives: alternatives?.length ? alternatives : void 0 });
+  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset, alternatives: alternatives?.length ? alternatives : void 0, path: path ? clean({ ...path }) : void 0 });
+}
+function icon(name, at, opts = {}) {
+  const { size, ink, inks, rotate, anchor, label, ...rest } = opts;
+  const semantics = rest.semantics ?? (label !== void 0 ? { role: "label", label } : void 0);
+  return node("icon", { ...rest, semantics }, { icon: name, at, icon_size: size, ink, inks: inks?.length ? inks : void 0, rotate, anchor });
+}
+function image(src2, rect, opts = {}) {
+  const { fit, alt, ...rest } = opts;
+  const semantics = rest.semantics ?? (alt !== void 0 ? { role: "label", label: alt } : void 0);
+  return node("image", { ...rest, semantics }, { asset: src2, rect, fit });
 }
 function repeat(from, template) {
   return clean({ kind: "repeat", from, template });
 }
 function instances(o) {
-  const { from, proto, instanceKey, x, y, r, w, h, fill, opacity, stroke: st, screenSize, label, hit, reach, lod, ...rest } = o;
+  const { from, proto, icon: ic, inks, instanceKey, x, y, r, w, h, fill, opacity, stroke: st, screenSize, label, hit, reach, lod, ...rest } = o;
   const l = lod === true ? {} : lod ? clean({ points: lod.points, budget: lod.budget }) : void 0;
-  return node("instances", rest, { from, proto: proto ?? "circle", instance_key: instanceKey, x, y, r, w, h, fill, instance_opacity: opacity, stroke: stroke(st), screen_size: screenSize || void 0, label, hit, reach, lod: l });
+  return node("instances", rest, { from, proto: proto ?? (ic !== void 0 ? "icon" : "circle"), icon: ic, inks: inks?.length ? inks : void 0, instance_key: instanceKey, x, y, r, w, h, fill, instance_opacity: opacity, stroke: stroke(st), screen_size: screenSize || void 0, label, hit, reach, lod: l });
 }
 function tiles(opts) {
   const { source, layers, tileSize, ...rest } = opts;
@@ -557,6 +570,8 @@ export {
   geom,
   ghost,
   group,
+  icon,
+  image,
   instances,
   interactive,
   isExpr,

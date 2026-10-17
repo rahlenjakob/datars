@@ -16,5 +16,6 @@ datars-render.workspace = true
 png.workspace = true
 
 [dev-dependencies]
+png.workspace = true
 datars-theme.workspace = true
 datars-render-svg.workspace = true

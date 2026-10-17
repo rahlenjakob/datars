@@ -104,7 +104,7 @@ impl InstNode {
                 let h = ins.h.as_ref().and_then(|v| v.get(i)).copied().unwrap_or(1.0);
                 Vec2::new(ins.x[i] + w / 2.0, ins.y[i] + h / 2.0)
             }
-            Proto::Symbol { .. } => Vec2::new(ins.x[i], ins.y[i]),
+            Proto::Symbol { .. } | Proto::Icon { .. } => Vec2::new(ins.x[i], ins.y[i]),
         }
     }
     pub fn node_opacity(&self) -> f64 {

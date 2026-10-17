@@ -85,6 +85,83 @@ fn settle_tiles(engine: &mut Engine, fetch: &dyn Fn(&Request) -> Option<Vec<u8>>
     }
 }
 
+/// Fetch the icons and pictures every state draws, the way a host would: resolve, serve the
+/// `icon:`/`image:` requests, repeat until nothing is missing. What arrives ships in the bundle
+/// (and its baked scenes draw it); what can't be fetched is said in the report.
+fn settle_assets(engine: &mut Engine, fetch: &dyn Fn(&Request) -> Option<Vec<u8>>, report: &mut Report) {
+    let n = engine.state_names().len();
+    for _ in 0..4 {
+        for i in 0..n {
+            engine.scene_for_state(i);
+        }
+        let asks: Vec<(String, String)> = engine
+            .requests()
+            .into_iter()
+            .filter_map(|r| match r {
+                Request::Source { name, url } if name.starts_with("icon:") || name.starts_with("image:") => Some((name, url)),
+                _ => None,
+            })
+            .collect();
+        if asks.is_empty() {
+            return;
+        }
+        for (name, url) in asks {
+            match fetch(&Request::Source { name: name.clone(), url: url.clone() }) {
+                Some(bytes) => {
+                    if let Err(e) = engine.provide(&name, &bytes) {
+                        report.decisions.push(format!("warning: {e}"));
+                    }
+                }
+                None => {
+                    let why = match url.strip_prefix("datars:icons/").and_then(|r| r.split_once('/')) {
+                        Some((set, file)) => format!("the {set} set has no icon `{}` (`datars icons <word>` searches it)", file.trim_end_matches(".svg")),
+                        None => format!("{url} could not be read"),
+                    };
+                    report.decisions.push(format!("warning: {name}: {why}"));
+                    engine.asset_failed(&name, &why);
+                }
+            }
+        }
+    }
+}
+
+/// The icons and pictures a chart draws, as chunks — one `icons` chunk (the compact drawings of
+/// every icon, by key) and an `image` chunk per picture (its file as shipped) — and their credits.
+fn asset_chunks(engine: &Engine, b: &mut Builder, report: &mut Report) -> (Option<String>, Vec<String>, Vec<datars_bundle::AssetCredit>) {
+    let mut credits: Vec<datars_bundle::AssetCredit> = Vec::new();
+    let icons = engine.icons_drawn();
+    let icons_chunk = (!icons.is_empty()).then(|| {
+        let mut all = serde_json::Map::new();
+        for (key, icon) in &icons {
+            all.insert(key.clone(), serde_json::from_str(&icon.to_json()).unwrap_or_default());
+            let (from, name, licence, version) = match datars_icon::Source::parse(key) {
+                Some(datars_icon::Source::Set { set, name }) => {
+                    let s = datars_icon::set::bundled(&set);
+                    (format!("datars:icons/{set}"), Some(name), s.map(|s| s.licence.clone()).unwrap_or_else(|| "unknown".into()), s.map(|s| s.version.clone()))
+                }
+                _ => (key.clone(), None, "unknown".to_string(), None),
+            };
+            match credits.iter_mut().find(|c| c.kind == "icons" && c.from == from) {
+                Some(c) => c.names.extend(name),
+                None => credits.push(datars_bundle::AssetCredit { kind: "icons".into(), from, licence, version, names: name.into_iter().collect() }),
+            }
+        }
+        let bytes = serde_json::to_vec(&serde_json::Value::Object(all)).unwrap_or_default();
+        report.decisions.push(format!("icons: {} drawn, {} B gzipped, shipped with T2/T3 (baked scenes hold their shapes)", icons.len(), gzip_len(&bytes)));
+        b.chunk("icons", bytes, meta(&[("count", icons.len().into())]))
+    });
+    let mut images = Vec::new();
+    for (src, raster) in engine.images_drawn() {
+        report.decisions.push(format!("picture `{src}`: {} × {} px, {} KB, shipped with every playable tier", raster.width, raster.height, raster.encoded.len() / 1024));
+        images.push(b.chunk("image", raster.encoded.to_vec(), meta(&[("source", src.clone().into()), ("width", raster.width.into()), ("height", raster.height.into())])));
+        credits.push(datars_bundle::AssetCredit { kind: "image".into(), from: src, licence: "unknown".into(), version: None, names: Vec::new() });
+    }
+    for c in credits.iter().filter(|c| c.licence == "unknown") {
+        report.decisions.push(format!("note: {} `{}` has no licence on record; make sure you may publish it", if c.kind == "image" { "picture" } else { "icon" }, c.from));
+    }
+    (icons_chunk, images, credits)
+}
+
 /// Polygon GeoJSON (atlases, region files) ships as a decimal topology when that is smaller:
 /// shared borders stored once, integer deltas. Chosen only after checking the topology decodes to
 /// exactly the same features — ids, properties and every coordinate — so charts are bit-identical.
@@ -136,6 +213,10 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
                 continue;
             }
         };
+        // Icons and pictures: fetched with every state's (`settle_assets`), shipped as their own chunks.
+        if name.starts_with("icon:") || name.starts_with("image:") {
+            continue;
+        }
         if matches!(req, Request::Slot { .. }) {
             report.decisions.push(format!("data slot `{name}`: filled by the host at runtime"));
             runtime_text = true;
@@ -194,6 +275,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
     }
     let floor = format!(">={}", opts.runtime_floor);
     settle_tiles(&mut engine, fetch);
+    settle_assets(&mut engine, fetch, &mut report);
 
     // Shared across tiers: the accessible text and the poster.
     let baked = engine.bake();
@@ -252,6 +334,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
     // Fonts ship with every playable variant (T1's baked glyph runs need their outlines too);
     // script subsets only with the variants that resolve text on the device.
     let font_chunks = packed.eager.clone();
+    let (icons_chunk, image_chunks, asset_credits) = asset_chunks(&engine, &mut b, &mut report);
     let mut a11y = Vec::new();
     for (i, (name, _)) in baked.iter().enumerate() {
         engine.goto(i);
@@ -293,6 +376,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
     if t1 {
         let mut chunks = vec![poster.clone(), text.clone()];
         chunks.extend(font_chunks.iter().cloned());
+        chunks.extend(image_chunks.iter().cloned());
         let shell = b.chunk("program", serde_json::to_vec(&program).unwrap_or_default(), BTreeMap::new());
         chunks.push(shell);
         for (i, ((name, _), json)) in baked.iter().zip(&baked_json).enumerate() {
@@ -310,6 +394,8 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
                 chunks.extend(data_chunks.iter().cloned());
                 chunks.extend(font_chunks.iter().cloned());
                 chunks.extend(packed.lazy.iter().cloned());
+                chunks.extend(icons_chunk.iter().cloned());
+                chunks.extend(image_chunks.iter().cloned());
                 b.variant(Tier::T2, Requires { runtime: floor.clone(), modules: vec!["core".into(), "graph".into()], ..Default::default() }, &chunks, serde_json::json!({}));
                 report.decisions.push("T2: recipes pre-expanded (no sandbox at runtime)".into());
             }
@@ -322,6 +408,8 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
         chunks.extend(data_chunks.iter().cloned());
         chunks.extend(font_chunks.iter().cloned());
         chunks.extend(packed.lazy.iter().cloned());
+        chunks.extend(icons_chunk.iter().cloned());
+        chunks.extend(image_chunks.iter().cloned());
         // Pinned to this build's std: a runtime with another one plays T2 instead (same output).
         b.variant(Tier::T3, Requires { runtime: floor, modules: vec!["core".into(), "graph".into(), "sandbox".into()], packages: datars_engine::bundle::packages() }, &chunks, serde_json::json!({}));
     }
@@ -330,6 +418,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
     bundle.manifest.title = (!doc.title.is_empty()).then(|| doc.title.clone());
     bundle.manifest.size = Some([doc.size.width, doc.size.height]);
     bundle.manifest.fonts = packed.credits;
+    bundle.manifest.assets = asset_credits;
     if let Some(key) = &opts.sign {
         bundle.manifest.sign(key);
     }

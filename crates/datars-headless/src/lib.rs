@@ -32,7 +32,16 @@ pub fn load_at(json: &str, dir: Option<&Path>) -> Result<Engine, String> {
 /// (Google Fonts, font URLs) through its cache, so previews draw what bundles ship. Tile ranges
 /// are still read from disk relative to `dir`.
 pub fn load_at_with(json: &str, dir: Option<&Path>, fetch: &dyn Fn(&Request) -> Option<Vec<u8>>) -> Result<Engine, String> {
+    load_at_with_assets(json, dir, fetch, None)
+}
+
+/// [`load_at_with`], with icons and pictures answered as resolves meet them by `assets` (owned,
+/// so the engine can keep asking): by default, from disk relative to `dir` and the default icon
+/// set compiled in.
+pub fn load_at_with_assets(json: &str, dir: Option<&Path>, fetch: &dyn Fn(&Request) -> Option<Vec<u8>>, assets: Option<Box<datars_engine::AssetFetch>>) -> Result<Engine, String> {
     let mut e = load(json)?;
+    let base = dir.map(Path::to_path_buf);
+    e.set_asset_fetch(assets.unwrap_or_else(|| Box::new(move |name, url| asset_from_disk(name, url, base.as_deref()))));
     // Tile archives are read by range as frames need them, like a host serving `Range` requests.
     let base = dir.map(Path::to_path_buf);
     e.set_range_fetch(Box::new(move |url, offset, length| read_range(&tile_file(url, base.as_deref())?, offset, length)));
@@ -55,9 +64,25 @@ pub fn load_at_with(json: &str, dir: Option<&Path>, fetch: &dyn Fn(&Request) -> 
     Ok(e)
 }
 
+/// An icon or picture from disk: `datars:icons/…` from the default set compiled in, relative
+/// paths against `dir` (remote URLs: `None`, no network here).
+pub fn asset_from_disk(_name: &str, url: &str, dir: Option<&Path>) -> Option<Vec<u8>> {
+    if url.starts_with("datars:") {
+        return datars_asset(url);
+    }
+    if url.contains("://") {
+        return None;
+    }
+    std::fs::read(dir.map(|d| d.join(url)).unwrap_or_else(|| PathBuf::from(url))).ok()
+}
+
 /// The bytes for a `datars:fonts/<file>` URL: the default fonts that ship with the datars
-/// toolchain and runtimes (compiled into this build, else the source tree's `fonts/`).
+/// toolchain and runtimes (compiled into this build, else the source tree's `fonts/`) — or for
+/// `datars:icons/<set>/<name>.svg`, an icon of a default set.
 pub fn datars_asset(url: &str) -> Option<Vec<u8>> {
+    if url.starts_with("datars:icons/") {
+        return datars_icon::set::bundled_svg(url).map(String::into_bytes);
+    }
     let rest = url.strip_prefix("datars:")?;
     let file = rest.strip_prefix("fonts/")?;
     if file.contains("..") || file.contains('/') {

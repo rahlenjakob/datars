@@ -13,6 +13,7 @@ datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
 datars-bundle.workspace = true
 datars-geo.workspace = true
 datars-ir.workspace = true
+datars-icon = { workspace = true, features = ["bundled"] }
 datars-scene.workspace = true
 datars-render-svg.workspace = true
 datars-headless.workspace = true
@@ -27,6 +28,8 @@ datars-text.workspace = true
 datars-theme.workspace = true
 
 [dev-dependencies]
+png.workspace = true
+datars-scene.workspace = true
 serde_json.workspace = true
 datars-math.workspace = true
 datars-render.workspace = true

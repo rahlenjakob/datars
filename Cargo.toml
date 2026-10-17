@@ -21,6 +21,7 @@ datars-color = { path = "crates/datars-color" }
 datars-theme = { path = "crates/datars-theme" }
 datars-text = { path = "crates/datars-text", default-features = false }
 datars-scene = { path = "crates/datars-scene" }
+datars-icon = { path = "crates/datars-icon" }
 datars-render = { path = "crates/datars-render" }
 datars-render-cpu = { path = "crates/datars-render-cpu" }
 datars-render-svg = { path = "crates/datars-render-svg" }

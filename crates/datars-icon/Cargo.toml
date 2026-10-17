@@ -1,0 +1,22 @@
+[package]
+name = "datars-icon"
+description = "Icons as chart material: a deterministic reader for the SVG subset icons and logos use, ink slots instead of colours, icon sources and the default set."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+homepage.workspace = true
+keywords = ["visualization", "icons", "svg"]
+categories = ["visualization", "graphics"]
+
+[dependencies]
+datars-math.workspace = true
+datars-scene.workspace = true
+datars-theme.workspace = true
+serde_json.workspace = true
+
+[features]
+# The default set (Lucide, ~600 KB) compiled in: tools and native hosts that answer `datars:icons/…`
+# requests themselves. The web runtime and published bundles never need it (bundles carry their icons).
+bundled = []

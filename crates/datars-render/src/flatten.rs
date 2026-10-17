@@ -154,6 +154,23 @@ fn node(cx: &mut Cx, n: &Node, parent: Affine, parent_opacity: f64) {
                 let scale = if t.screen_size { 1.0 } else { xf.scale_factor() };
                 let origin = xf.apply(t.origin) + t.offset * scale;
                 let halo = t.halo.as_ref().map(|(i, w)| (i.resolve(cx.theme).fade(opacity as f32), *w));
+                let glyphs: usize = t.runs.iter().map(|r| r.glyphs.len()).sum();
+                if let Some(along) = t.along.as_ref().filter(|a| a.len() == glyphs) {
+                    // Along a path: a glyph at a time, each at its place and turned with the path.
+                    let mut k = 0;
+                    for (i, r) in t.runs.iter().enumerate() {
+                        let color = r.ink.resolve(cx.theme).fade(opacity as f32);
+                        for (j, g) in r.glyphs.iter().enumerate() {
+                            let [x, y, turn, _] = along[k];
+                            k += 1;
+                            let text = (i == 0 && j == 0 && !t.text.is_empty()).then(|| Arc::<str>::from(t.text.as_ref()));
+                            let one: Arc<[datars_scene::GlyphPos]> = Arc::from([datars_scene::GlyphPos { id: g.id, x: 0.0, y: g.y }]);
+                            let at = xf.apply(t.origin + Vec2::new(x as f64, y as f64)) + t.offset * scale;
+                            cx.ops.push(Op::Glyphs { font: r.font.clone(), size: r.size, glyphs: one, origin: at, scale, rotate: turn as f64, color, halo, text });
+                        }
+                    }
+                    return finish(cx, clips, layered);
+                }
                 for (i, r) in t.runs.iter().enumerate() {
                     let color = r.ink.resolve(cx.theme).fade(opacity as f32);
                     let text = (i == 0 && !t.text.is_empty()).then(|| Arc::<str>::from(t.text.as_ref()));
@@ -161,7 +178,7 @@ fn node(cx: &mut Cx, n: &Node, parent: Affine, parent_opacity: f64) {
                 }
             }
         }
-        NodeKind::Image { asset, rect } => cx.ops.push(Op::Image { asset: asset.clone(), rect: *rect, xf, opacity: opacity as f32 }),
+        NodeKind::Image { asset, rect } => cx.ops.push(Op::Image { asset: asset.clone(), rect: *rect, xf, opacity: opacity as f32, image: None }),
         NodeKind::Instances(i) => {
             if !i.is_empty() {
                 let theme = cx.theme;
@@ -201,7 +218,7 @@ fn node(cx: &mut Cx, n: &Node, parent: Affine, parent_opacity: f64) {
                 };
                 let (x, y, size, w, h, fill, op) = cols;
                 cx.ops.push(Op::Instances(InstancesOp {
-                    proto: i.proto.clone(),
+                    proto: resolved_proto(cx.theme, &i.proto),
                     xf,
                     x,
                     y,
@@ -217,11 +234,28 @@ fn node(cx: &mut Cx, n: &Node, parent: Affine, parent_opacity: f64) {
             }
         }
     }
+    finish(cx, clips, layered);
+}
+
+/// Close what a node opened: its clips, then its layer.
+fn finish(cx: &mut Cx, clips: usize, layered: bool) {
     for _ in 0..clips {
         cx.ops.push(Op::PopClip);
     }
     if layered {
         cx.ops.push(Op::PopLayer);
+    }
+}
+
+/// An icon prototype with its slot inks resolved to colours (backends draw colours); other
+/// prototypes as they are.
+fn resolved_proto(theme: &ResolvedTheme, p: &datars_scene::Proto) -> datars_scene::Proto {
+    match p {
+        datars_scene::Proto::Icon { icon } if icon.inks.iter().any(|i| i.is_token()) => {
+            let inks = icon.inks.iter().map(|i| datars_theme::Ink::Color(i.resolve(theme))).collect();
+            datars_scene::Proto::Icon { icon: Arc::new(datars_scene::IconGlyph { inks, ..(**icon).clone() }) }
+        }
+        _ => p.clone(),
     }
 }
 
@@ -278,14 +312,38 @@ fn markers_ops(cx: &mut Cx, path: &PathData, m: &Markers, s: &Stroke, xf: Affine
     let color = paint(cx, &s.paint);
     let Some((first, _)) = polys.first() else { return };
     let Some((last, _)) = polys.last() else { return };
+    let theme = cx.theme;
     let mut emit = |tip: Vec2, from: Vec2, mk: &Marker| {
         let d = (tip - from).normalize();
-        let p = match *mk {
+        let p = match mk {
             Marker::Arrow { size } => {
                 let side = d.perp() * (size * 0.5);
-                PathData::polygon(&[tip, tip - d * size + side, tip - d * size - side])
+                PathData::polygon(&[tip, tip - d * *size + side, tip - d * *size - side])
             }
-            Marker::Dot { r } => PathData::circle(tip, r),
+            Marker::Dot { r } => PathData::circle(tip, *r),
+            Marker::Icon { icon, size } => {
+                // Centred on the end, its +x along the line, `size` px across; drawn in the
+                // stroke's paint where it says `currentColor`.
+                let k = size / 2.0;
+                let at = Affine::translate(tip.x, tip.y).mul(Affine([d.x, d.y, -d.y, d.x, 0.0, 0.0])).mul(Affine::scale(k, k));
+                let current = color.representative();
+                for l in &icon.layers {
+                    let ink = |i: &datars_scene::IconInk| match i {
+                        datars_scene::IconInk::Current => current,
+                        datars_scene::IconInk::Slot(n) => icon.inks.get(*n as usize).map(|x| x.resolve(theme)).unwrap_or(current),
+                    };
+                    let path = SharedPath::from_shared(&l.path);
+                    let op = (opacity * l.opacity) as f32;
+                    if let Some(f) = &l.fill {
+                        cx.ops.push(Op::Fill { path: path.clone(), xf: at, paint: DPaint::Solid(ink(f)), rule: l.rule, opacity: op });
+                    }
+                    if let Some(st) = &l.stroke {
+                        let style = StrokeStyle { width_px: st.width * k, cap: st.cap, join: st.join, miter_limit: 4.0, dash: None };
+                        cx.ops.push(Op::Stroke { path, xf: at, style, paint: DPaint::Solid(ink(&st.ink)), opacity: op });
+                    }
+                }
+                return;
+            }
         };
         cx.ops.push(Op::Fill { path: SharedPath::new(p), xf: Affine::IDENTITY, paint: color.clone(), rule: FillRule::NonZero, opacity: opacity as f32 });
     };
@@ -401,7 +459,7 @@ mod tests {
         let stroke = Stroke { paint: Paint::token("accent"), width: 2.0, dash: None, cap: datars_scene::Cap::Round, join: datars_scene::Join::Round, non_scaling: false };
         let head = Markers { start: None, end: Some(Marker::Dot { r: 5.0 }) };
         let dot_at = |pts: Vec<Vec2>, trim: Option<[f64; 2]>| -> Option<Vec2> {
-            let mut n = Node::new(Key::name("track"), NodeKind::Shape { geom: Geom::Polyline { pts: pts.into(), closed: false, curve: Default::default() }, fill: None, stroke: Some(stroke.clone()), markers: Some(head) });
+            let mut n = Node::new(Key::name("track"), NodeKind::Shape { geom: Geom::Polyline { pts: pts.into(), closed: false, curve: Default::default() }, fill: None, stroke: Some(stroke.clone()), markers: Some(head.clone()) });
             n.common.trim = trim;
             let list = flatten(&Scene::new(200.0, 200.0, n), &theme);
             list.ops.iter().find_map(|op| match op { Op::Fill { path, .. } => Some(path.path.bounds().center()), _ => None })

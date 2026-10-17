@@ -74,6 +74,8 @@ fn open_parts(engine: &mut Engine, manifest: &Manifest, tier: Tier, entry: &serd
             for (m, bytes) in chunks("font") {
                 add_font_chunk(engine, &m, &bytes, true)?;
             }
+            // Baked scenes hold their icons' shapes; pictures are drawn from their files.
+            add_assets(engine, &chunks("icons"), &chunks("image"))?;
             Ok(Tier::T1)
         }
         Tier::T2 | Tier::T3 => {
@@ -93,9 +95,24 @@ fn open_parts(engine: &mut Engine, manifest: &Manifest, tier: Tier, entry: &serd
             for (m, bytes) in chunks("font") {
                 add_font_chunk(engine, &m, &bytes, false)?;
             }
+            add_assets(engine, &chunks("icons"), &chunks("image"))?;
             Ok(tier)
         }
     }
+}
+
+/// A bundle's icons and pictures: everything its chart draws, so the engine asks for none.
+fn add_assets(engine: &mut Engine, icons: &[(BTreeMap<String, serde_json::Value>, Vec<u8>)], images: &[(BTreeMap<String, serde_json::Value>, Vec<u8>)]) -> Result<(), String> {
+    engine.seal_assets();
+    for (_, bytes) in icons {
+        engine.add_icons(bytes, true)?;
+    }
+    for (m, bytes) in images {
+        if let Some(src) = m.get("source").and_then(|s| s.as_str()) {
+            engine.add_image(src, bytes)?;
+        }
+    }
+    Ok(())
 }
 
 /// Give the engine a font chunk: a face a theme token names (`face`, `family`, `weight`,

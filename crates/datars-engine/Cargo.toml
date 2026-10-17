@@ -17,6 +17,7 @@ datars-math.workspace = true
 datars-color.workspace = true
 datars-theme.workspace = true
 datars-scene.workspace = true
+datars-icon.workspace = true
 datars-render.workspace = true
 datars-text.workspace = true
 datars-expr.workspace = true
@@ -39,3 +40,7 @@ sandbox = ["dep:datars-sandbox"]
 # Start every engine with the default family (Inter) compiled in. Without it (the web runtime),
 # faces come from bundle font chunks and `font:` requests the host answers, like any font.
 bundled-fonts = ["datars-text/bundled-fonts"]
+
+[dev-dependencies]
+datars-icon = { workspace = true, features = ["bundled"] }
+png.workspace = true

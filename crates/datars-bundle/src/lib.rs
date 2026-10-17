@@ -108,6 +108,28 @@ pub struct Manifest {
     /// fonts may be embedded, and their notices travel in each subset's name table too.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub fonts: Vec<FontCredit>,
+    /// The icons and pictures the bundle ships (its `icons` and `image` chunks), by where they
+    /// came from, with their licences.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub assets: Vec<AssetCredit>,
+}
+
+/// Icons or a picture a bundle ships: an icon set's icons (`from: datars:icons/lucide`, the names
+/// it draws), or one file.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct AssetCredit {
+    /// `icons` or `image`.
+    pub kind: String,
+    /// Where the build step got it: `datars:icons/lucide` (a default set), a project file, a URL.
+    pub from: String,
+    /// SPDX-style: `ISC` for the default set; `unknown` for a project's own files (the build
+    /// warns — make sure you may publish them).
+    pub licence: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    /// The icons drawn from a set.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub names: Vec<String>,
 }
 
 /// One font a bundle ships (as subsets): which face, where it came from, under what licence.

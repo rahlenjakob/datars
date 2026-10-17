@@ -4,6 +4,7 @@
 //! lists. Sans-IO: sources the engine can't read itself become [`Request`]s the host fulfils. The
 //! same engine runs in every host (web, iOS, Android, desktop, headless, tests).
 
+pub mod assets;
 mod bounds;
 mod drivers;
 pub mod session;
@@ -22,12 +23,14 @@ pub mod pick;
 pub mod points;
 pub mod program;
 mod resolve;
+mod resolve_icons;
 mod scales;
 mod tables;
 pub mod textlayer;
+pub mod textpath;
 mod tiles;
 
-pub use bounds::{node_bounds, quads_overlap, text_core, text_quad, text_rect};
+pub use bounds::{drawn_bounds, node_bounds, quads_overlap, text_core, text_quad, text_rect};
 pub use resolve::{BoundAction, ExprValue, Expand, Expansion, Origin, OriginRow};
 pub use points::PointStats;
 pub use tiles::{RangeFetch, TileStats, TileView};
@@ -80,6 +83,9 @@ pub enum Request {
     /// Appear as views need tiles: after loading (the header), and as cameras move.
     Range { name: String, url: String, offset: u64, length: u64 },
 }
+
+/// A host function answering an icon or picture request at once: (request name, URL) → bytes.
+pub type AssetFetch = dyn Fn(&str, &str) -> Option<Vec<u8>>;
 
 /// The smallest share of a `lod` node's point budget a small view draws (see `area_point_scale`).
 const MIN_AREA_POINT_SCALE: f64 = 0.2;
@@ -302,6 +308,8 @@ struct Resolved {
     motion: Vec<datars_motion::Rule>,
     /// The elements `hover()` asked about while resolving it.
     hover_asked: Vec<KeyPath>,
+    /// The icons it draws (the contrast check).
+    icons: Vec<assets::IconMark>,
 }
 
 /// A transition planned ahead ([`Engine::prepare`]): from the settled scene then on screen to a
@@ -453,6 +461,12 @@ pub struct Engine {
     /// Whether the document draws its own narration, once asked (`Engine::draws_narration`).
     narration_drawn: std::cell::Cell<Option<bool>>,
     range_fetch: Option<Box<RangeFetch>>,
+    /// The document's icons and pictures, and what it still needs (see `assets`).
+    assets: assets::Assets,
+    /// Answers icon and picture requests on the spot (tools, the build step): the host's IO.
+    asset_fetch: Option<Box<AssetFetch>>,
+    /// Resolves nested by assets arriving mid-resolve (bounded).
+    asset_depth: u8,
 }
 
 /// How much heavier text is drawn for a reader who asked for bold text (`Engine::set_bold_text`):
@@ -572,6 +586,9 @@ impl Engine {
             flatten_cache: RefCell::new(datars_render::FlattenCache::default()),
             narration_drawn: std::cell::Cell::new(None),
             range_fetch: None,
+            assets: assets::Assets::default(),
+            asset_fetch: None,
+            asset_depth: 0,
         }
     }
 
@@ -658,6 +675,18 @@ impl Engine {
         self.doc = doc;
         self.narration_drawn.set(None);
         self.retheme();
+        self.assets.reset();
+        for (k, v) in &self.doc.icons {
+            match datars_icon::Icon::from_value(v) {
+                Ok(i) => {
+                    self.assets.icons.insert(k.clone(), Arc::new(i));
+                }
+                Err(e) => self.diags.push(Diag { message: format!("icons.{k}: {e}") }),
+            }
+        }
+        let mut literal = BTreeMap::new();
+        assets::literal_sources(&self.doc.scene, &self.theme, &mut literal);
+        self.ask_assets(literal);
         self.diags.clone()
     }
 
@@ -680,7 +709,7 @@ impl Engine {
             self.program.goto_index(i);
         }
         if let Some(scene) = on_screen {
-            self.shown = Some(Rc::new(Resolved { scene, actions: Vec::new(), tiles: Vec::new(), points: Vec::new(), motion: Vec::new(), hover_asked: Vec::new() }));
+            self.shown = Some(Rc::new(Resolved { scene, actions: Vec::new(), tiles: Vec::new(), points: Vec::new(), motion: Vec::new(), hover_asked: Vec::new(), icons: Vec::new() }));
             self.transition_to_current(Some(state));
         }
         diags
@@ -906,7 +935,139 @@ impl Engine {
         let mut r = self.requests.clone();
         r.extend(self.tiles.borrow().requests());
         r.extend(self.font_requests());
+        r.extend(self.assets.pending.iter().map(|(name, url)| Request::Source { name: name.clone(), url: url.clone() }));
         r
+    }
+
+    /// Answer icon and picture requests through `fetch` as resolves need them, instead of as
+    /// [`Request`]s (tools, the build step, apps with their files on disk): `fetch(name, url)`
+    /// does the IO, the engine stays sans-IO. A resolve that met missing ones resolves again with
+    /// what arrived.
+    pub fn set_asset_fetch(&mut self, fetch: Box<AssetFetch>) {
+        self.asset_fetch = Some(fetch);
+        let pending = std::mem::take(&mut self.assets.pending);
+        self.ask_assets(pending);
+    }
+
+    /// Icons and pictures the engine needs: fetched now when it can, else requests.
+    fn ask_assets(&mut self, asks: BTreeMap<String, String>) -> bool {
+        let mut got = false;
+        for (name, url) in asks {
+            let have = name.strip_prefix(assets::ICON_PREFIX).is_some_and(|k| self.assets.icons.contains_key(k)) || name.strip_prefix(assets::IMAGE_PREFIX).is_some_and(|k| self.assets.images.contains_key(k));
+            if have || self.assets.pending.contains_key(&name) || self.assets.failed.contains_key(&name) {
+                continue;
+            }
+            match self.asset_fetch.as_ref().map(|f| f(&name, &url)) {
+                Some(Some(bytes)) => {
+                    let _ = self.store_asset(&name, &bytes);
+                    got = true;
+                }
+                Some(None) => {
+                    self.assets.failed.insert(name.clone(), format!("{url} could not be read"));
+                }
+                None if self.assets.sealed => {}
+                None => {
+                    self.assets.pending.insert(name, url);
+                }
+            }
+        }
+        got
+    }
+
+    /// Read an icon's or picture's bytes into the store (no re-resolve).
+    fn store_asset(&mut self, name: &str, bytes: &[u8]) -> Result<(), String> {
+        self.assets.pending.remove(name);
+        if let Some(key) = name.strip_prefix(assets::ICON_PREFIX) {
+            let read = std::str::from_utf8(bytes).map_err(|_| "not text (an SVG file is XML)".to_string()).and_then(datars_icon::parse_svg);
+            return match read {
+                Ok(icon) => {
+                    self.assets.icons.insert(key.to_string(), Arc::new(icon));
+                    Ok(())
+                }
+                Err(e) => {
+                    self.assets.failed.insert(name.to_string(), e.clone());
+                    Err(format!("icon `{key}`: {e}"))
+                }
+            };
+        }
+        let src = name.strip_prefix(assets::IMAGE_PREFIX).unwrap_or(name);
+        match datars_render::Raster::decode(bytes) {
+            Ok(r) => {
+                self.assets.images.insert(src.to_string(), Arc::new(r));
+                Ok(())
+            }
+            Err(e) => {
+                self.assets.failed.insert(name.to_string(), e.clone());
+                Err(format!("picture `{src}`: {e}"))
+            }
+        }
+    }
+
+    /// An icon or picture request the host couldn't answer (a 404, no such icon in the set), and
+    /// why: said as a diagnostic, and not asked for again.
+    pub fn asset_failed(&mut self, name: &str, why: &str) {
+        self.assets.pending.remove(name);
+        self.assets.failed.insert(name.to_string(), why.to_string());
+        self.assets_changed();
+    }
+
+    /// Something arrived: resolve again, without animating what only arrived (as for fonts).
+    fn assets_changed(&mut self) {
+        if self.batching > 0 {
+            self.batch_stale = true;
+            self.cache.clear();
+            return;
+        }
+        let was_moving = self.active.is_some();
+        self.invalidate();
+        if !was_moving {
+            if let Some(a) = self.active.take() {
+                self.shown = Some(a.to);
+            }
+        }
+    }
+
+    /// A bundle's icons chunk (`{ "<key>": <icon>, … }`, see [`datars_icon::Icon::to_json`]): the
+    /// icons its chart draws. A bundle's chart asks for nothing more (`sealed`).
+    pub fn add_icons(&mut self, json: &[u8], seal: bool) -> Result<(), String> {
+        let v: serde_json::Value = serde_json::from_slice(json).map_err(|e| e.to_string())?;
+        for (k, i) in v.as_object().ok_or("an icons chunk is an object")? {
+            self.assets.icons.insert(k.clone(), Arc::new(datars_icon::Icon::from_value(i)?));
+            self.assets.pending.remove(&format!("{}{k}", assets::ICON_PREFIX));
+        }
+        if seal {
+            self.seal_assets();
+        }
+        self.assets_changed();
+        Ok(())
+    }
+
+    /// A bundle's picture (its file as shipped), for `source`.
+    pub fn add_image(&mut self, source: &str, bytes: &[u8]) -> Result<(), String> {
+        let name = format!("{}{source}", assets::IMAGE_PREFIX);
+        self.store_asset(&name, bytes)?;
+        self.assets_changed();
+        Ok(())
+    }
+
+    /// Opened from a bundle: ask for no icon or picture (a bundle carries what its chart draws).
+    pub fn seal_assets(&mut self) {
+        self.assets.sealed = true;
+        self.assets.pending.clear();
+    }
+
+    /// The icons the document has drawn so far (resolve every state first): by key, what a
+    /// bundle ships — with the set and licence each came from.
+    pub fn icons_drawn(&self) -> Vec<(String, Arc<datars_icon::Icon>)> {
+        let used = self.assets.used.borrow();
+        self.assets.icons.iter().filter(|(k, _)| used.contains(&format!("{}{k}", assets::ICON_PREFIX))).map(|(k, i)| (k.clone(), i.clone())).collect()
+    }
+
+    /// The pictures the document has drawn so far: by source, the decoded picture (its file in
+    /// `encoded`).
+    pub fn images_drawn(&self) -> Vec<(String, Arc<datars_render::Raster>)> {
+        let used = self.assets.used.borrow();
+        self.assets.images.iter().filter(|(k, _)| used.contains(&format!("{}{k}", assets::IMAGE_PREFIX))).map(|(k, i)| (k.clone(), i.clone())).collect()
     }
 
     /// Hand over bytes for a [`Request::Range`] of a tiles source. Tiles waiting on them decode
@@ -1065,6 +1226,11 @@ impl Engine {
         self.snapshots.remove(source);
         if self.recording.is_some() {
             self.rec(session::Input::Provide { source: source.to_string(), bytes: session::base64(bytes) });
+        }
+        if source.starts_with(assets::ICON_PREFIX) || source.starts_with(assets::IMAGE_PREFIX) {
+            let r = self.store_asset(source, bytes);
+            self.assets_changed();
+            return r;
         }
         if let Some(id) = source.strip_prefix("font:") {
             // A face a theme font token named (a `font:<face id>` request).
@@ -1477,7 +1643,7 @@ impl Engine {
         if let Some(b) = &self.baked {
             let i = self.program.index().min(b.len().saturating_sub(1));
             let scene = b.get(i).cloned().unwrap_or_else(|| Scene::new(self.viewport.width, self.viewport.height, datars_scene::Node::group(datars_scene::Key::name("empty"), vec![])));
-            return Rc::new(Resolved { scene, actions: Vec::new(), tiles: Vec::new(), points: Vec::new(), motion: Vec::new(), hover_asked: Vec::new() });
+            return Rc::new(Resolved { scene, actions: Vec::new(), tiles: Vec::new(), points: Vec::new(), motion: Vec::new(), hover_asked: Vec::new(), icons: Vec::new() });
         }
         let signals = self.all_signals();
         let sig = self.signature(&signals);
@@ -1518,6 +1684,7 @@ impl Engine {
         let expander: Option<&dyn Expand> = None;
         let store = tables::TableStore::new(self.sources.clone(), self.doc.tables.clone(), self.tables_cache.clone());
         let mut r = resolve::Resolver::new(&self.doc, signals, &self.theme, &self.fonts, expander, size_class, &self.geo, store);
+        r.assets = Some(&self.assets);
         r.hovered = self.hovered.clone();
         if record {
             r.record_origins();
@@ -1534,6 +1701,7 @@ impl Engine {
         if !crowded.is_empty() {
             let store = tables::TableStore::new(self.sources.clone(), self.doc.tables.clone(), self.tables_cache.clone());
             let mut again = resolve::Resolver::new(&self.doc, signals, &self.theme, &self.fonts, expander, size_class, &self.geo, store);
+            again.assets = Some(&self.assets);
             again.hovered = self.hovered.clone();
             if record {
                 again.record_origins();
@@ -1555,7 +1723,18 @@ impl Engine {
         }
         let origins = r.origins.take().map(|o| o.into_inner()).unwrap_or_default();
         let placements = Placements { anchors: r.dodge_chosen.take(), banded: r.banded.clone() };
-        (Resolved { scene, actions: r.actions.take(), tiles: r.tiles.take(), points: r.points.take(), motion: r.motion.take(), hover_asked: r.hover_asked.take() }, origins, placements)
+        let out = (Resolved { scene, actions: r.actions.take(), tiles: r.tiles.take(), points: r.points.take(), motion: r.motion.take(), hover_asked: r.hover_asked.take(), icons: r.icon_marks.take() }, origins, placements);
+        // Icons and pictures it met that aren't here: fetched now when the host can (and the
+        // scene resolved again with them), else asked for.
+        let asks = r.asks.take();
+        drop(r);
+        if !asks.is_empty() && self.ask_assets(asks) && self.asset_depth < 4 {
+            self.asset_depth += 1;
+            let again = self.resolve_pinned(signals, record, pins, focus);
+            self.asset_depth -= 1;
+            return again;
+        }
+        out
     }
 
     /// Why an element exists and looks the way it does (`datars explain`): the recipes that
@@ -1942,7 +2121,7 @@ impl Engine {
         }
         if let Some((_, plan)) = &self.scrub {
             let scene = plan.at(frac, &TextShaper(&self.fonts));
-            self.shown = Some(Rc::new(Resolved { scene, actions: self.resolve_now().actions.clone(), tiles: Vec::new(), points: Vec::new(), motion: Vec::new(), hover_asked: Vec::new() }));
+            self.shown = Some(Rc::new(Resolved { scene, actions: self.resolve_now().actions.clone(), tiles: Vec::new(), points: Vec::new(), motion: Vec::new(), hover_asked: Vec::new(), icons: Vec::new() }));
         }
         i
     }
@@ -2179,6 +2358,12 @@ impl Engine {
         r
     }
 
+    /// The icons state `index` draws, with what each stands for and its ink (`datars lint` checks
+    /// their contrast, WCAG 1.4.11).
+    pub fn icon_marks(&mut self, index: usize) -> Vec<assets::IconMark> {
+        self.resolve_state(index).icons.clone()
+    }
+
     /// The settled scene of state `index` (without changing the running program), tiles filled.
     pub fn scene_for_state(&mut self, index: usize) -> Scene {
         let mut s = self.resolve_state(index).scene.clone();
@@ -2219,7 +2404,16 @@ impl Engine {
     }
 
     pub fn display_list(&self, scene: &Scene) -> DisplayList {
-        datars_render::flatten_cached(scene, &self.theme, &mut self.flatten_cache.borrow_mut())
+        let mut list = datars_render::flatten_cached(scene, &self.theme, &mut self.flatten_cache.borrow_mut());
+        // Pictures: the decoded files, from the store (the scene names them).
+        if !self.assets.images.is_empty() {
+            for op in &mut list.ops {
+                if let datars_render::Op::Image { asset, image, .. } = op {
+                    *image = self.assets.images.get(asset.as_ref()).cloned();
+                }
+            }
+        }
+        list
     }
 
     pub fn fonts(&self) -> &datars_text::FontDb {

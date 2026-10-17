@@ -14,3 +14,4 @@ datars-color.workspace = true
 datars-theme.workspace = true
 datars-scene.workspace = true
 serde.workspace = true
+png.workspace = true
