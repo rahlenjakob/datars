@@ -82,8 +82,11 @@ fn open_parts(engine: &mut Engine, manifest: &Manifest, tier: Tier, entry: &serd
             engine.load(doc);
             // Data the compiler fetched (atlases, files, a live source's snapshot): content-addressed,
             // so shared across bundles.
+            // One chunk may answer several sources (the parts of one response): `sources`.
             for (m, bytes) in chunks("data") {
-                if let Some(source) = m.get("source").and_then(|s| s.as_str()) {
+                let all: Vec<&str> = m.get("sources").and_then(|s| s.as_array()).map(|a| a.iter().filter_map(|s| s.as_str()).collect()).unwrap_or_default();
+                let names = if all.is_empty() { m.get("source").and_then(|s| s.as_str()).into_iter().collect() } else { all };
+                for source in names {
                     engine.provide_snapshot(source, &bytes)?;
                 }
             }

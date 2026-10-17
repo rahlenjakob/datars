@@ -125,6 +125,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
     let mut font_sources: BTreeMap<String, (String, Vec<u8>)> = BTreeMap::new();
     let mut data_bytes: Vec<Vec<u8>> = Vec::new();
     let mut runtime_text = doc.data.values().any(|s| s.live.is_some());
+    let mut shipped: Vec<(Vec<u8>, Vec<String>)> = Vec::new();
     for req in engine.requests() {
         let name = match &req {
             Request::Source { name, .. } | Request::Slot { name, .. } | Request::Atlas { name, .. } => name.clone(),
@@ -169,7 +170,12 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
                 engine.provide(&name, &bytes)?;
                 report.decisions.push(format!("data `{name}`: {} KB gzipped, shipped with T2/T3 (shared by hash)", gzip_len(&bytes) / 1024));
                 data_bytes.push(bytes.clone());
-                data_chunks.push(b.chunk("data", bytes, meta(&[("source", name.into())])));
+                // Two sources reading one file (the parts of a response, by `rows`) share its
+                // chunk, content-addressed: it names every one of them (below).
+                match shipped.iter_mut().find(|(b, _)| *b == bytes) {
+                    Some((_, names)) => names.push(name),
+                    None => shipped.push((bytes, vec![name])),
+                }
             }
             None if is_font => report.decisions.push(format!("warning: font `{name}`: {url} could not be acquired; its text falls back (see `datars check`)")),
             None => {
@@ -177,6 +183,14 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
                 report.decisions.push(format!("data `{name}`: not available at build time ({req:?}); the runtime must fetch it"));
             }
         }
+    }
+    for (bytes, names) in shipped {
+        // `source` is the first (what runtimes before `sources` read); `sources`, all of them.
+        let mut m = meta(&[("source", names[0].clone().into())]);
+        if names.len() > 1 {
+            m.insert("sources".into(), serde_json::json!(names));
+        }
+        data_chunks.push(b.chunk("data", bytes, m));
     }
     let floor = format!(">={}", opts.runtime_floor);
     settle_tiles(&mut engine, fetch);

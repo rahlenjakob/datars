@@ -254,3 +254,31 @@ fn hosts_arent_asked_for_what_the_bundle_carries() {
     }
     assert!(core.engine.requests().is_empty(), "{:?}", core.engine.requests());
 }
+
+/// Two sources reading parts of one file (`rows`) both open on it: the shared chunk names them
+/// both, so neither is left asking for it when the chart opens.
+#[test]
+fn sources_sharing_a_file_both_ship() {
+    let doc = serde_json::json!({ "datars": 1, "size": { "width": 200, "height": 60 },
+        "data": {
+            "a": { "url": "both.json", "rows": "a", "key": ["k"] },
+            "b": { "url": "both.json", "rows": "b", "key": ["k"], "live": { "mode": "upsert" } }
+        },
+        "scene": { "kind": "group", "key": "g", "children": [
+            { "kind": "repeat", "from": "a", "template": { "kind": "shape", "geom": { "type": "rect", "x": "=d.v", "y": 0, "w": 4, "h": 4 }, "fill": "$accent" } },
+            { "kind": "repeat", "from": "b", "template": { "kind": "shape", "geom": { "type": "rect", "x": "=d.v", "y": 10, "w": 4, "h": 4 }, "fill": "$accent" } }
+        ] } });
+    let file = br#"{"a": [{"k": 1, "v": 10}], "b": [{"k": 1, "v": 20}, {"k": 2, "v": 30}]}"#.to_vec();
+    let fetch = |r: &datars_engine::Request| match r {
+        datars_engine::Request::Source { url, .. } if url == "both.json" => Some(file.clone()),
+        _ => None,
+    };
+    let (bundle, _) = datars_build::build_with(&doc.to_string(), &datars_build::Options::default(), &fetch).unwrap();
+    let data: Vec<_> = bundle.manifest.chunks.iter().filter(|c| c.kind == "data").collect();
+    assert_eq!(data.len(), 1, "one file, one chunk");
+    assert_eq!(data[0].meta.get("sources"), Some(&serde_json::json!(["a", "b"])));
+    let mut engine = datars_engine::Engine::without_builtin_fonts();
+    datars_build::open(&mut engine, &bundle, &caps(&["core", "graph"])).unwrap();
+    assert!(engine.requests().is_empty(), "nothing to fetch: {:?}", engine.requests());
+    assert_eq!(engine.scene().snapshot().matches("rect").count(), 3, "{}", engine.scene().snapshot());
+}
