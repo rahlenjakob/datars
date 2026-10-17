@@ -35,6 +35,9 @@ internal object Native {
     external fun event(v: Long, name: String): Boolean
     external fun setMode(v: Long, mode: Int)
     external fun status(v: Long): String?
+    /** What TalkBack walks through: the brief status (state, narration, controls) and `readout`,
+     * the reading order (`[{kind, label, value, rect, path}]`). */
+    external fun accessibility(v: Long): String?
     /** JSON `[{name, url} | {name, slot}]`: data the engine waits for. */
     external fun dataRequests(v: Long): String?
     external fun provideSource(v: Long, name: String, bytes: ByteArray): Boolean

@@ -2,6 +2,8 @@
 //! desktop): an engine plus the bundle loader and content store, and the status hosts render chrome
 //! from. Hosts add only a surface, a clock, input, networking and the accessibility bridge.
 
+pub mod readout;
+
 use datars_bundle::{Capabilities, ContentStore, Loader, MemStore};
 pub use datars_engine;
 use datars_engine::{Engine, Pointer};
@@ -187,6 +189,28 @@ impl Core {
             return String::new();
         }
         self.engine.accessible_summary()
+    }
+
+    /// What a native screen reader walks through, in order ([`readout::readout`]): the chart (its
+    /// name, the summary as its value), headings, axes and legends as a line each, data marks
+    /// with their values apart, buttons. Reads the whole semantics tree: when a step settles.
+    pub fn readout(&mut self) -> Vec<readout::Readout> {
+        if self.tier == Some(datars_bundle::Tier::T0) {
+            return Vec::new();
+        }
+        let items = self.engine.semantic_items();
+        let name = self.engine.accessible_name();
+        let summary = self.engine.accessible_summary();
+        readout::readout(&name, &summary, &items)
+    }
+
+    /// What a native accessibility bridge needs at once: [`Core::status_brief`] (state, narration,
+    /// controls) and `readout` ([`Core::readout`] as `[{kind, label, value, rect, path}]`) — one
+    /// walk of the semantics tree, not two.
+    pub fn accessibility(&mut self) -> serde_json::Value {
+        let mut v = self.status_brief();
+        v["readout"] = serde_json::Value::Array(self.readout().iter().map(|r| r.to_json()).collect());
+        v
     }
 
     /// The semantic items a reader can activate (`actionable`, in [`Core::semantics`]' shape):

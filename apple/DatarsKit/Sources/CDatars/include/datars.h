@@ -53,5 +53,7 @@ int32_t datars_view_event(DatarsView *v, const uint8_t *name, size_t len);
 void datars_view_set_mode(DatarsView *v, int32_t mode);
 int32_t datars_view_set_tokens(DatarsView *v, const uint8_t *json, size_t len);
 char *datars_view_status(DatarsView *v);
+/* What a screen-reader bridge needs: the brief status and `readout` (the reading order: chart, headings, axes, data marks with values, buttons), as JSON. Free with datars_string_free. */
+char *datars_view_accessibility(DatarsView *v);
 char *datars_view_data_requests(DatarsView *v);
 int32_t datars_view_provide_range(DatarsView *v, const uint8_t *name, size_t name_len, uint64_t offset, const uint8_t *bytes, size_t len);

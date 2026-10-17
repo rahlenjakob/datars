@@ -472,37 +472,63 @@ open class DatarsChartView: PlatformView {
         bringSubviewToFront(tip)
     }
 
-    /// The engine's semantics tree as accessibility elements (VoiceOver reads the chart's content).
+    /// The chart as VoiceOver reads it, a swipe at a time (the runtime's reading order): the chart
+    /// first — its name, and what it shows as its value ("8 data points, from 3.5 to 27.6") — then
+    /// its controls (sliders adjustable, selects their native menus), headings for its parts (the
+    /// rotor's Headings), an axis or a legend as one line, each data mark with its name and its
+    /// value apart, clickable marks and controls as buttons. A new step is announced.
     public func updateAccessibility() {
-        let items = engine.status()["semantics"] as? [[String: Any]] ?? []
-        let status = engine.status()
-        // A control that's clicked (a switch, a checkbox, a segment, a button) is a button like any
-        // interactive mark; one that's dragged (a slider's or a range's thumb) is an adjustable
-        // element below.
-        var elements: [Any] = items.filter { ($0["role"] as? String) != "control" || ($0["actionable"] as? Bool) == true }.map { item in
+        let a = engine.accessibility()
+        let readout = a["readout"] as? [[String: Any]] ?? []
+        var elements: [Any] = readout.map { r in
+            let kind = r["kind"] as? String ?? ""
             let e: UIAccessibilityElement
-            if item["actionable"] as? Bool == true, let path = item["path"] as? String {
+            if kind == "button", let path = r["path"] as? String {
                 e = DatarsActionable(view: self, path: path)
             } else {
                 e = UIAccessibilityElement(accessibilityContainer: self)
             }
-            e.accessibilityLabel = item["label"] as? String
-            e.accessibilityFrameInContainerSpace = Self.frame(item["rect"]) ?? bounds
-            if (item["role"] as? String) == "title" { e.accessibilityTraits = .header }
+            e.accessibilityLabel = r["label"] as? String
+            if let v = r["value"] as? String, !v.isEmpty { e.accessibilityValue = v }
+            e.accessibilityFrameInContainerSpace = Self.frame(r["rect"]) ?? bounds
+            switch kind {
+            case "chart": e.accessibilityTraits = [.summaryElement, .header]
+            case "heading": e.accessibilityTraits = .header
+            case "text", "datum": e.accessibilityTraits = .staticText
+            default: break
+            }
             return e
         }
-        let controls = status["controls"] as? [[String: Any]] ?? []
+        let controls = a["controls"] as? [[String: Any]] ?? []
         let selects = controls.filter { ($0["kind"] as? String) == "select" }
         updatePickers(selects)
-        // A select is its picker button (a native menu), not the drawn box.
-        let selectLabels = Set(selects.compactMap { $0["label"] as? String })
-        elements.removeAll { ($0 as? UIAccessibilityElement)?.accessibilityLabel.map(selectLabels.contains) ?? false }
-        elements.insert(contentsOf: pickers as [Any], at: 0)
-        // Engine-drawn sliders as adjustable elements: swipe up/down changes the value.
-        for c in controls where (c["kind"] as? String ?? "slider") == "slider" {
-            elements.insert(DatarsAdjustable(view: self, control: c), at: 0)
+        // Controls right after the chart: a select as its picker button (a native menu), an
+        // engine-drawn slider as an adjustable element (swipe up or down changes its value).
+        let at = elements.isEmpty ? 0 : 1
+        elements.insert(contentsOf: pickers as [Any], at: at)
+        for c in controls.reversed() where (c["kind"] as? String ?? "slider") == "slider" {
+            elements.insert(DatarsAdjustable(view: self, control: c), at: at)
         }
         accessibilityElements = elements
+        announce(a)
+    }
+
+    /// The step VoiceOver last heard about.
+    private var announced = -1
+
+    /// A new step, said once: its narration (title and text), else where the reader is ("Step 2
+    /// of 4"). Not the first state: the chart's name and summary say what it is.
+    private func announce(_ a: [String: Any]) {
+        let index = a["index"] as? Int ?? 0
+        guard index != announced else { return }
+        let first = announced < 0
+        announced = index
+        guard !first else { return }
+        let n = a["narration"] as? [String: Any]
+        let said = [n?["title"] as? String, n?["text"] as? String].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ". ")
+        let count = (a["states"] as? [Any])?.count ?? 0
+        let text = said.isEmpty ? (count > 1 ? "Step \(index + 1) of \(count)" : "") : said
+        if !text.isEmpty { UIAccessibility.post(notification: .announcement, argument: text) }
     }
 
     /// One menu button per select, over its box: the options with a check on the chosen one; a
@@ -599,19 +625,41 @@ open class DatarsChartView: PlatformView {
         }
     }
 
+    /// The chart for VoiceOver on the Mac: a group named by the chart, its summary as help, and the
+    /// runtime's reading order as children — headings and lines of text, data marks with their
+    /// values, buttons that press like a click. A new step is announced.
     public func updateAccessibility() {
-        let items = engine.status()["semantics"] as? [[String: Any]] ?? []
+        let a = engine.accessibility()
+        let readout = a["readout"] as? [[String: Any]] ?? []
         setAccessibilityRole(.group)
-        setAccessibilityLabel(items.first?["label"] as? String ?? "Chart")
-        setAccessibilityChildren(items.dropFirst().map { item in
-            let e = NSAccessibilityElement()
+        setAccessibilityLabel(readout.first?["label"] as? String ?? "Chart")
+        setAccessibilityHelp(readout.first?["value"] as? String)
+        setAccessibilityChildren(readout.dropFirst().map { r -> NSAccessibilityElement in
+            let kind = r["kind"] as? String ?? ""
+            let e: NSAccessibilityElement = kind == "button" ? DatarsMacActionable(view: self, path: r["path"] as? String ?? "") : NSAccessibilityElement()
             e.setAccessibilityParent(self)
-            e.setAccessibilityRole((item["role"] as? String) == "title" ? .staticText : .group)
-            e.setAccessibilityLabel(item["label"] as? String)
-            e.setAccessibilityFrameInParentSpace(Self.frame(item["rect"]) ?? bounds)
+            e.setAccessibilityRole(kind == "button" ? .button : .staticText)
+            e.setAccessibilityLabel(r["label"] as? String)
+            if let v = r["value"] as? String, !v.isEmpty { e.setAccessibilityValue(v) }
+            e.setAccessibilityFrameInParentSpace(Self.frame(r["rect"]).map { CGRect(x: $0.minX, y: bounds.height - $0.maxY, width: $0.width, height: $0.height) } ?? bounds)
             return e
         })
+        let index = a["index"] as? Int ?? 0
+        if index != announced {
+            let first = announced < 0
+            announced = index
+            let n = a["narration"] as? [String: Any]
+            let said = [n?["title"] as? String, n?["text"] as? String].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: ". ")
+            let count = (a["states"] as? [Any])?.count ?? 0
+            let text = said.isEmpty ? (count > 1 ? "Step \(index + 1) of \(count)" : "") : said
+            if !first && !text.isEmpty {
+                NSAccessibility.post(element: self, notification: .announcementRequested, userInfo: [.announcement: text, .priority: NSAccessibilityPriorityLevel.high.rawValue])
+            }
+        }
     }
+
+    /// The step VoiceOver last heard about.
+    private var announced = -1
     #endif
 
     /// A semantics `rect` ([x, y, w, h] in points, top-left origin) as a frame.
@@ -620,6 +668,25 @@ open class DatarsChartView: PlatformView {
         return CGRect(x: a[0], y: a[1], width: a[2], height: a[3])
     }
 }
+
+#if canImport(AppKit) && !canImport(UIKit)
+/// An interactive mark on the Mac: VoiceOver's press runs its click intent.
+final class DatarsMacActionable: NSAccessibilityElement {
+    weak var chart: DatarsChartView?
+    let path: String
+    init(view: DatarsChartView, path: String) {
+        chart = view
+        self.path = path
+        super.init()
+    }
+    override func accessibilityPerformPress() -> Bool {
+        guard let chart, chart.engine.activate(path: path) else { return false }
+        chart.needsDisplay = true
+        chart.updateAccessibility()
+        return true
+    }
+}
+#endif
 
 #if canImport(UIKit)
 /// An interactive mark (select, filter, drill): double-tap runs its click intent.
@@ -656,17 +723,30 @@ final class DatarsAdjustable: UIAccessibilityElement {
         step = s > 0 ? s : (hi - lo) / 20
         value = c["value"] as? Double ?? lo
         super.init(accessibilityContainer: view)
-        accessibilityLabel = c["label"] as? String
         accessibilityTraits = .adjustable
-        accessibilityFrameInContainerSpace = view.bounds
-        accessibilityValue = String(format: "%g", value)
+        accessibilityFrameInContainerSpace = DatarsChartView.frame(c["rect"]) ?? view.bounds
+        say(c["label"] as? String)
+    }
+
+    /// The control's label says its value as drawn ("Monthly income (SEK): 32,000"): the name is
+    /// the label, the value what follows (not a raw "32000").
+    private func say(_ label: String?) {
+        let l = label ?? ""
+        if let r = l.range(of: ": ", options: .backwards) {
+            accessibilityLabel = String(l[..<r.lowerBound])
+            accessibilityValue = String(l[r.upperBound...])
+        } else {
+            accessibilityLabel = l
+            accessibilityValue = String(format: "%g", value)
+        }
     }
 
     private func set(_ v: Double) {
         value = min(hi, max(lo, v))
-        accessibilityValue = String(format: "%g", value)
         chart?.engine.setSignal(signal, value)
         chart?.renderLoop()
+        let c = (chart?.engine.accessibility()["controls"] as? [[String: Any]])?.first { ($0["signal"] as? String) == signal }
+        say(c?["label"] as? String)
     }
     override func accessibilityIncrement() { set(value + step) }
     override func accessibilityDecrement() { set(value - step) }

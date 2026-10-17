@@ -430,6 +430,15 @@ pub extern "C" fn datars_view_provide_range(v: *mut DatarsView, name: *const u8,
     view(v).map_or(0, |v| v.core.engine.provide_range(&s(name, name_len), offset, b(bytes, len)).is_ok() as i32)
 }
 
+/// What a screen-reader bridge needs, as JSON: the brief status (state, narration, controls)
+/// and `readout`, the reading order — the chart (name, summary), headings, axes and legends as a
+/// line each, data marks with their values, buttons (`[{kind, label, value, rect, path}]`).
+#[no_mangle]
+pub extern "C" fn datars_view_accessibility(v: *mut DatarsView) -> *mut c_char {
+    let Some(v) = view(v) else { return std::ptr::null_mut() };
+    out(v.core.accessibility())
+}
+
 /// State, narration, semantics (accessibility tree), tokens, diagnostics — as JSON.
 #[no_mangle]
 pub extern "C" fn datars_view_status(v: *mut DatarsView) -> *mut c_char {
@@ -808,6 +817,11 @@ pub mod android {
     #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_status(mut env: JNIEnv, _: JClass, v: jlong) -> jstring {
         let r = datars_view_status(v as *mut DatarsView);
+        to_j(&mut env, r)
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_accessibility(mut env: JNIEnv, _: JClass, v: jlong) -> jstring {
+        let r = datars_view_accessibility(v as *mut DatarsView);
         to_j(&mut env, r)
     }
     #[no_mangle]

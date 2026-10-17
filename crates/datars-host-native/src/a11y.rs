@@ -31,73 +31,85 @@ fn rect(r: datars_math::Rect, dpr: f64) -> Rect {
     Rect { x0: r.x * dpr, y0: r.y * dpr, x1: (r.x + r.w) * dpr, y1: (r.y + r.h) * dpr }
 }
 
-fn role_of(role: &str, actionable: bool) -> Role {
-    if actionable {
-        return Role::Button;
-    }
-    match role {
-        "title" | "annotation" | "tick" => Role::Label,
-        "datum" | "region" => Role::Image,
-        "legend-item" => Role::ListItem,
-        "legend" => Role::List,
-        _ => Role::Group,
-    }
-}
-
-/// The whole tree for the current frame, in physical pixels (`dpr`), and what each node targets.
+/// The whole tree for the current frame, in physical pixels (`dpr`), and what each node targets:
+/// the window, the chart in it as a figure — named, its summary as its description — and the
+/// runtime's reading order under it ([`datars_runtime::readout`]): engine-drawn sliders as
+/// adjustable sliders, headings, lines of text (an axis, a legend, a note), data marks with their
+/// values, buttons for what a click acts on (a switch, a filtering bar, a select's box).
 pub fn tree(engine: &mut Engine, title: &str, dpr: f64) -> (TreeUpdate, Vec<(NodeId, Target)>) {
     let vp = engine.viewport();
     let items = engine.semantic_items();
-    let controls = engine.controls();
+    let name = engine.accessible_name();
+    let summary = engine.accessible_summary();
+    let readout = datars_runtime::readout::readout(&name, &summary, &items);
     let mut nodes: Vec<(NodeId, Node)> = Vec::new();
     let mut targets = Vec::new();
+    let whole = Rect { x0: 0.0, y0: 0.0, x1: vp.width * dpr, y1: vp.height * dpr };
     let mut root = Node::new(Role::Window);
     root.set_label(title);
-    root.set_bounds(Rect { x0: 0.0, y0: 0.0, x1: vp.width * dpr, y1: vp.height * dpr });
-    // Children by depth: a stack of (depth, index into `nodes`) for the open ancestors.
-    let mut root_children = Vec::new();
-    let mut stack: Vec<(usize, usize)> = Vec::new();
-    let mut controls_left = controls.iter();
-    for (i, it) in items.iter().enumerate() {
-        let key = if it.path.is_empty() { format!("{}#{i}", it.label) } else { it.path.clone() };
-        let id = id_for(&key);
-        let mut n;
-        if it.role == "control" {
-            n = Node::new(Role::Slider);
-            if let Some(c) = controls_left.next() {
-                n.set_numeric_value(c.value);
-                n.set_min_numeric_value(c.min);
-                n.set_max_numeric_value(c.max);
-                if c.step > 0.0 {
-                    n.set_numeric_value_step(c.step);
-                }
-                for a in [Action::Increment, Action::Decrement, Action::SetValue] {
-                    n.add_action(a);
-                }
-                targets.push((id, Target::Control { signal: c.signal.clone(), min: c.min, max: c.max, step: c.step, value: c.value }));
-            }
-        } else {
-            n = Node::new(role_of(&it.role, it.actionable));
-            if it.actionable {
-                n.add_action(Action::Click);
-                targets.push((id, Target::Mark(it.path.clone())));
-            }
+    root.set_bounds(whole);
+    let figure_id = id_for("figure");
+    let mut figure = Node::new(Role::Figure);
+    if let Some(chart) = readout.first() {
+        figure.set_label(chart.label.as_str());
+        if !chart.value.is_empty() {
+            figure.set_description(chart.value.as_str());
         }
-        n.set_label(it.label.as_str());
-        if !it.rect.is_empty() {
-            n.set_bounds(rect(it.rect, dpr));
+    }
+    figure.set_bounds(whole);
+    let mut kids = Vec::new();
+    // Engine-drawn sliders first (selects are their drawn box, a button below).
+    for c in engine.controls().into_iter().filter(|c| c.kind == "slider") {
+        let id = id_for(&format!("slider:{}", c.signal));
+        let mut n = Node::new(Role::Slider);
+        n.set_label(c.label.as_str());
+        n.set_numeric_value(c.value);
+        n.set_min_numeric_value(c.min);
+        n.set_max_numeric_value(c.max);
+        if c.step > 0.0 {
+            n.set_numeric_value_step(c.step);
         }
-        while stack.last().is_some_and(|&(d, _)| d >= it.depth) {
-            stack.pop();
+        // What the drawn control says ("32,000"), not the raw number.
+        if let Some((_, said)) = c.label.rsplit_once(": ") {
+            n.set_value(said);
         }
-        match stack.last() {
-            Some(&(_, parent)) => nodes[parent].1.push_child(id),
-            None => root_children.push(id),
+        for a in [Action::Increment, Action::Decrement, Action::SetValue] {
+            n.add_action(a);
         }
-        stack.push((it.depth, nodes.len()));
+        let [x, y, w, h] = c.rect;
+        if w > 0.0 && h > 0.0 {
+            n.set_bounds(rect(datars_math::Rect::new(x, y, w, h), dpr));
+        }
+        targets.push((id, Target::Control { signal: c.signal.clone(), min: c.min, max: c.max, step: c.step, value: c.value }));
+        kids.push(id);
         nodes.push((id, n));
     }
-    root.set_children(root_children);
+    for (i, r) in readout.iter().enumerate().skip(1) {
+        let id = id_for(&if r.path.is_empty() { format!("{}:{}#{i}", r.kind, r.label) } else { r.path.clone() });
+        let mut n = Node::new(match r.kind {
+            "button" => Role::Button,
+            "heading" => Role::Heading,
+            _ => Role::Label,
+        });
+        // A data mark says its name and its value ("Housing, 10,240").
+        if r.value.is_empty() {
+            n.set_label(r.label.as_str());
+        } else {
+            n.set_label(format!("{}, {}", r.label, r.value));
+        }
+        if r.kind == "button" {
+            n.add_action(Action::Click);
+            targets.push((id, Target::Mark(r.path.clone())));
+        }
+        if let Some([x, y, w, h]) = r.rect {
+            n.set_bounds(rect(datars_math::Rect::new(x, y, w, h), dpr));
+        }
+        kids.push(id);
+        nodes.push((id, n));
+    }
+    figure.set_children(kids);
+    root.set_children(vec![figure_id]);
+    nodes.insert(0, (figure_id, figure));
     nodes.insert(0, (ROOT, root));
     (TreeUpdate { nodes, tree: Some(TreeInfo::new(ROOT)), tree_id: TreeId::ROOT, focus: ROOT }, targets)
 }
@@ -145,7 +157,12 @@ mod tests {
         assert!(slider.1.label().unwrap().starts_with("Monthly income"));
         let b = slider.1.bounds().unwrap();
         assert!(b.x1 - b.x0 > 500.0, "framed by the whole control, in physical px: {b:?}");
-        assert!(t.nodes.iter().any(|(_, n)| n.role() == Role::Image && n.label().is_some_and(|l| l.starts_with("Housing"))), "data marks are labelled");
+        assert!(t.nodes.iter().any(|(_, n)| n.role() == Role::Label && n.label() == Some("Housing, 10,240")), "data marks say their name and value");
+        assert_eq!(slider.1.value(), Some("32,000"), "the slider says its value as drawn");
+        let figure = t.nodes.iter().find(|(_, n)| n.role() == Role::Figure).expect("the chart");
+        assert_eq!(figure.1.label(), Some("Where a monthly income goes"));
+        assert!(figure.1.description().is_some_and(|d| d.contains("6 data points")), "{:?}", figure.1.description());
+        assert!(t.nodes.iter().any(|(_, n)| n.role() == Role::Label && n.label().is_some_and(|l| l.starts_with("y axis: Housing, Food"))), "an axis is one line");
         let req = ActionRequest { action: Action::Increment, target_tree: TreeId::ROOT, target_node: slider.0, data: None };
         assert!(act(&mut e, &targets, &req));
         assert_eq!(e.signal("income"), Some(datars_engine::SignalValue::Num(33000.0)));
@@ -156,6 +173,18 @@ mod tests {
         let south = t.nodes.iter().find(|(_, n)| n.role() == Role::Button && n.label().is_some_and(|l| l.starts_with("South"))).expect("a button");
         assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: south.0, data: None }));
         assert_eq!(e.signal("selected"), Some(datars_engine::SignalValue::Str("South".into())));
+
+        // A switch is a button that flips it (every control used to become a slider, taking the
+        // next slider's range — a switch got none, and no click).
+        let doc = r#"{"datars":1,"size":{"width":300,"height":60},"signals":{"on":{"type":"bool","default":false}},
+            "scene":{"kind":"use","recipe":"@datars/std/toggle","params":{"signal":"on","label":"Show averages"}}}"#;
+        let mut e = datars_headless::load_at(doc, None).unwrap();
+        e.frame(0.0);
+        let (t, targets) = tree(&mut e, "Toggle", 1.0);
+        assert!(!t.nodes.iter().any(|(_, n)| n.role() == Role::Slider), "no slider without one");
+        let switch = t.nodes.iter().find(|(_, n)| n.role() == Role::Button && n.label().is_some_and(|l| l.starts_with("Show averages"))).expect("the switch is a button");
+        assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: switch.0, data: None }));
+        assert_eq!(e.signal("on"), Some(datars_engine::SignalValue::Bool(true)));
         // Every non-root node hangs off the tree exactly once.
         let children: usize = t.nodes.iter().map(|(_, n)| n.children().len()).sum();
         assert_eq!(children, t.nodes.len() - 1);

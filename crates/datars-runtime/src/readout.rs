@@ -1,0 +1,206 @@
+//! What a native screen reader walks through (VoiceOver, TalkBack, desktop readers): the engine's
+//! semantics tree as a flat reading order a swipe at a time moves along — the chart first (its
+//! name, and the summary as its value), then headings for the parts, an axis or a legend as one
+//! line, each data mark with its name and value apart, clickable marks as buttons. Hosts turn
+//! these into their platform's elements; the web runtime builds its own (tables) from the same
+//! tree. Engine-drawn sliders and selects aren't here: hosts offer them from `status().controls`.
+
+use datars_engine::SemanticItem;
+
+/// One stop for a screen reader.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Readout {
+    /// `chart` (the whole: first), `heading` (a part: a sub-chart's or a series' name), `text`
+    /// (an axis, a legend, a note), `datum` (a data mark), `button` (something a tap acts on).
+    pub kind: &'static str,
+    pub label: String,
+    /// What the element says after its name: a datum's value ("10,240", "× 24" for repeated
+    /// marks), the chart's summary.
+    pub value: String,
+    /// Where it is, in root coordinates (CSS px); none for the chart (the whole view).
+    pub rect: Option<[f64; 4]>,
+    /// A button's key path (`Engine::activate`).
+    pub path: String,
+}
+
+impl Readout {
+    pub fn to_json(&self) -> serde_json::Value {
+        serde_json::json!({ "kind": self.kind, "label": self.label, "value": self.value, "rect": self.rect, "path": self.path })
+    }
+}
+
+struct Tree<'a> {
+    item: &'a SemanticItem,
+    kids: Vec<Tree<'a>>,
+}
+
+fn is_data(i: &SemanticItem) -> bool {
+    i.role == "datum" || i.role == "region"
+}
+
+fn rect_of(i: &SemanticItem) -> Option<[f64; 4]> {
+    let r = i.rect;
+    (r.w.is_finite() && r.h.is_finite() && r.w > 0.0 && r.h > 0.0).then_some([r.x, r.y, r.w, r.h])
+}
+
+/// Labels as one line: all of a few, the ends of many.
+fn line(labels: &[&str]) -> String {
+    if labels.len() <= 12 {
+        labels.join(", ")
+    } else {
+        format!("{} to {}", labels[0], labels[labels.len() - 1])
+    }
+}
+
+fn descend<'a>(t: &Tree<'a>, role: &str, out: &mut Vec<&'a str>) {
+    for k in &t.kids {
+        if k.item.role == role {
+            if !k.item.label.trim().is_empty() {
+                out.push(k.item.label.as_str());
+            }
+        } else {
+            descend(k, role, out);
+        }
+    }
+}
+
+/// "Housing: 10,240" → ("Housing", "10,240"); a label without a value stays whole.
+fn split(label: &str) -> (String, String) {
+    match label.rfind(": ") {
+        Some(i) if i > 0 => (label[..i].to_string(), label[i + 2..].to_string()),
+        _ => (label.to_string(), String::new()),
+    }
+}
+
+/// The reading order for a chart named `name` with `summary`, from its semantics `items`.
+pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout> {
+    let mut out = vec![Readout { kind: "chart", label: if name.is_empty() { "Chart".into() } else { name.into() }, value: summary.into(), rect: None, path: String::new() }];
+    // Dragged and picked controls are the host's native ones; clicked controls are buttons.
+    let shown: Vec<&SemanticItem> = items.iter().filter(|i| i.role != "control" || i.actionable).collect();
+    let mut top: Vec<Tree> = Vec::new();
+    // Pre-order with depths → a tree (a stack of open ancestors, as indices into their parents).
+    let mut path: Vec<usize> = Vec::new();
+    for item in shown {
+        let node = Tree { item, kids: Vec::new() };
+        // Close the ancestors at this depth or deeper.
+        let mut level = &mut top;
+        let mut keep = 0;
+        for &i in &path {
+            if level[i].item.depth >= item.depth {
+                break;
+            }
+            keep += 1;
+            level = &mut level[i].kids;
+        }
+        path.truncate(keep);
+        level.push(node);
+        path.push(level.len() - 1);
+    }
+    fn walk(nodes: &[Tree], name: &str, group: &str, out: &mut Vec<Readout>) {
+        for n in nodes {
+            let (role, label) = (n.item.role.as_str(), n.item.label.trim());
+            // What a click acts on — a filtering bar, a switch, a select's box — is a button.
+            if n.item.actionable {
+                out.push(Readout { kind: "button", label: label.into(), value: String::new(), rect: rect_of(n.item), path: n.item.path.clone() });
+                continue;
+            }
+            if is_data(n.item) {
+                // Marks that say the same in a row (a parliament's seats) are one, with a count.
+                if let Some(last) = out.last_mut() {
+                    if last.kind == "datum" && last.label == label && (last.value.is_empty() || last.value.starts_with('×')) {
+                        let n_was: usize = last.value.trim_start_matches('×').trim().parse().unwrap_or(1);
+                        last.value = format!("× {}", n_was + 1);
+                        if let (Some(a), Some(b)) = (last.rect, rect_of(n.item)) {
+                            let (x0, y0) = (a[0].min(b[0]), a[1].min(b[1]));
+                            last.rect = Some([x0, y0, (a[0] + a[2]).max(b[0] + b[2]) - x0, (a[1] + a[3]).max(b[1] + b[3]) - y0]);
+                        }
+                        continue;
+                    }
+                }
+                let (l, v) = split(label);
+                out.push(Readout { kind: "datum", label: l, value: v, rect: rect_of(n.item), path: String::new() });
+                continue;
+            }
+            match role {
+                // Said with their axis or legend.
+                "tick" | "legend-item" => continue,
+                "axis" | "legend" => {
+                    let mut parts = Vec::new();
+                    descend(n, if role == "axis" { "tick" } else { "legend-item" }, &mut parts);
+                    let title = if label.is_empty() && role == "legend" { "Legend" } else { label };
+                    let text = if parts.is_empty() { title.to_string() } else if title.is_empty() { line(&parts) } else { format!("{title}: {}", line(&parts)) };
+                    if !text.is_empty() {
+                        out.push(Readout { kind: "text", label: text, value: String::new(), rect: rect_of(n.item), path: String::new() });
+                    }
+                    continue;
+                }
+                _ => {}
+            }
+            // The chart itself (named first) and repeats of its name or its part's say nothing new.
+            let dup = label.is_empty() || label == name || (role == "title" && label == group);
+            if !dup {
+                let kind = match role {
+                    "group" | "series" | "title" => "heading",
+                    _ => "text",
+                };
+                let text = if role == "annotation" { format!("Note: {label}") } else { label.to_string() };
+                // A series right under its part's heading of the same name: once is enough.
+                if !(kind == "heading" && out.last().is_some_and(|l| l.kind == "heading" && l.label == text)) {
+                    out.push(Readout { kind, label: text, value: String::new(), rect: rect_of(n.item), path: String::new() });
+                }
+            }
+            let group = if matches!(role, "group" | "series") && !label.is_empty() { label } else { group };
+            walk(&n.kids, name, group, out);
+        }
+    }
+    walk(&top, name, name, &mut out);
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn item(role: &str, label: &str, depth: usize) -> SemanticItem {
+        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), actionable: false, value: None }
+    }
+
+    #[test]
+    fn a_bar_chart_reads_as_its_name_its_axes_and_its_data() {
+        let items = vec![
+            item("group", "Per month", 0),
+            item("title", "Per month", 1),
+            item("axis", "y axis", 1),
+            item("tick", "Housing", 2),
+            item("tick", "Food", 2),
+            item("series", "amount by category", 1),
+            item("datum", "Housing: 10,240", 2),
+            item("datum", "Food: 5,120", 2),
+            item("axis", "x axis", 1),
+            item("tick", "0", 2),
+            item("tick", "10,000", 2),
+        ];
+        let r = readout("Per month", "2 data points.", &items);
+        let said: Vec<(&str, &str, &str)> = r.iter().map(|x| (x.kind, x.label.as_str(), x.value.as_str())).collect();
+        assert_eq!(said, vec![
+            ("chart", "Per month", "2 data points."),
+            ("text", "y axis: Housing, Food", ""),
+            ("heading", "amount by category", ""),
+            ("datum", "Housing", "10,240"),
+            ("datum", "Food", "5,120"),
+            ("text", "x axis: 0, 10,000", ""),
+        ]);
+    }
+
+    #[test]
+    fn repeated_marks_are_one_with_a_count_and_clicks_are_buttons() {
+        let mut click = item("datum", "North: 774", 0);
+        click.actionable = true;
+        click.path = "(\"bars\",\"North\")".into();
+        let items = vec![item("datum", "V", 0), item("datum", "V", 0), item("datum", "V", 0), item("datum", "S", 0), click, item("control", "Rate: 3%", 0)];
+        let r = readout("Seats", "", &items);
+        let said: Vec<(&str, &str, &str)> = r.iter().skip(1).map(|x| (x.kind, x.label.as_str(), x.value.as_str())).collect();
+        assert_eq!(said, vec![("datum", "V", "× 3"), ("datum", "S", ""), ("button", "North: 774", "")], "a dragged control is the host's own slider");
+        assert_eq!(r[3].path, "(\"bars\",\"North\")");
+    }
+}

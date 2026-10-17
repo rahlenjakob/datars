@@ -426,15 +426,20 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
 
     /** One semantics item (or engine-drawn control) as TalkBack sees it. */
     private data class A11yItem(val label: String, val role: String, val rect: android.graphics.RectF?, val path: String, val actionable: Boolean,
-                                val signal: String? = null, val min: Double = 0.0, val max: Double = 1.0, val step: Double = 0.0, val value: Double = 0.0)
+                                val signal: String? = null, val min: Double = 0.0, val max: Double = 1.0, val step: Double = 0.0, val value: Double = 0.0,
+                                /** What it says after its name: a data mark's value, the chart's summary. */
+                                val said: String = "")
     private var a11y: List<A11yItem> = emptyList()
 
-    /** TalkBack reads the engine's semantics — the chart's content, not a picture — with frames;
-     * interactive marks are buttons, engine-drawn sliders are adjustable ranges. */
+    /** TalkBack reads the chart's content, not a picture, in the runtime's reading order: the
+     * chart first (its name and summary), its controls (sliders adjustable ranges, selects the
+     * platform's list), headings for its parts, an axis or a legend as one line, each data mark
+     * with its value, clickable marks and controls as buttons — each with its frame. A new step
+     * is announced. */
     private fun updateAccessibility() {
-        val s = JSONObject(Native.status(handle) ?: "{}")
+        val s = JSONObject(Native.accessibility(handle) ?: "{}")
         val out = mutableListOf<A11yItem>()
-        val items = s.optJSONArray("semantics") ?: org.json.JSONArray()
+        val items = s.optJSONArray("readout") ?: org.json.JSONArray()
         fun rect(it: JSONObject) = it.optJSONArray("rect")?.let { a -> if (a.length() == 4 && !a.isNull(0)) android.graphics.RectF(a.getDouble(0).toFloat(), a.getDouble(1).toFloat(), (a.getDouble(0) + a.getDouble(2)).toFloat(), (a.getDouble(1) + a.getDouble(3)).toFloat()) else null }
         // Engine-drawn controls, each with where it is: sliders as adjustable ranges, selects as
         // buttons that open the platform's list (and the list is what a tap on one opens too).
@@ -459,14 +464,36 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         val selectLabels = found.map { it.label }.toSet()
         for (i in 0 until minOf(items.length(), 400)) {
             val it = items.getJSONObject(i)
-            // A clicked control (a switch, a checkbox, a button) is a button; a dragged one (a
-            // slider's thumb) is its adjustable range above; a select is its list above.
-            if (it.optString("role") == "control" && (!it.optBoolean("actionable") || it.optString("label") in selectLabels)) continue
-            out.add(A11yItem(it.optString("label"), it.optString("role"), rect(it), it.optString("path"), it.optBoolean("actionable")))
+            val kind = it.optString("kind")
+            // A select is its list above (the drawn box isn't a second one).
+            if (kind == "button" && it.optString("label") in selectLabels) continue
+            val item = A11yItem(it.optString("label"), kind, rect(it), it.optString("path"), kind == "button", said = it.optString("value"))
+            // The chart first, then its controls, then its content.
+            if (kind == "chart") out.add(0, item) else out.add(item)
         }
         a11y = out
-        contentDescription = out.firstOrNull { it.role == "title" }?.label ?: out.firstOrNull()?.label
+        contentDescription = out.firstOrNull { it.role == "chart" }?.label
         sendAccessibilityEvent(android.view.accessibility.AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED)
+        announce(s)
+    }
+
+    /** The step TalkBack last heard about. */
+    private var announced = -1
+
+    /** A new step, said once: its narration (title and text), else where the reader is ("Step 2 of
+     * 4"). Not the first state: the chart's name and summary say what it is. */
+    private fun announce(s: JSONObject) {
+        val index = s.optInt("index")
+        if (index == announced) return
+        val first = announced < 0
+        announced = index
+        if (first) return
+        val n = s.optJSONObject("narration")
+        val said = listOfNotNull(n?.optString("title"), n?.optString("text")).filter { it.isNotEmpty() }.joinToString(". ")
+        val count = s.optJSONArray("states")?.length() ?: 0
+        val text = said.ifEmpty { if (count > 1) "Step ${index + 1} of $count" else "" }
+        @Suppress("DEPRECATION")
+        if (text.isNotEmpty()) announceForAccessibility(text)
     }
 
     private val provider = object : android.view.accessibility.AccessibilityNodeProvider() {
@@ -485,6 +512,7 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             info.setParent(host)
             info.packageName = context.packageName
             info.text = item.label
+            if (item.said.isNotEmpty()) info.contentDescription = "${item.label}, ${item.said}"
             info.isEnabled = true
             info.isVisibleToUser = true
             val d = resources.displayMetrics.density
@@ -510,7 +538,11 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
                     info.isClickable = true
                     info.addAction(android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
                 }
-                else -> info.className = "android.view.View"
+                else -> {
+                    info.className = "android.view.View"
+                    // The chart and its parts' names: TalkBack's headings navigation.
+                    if ((item.role == "chart" || item.role == "heading") && android.os.Build.VERSION.SDK_INT >= 28) info.isHeading = true
+                }
             }
             return info
         }

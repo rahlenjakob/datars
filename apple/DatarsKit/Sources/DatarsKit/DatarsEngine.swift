@@ -131,6 +131,10 @@ public final class DatarsEngine {
 
     /// State, narration, the accessibility tree, resolved tokens.
     public func status() -> [String: Any] { json(datars_view_status(view)) }
+    /// What VoiceOver walks through: the brief status (state, narration, controls) and `readout`,
+    /// the reading order (`[{kind, label, value, rect, path}]`: the chart with its summary,
+    /// headings, axes and legends, data marks with their values, buttons).
+    public func accessibility() -> [String: Any] { json(datars_view_accessibility(view)) }
 
     /// The last frame: `engine` and `render` time (ms), and on the GPU `draws`, `uploaded` (bytes
     /// of new meshes), `rebuilt` (instances), `tessellated` (meshes), `standIns`.
