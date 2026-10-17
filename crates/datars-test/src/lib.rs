@@ -256,7 +256,7 @@ pub fn run(opts: &Options) -> Report {
     let _ = std::fs::create_dir_all(&out_dir);
     let list = examples(&opts.root, &opts.filter);
     // One thread per example (each builds its own engine; results are deterministic regardless).
-    let results: Vec<(String, Golden, Vec<Failure>, usize, BTreeMap<String, String>, BTreeMap<String, usize>)> = std::thread::scope(|s| {
+    let results: Vec<ExampleRun> = std::thread::scope(|s| {
         let handles: Vec<_> = list
             .iter()
             .map(|(name, path)| {
@@ -354,7 +354,11 @@ fn label_counts(engine: &mut Engine) -> BTreeMap<String, usize> {
     out
 }
 
-fn run_example(name: &str, path: &Path, out_dir: &Path, samples: usize, pixels: bool) -> (String, Golden, Vec<Failure>, usize, BTreeMap<String, String>, BTreeMap<String, usize>) {
+/// One example's run: its name, golden, failures, frames checked, state snapshots, and unreadable
+/// labels per reading.
+type ExampleRun = (String, Golden, Vec<Failure>, usize, BTreeMap<String, String>, BTreeMap<String, usize>);
+
+fn run_example(name: &str, path: &Path, out_dir: &Path, samples: usize, pixels: bool) -> ExampleRun {
     let mut failures = Vec::new();
     let mut golden = Golden::default();
     let mut snaps = BTreeMap::new();
