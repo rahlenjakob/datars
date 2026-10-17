@@ -1763,6 +1763,8 @@ export class DatarsView extends ElementBase {
     this.growForText(s);
   }
 
+  /** What the chart shows, said first (`Engine::accessible_summary`), as last described. */
+  private summary = "";
   /** The step the live region last announced. */
   private announced = -1;
   /** The words the element says around the chart's own, in the document's language (the
@@ -1819,7 +1821,7 @@ export class DatarsView extends ElementBase {
    * named groups, an axis or a legend as one line ("y axis: 0 to 1,600"), annotations as text,
    * and each run of data marks as a table (name, value), its rows reachable with the arrow keys
    * and outlined on the chart as the keyboard moves; clickable marks are buttons. The chart's
-   * name and summary go on the element itself (`aria-label`, `aria-description`). */
+   * name goes on the element itself (`aria-label`), its summary first inside it. */
   private fillMirror(s: Record<string, any>, items: MirrorItem[]) {
     // Where the keyboard is, read before the mirror is rebuilt: rebuilding mustn't lose it.
     const active = this.root.activeElement as HTMLElement | null;
@@ -1867,9 +1869,15 @@ export class DatarsView extends ElementBase {
     const name = (s.name as string | undefined)?.trim() || rootLabel || shown.find((i) => i.role === "title" && i.label.trim())?.label || "";
     if (name) this.setAttribute("aria-label", name);
     else if (!this.getAttribute("aria-label")) this.setAttribute("aria-label", this.ph("chart"));
-    if (typeof s.summary === "string") {
-      if (s.summary) this.setAttribute("aria-description", s.summary);
-      else this.removeAttribute("aria-description");
+    // The summary — what the chart shows — as the first thing in the chart's content, read in
+    // order by every screen reader. (Not `aria-description`: VoiceOver with Chrome files that
+    // under "more content", unread, and readers that do say it would say it twice.)
+    if (typeof s.summary === "string") this.summary = s.summary;
+    if (this.summary) {
+      const p = document.createElement("p");
+      p.className = "summary";
+      p.textContent = this.summary;
+      this.mirror.prepend(p);
     }
     // The flat list (pre-order, with depths) as a tree.
     type N = { item: MirrorItem; kids: N[] };

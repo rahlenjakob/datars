@@ -77,7 +77,7 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(`http://127.0.0.1:${server.address().port}`);
     await p.locator("datars-view .mirror table").waitFor({ state: "attached", timeout: 30_000 });
-    await p.waitForFunction(() => document.querySelector("datars-view").getAttribute("aria-description"), null, { timeout: 10_000 });
+    await p.locator("datars-view .mirror p.summary").waitFor({ state: "attached", timeout: 10_000 });
 
     // The accessibility tree as Chrome builds it.
     // (Chrome builds its tree a little after the DOM changes: ask until the data is in it.)
@@ -87,12 +87,15 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     for (let i = 0; i < 50; i++) {
       ({ nodes } = await cdp.send("Accessibility.getFullAXTree"));
       const fig = nodes.find((n) => v(n.role) === "figure");
-      if (v(fig?.description) && nodes.some((n) => v(n.role) === "rowheader" && v(n.name) === "Plums")) break;
+      if (nodes.some((n) => v(n.name) === "Kilograms of each fruit a market stall sold. 3 data points, from 18 to 42.") && nodes.some((n) => v(n.role) === "rowheader" && v(n.name) === "Plums")) break;
       await p.waitForTimeout(100);
     }
     const figure = nodes.find((n) => v(n.role) === "figure");
     assert.equal(v(figure.name), "Fruit sold on Saturday", "named by the document's title");
-    assert.equal(v(figure.description), "Kilograms of each fruit a market stall sold. 3 data points, from 18 to 42.");
+    // The summary is the first thing inside it, read in order.
+    const first = await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror").firstElementChild?.textContent);
+    assert.equal(first, "Kilograms of each fruit a market stall sold. 3 data points, from 18 to 42.");
+    assert.equal(v(figure.description), "", "not also a description (said twice, or not at all)");
     const roles = nodes.filter((n) => !n.ignored).map((n) => `${v(n.role)}:${v(n.name)}`);
     assert.ok(!roles.some((r) => r.startsWith("Canvas")), "the canvas is a picture: not in the tree");
     for (const want of ["rowheader:Apples", "cell:42", "rowheader:Pears", "cell:18", "rowheader:Plums", "cell:27"]) assert.ok(roles.includes(want), `${want} in ${roles.join(" | ")}`);
@@ -231,8 +234,8 @@ test("the element's own words speak the document's language", { skip, timeout: 1
   try {
     const p = await browser.newPage({ viewport: { width: 800, height: 500 } });
     await p.goto(`http://127.0.0.1:${server.address().port}/sv`);
-    await p.waitForFunction(() => document.querySelector("datars-view").getAttribute("aria-description"), null, { timeout: 30_000 });
-    assert.equal(await p.evaluate(() => document.querySelector("datars-view").getAttribute("aria-description")), "Kilo frukt. 3 datapunkter, från 18 till 42.");
+    await p.locator("datars-view .mirror p.summary").waitFor({ state: "attached", timeout: 30_000 });
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror p.summary").textContent), "Kilo frukt. 3 datapunkter, från 18 till 42.");
     await p.locator("datars-view").focus();
     await p.keyboard.press("ArrowRight");
     await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent !== "", null, { timeout: 10_000 });
