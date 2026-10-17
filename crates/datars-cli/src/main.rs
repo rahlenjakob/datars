@@ -18,7 +18,7 @@ struct Args {
 }
 
 /// Flags that never take a value (so `--hash doc.json` doesn't read `doc.json` as the value).
-const BOOL_FLAGS: &[&str] = &["json", "update", "no-pixels", "hash", "help", "explain", "watch", "write", "timeline", "cpu"];
+const BOOL_FLAGS: &[&str] = &["verbose", "json", "update", "no-pixels", "hash", "help", "explain", "watch", "write", "timeline", "cpu"];
 
 fn parse() -> Args {
     let mut it = std::env::args().skip(1);
@@ -60,6 +60,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   budgets   [--update]                                                          bundle + runtime sizes (gzip) against budgets.json
   profile   <doc> [--dpr 2] [--timeline] [--cpu] [--json]                      states cold/warm, then every transition stepped at 60 fps: stall, per-frame engine + GPU raster
   dev       <doc.ts|doc.json> [--port 8788]                                     live page: rebuild on save, diagnostics, lint, states
+  labels    <doc|dir>… [--widths 390,768,1200] [--text-scale 1,1.5,2] [--verbose]   labels a reader can't read (cut off, overlapping, clipped) at each width and text size
   lint      <doc> [--size WxH[,WxH]]                                            identity, encoding, legibility, accessibility, theme checks (in those boxes)
   explain   <doc> --key '(\"SE\",)' [--state N]                             why an element exists: recipes, template, data row, expression values
   data      profile <file.csv|file.json>                                        column types, missing values, ranges, candidate keys, hints
@@ -365,6 +366,9 @@ fn run(a: Args) -> Result<(), String> {
         println!("{}\nimport {{ {name} }} from \"./{}/{name}\" in your doc; it's embedded when the doc is built", out.display(), dir.display());
         return Ok(());
     }
+    if a.cmd == "labels" {
+        return labels_cmd(&a, json);
+    }
     if a.cmd == "lint" {
         let path = a.pos.first().ok_or("a document path is required")?;
         let mut e = load(&read_doc(path)?, Path::new(path).parent())?;
@@ -653,6 +657,11 @@ fn run(a: Args) -> Result<(), String> {
         Some("dark") => engine.set_mode(datars_theme::Mode::Dark),
         Some("high-contrast") => engine.set_mode(datars_theme::Mode::HighContrast),
         _ => {}
+    }
+    // `--text-scale 1.5`: as a reader with a bigger text size gets it (Dynamic Type, Android's
+    // font scale, the browser's default font size).
+    if let Some(t) = a.flags.get("text-scale") {
+        engine.set_text_scale(t.parse().map_err(|_| "--text-scale: a number (1 = the theme's sizes)")?);
     }
     let dpr: f64 = a.flags.get("dpr").and_then(|d| d.parse().ok()).unwrap_or(2.0);
     let stem = Path::new(path).file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_else(|| "doc".into());
@@ -1014,4 +1023,130 @@ fn main() -> ExitCode {
             ExitCode::FAILURE
         }
     }
+}
+
+/// The documents under `paths`: files as given; in a directory, its `.ts` documents (not `_`
+/// helpers) and each subdirectory's `doc.json` (else `doc.ts`).
+fn collect_docs(paths: &[String]) -> Vec<String> {
+    let mut out = Vec::new();
+    for p in paths {
+        let path = Path::new(p);
+        if !path.is_dir() {
+            out.push(p.clone());
+            continue;
+        }
+        let mut found: Vec<String> = Vec::new();
+        for e in std::fs::read_dir(path).into_iter().flatten().flatten() {
+            let f = e.path();
+            let name = e.file_name().to_string_lossy().into_owned();
+            if f.is_dir() {
+                for d in ["doc.json", "doc.ts"] {
+                    if f.join(d).exists() {
+                        found.push(f.join(d).display().to_string());
+                        break;
+                    }
+                }
+            } else if name.ends_with(".ts") && !name.starts_with('_') && !name.ends_with(".d.ts") {
+                found.push(f.display().to_string());
+            }
+        }
+        found.sort();
+        out.extend(found);
+    }
+    out
+}
+
+/// `datars labels`: every state of every document at each width and text size, and the labels a
+/// reader couldn't read there — cut off at the edge, drawn over one another, clipped by a box.
+fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
+    let list = |k: &str, d: &[f64]| -> Result<Vec<f64>, String> {
+        match a.flags.get(k) {
+            Some(v) => v.split(',').map(|x| x.trim().parse::<f64>().map_err(|_| format!("--{k}: numbers, comma-separated"))).collect(),
+            None => Ok(d.to_vec()),
+        }
+    };
+    let widths = list("widths", &[390.0, 768.0, 1200.0])?;
+    let scales = list("text-scale", &[1.0, 1.5, 2.0])?;
+    let docs = collect_docs(&a.pos);
+    if docs.is_empty() {
+        return Err("usage: datars labels <doc|dir>… [--widths 390,768,1200] [--text-scale 1,1.5,2]".into());
+    }
+    // A document per thread (each compiles and loads its own engine), a few at a time.
+    let threads = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(4).min(8);
+    let results: Vec<(String, Result<Vec<datars_devtools::LabelAudit>, String>)> = std::thread::scope(|s| {
+        let chunks: Vec<Vec<String>> = (0..threads).map(|t| docs.iter().skip(t).step_by(threads).cloned().collect()).collect();
+        let handles: Vec<_> = chunks
+            .into_iter()
+            .map(|chunk| {
+                let widths = widths.clone();
+                let scales = scales.clone();
+                s.spawn(move || {
+                    chunk
+                        .into_iter()
+                        .map(|path| {
+                            let r = (|| {
+                                let mut e = load(&read_doc(&path)?, Path::new(&path).parent())?;
+                                let h = e.viewport().height;
+                                let readings: Vec<datars_devtools::Reading> = widths.iter().flat_map(|w| scales.iter().map(move |t| datars_devtools::Reading { width: *w, height: h, text_scale: *t })).collect();
+                                Ok(datars_devtools::audit_labels(&mut e, &readings))
+                            })();
+                            (path, r)
+                        })
+                        .collect::<Vec<_>>()
+                })
+            })
+            .collect();
+        handles.into_iter().flat_map(|h| h.join().unwrap_or_default()).collect()
+    });
+    let mut results = results;
+    results.sort_by(|x, y| x.0.cmp(&y.0));
+    let verbose = a.flags.contains_key("verbose");
+    let mut by_reading: BTreeMap<String, (usize, usize, usize)> = BTreeMap::new();
+    let mut rows = Vec::new();
+    let (mut total, mut failed) = (0usize, 0usize);
+    for (path, r) in &results {
+        match r {
+            Err(e) => {
+                failed += 1;
+                if !json {
+                    eprintln!("{path}: {}", e.lines().next().unwrap_or(""));
+                }
+            }
+            Ok(audits) => {
+                let n: usize = audits.iter().map(|x| x.issues.count()).sum();
+                total += n;
+                for x in audits {
+                    let k = by_reading.entry(format!("{:>5} px, text {:.2}×", x.reading.width, x.reading.text_scale)).or_default();
+                    k.0 += x.issues.overlapping.len();
+                    k.1 += x.issues.cut.len();
+                    k.2 += x.issues.clipped.len();
+                    if x.issues.count() > 0 {
+                        rows.push(serde_json::json!({ "doc": path, "width": x.reading.width, "height": x.reading.height, "textScale": x.reading.text_scale, "state": x.state,
+                            "overlapping": x.issues.overlapping, "cut": x.issues.cut, "clipped": x.issues.clipped }));
+                    }
+                }
+                if !json && (n > 0 || verbose) {
+                    println!("{n:>4}  {path}");
+                    if verbose {
+                        for x in audits.iter().filter(|x| x.issues.count() > 0) {
+                            let mut what: Vec<String> = x.issues.overlapping.iter().map(|(p, q)| format!("\"{p}\" / \"{q}\"")).collect();
+                            what.extend(x.issues.cut.iter().map(|t| format!("cut \"{t}\"")));
+                            what.extend(x.issues.clipped.iter().map(|t| format!("clipped \"{t}\"")));
+                            println!("        {} [{}]: {}", x.reading.name(), x.state, what.join(", "));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if json {
+        println!("{}", serde_json::json!({ "documents": results.len(), "failed": failed, "issues": total, "rows": rows }));
+    } else {
+        println!("\n{:<24} {:>8} {:>8} {:>8}", "reading", "overlap", "cut", "clipped");
+        for (k, (o, c, cl)) in &by_reading {
+            println!("{k:<24} {o:>8} {c:>8} {cl:>8}");
+        }
+        println!("\n{} documents ({} failed to load) · {} unreadable labels", results.len(), failed, total);
+    }
+    Ok(())
 }

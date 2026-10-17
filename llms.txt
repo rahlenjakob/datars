@@ -38,6 +38,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   budgets   [--update]                                                          bundle + runtime sizes (gzip) against budgets.json
   profile   <doc> [--dpr 2] [--timeline] [--cpu] [--json]                      states cold/warm, then every transition stepped at 60 fps: stall, per-frame engine + GPU raster
   dev       <doc.ts|doc.json> [--port 8788]                                     live page: rebuild on save, diagnostics, lint, states
+  labels    <doc|dir>… [--widths 390,768,1200] [--text-scale 1,1.5,2] [--verbose]   labels a reader can't read (cut off, overlapping, clipped) at each width and text size
   lint      <doc> [--size WxH[,WxH]]                                            identity, encoding, legibility, accessibility, theme checks (in those boxes)
   explain   <doc> --key '("SE",)' [--state N]                             why an element exists: recipes, template, data row, expression values
   data      profile <file.csv|file.json>                                        column types, missing values, ranges, candidate keys, hints

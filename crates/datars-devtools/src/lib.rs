@@ -112,6 +112,8 @@ pub struct DrawnLabel {
     pub quad: [datars_math::Vec2; 4],
     pub opacity: f64,
     pub clip: Option<Rect>,
+    /// Inside a view with a camera (a map): what its clip cuts is panned out of sight, on purpose.
+    pub in_camera: bool,
 }
 
 /// Every text the scene draws, where it lands on the canvas: through transforms, pins, views and
@@ -127,7 +129,7 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
             None => r,
         })
     }
-    fn walk(n: &Node, parent: Affine, opacity: f64, clip: Option<Rect>, out: &mut Vec<DrawnLabel>) {
+    fn walk(n: &Node, parent: Affine, opacity: f64, clip: Option<Rect>, cam: bool, out: &mut Vec<DrawnLabel>) {
         let opacity = opacity * n.common.opacity;
         if !n.common.visible || opacity <= 0.01 {
             return;
@@ -150,18 +152,19 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
                     let quad = [(local.x, local.y), (local.x1(), local.y), (local.x1(), local.y1()), (local.x, local.y1())].map(|(x, y)| m.apply(datars_math::Vec2::new(x, y)));
                     (corners(m, local), quad)
                 };
-                out.push(DrawnLabel { text: t.text.clone(), rect, quad, opacity, clip });
+                out.push(DrawnLabel { text: t.text.clone(), rect, quad, opacity, clip, in_camera: cam });
             }
             NodeKind::View { viewport, camera, clip: clips, children } => {
                 let inner = xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y)));
                 let clip = if *clips { narrow(clip, corners(xf, *viewport)) } else { clip };
-                children.iter().for_each(|c| walk(c, inner, opacity, clip, out));
+                let cam = cam || camera.is_some();
+                children.iter().for_each(|c| walk(c, inner, opacity, clip, cam, out));
             }
-            _ => n.children().iter().for_each(|c| walk(c, xf, opacity, clip, out)),
+            _ => n.children().iter().for_each(|c| walk(c, xf, opacity, clip, cam, out)),
         }
     }
     let mut out = Vec::new();
-    walk(&scene.root, Affine::IDENTITY, 1.0, None, &mut out);
+    walk(&scene.root, Affine::IDENTITY, 1.0, None, false, &mut out);
     out
 }
 
@@ -172,6 +175,16 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
 pub struct LabelIssues {
     pub cut: Vec<String>,
     pub overlapping: Vec<(String, String)>,
+    /// Labels a box clips part of (a column too narrow for its names): the reader sees a piece.
+    /// Not counted under a map's camera, whose edge cuts labels as the reader pans.
+    pub clipped: Vec<String>,
+}
+
+impl LabelIssues {
+    /// Everything a reader can't read.
+    pub fn count(&self) -> usize {
+        self.cut.len() + self.overlapping.len() + self.clipped.len()
+    }
 }
 
 pub fn label_issues(scene: &Scene) -> LabelIssues {
@@ -195,6 +208,10 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
         if inside && crosses && l.clip.is_none() {
             out.cut.push(l.text.clone());
         }
+        // (A sliver — a descender, a halo — is no loss.)
+        if l.clip.is_some() && !l.in_camera && r.w * r.h < 0.85 * l.rect.w * l.rect.h && (l.rect.w - r.w > 2.0 || l.rect.h - r.h > 2.0) {
+            out.clipped.push(l.text.clone());
+        }
     }
     // Text boxes are line boxes (ascent to descent): a sliver of overlap between stacked lines is
     // spacing, not a collision — a quarter of the smaller label is.
@@ -215,6 +232,57 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
                     out.overlapping.push((labels[i].1.text.clone(), labels[j].1.text.clone()));
                 }
             }
+        }
+    }
+    out
+}
+
+/// One way a reader gets a chart: the box it lays out in and their text size.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize)]
+pub struct Reading {
+    pub width: f64,
+    pub height: f64,
+    pub text_scale: f64,
+}
+
+impl Reading {
+    /// The readings a chart should survive: a phone, a tablet and a wide column (at the height it
+    /// was written for, as a page's `height` keeps it), each at the theme's text size and at 1.5
+    /// and 2 × — the large sizes readers choose on phones and in browsers.
+    pub fn standard(height: f64) -> Vec<Reading> {
+        let mut out = Vec::new();
+        for width in [390.0, 768.0, 1200.0] {
+            for text_scale in [1.0, 1.5, 2.0] {
+                out.push(Reading { width, height, text_scale });
+            }
+        }
+        out
+    }
+
+    pub fn name(&self) -> String {
+        format!("{}×{} text {}×", self.width, self.height, self.text_scale)
+    }
+}
+
+/// What a reading of one state shows that can't be read.
+#[derive(Clone, Debug, PartialEq)]
+pub struct LabelAudit {
+    pub reading: Reading,
+    pub state: String,
+    pub issues: LabelIssues,
+}
+
+/// Every state of a chart at every reading: labels cut off, drawn over one another, or clipped by
+/// their box. The engine is left at the last reading.
+pub fn audit_labels(engine: &mut Engine, readings: &[Reading]) -> Vec<LabelAudit> {
+    let names = engine.state_names();
+    let mut out = Vec::new();
+    for r in readings {
+        engine.resize(r.width, r.height, 1.0);
+        engine.set_text_scale(r.text_scale);
+        for (i, state) in names.iter().enumerate() {
+            let issues = label_issues(&engine.scene_for_state(i));
+            out.push(LabelAudit { reading: *r, state: state.clone(), issues });
         }
     }
     out
@@ -254,6 +322,9 @@ pub fn lint_scene(scene: &Scene, state: &str) -> Vec<Finding> {
     if let Some((a, b)) = labels.overlapping.first() {
         let n = labels.overlapping.len();
         out.push(f("legibility/label-collisions", if n > 5 { "warning" } else { "info" }, format!("{state}: {n} overlapping labels (\"{a}\" overlaps \"{b}\")"), "give labels priorities, thin them, or use a legend"));
+    }
+    for t in &labels.clipped {
+        out.push(f("legibility/clipped", "warning", format!("{state}: label \"{t}\" is partly hidden by its box's clip"), "give the box room for its labels, wrap them (maxWidth), or thin them"));
     }
     for t in &labels.cut {
         out.push(f("legibility/offscreen", "warning", format!("{state}: label \"{t}\" is cut off at the canvas edge"), "check positions, alignment near edges, and layout room"));
@@ -347,6 +418,40 @@ mod tests {
         e.load(datars_ir::Doc::from_json(&flat).unwrap());
         let issues = label_issues(&e.scene());
         assert!(!issues.cut.is_empty() && !issues.overlapping.is_empty(), "{issues:?}");
+    }
+
+    /// A label a box's clip cuts in half is unreadable; one a map's camera pans past the edge isn't
+    /// counted (that's panning).
+    #[test]
+    fn a_label_its_box_clips_is_reported() {
+        let doc = serde_json::json!({ "datars": 1, "size": { "width": 300, "height": 100 }, "scene": { "kind": "group", "key": "root", "children": [
+            { "kind": "group", "key": "col", "size": { "w": 40 }, "clip": "box", "children": [
+                { "kind": "text", "key": "t", "text": "A long category name", "at": [0, 20], "style": { "size": 11 } }
+            ] }
+        ] } });
+        let mut e = Engine::new();
+        e.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap());
+        let issues = label_issues(&e.scene());
+        assert_eq!(issues.clipped, vec!["A long category name".to_string()], "{issues:?}");
+        assert_eq!(issues.count(), 1);
+    }
+
+    /// The audit reads every state at every reading, and finds what only a bigger text size
+    /// breaks: two labels a fixed distance apart run into each other at 2 ×.
+    #[test]
+    fn the_audit_finds_what_only_big_text_breaks() {
+        let doc = serde_json::json!({ "datars": 1, "size": { "width": 400, "height": 100 }, "scene": { "kind": "group", "key": "root", "children": [
+            { "kind": "text", "key": "a", "text": "Revenue", "at": [10, 20], "style": { "size": "$size.label" } },
+            { "kind": "text", "key": "b", "text": "Costs", "at": [70, 20], "style": { "size": "$size.label" } }
+        ] } });
+        let mut e = Engine::new();
+        e.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap());
+        let readings = [Reading { width: 400.0, height: 100.0, text_scale: 1.0 }, Reading { width: 400.0, height: 100.0, text_scale: 2.0 }];
+        let audit = audit_labels(&mut e, &readings);
+        assert_eq!(audit.len(), 2);
+        assert_eq!(audit[0].issues.count(), 0, "{:?}", audit[0]);
+        assert_eq!(audit[1].issues.overlapping, vec![("Revenue".to_string(), "Costs".to_string())], "{:?}", audit[1]);
+        assert_eq!(Reading::standard(300.0).len(), 9);
     }
 
     #[test]
