@@ -17,8 +17,7 @@ sources under every figure. Each article is a folder:
   several charts share them). A story from another article is named by its path (`../warming/spiral`).
 - `page/` (optional) — the page's own files, copied next to its `index.html`: a script that feeds
   a live chart, its styles. `{{env:DATARS_PUBLIC_…}}` in them is filled from the build's
-  environment (public by name: it reaches every reader). A story's data files read by relative
-  URL are published next to its "Chart code".
+  environment (public by name: it reaches every reader).
 - `theme.ts` — the chart theme its stories use: every article re-exports the shared house theme,
   `editorial.ts` (over `datars/neutral`), so the charts and the pages match.
 

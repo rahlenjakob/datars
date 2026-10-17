@@ -14,6 +14,7 @@
 // hidden or the chart is off the screen. The chart's source merges them (upsert by market, day and
 // minute), so the open minute moves and a new minute grows out of the line.
 import { liveFeed, socket, poll } from "../../runtime/datars.js";
+import { MIN, DAY, STOCKS, bySym, nyWall, isoDay, usMarket, fmtDay, minuteRow, sessionMeta, finnhubRows, twelveRows } from "./feed.js";
 
 const figure = document.querySelector('figure[data-story="follow"]');
 const slot = figure?.querySelector(".chart");
@@ -24,64 +25,10 @@ const note = document.getElementById("keys-note");
 const forget = document.getElementById("keys-forget");
 const replayButton = document.getElementById("replay");
 
-const MIN = 60_000, HOUR = 3_600_000, DAY = 86_400_000;
 const STORE = "datars.markets.keys";
 // A key a site build may carry (DATARS_PUBLIC_*): only for a licence that allows showing the data
 // to every reader — the free plans don't (see README.md). Empty unless the build sets it.
 const SITE_KEYS = { finnhub: "{{env:DATARS_PUBLIC_FINNHUB_KEY}}", twelvedata: "{{env:DATARS_PUBLIC_TWELVEDATA_KEY}}" };
-
-const STOCKS = [
-  { sym: "AAPL", name: "Apple", venue: "AAPL · Nasdaq", fh: "AAPL", td: "AAPL" },
-  { sym: "MSFT", name: "Microsoft", venue: "MSFT · Nasdaq", fh: "MSFT", td: "MSFT" },
-  { sym: "NVDA", name: "Nvidia", venue: "NVDA · Nasdaq", fh: "NVDA", td: "NVDA" },
-  { sym: "SPY", name: "S&P 500", venue: "SPY, an S&P 500 index fund · NYSE Arca", fh: "SPY", td: "SPY" },
-  { sym: "BTC", name: "Bitcoin", venue: "BTC in U.S. dollars · Binance", fh: "BINANCE:BTCUSDT", td: "BTC/USD", crypto: true },
-];
-const bySym = Object.fromEntries(STOCKS.map((s) => [s.sym, s]));
-
-// ---- time: New York's wall clock, the U.S. market's hours ----------------------------------------
-
-const nyParts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
-/** A UTC instant as New York's wall-clock time, written as if it were UTC (the chart's convention:
- * its axis then reads New York's hours). */
-function nyWall(utc) {
-  const p = Object.fromEntries(nyParts.formatToParts(new Date(utc)).map((x) => [x.type, x.value]));
-  return Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second) + (utc % 1000);
-}
-const isoDay = (wall) => new Date(wall).toISOString().slice(0, 10);
-const atWall = (day, h, m = 0) => Date.parse(`${day}T00:00:00Z`) + h * HOUR + m * MIN;
-
-// NYSE and Nasdaq: closed on these days, and closing at 1 p.m. on the early ones.
-const HOLIDAYS = new Set(["2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07", "2026-11-26", "2026-12-25",
-  "2027-01-01", "2027-01-18", "2027-02-15", "2027-03-26", "2027-05-31", "2027-06-18", "2027-07-05", "2027-09-06", "2027-11-25", "2027-12-24"]);
-const EARLY = new Set(["2026-11-27", "2026-12-24", "2027-11-26"]);
-const tradingDay = (day) => { const w = new Date(`${day}T12:00:00Z`).getUTCDay(); return w > 0 && w < 6 && !HOLIDAYS.has(day); };
-const closeHour = (day) => (EARLY.has(day) ? 13 : 16);
-
-/** The U.S. market now: open or not, the session to show (today's, else the last one), the next open. */
-function usMarket(now = Date.now()) {
-  const wall = nyWall(now);
-  const today = isoDay(wall);
-  const open = tradingDay(today) && wall >= atWall(today, 9, 30) && wall < atWall(today, closeHour(today));
-  let session = today;
-  if (!tradingDay(today) || wall < atWall(today, 9, 30)) {
-    do session = isoDay(Date.parse(`${session}T12:00:00Z`) - DAY); while (!tradingDay(session));
-  }
-  let next = today;
-  if (!tradingDay(today) || wall >= atWall(today, 9, 30)) {
-    do next = isoDay(Date.parse(`${next}T12:00:00Z`) + DAY); while (!tradingDay(next));
-  }
-  return { open, session, next, wall };
-}
-
-// Dates as a newsroom writes them: Oct. 16, 2026; Mon., Oct. 19 (AP: March to July in full, Sept.).
-const MONTHS = ["Jan.", "Feb.", "March", "April", "May", "June", "July", "Aug.", "Sept.", "Oct.", "Nov.", "Dec."];
-const WEEKDAYS = ["Sun.", "Mon.", "Tue.", "Wed.", "Thu.", "Fri.", "Sat."];
-function fmtDay(day, weekday = false) {
-  const d = new Date(`${day}T12:00:00Z`);
-  const md = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`;
-  return weekday ? `${WEEKDAYS[d.getUTCDay()]}, ${md}` : `${md}, ${d.getUTCFullYear()}`;
-}
 
 // ---- keys --------------------------------------------------------------------------------------
 
@@ -136,27 +83,36 @@ slot?.addEventListener("signal", (e) => {
   }
 }, true);
 let onPick = null;
+const onPickers = [];
 
 // ---- the screen reader's summary: polite, and not on every trade -----------------------------
 
 const latest = new Map(); // sym → { p, t }
 let announced = 0, announceTimer = 0;
+let announceAt = Infinity;
+/** Say it soon (a new market, a new state: in 1.5 s, once things have settled) or at the next
+ * five-minute mark — whichever is sooner than what is already planned. */
 function announceSoon(now = false) {
+  const at = Date.now() + (now ? 1500 : Math.max(0, announced + 5 * MIN - Date.now()));
+  if (at >= announceAt) return;
   clearTimeout(announceTimer);
-  const wait = now ? 1500 : Math.max(0, announced + 5 * MIN - Date.now());
-  announceTimer = setTimeout(announce, wait);
+  announceAt = at;
+  announceTimer = setTimeout(() => { announceAt = Infinity; announce(); }, at - Date.now());
 }
+/** What the summary last spoke about (market and feed): a new one is said as soon as it has a price. */
+let announcedFor = "";
 function announce() {
   if (!said) return;
   const m = meta.get(state.sym), l = latest.get(state.sym);
   if (!m) return;
+  announcedFor = l ? `${state.feed}:${state.sym}` : "";
   const money = (x) => x.toLocaleString("en-US", { style: "currency", currency: "USD" });
   let text = `${m.name}: `;
   if (l && Number.isFinite(m.ref)) {
     const d = l.p - m.ref, pct = (d / m.ref) * 100;
     text += `${money(l.p)}, ${d < 0 ? "down" : "up"} ${Math.abs(pct).toFixed(2)} percent. `;
   } else text += "no prices yet. ";
-  said.textContent = text + state.status.replace(/·/g, ".");
+  said.textContent = text + state.status.replace(/ · /g, ". ") + ".";
   announced = Date.now();
 }
 
@@ -165,7 +121,8 @@ function announce() {
 let recorded = null;
 async function recordedRows() {
   if (!recorded) {
-    const src = slot?.dataset.src?.replace(/\/c\/[^/]+$/, "/session.json");
+    // Published next to the chart's manifest, as its live source's snapshot.
+    const src = slot?.dataset.src?.replace(/\/c\/[^/]+$/, "/c/session.json");
     recorded = src ? fetch(src).then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.status)))) : Promise.reject(new Error("no chart"));
   }
   return recorded;
@@ -212,24 +169,6 @@ replayButton?.addEventListener("click", () => replay().catch((e) => console.warn
 
 // ---- live: Twelve Data (minute bars) and Finnhub (trades) ----------------------------------------
 
-/** One price a minute: the trade's minute on the market's wall clock. Regular hours only. */
-function minuteRow(s, utc, p) {
-  const wall = s.crypto ? utc : nyWall(utc);
-  const day = isoDay(wall);
-  const t = Math.floor(wall / MIN) * MIN;
-  if (!s.crypto && (t < atWall(day, 9, 30) || t >= atWall(day, closeHour(day)))) return null;
-  const l = latest.get(s.sym);
-  if (!l || utc >= l.utc) latest.set(s.sym, { p, t, utc });
-  return { sym: s.sym, day, t, p };
-}
-
-function sessionMeta(s, day, ref, refLabel) {
-  const crypto = !!s.crypto;
-  return { sym: s.sym, name: s.name, venue: s.venue, day, fmt: "$,.2f", tz: crypto ? "UTC" : "ET",
-    x0: crypto ? atWall(day, 0) : atWall(day, 9, 30), x1: crypto ? atWall(day, 24) : atWall(day, closeHour(day)),
-    ref, refLabel: refLabel ?? (crypto ? "At midnight UTC" : "Previous close") };
-}
-
 class Fatal extends Error {}
 async function getJson(url, signal) {
   const r = await fetch(url, { signal, cache: "no-store" });
@@ -243,93 +182,100 @@ const feeds = [];
 const health = { finnhub: null, twelvedata: null }; // what each feed last said
 const lag = new Map(); // provider → ms between a price's time and its arrival
 
+/** The newest price per market, for the screen reader's summary. */
+function noteLatest(rows) {
+  for (const r of rows) {
+    const l = latest.get(r.sym);
+    if (!l || r.t >= l.t) latest.set(r.sym, { p: r.p, t: r.t });
+  }
+  // The chosen market's first price: say it (once; after that, every five minutes at most).
+  if (rows.some((r) => r.sym === state.sym) && announcedFor !== `${state.feed}:${state.sym}`) announceSoon(true);
+  return rows;
+}
+
 function twelveData(key) {
   const td = (path, q) => `https://api.twelvedata.com/${path}?${new URLSearchParams({ ...q, apikey: key })}`;
+  const series = (s, size) => td("time_series", { symbol: s.td, interval: "1min", outputsize: String(size), ...(s.crypto ? { timezone: "UTC" } : {}) });
   const loaded = new Set();
+  let cx = null;
   /** The session so far for one market (390 minutes, or the UTC day for bitcoin) and its reference. */
   async function history(s, signal) {
-    const crypto = !!s.crypto;
-    const [bars, quote] = await Promise.all([
-      getJson(td("time_series", { symbol: s.td, interval: "1min", outputsize: crypto ? "1440" : "390", ...(crypto ? { timezone: "UTC" } : {}) }), signal),
-      crypto ? null : getJson(td("quote", { symbol: s.td }), signal),
-    ]);
-    const rows = (bars.values ?? []).map((v) => ({ wall: Date.parse(v.datetime.replace(" ", "T") + "Z"), open: +v.open, close: +v.close })).filter((v) => Number.isFinite(v.wall));
-    if (!rows.length) return [];
-    const day = isoDay(Math.max(...rows.map((r) => r.wall)));
-    const today = rows.filter((r) => isoDay(r.wall) === day).sort((a, b) => a.wall - b.wall);
-    const ref = crypto ? today[0].open : +quote.previous_close;
-    setMeta(sessionMeta(s, day, ref));
-    const out = today.map((r) => ({ sym: s.sym, day, t: r.wall, p: r.close }));
-    const last = today.at(-1);
-    latest.set(s.sym, { p: last.close, t: last.wall, utc: Date.now() });
-    return out;
+    loaded.add(s.sym); // asked once; a failure asks again (below)
+    try {
+      return await historyNow(s, signal);
+    } catch (e) {
+      loaded.delete(s.sym);
+      throw e;
+    }
+  }
+  async function historyNow(s, signal) {
+    const [bars, quote] = await Promise.all([getJson(series(s, s.crypto ? 1440 : 390), signal), s.crypto ? null : getJson(td("quote", { symbol: s.td }), signal)]);
+    const all = twelveRows(s, bars);
+    if (!all.length) return [];
+    const day = all.at(-1).day;
+    const today = all.filter((r) => r.day === day);
+    setMeta(sessionMeta(s, day, s.crypto ? today[0].open : +quote.previous_close));
+    return noteLatest(today.map(({ sym, day, t, p }) => ({ sym, day, t, p })));
   }
   const f = liveFeed({ source: "prices", view, watch: slot, pace: 1000,
     onStatus: (st) => { health.twelvedata = st; describe(); },
-    connect: poll(async (signal) => {
-      const s = bySym[state.sym] ?? STOCKS[0];
-      if (!loaded.has(s.sym)) { const rows = await history(s, signal); loaded.add(s.sym); return rows; }
-      if (!s.crypto && !usMarket().open) return []; // nothing trades: nothing to ask for
-      const bars = await getJson(td("time_series", { symbol: s.td, interval: "1min", outputsize: "2", ...(s.crypto ? { timezone: "UTC" } : {}) }), signal);
-      const rows = (bars.values ?? []).map((v) => ({ sym: s.sym, t: Date.parse(v.datetime.replace(" ", "T") + "Z"), p: +v.close }));
-      for (const r of rows) r.day = isoDay(r.t);
-      const newest = rows.reduce((a, r) => (r.t > a.t ? r : a), rows[0]);
-      if (newest) {
-        const nowWall = s.crypto ? Date.now() : nyWall(Date.now());
-        lag.set("twelvedata", Math.max(0, nowWall - (newest.t + MIN)));
-        latest.set(s.sym, { p: newest.p, t: newest.t, utc: Date.now() });
-        if (meta.get(s.sym)?.day !== newest.day) loaded.delete(s.sym); // a new session: its history
-      }
-      return rows;
-    }, 60_000) });
-  onPickers.push(() => f.flush()); // a new market's history comes with the next poll
-  return { feed: f, refresh: () => { /* next poll fetches the chosen market */ } };
+    connect: (c) => {
+      cx = c;
+      return poll(async (signal) => {
+        const s = bySym[state.sym] ?? STOCKS[0];
+        if (!loaded.has(s.sym)) return history(s, signal);
+        if (!s.crypto && !usMarket().open) return []; // nothing trades: nothing to ask for
+        const rows = twelveRows(s, await getJson(series(s, 2), signal)).map(({ sym, day, t, p }) => ({ sym, day, t, p }));
+        const newest = rows.at(-1);
+        if (newest) {
+          // A bar is stamped with its minute's start and arrives once that minute is over.
+          lag.set("twelvedata", Math.max(0, (s.crypto ? Date.now() : nyWall(Date.now())) - (newest.t + MIN)));
+          if (meta.get(s.sym)?.day !== newest.day) return history(s, signal); // a new session
+        }
+        return noteLatest(rows);
+      }, 60_000)(c);
+    } });
+  // A market picked on the chart: its history now, not at the next poll.
+  onPickers.push((sym) => {
+    const s = bySym[sym];
+    if (s && !loaded.has(sym) && cx) history(s, cx.signal).then((rows) => cx.push(rows), (e) => (e instanceof Fatal ? fatal("twelvedata", e) : cx.fail(e)));
+  });
+  return { feed: f };
 }
 
 function finnhub(key) {
   const fh = (path, q) => `https://finnhub.io/api/v1/${path}?${new URLSearchParams({ ...q, token: key })}`;
-  const bySymbol = Object.fromEntries(STOCKS.map((s) => [s.fh, s]));
-  // Each market's previous close (and a first price, where no history arrives).
-  const quotes = (async () => {
+  // Each market's previous close (and its last price: a first point before any trade arrives).
+  async function quotes(signal) {
     const out = [];
     for (const s of STOCKS) {
-      try {
-        const q = await getJson(fh("quote", { symbol: s.fh }));
-        const at = q.t ? q.t * 1000 : Date.now();
-        const wall = s.crypto ? at : nyWall(at);
-        const session = s.crypto ? isoDay(wall) : usMarket().session;
-        if (!meta.has(s.sym) || meta.get(s.sym).day !== session || !health.twelvedata) setMeta(sessionMeta(s, session, q.pc, s.crypto ? "Yesterday's close (UTC)" : "Previous close"));
-        const r = q.c ? minuteRow(s, at, q.c) : null;
-        if (r) out.push(r);
-      } catch (e) {
-        if (e instanceof Fatal) throw e;
-      }
+      const q = await getJson(fh("quote", { symbol: s.fh }), signal).catch((e) => { if (e instanceof Fatal) throw e; return null; });
+      if (!q) continue;
+      const at = q.t ? q.t * 1000 : Date.now();
+      const session = s.crypto ? isoDay(at) : usMarket().session;
+      // Twelve Data's history, when it is there, knows the session better.
+      if (!health.twelvedata || !meta.has(s.sym)) setMeta(sessionMeta(s, session, q.pc, s.crypto ? "Yesterday's close (UTC)" : "Previous close"));
+      const r = q.c ? minuteRow(s, at, q.c) : null;
+      if (r) out.push(r);
     }
-    return out;
-  })();
+    return noteLatest(out);
+  }
   const f = liveFeed({ source: "prices", view, watch: slot, pace: 1000,
     onStatus: (st) => { health.finnhub = st; describe(); },
     connect: (cx) => {
-      quotes.then((rows) => cx.push(rows), (e) => { cx.fail(e); fatal("finnhub", e); });
+      quotes(cx.signal).then((rows) => cx.push(rows), (e) => (e instanceof Fatal ? fatal("finnhub", e) : undefined));
       return socket(`wss://ws.finnhub.io?token=${encodeURIComponent(key)}`, {
         open: (ws) => { for (const s of STOCKS) ws.send(JSON.stringify({ type: "subscribe", symbol: s.fh })); },
         message: (m) => {
           if (m?.type === "error") { fatal("finnhub", new Fatal(m.msg ?? "refused")); return null; }
-          if (m?.type !== "trade") return null;
-          const rows = [];
-          for (const d of m.data ?? []) {
-            const s = bySymbol[d.s];
-            const r = s && minuteRow(s, d.t, d.p);
-            if (r) rows.push(r);
-            if (s) lag.set("finnhub", Math.max(0, Date.now() - d.t));
-          }
-          return rows;
+          const { rows, lag: l } = finnhubRows(m);
+          if (l !== undefined) lag.set("finnhub", l);
+          return noteLatest(rows.map(({ sym, day, t, p }) => ({ sym, day, t, p })));
         },
       })(cx);
     } });
   return { feed: f };
 }
-const onPickers = [];
 onPick = (sym) => { for (const p of onPickers) p(sym); describe(); };
 
 function fatal(provider, e) {
@@ -374,8 +320,9 @@ function stopAll() { while (feeds.length) feeds.pop().feed.stop(); }
 async function start(keys) {
   stopAll();
   if (keys.finnhub || keys.twelvedata) {
+    // Stocks are what a key is for: a reader who just came to follow them starts on Apple.
+    set({ feed: "live", sym: state.feed === "live" && bySym[state.sym] ? state.sym : "AAPL", status: "Connecting…", source: "" });
     for (const [provider, make] of [["twelvedata", twelveData], ["finnhub", finnhub]]) if (keys[provider]) feeds.push({ provider, ...make(keys[provider]) });
-    set({ feed: "live", sym: bySym[state.sym] ? state.sym : "AAPL", status: "Connecting…", source: "" });
     describe();
   } else {
     try { showRecorded(await recordedRows()); } catch (e) { console.warn("markets: recorded day", e); }

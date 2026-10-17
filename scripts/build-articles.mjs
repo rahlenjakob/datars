@@ -93,15 +93,6 @@ async function publish(article, story) {
   rmSync(to, { recursive: true, force: true });
   execFileSync(cli, ["publish", staged, "--alias", alias, "--to", to], { stdio: ["ignore", "ignore", "inherit"] });
   copyFileSync(file, join(to, "doc.ts"));
-  // The data files the code reads by relative URL, beside it: the code runs as published, and a
-  // page's own script can start from the same rows (a live chart's feed, a replay).
-  for (const s of Object.values(doc.data ?? {})) {
-    const f = typeof s?.url === "string" && !/^[a-z]+:/i.test(s.url) ? join(dir, s.url) : null;
-    if (f && existsSync(f) && !existsSync(join(to, s.url))) {
-      mkdirSync(dirname(join(to, s.url)), { recursive: true });
-      copyFileSync(f, join(to, s.url));
-    }
-  }
   const states = doc.program?.states ?? [];
   const drivers = JSON.stringify(doc.program?.drivers ?? []);
   const info = {

@@ -26,8 +26,31 @@ const HAS = "table.count('cur') > 0";
 const INK = `(${HAS} && ${CHG} < 0 ? "$down" : "$up")`;
 /** The price as the header writes it (the price axis and the change use the same format). */
 const PRICE = `format(${LAST}, ${M("fmt")})`;
-/** The header's figure: as large as the width allows. */
-const FIG = "min(40, max(28, box.w / 18))";
+/** The reader's text size, as std's controls read it: bigger text, bigger rows (never smaller). */
+const T = "max(1, textScale)";
+/** The header's figure: as large as the width allows (and a little larger with bigger text). */
+const FIG = `min(40, max(28, box.w / 18)) * sqrt(${T})`;
+/** A small text's size and its line, at the reader's text size. */
+const sz = (n: number) => `${n} * ${T}`;
+/** The header: the market and its venue (the market alone when both don't fit), the price, and
+ * the day's change beside it (or under it, where it doesn't fit beside). */
+const NAME_FULL = `${M("name")} + '  ·  ' + ${M("venue")}`;
+const CS = `(${FIG} * 0.5)`;
+const CHANGE = `format(${CHG}, '+$,.2f') + '  (' + format(${PCT}, '+.2f') + '%)'`;
+const BESIDE = `(measure(${PRICE}, ${FIG}, 700) + 20 + ${CS} * 0.6 + measure(${CHANGE}, ${CS}, 600) <= box.w)`;
+/** Where the change starts (x) and its baseline (y); the header's last baseline. */
+const CX = `(${BESIDE} ? measure(${PRICE}, ${FIG}, 700) + 14 : 0)`;
+const BY = `(${sz(20)} + ${FIG} + (${BESIDE} ? 0 : ${CS} * 1.45))`;
+/** The amount's x and width (the share follows it). */
+const AX = `(${CX} + ${CS} * 0.6 + 6)`;
+const AW = `measure(format(${CHG}, '+$,.2f'), ${CS}, 600)`;
+const BASE = `(${HAS} ? ${BY} : ${sz(20)} + ${FIG})`;
+/** The footer: the status (the page's, else the recorded day's) and the source. */
+const STATUS = `(status != '' ? status : 'Recorded ' + ${M("label")} + ' · Not live · Times are UTC')`;
+const LINE = sz(16.5);
+const SIDE = `(measure(${STATUS}, ${sz(12.5)}) + measure(source, ${sz(12)}) + 24 <= box.w)`;
+const SL = `ceil(measure(${STATUS}, ${sz(12.5)}) / (box.w * 0.92))`;
+const DL = `ceil(measure(source, ${sz(12)}) / (box.w * 0.92))`;
 
 export default doc({
   id: "markets/follow",
@@ -45,7 +68,7 @@ export default doc({
       // last session stays).
       live: { mode: "upsert", span: 4 * 86400, on: "t" },
     }),
-    meta: data.url("session.json", { rows: "meta", key: "sym", types: { x0: "num", x1: "num", ref: "num" } }),
+    meta: data.url("session.json", { rows: "meta", key: "sym", types: { x0: "num", x1: "num", ref: "num", day: "str" } }),
   },
   signals: {
     sym: signal.str("BTC"),
@@ -75,42 +98,51 @@ export default doc({
     key: "root",
     layout: { type: "rows", gap: 6, padding: [14, 18, 10, 12] },
     children: [
-      // The switcher: stocks and bitcoin with a key, the recorded coins without.
+      // The switcher: stocks and bitcoin with a key (their names where they fit, else tickers),
+      // the recorded coins without.
       group({
         key: "pick",
-        size: { h: 34 },
+        size: { h: e(`32 * ${T} + 2`) },
         children: [
           segmented({ signal: "sym", options: ["AAPL", "MSFT", "NVDA", "SPY", "BTC"], labels: ["Apple", "Microsoft", "Nvidia", "S&P 500", "Bitcoin"] },
-            { key: "live-pick", when: e('feed == "live"'), size: { w: e("min(box.w, 500)"), h: 32 } }),
+            { key: "live-pick", when: e(`feed == "live" && box.w >= 520 * ${T}`), size: { w: e("min(box.w, 500 * max(1, textScale))"), h: e(`32 * ${T}`) } }),
+          segmented({ signal: "sym", options: ["AAPL", "MSFT", "NVDA", "SPY", "BTC"], labels: ["AAPL", "MSFT", "NVDA", "SPY", "BTC"] },
+            { key: "live-pick-short", when: e(`feed == "live" && box.w < 520 * ${T}`), size: { w: e("box.w"), h: e(`32 * ${T}`) } }),
           segmented({ signal: "sym", options: ["BTC", "ETH"], labels: ["Bitcoin", "Ether"] },
-            { key: "coin-pick", when: e('feed != "live"'), size: { w: e("min(box.w, 220)"), h: 32 } }),
+            { key: "coin-pick", when: e('feed != "live"'), size: { w: e(`min(box.w, 220 * ${T})`), h: e(`32 * ${T}`) } }),
         ],
       }),
       group({
         key: "head",
-        size: { h: e(`${FIG} + 60`) },
-        semantics: { role: "title", label: e(`${HAS} ? ${M("name")} + ', ' + ${PRICE} + ', ' + (${CHG} < 0 ? 'down ' : 'up ') + format(abs(${PCT}), '.2f') + ' percent ' + ${M("refLabel")} : ${M("name")} + ': ' + empty`) },
+        size: { h: e(`${BASE} + ${sz(34)}`) },
+        semantics: { role: "title", label: e(`${HAS} ? ${M("name")} + ', ' + ${PRICE} + ', ' + (${CHG} < 0 ? 'down ' : 'up ') + format(abs(${PCT}), '.2f') + ' percent. ' + ${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")}) : ${M("name")} + ': ' + empty`) },
         children: [
-          text(e(`${M("name")} + '  ·  ' + ${M("venue")}`), [0, 14], { key: "name", style: { size: 13, weight: 600, ink: "$ink-2" } }),
-          text("", [0, e(`20 + ${FIG}`)], {
+          text(e(`measure(${NAME_FULL}, ${sz(13)}, 600) > box.w ? ${M("name")} : ${NAME_FULL}`), [0, e(sz(14))], { key: "name", style: { size: e(sz(13)), weight: 600, ink: "$ink-2" } }),
+          text("", [0, e(`${sz(20)} + ${FIG}`)], {
             key: "price",
             number: { value: e(LAST), format: e(M("fmt")) },
             style: { size: e(FIG), weight: 700 },
             when: e(HAS),
           }),
-          // The day's change, after the price: a triangle, the amount and the share.
+          // The day's change: a triangle, the amount and the share — beside the price, or under it
+          // when they don't fit side by side (a phone, a reader's bigger text).
           group({
             key: "change",
             when: e(HAS),
             children: [
-              shape(geom.path(e(`'M' + (measure(${PRICE}, ${FIG}, 700) + 14) + ' ' + (${CHG} < 0 ? (${FIG} + 7) + ' L' + (measure(${PRICE}, ${FIG}, 700) + 26) + ' ' + (${FIG} + 7) + ' L' + (measure(${PRICE}, ${FIG}, 700) + 20) + ' ' + (${FIG} + 17) : (${FIG} + 17) + ' L' + (measure(${PRICE}, ${FIG}, 700) + 26) + ' ' + (${FIG} + 17) + ' L' + (measure(${PRICE}, ${FIG}, 700) + 20) + ' ' + (${FIG} + 7)) + ' Z'`)),
+              shape(geom.path(e(`${CHG} < 0
+                ? 'M' + ${CX} + ' ' + (${BY} - ${CS} * 0.62) + ' L' + (${CX} + ${CS} * 0.6) + ' ' + (${BY} - ${CS} * 0.62) + ' L' + (${CX} + ${CS} * 0.3) + ' ' + (${BY} - ${CS} * 0.1) + ' Z'
+                : 'M' + ${CX} + ' ' + (${BY} - ${CS} * 0.1) + ' L' + (${CX} + ${CS} * 0.6) + ' ' + (${BY} - ${CS} * 0.1) + ' L' + (${CX} + ${CS} * 0.3) + ' ' + (${BY} - ${CS} * 0.62) + ' Z'`)),
                 { key: "arrow", fill: e(INK) }),
-              text(e(`(${CHG} < 0 ? '−' : '+') + format(abs(${CHG}), ${M("fmt")}) + '  (' + (${CHG} < 0 ? '−' : '+') + format(abs(${PCT}), '.2f') + '%)'`),
-                [e(`measure(${PRICE}, ${FIG}, 700) + 32`), e(`20 + ${FIG}`)],
-                { key: "amount", style: { size: e(`${FIG} * 0.5`), weight: 600, ink: e(INK) } }),
+              // Numbers that count to their new values (a changed string would crossfade, two
+              // figures over each other for a moment, every beat).
+              text("", [e(AX), e(BY)], { key: "amount", number: { value: e(CHG), format: "+$,.2f" }, style: { size: e(CS), weight: 600, ink: e(INK) } }),
+              text("(", [e(`${AX} + ${AW} + ${CS} * 0.45`), e(BY)], { key: "open", style: { size: e(CS), weight: 600, ink: e(INK) } }),
+              text("", [e(`${AX} + ${AW} + ${CS} * 0.45 + measure('(', ${CS}, 600)`), e(BY)], { key: "share", number: { value: e(PCT), format: "+.2f" }, style: { size: e(CS), weight: 600, ink: e(INK) } }),
+              text("%)", [e(`${AX} + ${AW} + ${CS} * 0.45 + measure('(' + format(${PCT}, '+.2f'), ${CS}, 600)`), e(BY)], { key: "close", style: { size: e(CS), weight: 600, ink: e(INK) } }),
             ],
           }),
-          text(e(`${HAS} ? ${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")}) : empty`), [0, e(`${FIG} + 48`)], { key: "ref", style: { size: 13, ink: "$muted" } }),
+          text(e(`${HAS} ? ${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")}) : empty`), [0, e(`${BASE} + ${sz(24)}`)], { key: "ref", style: { size: e(sz(13)), ink: "$muted" } }),
         ],
       }),
       // The session's chart once the market has prices; until then, what the page is waiting for.
@@ -132,7 +164,7 @@ export default doc({
             line({ curve: "linear", stroke: e(INK), width: 2 }),
             // The reference: the previous close (or midnight's price, for crypto).
             rule({ value: e(M("ref")), ink: "$muted" }),
-            text(e(`${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")})`), [e("box.w"), e(`scale.y(${M("ref")}) - 5`)], { key: "ref-label", when: e("box.w > 520"), halo: ["$paper", 3], style: { size: 11, ink: "$muted", align: "end" } }),
+            text(e(`${M("refLabel")} + ' ' + format(${M("ref")}, ${M("fmt")})`), [e("box.w"), e(`scale.y(${M("ref")}) - 5`)], { key: "ref-label", when: e(`box.w > 520 * ${T}`), halo: ["$paper", 3], style: { size: "$size.label", ink: "$muted", align: "end" } }),
             // The latest price: a dot, ringed.
             repeat("last", group({ key: "now", children: [
               shape(geom.circle({ cx: e("scale.x(d.t)"), cy: e("scale.y(d.p)"), r: 9 }), { key: "ring", fill: e(INK), opacity: 0.16 }),
@@ -140,16 +172,17 @@ export default doc({
             ] })),
           ],
         }, { key: "chart", when: e(HAS) }),
-          text(e("empty"), [e("box.w / 2"), e("box.h / 2")], { key: "waiting", when: e(`!(${HAS})`), style: { size: 15, ink: "$muted", align: "middle", baseline: "middle", maxWidth: e("box.w - 40") } }),
+          text(e("empty"), [e("box.w / 2"), e("box.h / 2")], { key: "waiting", when: e(`!(${HAS})`), style: { size: e(sz(15)), ink: "$muted", align: "middle", baseline: "middle", maxWidth: e("box.w - 40") } }),
         ],
       }),
-      // What the feed is doing, and whose data it is: one line, or two on a phone.
+      // What the feed is doing, and whose data it is: one line, or each on its own lines (as many
+      // as it takes) where they don't fit side by side.
       group({
         key: "foot",
-        size: { h: e("box.w < 620 ? 34 : 18") },
+        size: { h: e(`${SIDE} ? ${LINE} + 2 : (${SL} + ${DL}) * ${LINE} + 2`) },
         children: [
-          text(e(`status != '' ? status : 'Recorded ' + ${M("label")} + ' · Not live · Times are UTC'`), [0, 13], { key: "status", style: { size: 12.5, ink: "$ink-2" } }),
-          text(e("source"), [e("box.w < 620 ? 0 : box.w"), e("box.w < 620 ? 31 : 13")], { key: "source", style: { size: 12, ink: "$muted", align: e('box.w < 620 ? "start" : "end"') } }),
+          text(e(STATUS), [0, e(sz(13))], { key: "status", style: { size: e(sz(12.5)), ink: "$ink-2", maxWidth: e("box.w") } }),
+          text(e("source"), [e(`${SIDE} ? box.w : 0`), e(`${SIDE} ? ${sz(13)} : ${sz(13)} + ${SL} * ${LINE}`)], { key: "source", style: { size: e(sz(12)), ink: "$muted", align: e(`${SIDE} ? "end" : "start"`), maxWidth: e("box.w") } }),
         ],
       }),
     ],
