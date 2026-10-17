@@ -1,6 +1,6 @@
 ---
 title: Accessible charts on every platform · datars
-description: Experience a datars chart the way a screen reader, a keyboard, colour-blind eyes, high contrast and reduced motion meet it — live. Every mark has semantics, so assistive technology gets the data, on the web, iOS and Android, with a text alternative in every bundle.
+description: Experience a datars chart the way a screen reader, a keyboard, a bigger text size, colour-blind eyes, high contrast and reduced motion meet it — live. Every mark has semantics, so assistive technology gets the data on the web, iOS, Android and desktop, with a text alternative in every bundle.
 og: accessibility-lab
 css: features-accessibility.css
 ---
@@ -8,7 +8,7 @@ css: features-accessibility.css
   <div class="wrap">
     <p class="eyebrow">Accessible</p>
     <h1>A chart a screen reader can read, not a picture it can't</h1>
-    <p class="lede-2">Every mark in datars carries semantics — a role, a label, a value, a reading order — and the standard recipes fill them in: <em>“Moderates: 68 seats”</em>, not <em>“rect”</em>. Each platform's runtime hands them to its assistive technology. Below is one chart, and what each kind of reader gets from it: the list a screen reader walks, the buttons a keyboard reaches, the colours as other eyes see them, high contrast, and less motion.</p>
+    <p class="lede-2">Every mark in datars carries semantics — a role, a label, a value, a reading order — and the standard recipes fill them in: <em>“Moderates: 68 seats”</em>, not <em>“rect”</em>. Each platform's runtime hands them to its assistive technology. Below is one chart, and what each kind of reader gets from it: the list a screen reader walks, the items a keyboard reaches, the chart at twice the text size, the colours as other eyes see them, more contrast and forced colours, and less motion.</p>
   </div>
 </section>
 
@@ -18,7 +18,7 @@ css: features-accessibility.css
       <div class="al-stage">
         <div class="frame al-cq al-frame">
           <div class="al-view">
-            <div class="chart" data-chart="accessibility-lab" data-caption data-min="300" data-phone-ratio="1.55"></div>
+            <div class="chart" data-chart="accessibility-lab" data-caption data-min="300" data-phone-ratio="1.55" data-phone-min="600"></div>
             <div class="al-reading" hidden aria-hidden="true"></div>
           </div>
         </div>
@@ -34,32 +34,43 @@ css: features-accessibility.css
         <div class="seg al-tabs" role="tablist" aria-label="Reader">
           <button type="button" role="tab" id="al-tab-sr" aria-controls="al-sr" aria-selected="true" aria-pressed="true">Screen reader</button>
           <button type="button" role="tab" id="al-tab-kb" aria-controls="al-kb" aria-selected="false" aria-pressed="false" tabindex="-1">Keyboard</button>
+          <button type="button" role="tab" id="al-tab-ts" aria-controls="al-ts" aria-selected="false" aria-pressed="false" tabindex="-1">Text size</button>
           <button type="button" role="tab" id="al-tab-vi" aria-controls="al-vi" aria-selected="false" aria-pressed="false" tabindex="-1">Vision</button>
           <button type="button" role="tab" id="al-tab-mo" aria-controls="al-mo" aria-selected="false" aria-pressed="false" tabindex="-1">Motion</button>
         </div>
 
         <div class="al-pane" id="al-sr" role="tabpanel" aria-labelledby="al-tab-sr">
           <p class="al-name">Announced as <b>figure</b>, <q class="al-figname">…</q></p>
+          <p class="al-summary">…</p>
           <div class="al-walk">
             <button type="button" class="btn btn-ghost small" data-walk="-1" aria-label="Previous item">← Previous</button>
             <span class="al-pos" aria-live="polite">Item – of –</span>
             <button type="button" class="btn btn-ghost small" data-walk="1" aria-label="Next item">Next →</button>
           </div>
-          <ol class="al-tree" aria-label="The chart's list, as a screen reader walks it"></ol>
+          <ol class="al-tree" aria-label="The chart, in the order a screen reader walks it"></ol>
           <h3>The live region said</h3>
           <ol class="al-said" aria-label="Announcements"><li class="al-quiet">Nothing yet: step the story under the chart.</li></ol>
-          <p class="fine">The list is the chart's own semantics (<code>chart.status.semantics</code>) — what the element keeps, hidden, for screen readers: every labelled mark as text, each clickable one as a button. Pick an item to see its box on the chart. The live region speaks each step's narration, politely.</p>
+          <p class="fine">The reading order the element gives screen readers — its <code>readout</code>: the chart's name and summary, headings for its parts, each axis in one line, each bar's name and value, the checkboxes and the switch as checkboxes and a switch, each with its box on the chart. The same order the native runtimes give VoiceOver and TalkBack. A step's narration is spoken once, politely.</p>
         </div>
 
         <div class="al-pane" id="al-kb" role="tabpanel" aria-labelledby="al-tab-kb" hidden>
           <ol class="al-keys-how">
             <li><kbd>Tab</kbd> to the chart: <kbd>→</kbd> <kbd>←</kbd> or <kbd>Space</kbd> step the story.</li>
-            <li><kbd>Tab</kbd> again: you're on the parties' buttons — the chart outlines the bar each stands for. <kbd>Enter</kbd> adds the party to the coalition, again takes it out.</li>
+            <li><kbd>Tab</kbd> on: the parties' checkboxes and the line's switch — <kbd>Space</kbd> ticks one. The chart outlines what has the keyboard.</li>
+            <li><kbd>Tab</kbd> again: you're in the data, one stop for all eight bars. <kbd>↓</kbd> <kbd>↑</kbd> (or <kbd>→</kbd> <kbd>←</kbd>), <kbd>Home</kbd>, <kbd>End</kbd> walk them, each named on the chart; <kbd>Enter</kbd> adds the party.</li>
             <li><kbd>Shift</kbd>+<kbd>Tab</kbd> goes back. Nothing here needs a mouse.</li>
           </ol>
           <h3>Keys pressed in the chart</h3>
           <ol class="al-keylog" aria-label="Keys and what they did"><li class="al-quiet">Tab into the chart and press keys.</li></ol>
           <p class="fine">Read from the page: the keys from <code>keydown</code> on the element, what they did from its <code>signal</code> and <code>state</code> events.</p>
+        </div>
+
+        <div class="al-pane" id="al-ts" role="tabpanel" aria-labelledby="al-tab-ts" hidden>
+          <label class="al-range"><span>Text size <output class="al-ts-out">1×</output></span>
+            <input type="range" min="1" max="2" step="0.25" value="1" data-ts aria-label="Text size">
+          </label>
+          <p class="al-note">The chart lays out again for the bigger text — wider axes, bars named in more lines, checkboxes in more rows, taller where it needs to be — and moves there; it isn't scaled as a picture. By default the element follows the reader's browser font size (yours: <b class="al-ts-yours">1×</b>), Dynamic Type on iOS, the font size on Android; a page can set it:</p>
+<pre class="live-code"><code data-lang="html" id="al-ts-code">&lt;datars-view src="c/riksdag"&gt;&lt;/datars-view&gt;</code></pre>
         </div>
 
         <div class="al-pane" id="al-vi" role="tabpanel" aria-labelledby="al-tab-vi" hidden>
@@ -73,8 +84,9 @@ css: features-accessibility.css
           </div>
           <p class="al-note">A simulation over the drawn chart — the same matrices the engine's palette checks use. These are the parties' own colours, set by the document: under deuteranopia the Social Democrats' red and the Centre's green move closer. Every bar is named on its axis and carries its value, so nothing hangs on colour alone.</p>
           <h3>Contrast</h3>
-          <label class="al-switch"><input type="checkbox" data-hc><span>High contrast — the theme's own mode, <code>mode="high-contrast"</code></span></label>
-          <p class="al-note">Text and rules go full strength; the colours that come from the document's keys stay theirs. The page or app turns it on — the web element doesn't follow the system's <code>prefers-contrast</code> by itself yet.</p>
+          <label class="al-switch"><input type="checkbox" data-hc><span>More contrast — the theme's high-contrast mode, which a reader who asks for more contrast (<code>prefers-contrast: more</code>) gets by themselves</span></label>
+          <label class="al-switch"><input type="checkbox" data-fc><span>Forced colours — what a Windows contrast theme does to the chart (simulated here through <code>setTokens</code>)</span></label>
+          <p class="al-note">A browser can't recolour a canvas, so under forced colours the element paints the chart's text, rules and surfaces in the system's own colours itself — CanvasText on Canvas, Highlight for the accent — and keeps the data colours that tell the parties apart.</p>
         </div>
 
         <div class="al-pane" id="al-mo" role="tabpanel" aria-labelledby="al-tab-mo" hidden>
@@ -147,6 +159,18 @@ css: features-accessibility.css
 </section>
 
 <section class="section">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Legibility</p>
+      <h2>Every chart, read on a phone with big text, before anyone has to</h2>
+      <p><code>datars labels</code> lays every state of a chart out at a phone's width, a tablet's and a wide column's, each at the theme's text size and at 1.5 and 2 ×, and counts the labels a reader couldn't read there: cut off at the edge, drawn over one another, clipped by their box, or sitting on the data with a line through them. The repository runs it over its examples in <code>datars test</code>, where a chart that gets harder to read fails. Here it is over the example charts, at this build:</p>
+    </header>
+    {{run:labels examples --widths 390,768 --text-scale 1,1.5,2|40}}
+    <p class="fine">What's left is at 2 × on a phone — about the room of a 195 px chart at the theme's size. What it found and fixed so far — axis labels drawn across bars when names turned, legends and controls that didn't grow with the text, tables wider than the screen, labels on the lines they label — is in <a href="/docs/accessibility/#checks">the guide</a>.</p>
+  </div>
+</section>
+
+<section class="section">
   <div class="wrap split">
     <div>
       <p class="eyebrow">Caught before publishing</p>
@@ -167,12 +191,12 @@ css: features-accessibility.css
       <h2>What isn't there yet</h2>
     </header>
     <ul class="al-gaps">
+      <li><b>No screen reader has driven these yet.</b> The web element's accessibility tree is checked in Chrome by a test and read through the macOS Accessibility API (what VoiceOver gets); VoiceOver and TalkBack element trees are dumped in the simulator and the emulator. Nobody has yet listened to VoiceOver, TalkBack, NVDA or JAWS read them, and real devices are untested.</li>
       <li><b>Brushes and pannable views have no keyboard path of their own.</b> Give the same signal a control (a std <code>range</code> or <code>slider</code>, which keyboards reach as native inputs), or set it from the page.</li>
-      <li><b>The live region speaks a step's narration, not the result of a click.</b> The button says it instead: its label follows the state (<q>Moderates: 68 seats, in the coalition</q>), and the coalition's total is a labelled item in the list.</li>
-      <li><b>No tooltip on keyboard focus.</b> A focused button reads the same label a tooltip would show, and the mark is outlined; the drawn tooltip is for the pointer.</li>
-      <li><b>High contrast is the page's choice.</b> The web element doesn't pick it from <code>prefers-contrast</code> or forced colours by itself yet.</li>
-      <li><b>Long lists stop at 500 marks</b> on the web — a map of thousands of counties is in the text description, not read out mark by mark.</li>
-      <li><b>Android and desktop</b> trees are tested, but not yet with TalkBack, NVDA or Orca driving them.</li>
+      <li><b>The live region speaks a step's narration, not the result of a click.</b> The checkbox or button says it instead (its state, a label that follows it), and the summary follows what's shown.</li>
+      <li><b>Long lists stop at 500 marks</b> on the web — a map of thousands of counties is in the text description and the summary's count, not read out mark by mark.</li>
+      <li><b>Text size follows the theme's sizes only.</b> Text a document sizes in pixels stays as written; posters and videos are at the theme's size; iOS and Android apps get the height bigger text needs (<code>contentHeight</code>) but lay their views out themselves.</li>
+      <li><b>Two languages.</b> The words the element adds — the summary, “Step 2 of 4”, captions — are English and Swedish so far; other locales read them in English.</li>
     </ul>
   </div>
 </section>

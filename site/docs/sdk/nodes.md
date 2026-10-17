@@ -79,7 +79,20 @@ Text is shaped, wrapped and measured by the engine with the fonts the chart carr
 
 <figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-text-options" data-phone-ratio="1.5" data-caption></div></div><figcaption>Font tokens, wrapping at <code>maxWidth</code> (dashed), a halo over busy marks, rotation, a screen offset — and <code>number</code>: step through and every format counts to the new value. <a href="{{src}}/site/figures/sdk/text-options.ts">Figure source</a></figcaption>{{alt:sdk-text-options}}</figure>
 
-Texts never pile up if you ask: `contain: true` nudges a label back inside the canvas, and a group's [`declutter`](/docs/sdk/options/#NodeOpts) drops texts that would land on earlier ones.
+Texts never pile up if you ask: `contain: true` nudges a label back inside the canvas (`contain: "wrap"` first wraps it to the room it has before the edge), and a group's [`declutter`](/docs/sdk/options/#NodeOpts) drops texts that would land on earlier ones.
+
+{{sdk:TextPlace}}
+
+`alternatives` are other places for a text, tried in order when where it is would sit on the data — a line of a mark through its letters, or a filled mark under part of it — or on other text: the first clear one wins; with none clear the text stays and gets a halo. A reference line's label at the right end of its line, else below it, else at the left end:
+
+```ts
+text("Target 2%", [e("box.w"), e("scale.y(2) - 4")], { style: { align: "end" }, alternatives: [
+  { at: [e("box.w"), e("scale.y(2) + 4")], baseline: "top" },
+  { at: [0, e("scale.y(2) - 4")], align: "start" },
+] })
+```
+
+Text sized with the theme's tokens follows the reader's text size; see [Accessibility](/docs/accessibility/#reader-settings-the-charts-follow).
 
 ## Repeats
 

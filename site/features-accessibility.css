@@ -3,7 +3,7 @@
 .al-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; align-items: start; }
 .al-stage { position: sticky; top: 76px; z-index: 2; }
 .al-cq { container-type: inline-size; }
-@container (max-width: 599.98px) { .frame.al-cq .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); } }
+@container (max-width: 599.98px) { .frame.al-cq .chart[style*="--phone"]:not(:has(datars-view)) { aspect-ratio: 1 / var(--phone); min-height: var(--phone-min, var(--min, 240px)); } }
 .al-view { position: relative; overflow: hidden; border-radius: 8px; }
 .al-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
 /* The item being read, outlined where it's drawn. */
@@ -16,6 +16,13 @@
 .al-pane[hidden] { display: none; }
 .al-name { margin: 0 0 12px; font-size: 14px; color: var(--ink-2); }
 .al-name q { color: var(--ink); font-weight: 600; }
+.al-summary { margin: -6px 0 12px; font-size: 13.5px; line-height: 1.45; color: var(--ink-2); }
+.al-summary:empty { display: none; }
+.al-range { display: grid; gap: 8px; font-size: 14px; color: var(--ink-2); }
+.al-range span { display: flex; justify-content: space-between; }
+.al-range output { font: 600 14px/1 var(--mono); color: var(--ink); }
+.al-range input { width: 100%; accent-color: var(--accent); }
+.al-switch + .al-switch { margin-top: 10px; }
 .al-walk { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .al-walk .btn { padding: 6px 12px; font-size: 13px; }
 .al-pos { flex: 1; text-align: center; font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }

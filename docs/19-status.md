@@ -112,24 +112,29 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   path on real phones, and Vulkan on Android at all, are untested. The performance page's native
   figures are from the simulator and the emulator.
 - **Accessibility:** a chart's name (its title) and summary (its description, how many data
-  points, their range) on every host; the web mirror (data tables with name and value columns,
-  axes and legends as a line each, one Tab stop into the data and arrow keys through it with the
-  mark outlined and named on the chart, native range inputs and selects, buttons for interactive
-  marks, step narration announced once) — checked in Chrome's accessibility tree by a browser
-  test, not yet with a screen reader driving it; native bridges read one reading order from the
-  runtime (`readout`): iOS VoiceOver elements (summary element, headings, values, adjustable
-  sliders, step announcements) dumped in the simulator; macOS children with press actions; Android
-  TalkBack virtual nodes (dumped with `uiautomator` on the emulator, not yet driven by TalkBack
-  itself); desktop AccessKit (a figure with its description, unit-tested, not yet driven by a
-  screen reader). Reduced motion everywhere; `prefers-contrast: more` and forced colours on the
+  points, their range, how many without data) on every host, in the document's language (English
+  and Swedish phrase tables, `datars_engine::phrases`); one reading order from the runtime
+  (`readout`): headings, axes and legends as a line each, marks with their values, repeated marks
+  counted, marks without data as one line, buttons, and the std controls' native kinds
+  (checkbox, switch, radio with their state). Web: the summary first inside the figure, data
+  tables, one Tab stop into the data and arrow keys through it with the mark outlined and named,
+  native inputs, `role="checkbox" / "switch" / "radio"`, step narration announced once; checked in
+  Chrome's accessibility tree by browser tests and read through the macOS Accessibility API (what
+  VoiceOver gets) in a windowed Chrome — VoiceOver itself not driven (its AppleScript control is a
+  system security setting this environment doesn't change). iOS VoiceOver elements dumped in the
+  simulator; macOS children with press actions; Android TalkBack virtual nodes dumped with
+  `uiautomator` on the emulator; desktop AccessKit unit-tested. None yet driven by a screen reader
+  or on a device. Reduced motion everywhere; `prefers-contrast: more` and forced colours on the
   web; the reader's text size on every host (above); labelled SVG posters.
-- **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text;
-  `datars test` keeps each example's count as a ratchet. Over the examples, the std reference and
-  gallery figures (126 documents), 122 unreadable labels remain of 1182 found (58 of the fixed
-  were turned names the check had counted by their line spacing); the examples have 11, all at
-  2 × on a phone. Open: slope and timeline labels at a phone's edge at 2 ×, Gantt names a narrow
-  column clips, content taller than a fixed-height chart at large text (it runs off the bottom),
-  and the site's hand-placed SDK diagrams (most of the 2,228 left in the whole site corpus).
+- **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text (at
+  the height the web grows a chart to) and counts labels cut off, overlapping, clipped, or on the
+  data without a halo; `datars test` keeps each example's count as a ratchet. Over the examples,
+  the std reference and gallery figures (126 documents), 122 remain of 1182 + 242 found (58 of the
+  fixed were turned names the check had counted by their line spacing); the examples have 13, all
+  at 2 × on a phone. The check also found a layout bug at 1 × (axis names turned across bars when
+  the final scales changed the plot area), fixed. Open: a Gantt group heading taller than its row
+  at 2 ×, crowded dense networks and multi-panel figures at 2 × on a phone, and the site's
+  hand-placed SDK diagrams (most of the 2,321 left in the whole site corpus of 202 documents).
 - **Selectable chart text (web):** done — transparent text spans over the canvas (select, copy,
   find-in-page); `aria-hidden`, since the semantics mirror is what screen readers read.
 - **Tooltips:** hover on the web and desktop; tap on touch screens (web, iOS, Android), placed above

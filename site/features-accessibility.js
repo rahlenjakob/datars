@@ -2,12 +2,14 @@
 // each kind of reader gets from it.
 //
 // Everything through <datars-view>'s public API, nothing from inside it:
-// - Screen reader: `status.semantics` — the tree the element's hidden list is built from (each
-//   item's role, label, depth, box and whether a click acts on it) — walked item by item with its
-//   box outlined over the chart; the `state` event's narration is what the live region speaks.
+// - Screen reader: `readout` — the order a screen reader walks (the chart's name and summary,
+//   headings, axes, each mark's name and value, checkboxes and switches with their state), each
+//   with its box, outlined over the chart; the `state` event's narration is what the live region
+//   speaks.
 // - Keyboard: `keydown` on the element, and the `signal` and `state` events for what a key did.
-// - Vision: an SVG colour matrix over the drawn chart (the engine's own CVD matrices), and the
-//   `mode` attribute for high contrast.
+// - Text size: the `textScale` property (the `text-scale` attribute).
+// - Vision: an SVG colour matrix over the drawn chart (the engine's own CVD matrices), the `mode`
+//   attribute for high contrast, and `setTokens` to show what forced colours do.
 // - Motion: the `reduced-motion` attribute, and `send` to play the steps.
 import { highlight } from "./site.js";
 
@@ -30,13 +32,6 @@ function whenReady(slot) {
 const reducedQuery = matchMedia("(prefers-reduced-motion: reduce)");
 const NAMES = { S: "Social Democrats", SD: "Sweden Democrats", M: "Moderates", V: "Left", C: "Centre", KD: "Christian Democrats", MP: "Greens", L: "Liberals" };
 
-/** The items a screen reader walks, by the rules the element's list follows (packages/web): no
- * unnamed groups, no drawn control that isn't clickable (its native input stands for it), at most
- * 500 marks. */
-function readable(semantics) {
-  return (semantics ?? []).filter((i) => !(i.role === "control" && !i.actionable) && (i.actionable || i.label)).slice(0, 500);
-}
-
 function lab(section) {
   const slot = section.querySelector('.chart[data-chart="accessibility-lab"]');
   const viewBox = section.querySelector(".al-view");
@@ -45,6 +40,7 @@ function lab(section) {
   const pos = section.querySelector(".al-pos");
   const said = section.querySelector(".al-said");
   const figname = section.querySelector(".al-figname");
+  const summary = section.querySelector(".al-summary");
   const keylog = section.querySelector(".al-keylog");
   let view = null;
   let items = [];
@@ -75,13 +71,16 @@ function lab(section) {
   }
 
   // ---- the screen reader's list ----
+  /** What the kind of each stop is called, as a reader hears it. */
+  const KIND = { chart: "figure", heading: "heading", text: "text", datum: "data", button: "button", checkbox: "checkbox", switch: "switch", radio: "radio" };
   function describe() {
     if (!view) return;
-    const s = view.status;
-    if (!s) return;
-    const next = readable(s.semantics);
-    const key = (list) => list.map((i) => `${i.role}|${i.label}|${i.actionable}`).join("\n");
-    figname.textContent = view.getAttribute("aria-label") || next[0]?.label || "Chart";
+    const r = view.readout;
+    if (!r) return;
+    const [chart, ...next] = r;
+    figname.textContent = chart?.label ?? "Chart";
+    summary.textContent = chart?.value || "";
+    const key = (list) => list.map((i) => `${i.kind}|${i.label}|${i.value}|${i.checked}`).join("\n");
     if (key(next) === key(items)) {
       items = next; // the boxes may have moved
       return place();
@@ -90,23 +89,25 @@ function lab(section) {
     items = next;
     tree.replaceChildren(...items.map((it, i) => {
       const li = document.createElement("li");
-      li.style.setProperty("--depth", String(it.depth));
+      li.style.setProperty("--depth", it.kind === "heading" ? "0" : "1");
       const b = document.createElement("button");
       b.type = "button";
       b.className = "al-item";
       b.dataset.i = String(i);
       const role = document.createElement("span");
-      role.className = `al-role${it.actionable ? " al-act" : ""}`;
-      role.textContent = it.actionable ? "button" : it.role;
+      const acts = ["button", "checkbox", "switch", "radio"].includes(it.kind);
+      role.className = `al-role${acts ? " al-act" : ""}`;
+      role.textContent = KIND[it.kind] ?? it.kind;
       const text = document.createElement("span");
       text.className = "al-label";
-      text.textContent = it.label;
+      const state = it.checked === undefined ? "" : it.kind === "switch" ? (it.checked ? ", on" : ", off") : it.checked ? ", checked" : ", not checked";
+      text.textContent = `${it.label}${it.value ? `, ${it.value}` : ""}${state}`;
       b.append(role, text);
       b.addEventListener("click", () => read(i));
       li.appendChild(b);
       return li;
     }));
-    // Keep reading where we were, if that item's still there (a label that follows the state).
+    // Keep reading where we were, if that item's still there.
     const again = label ? items.findIndex((i) => i.label === label) : -1;
     read(again >= 0 ? again : Math.min(at, items.length - 1), false);
   }
@@ -183,6 +184,33 @@ function lab(section) {
     view.setAttribute("mode", hc.checked ? "high-contrast" : document.documentElement.dataset.theme === "dark" ? "dark" : "light");
   });
 
+  // ---- text size ----
+  const ts = section.querySelector("input[data-ts]");
+  const tsOut = section.querySelector(".al-ts-out");
+  const tsCode = section.querySelector("#al-ts-code");
+  const yours = section.querySelector(".al-ts-yours");
+  function textCode() {
+    const v = Number(ts.value);
+    tsOut.textContent = `${v}×`;
+    tsCode.textContent = `<datars-view src="c/riksdag" text-scale="${v}"></datars-view>`;
+    highlight(tsCode);
+  }
+  ts.addEventListener("input", () => {
+    textCode();
+    if (view) view.textScale = Number(ts.value);
+    soonDescribe(1200);
+  });
+  textCode();
+
+  // ---- forced colours, as the element paints them (simulated with the public setTokens) ----
+  const fc = section.querySelector("input[data-fc]");
+  fc.addEventListener("change", () => {
+    if (!view) return;
+    const dark = document.documentElement.dataset.theme === "dark";
+    const [ink, paper, accent] = dark ? ["#ffffff", "#000000", "#1aebff"] : ["#000000", "#ffffff", "#0066cc"];
+    view.setTokens(fc.checked ? { ink, paper, "ink-2": ink, muted: ink, rule: ink, grid: `mix(${ink}, ${paper}, 0.7)`, surface: paper, "surface-ink": ink, accent, highlight: accent } : {});
+  });
+
   // ---- motion ----
   const rm = section.querySelector("input[data-rm]");
   const rmCode = section.querySelector("#al-rm-code");
@@ -215,12 +243,14 @@ function lab(section) {
   });
 
   // ---- the chart ----
+  let t = 0;
+  function soonDescribe(ms = 350) { clearTimeout(t); t = setTimeout(describe, ms); }
   whenReady(slot).then((v) => {
     view = v;
+    yours.textContent = `${v.textScale}×`;
     if (rm.checked !== reducedQuery.matches) v.setAttribute("reduced-motion", rm.checked ? "reduce" : "no-preference");
-    // The element fills its list in idle time once a change settles: read it a moment after.
-    let t = 0;
-    const soon = (ms = 350) => { clearTimeout(t); t = setTimeout(describe, ms); };
+    // Read the order a moment after a change settles.
+    const soon = soonDescribe;
     v.addEventListener("state", (e) => {
       announce(e.detail?.narration);
       if (pendingKey) key(pendingKey, `step: ${e.detail?.state ?? ""}`);
@@ -228,7 +258,7 @@ function lab(section) {
       soon(900);
     });
     v.addEventListener("signal", (e) => {
-      if (!e.detail.changed.includes("coalition")) return;
+      if (!e.detail.changed.includes("coalition")) return soon(500);
       const c = e.detail.signals.coalition ?? [];
       if (pendingKey) key(pendingKey, `coalition: ${c.length ? c.map((k) => NAMES[k] ?? k).join(", ") : "nobody"}`);
       pendingKey = null;
@@ -242,7 +272,7 @@ function lab(section) {
       setTimeout(() => { if (pendingKey === k) { key(k, "nothing here"); pendingKey = null; } }, 400);
     });
     v.addEventListener("pointerup", () => soon(500));
-    new MutationObserver(() => describe()).observe(v, { attributes: true, attributeFilter: ["aria-label", "mode"] });
+    new MutationObserver(() => describe()).observe(v, { attributes: true, attributeFilter: ["aria-label", "mode", "text-scale"] });
     const n = v.status?.narration;
     if (n) announce(n);
     soon(600);

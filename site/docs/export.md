@@ -86,7 +86,7 @@ It renders from the published bundle with the CPU reference — the same picture
 
 ## Previews with real data
 
-A chart with a [data slot](/docs/publishing/#data-slots-each-readers-own-data) renders its sample until data arrives. Give it a file instead:
+A chart with a [data slot](/docs/publishing/#data-slots-each-reader-s-own-data) renders its sample until data arrives. Give it a file instead:
 
 ```sh
 datars render spending/doc.ts --data spending=user.json --out user.png

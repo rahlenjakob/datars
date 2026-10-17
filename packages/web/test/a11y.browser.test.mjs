@@ -221,6 +221,16 @@ test("a switch, checkboxes and segments are switch, checkbox and radio to a scre
     await p.keyboard.press("Space");
     await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror [role=switch]")?.getAttribute("aria-checked") === "false", null, { timeout: 10_000 });
     assert.equal(await p.evaluate(() => document.querySelector("datars-view").signals.on), false);
+    // The element's `readout` is the same order and states, for a page to show or test.
+    let readout = null;
+    for (let i = 0; i < 50 && !readout?.some((r) => r.kind === "switch" && r.checked === false); i++) {
+      readout = await p.evaluate(() => document.querySelector("datars-view").readout);
+      await p.waitForTimeout(100);
+    }
+    assert.equal(readout[0].kind, "chart");
+    const controls = readout.filter((r) => ["switch", "checkbox", "radio"].includes(r.kind)).map((r) => `${r.kind} ${r.label} ${r.checked}`);
+    assert.deepEqual(controls.slice(0, 3), ["switch Averages false", "checkbox Apples true", "checkbox Pears false"]);
+    assert.ok(readout.every((r) => r.rect === null || r.rect.length === 4), "rects are [x, y, w, h]");
   } finally {
     await browser.close();
     server.close();

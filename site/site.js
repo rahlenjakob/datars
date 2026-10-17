@@ -45,9 +45,11 @@ for (const m of menus) {
 // ---- chart slots -----------------------------------------------------------------------------
 function heightFor(slot, width) {
   // `data-phone-ratio`: charts that re-lay themselves out as rows on a narrow box need the height.
-  const phone = width < 600 && Number(slot.dataset.phoneRatio);
+  // `data-phone-min`: one whose content wraps into more rows there needs a floor of its own.
+  const narrow = width < 600;
+  const phone = narrow && Number(slot.dataset.phoneRatio);
   const aspect = phone || Number(slot.dataset.ratio || slot.dataset.aspect) || 0.6;
-  const min = Number(slot.dataset.min) || 240;
+  const min = (narrow && Number(slot.dataset.phoneMin)) || Number(slot.dataset.min) || 240;
   return Math.max(min, Math.round(width * aspect));
 }
 

@@ -699,9 +699,10 @@ function fill(html, where) {
     if (caption && !/data-caption/.test(attrs)) add.push("data-caption");
     const all = `${attrs} ${add.join(" ")}`;
     // The slot's space, reserved in CSS before any script runs (the page mustn't move when the
-    // chart mounts): its aspect (or `data-ratio`), minimum height and phone ratio as variables.
+    // chart mounts): its aspect (or `data-ratio`), minimum height, phone ratio and phone
+    // minimum as variables.
     const get = (n) => all.match(new RegExp(`data-${n}="([^"]+)"`))?.[1];
-    const vars = [`--aspect:${get("ratio") ?? get("aspect")}`, get("min") && `--min:${get("min")}px`, get("phone-ratio") && `--phone:${get("phone-ratio")}`].filter(Boolean).join(";");
+    const vars = [`--aspect:${get("ratio") ?? get("aspect")}`, get("min") && `--min:${get("min")}px`, get("phone-ratio") && `--phone:${get("phone-ratio")}`, get("phone-min") && `--phone-min:${get("phone-min")}px`].filter(Boolean).join(";");
     return `<div class="chart"${pre}data-chart="${a}"${post} ${add.join(" ")} style="${vars}"></div>${caption ? captionBar(a) : ""}`;
   });
   // A placeholder left over is a typo — outside code: code shows `{{ … }}` as written (JSX objects).

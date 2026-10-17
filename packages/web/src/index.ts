@@ -1589,6 +1589,16 @@ export class DatarsView extends ElementBase {
     return this.view?.ready() ? this.view.status() : null;
   }
 
+  /** What a screen reader walks through, in order — the chart (its name, and its summary as
+   * `value`), headings, axes and legends as a line each, data marks with their values apart,
+   * checkboxes, switches and radio buttons with `checked`, buttons: `[{kind, label, value, rect,
+   * path, checked?}]`, `rect` in CSS px from the chart's corner. The same order the native
+   * runtimes give VoiceOver and TalkBack; the element's own hidden content follows it (with data
+   * runs as tables). `null` until loaded. Reads the whole semantics tree: not every frame. */
+  get readout(): { kind: string; label: string; value: string; rect: number[] | null; path: string; checked?: boolean }[] | null {
+    return this.view?.ready() && this.view.readout ? this.view.readout() : null;
+  }
+
   /** What the last frame drew from big data: `rows` in its point pyramids, points `drawn`, `tiles`
    * and the deepest `level`; archive `bytes` and range `requests` fetched so far. */
   get stats(): { rows: number; drawn: number; tiles: number; level: number; bytes: number; requests: number } | null {

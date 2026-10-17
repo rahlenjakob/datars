@@ -54,6 +54,7 @@ The engine is built with the recipe sandbox (for T3 bundles) and the Inter font 
 | `seek(pos)` | Program position as a number (state + fraction toward the next), for scroll-scrubbed stories. |
 | `setPlaying(on)` | Pause or resume autoplay (for example when the view scrolls off screen). |
 | `setDarkMode(dark)` | Dark or light theme mode. The view doesn't follow the system setting on its own. |
+| `textScale: Double?` | The chart's text size as a multiple of the theme's; `null` (the default) follows the system font size. |
 | `pixelHash()` | The last frame's pixel identity — the same value `datars render --hash` prints for the same state. |
 
 The view renders on demand: at most one frame per vsync while something moves, then nothing until the engine's next scheduled moment (an autoplay hold, a live refresh). Touches reach the chart — taps run interactive marks' click intents, drags brush and pan explorable views — and then your `OnClickListener`.
@@ -79,7 +80,7 @@ fun ElectionChart(url: String, step: Int, modifier: Modifier = Modifier) {
 
 ## Each user's data, on the device
 
-A document can leave a source to the app: a [data slot](/docs/publishing/#data-slots-each-readers-own-data). The chart is built and published once; each user's rows are handed in on the device and go nowhere else.
+A document can leave a source to the app: a [data slot](/docs/publishing/#data-slots-each-reader-s-own-data). The chart is built and published once; each user's rows are handed in on the device and go nowhere else.
 
 ```kotlin
 chart.loadAsset("spending.datars")            // shipped in the app: works offline from the first launch

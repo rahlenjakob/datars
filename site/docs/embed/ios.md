@@ -96,6 +96,8 @@ chart.renderLoop()
 | `setSignal(_:_:)` | Set a numeric signal: app state driving the chart. |
 | `setPlaying(_:)` | Pause or resume autoplay (for example while the view is off screen). |
 | `setReducedMotion(_:)` | Override the Reduce Motion setting. |
+| `setTextScale(_:)` | The text size as a multiple of the theme's (`DatarsView.textScale` does it for you, following Dynamic Type). |
+| `accessibility()` | What VoiceOver walks through: the brief status (state, narration, controls, `contentHeight`) and `readout`, the reading order — for apps that build their own accessible views. |
 | `status()` | The current state, states, narration, accessibility tree and resolved tokens. |
 | `pointer(_:x:y:)`, `zoom(atX:y:delta:)` | Pointer and pinch input, for apps that wire their own gesture recognizers. |
 | `pixelHash()` | The last frame's pixel identity — the same value `datars render --hash` prints for the same state. |
@@ -125,7 +127,7 @@ Taps reach the chart: a tap on an interactive mark runs its click intent (select
 
 ## Each user's data, on the device
 
-A document can leave a source to the app: a [data slot](/docs/publishing/#data-slots-each-readers-own-data). The chart is built and published once; each user's rows are handed in on the device and go nowhere else — a banking app's spending chart, a fitness app's weekly summary.
+A document can leave a source to the app: a [data slot](/docs/publishing/#data-slots-each-reader-s-own-data). The chart is built and published once; each user's rows are handed in on the device and go nowhere else — a banking app's spending chart, a fitness app's weekly summary.
 
 ```swift
 DatarsChart(source: .url(chartURL), data: ["spending": rowsJSON])

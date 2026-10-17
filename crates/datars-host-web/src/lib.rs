@@ -385,6 +385,11 @@ mod web {
         pub fn semantics(&mut self) -> JsValue {
             serde_wasm(&serde_json::Value::Array(self.core.semantics()))
         }
+        /// What a screen reader walks through, in order (`datars_runtime::readout`): `[{kind,
+        /// label, value, rect, path, checked}]`. Reads the semantics tree: once per settled state.
+        pub fn readout(&mut self) -> JsValue {
+            serde_wasm(&serde_json::Value::Array(self.core.readout().iter().map(|r| r.to_json()).collect()))
+        }
         /// What a screen reader says about the chart after its name: the document's description,
         /// how much data it shows and its range (`Engine::accessible_summary`). Reads the
         /// semantics tree: idle time, once per settled state.
