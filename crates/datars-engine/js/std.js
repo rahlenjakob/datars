@@ -12,6 +12,7 @@ var axis = recipe({
     ticks: t.number(0, "Tick count hint (0 = automatic: from the axis length, and across, from how many of its measured labels fit)."),
     format: t.string(void 0, "Number format for labels (d3-format)."),
     label: t.string(void 0, "Axis title: under the end of a horizontal axis; above the top of a vertical one, over its labels (a plot draws `yLabel` above its top-left corner instead, in a row of its own)."),
+    name: t.string(void 0, 'What a screen reader calls the axis when its title is drawn elsewhere (a plot\'s `yLabel`, in a row above the plot): "Seats: 0, 50, 100" rather than "y axis: 0, 50, 100". Defaults to `label`, else "x axis" / "y axis".'),
     line: t.bool(true, "Draw the domain line."),
     prefix: t.string(void 0, "Before each number label ('$')."),
     suffix: t.string(void 0, "After it ('M', ' kr')."),
@@ -62,7 +63,7 @@ var axis = recipe({
       // Whatever the rules above miss — a last label nudged in from the edge onto its neighbour, a
       // first turned name pushed right — the later label gives way.
       declutter: true,
-      semantics: { role: "axis", label: p.label ?? `${s} axis` },
+      semantics: { role: "axis", label: p.label ?? p.name ?? `${s} axis` },
       children: [
         p.line ? domainLine : null,
         repeat(from, group({ when: whole, semantics: { role: "tick", label: e(label) }, children: [tickMark, tickLabel, catLabel, turnedLabel] })),
@@ -2089,7 +2090,7 @@ var plot = recipe7({
     const xNames = (p.xType === "band" || p.xType === "point") && names.data && names.data !== "@group" ? names : {};
     const showX = p.axes === "both" || p.axes === "x";
     const showY = (p.axes === "both" || p.axes === "y") && !noY;
-    const yAxis = (opts) => axis({ scale: "y", orient: "left", type: p.yType, format: p.yFormat ?? (valueAxis === "y" ? p.format ?? percent : void 0), ticks: p.yTicks || void 0, prefix: valueAxis === "y" ? p.prefix : void 0, suffix: valueAxis === "y" ? p.suffix : void 0 }, opts);
+    const yAxis = (opts) => axis({ scale: "y", orient: "left", type: p.yType, format: p.yFormat ?? (valueAxis === "y" ? p.format ?? percent : void 0), ticks: p.yTicks || void 0, prefix: valueAxis === "y" ? p.prefix : void 0, suffix: valueAxis === "y" ? p.suffix : void 0, name: p.yLabel }, opts);
     const leftAxes = !showY ? null : !lower ? yAxis({ size: { w: "auto" } }) : group7({ key: "axes-left", size: { w: "auto" }, children: [
       yAxis(),
       group7({ key: "lower-axis", transform: { translate: [0, e7(`scale.y.max() + ${PANE_GAP + 12}`)] }, children: [axis({ scale: "lower", orient: "left", ticks: 2, format: lower.format ?? ".2~s" })] })
@@ -2153,7 +2154,7 @@ var plot = recipe7({
                 showX ? axis({ ...xAxis, label: p.xLabel, ...xNames }, { size: { h: "auto" } }) : null
               ]
             }),
-            right ? axis({ scale: "y2", orient: "right", format: right.format, prefix: right.prefix, suffix: right.suffix }, { key: "axis-y2", size: { w: "auto" } }) : null,
+            right ? axis({ scale: "y2", orient: "right", format: right.format, prefix: right.prefix, suffix: right.suffix, name: right.label }, { key: "axis-y2", size: { w: "auto" } }) : null,
             // Room at the right for lines labelled at their ends (they draw just past the plot area).
             endLabels2 ? group7({ key: "end-labels", size: { w: labelRoom } }) : null
           ]

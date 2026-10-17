@@ -214,7 +214,7 @@ export const plot = recipe<PlotParams>({
     const xNames = (p.xType === "band" || p.xType === "point") && names.data && names.data !== "@group" ? names : {};
     const showX = p.axes === "both" || p.axes === "x";
     const showY = (p.axes === "both" || p.axes === "y") && !noY;
-    const yAxis = (opts?: Record<string, unknown>) => axis({ scale: "y", orient: "left", type: p.yType, format: p.yFormat ?? (valueAxis === "y" ? p.format ?? percent : undefined), ticks: p.yTicks || undefined, prefix: valueAxis === "y" ? p.prefix : undefined, suffix: valueAxis === "y" ? p.suffix : undefined }, opts);
+    const yAxis = (opts?: Record<string, unknown>) => axis({ scale: "y", orient: "left", type: p.yType, format: p.yFormat ?? (valueAxis === "y" ? p.format ?? percent : undefined), ticks: p.yTicks || undefined, prefix: valueAxis === "y" ? p.prefix : undefined, suffix: valueAxis === "y" ? p.suffix : undefined, name: p.yLabel }, opts);
     // The lower pane's axis sits under the price axis, in one column as wide as the wider of
     // the two, so both panes start at the same x.
     const leftAxes = !showY ? null : !lower ? yAxis({ size: { w: "auto" } }) : group({ key: "axes-left", size: { w: "auto" }, children: [
@@ -288,7 +288,7 @@ export const plot = recipe<PlotParams>({
                 showX ? axis({ ...xAxis, label: p.xLabel, ...xNames }, { size: { h: "auto" } }) : null,
               ],
             }),
-            right ? axis({ scale: "y2", orient: "right", format: right.format, prefix: right.prefix, suffix: right.suffix }, { key: "axis-y2", size: { w: "auto" } }) : null,
+            right ? axis({ scale: "y2", orient: "right", format: right.format, prefix: right.prefix, suffix: right.suffix, name: right.label }, { key: "axis-y2", size: { w: "auto" } }) : null,
             // Room at the right for lines labelled at their ends (they draw just past the plot area).
             endLabels ? group({ key: "end-labels", size: { w: labelRoom } }) : null,
           ],

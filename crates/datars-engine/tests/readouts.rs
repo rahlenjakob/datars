@@ -67,3 +67,17 @@ fn the_summary_speaks_the_documents_language() {
     let mut e = engine(d);
     assert_eq!(e.accessible_summary(), "Hur många av varje sak. 4 datapunkter, från 7 till 4\u{a0}500.");
 }
+
+#[test]
+fn an_axis_is_called_by_its_title_even_when_the_title_is_drawn_above_the_plot() {
+    let mut doc = bars("Seats", "");
+    doc["scene"]["params"]["yLabel"] = json!("Seats in the Riksdag");
+    doc["scene"]["params"]["xLabel"] = json!("Party");
+    let mut e = engine(doc);
+    let axes: Vec<String> = e.semantic_items().into_iter().filter(|i| i.role == "axis").map(|i| i.label).collect();
+    assert_eq!(axes, vec!["Seats in the Riksdag", "Party"], "the y axis by its yLabel (drawn in a row above), the x by its xLabel");
+    // Without titles: which axis it is.
+    let mut e = engine(bars("Seats", ""));
+    let axes: Vec<String> = e.semantic_items().into_iter().filter(|i| i.role == "axis").map(|i| i.label).collect();
+    assert_eq!(axes, vec!["y axis", "x axis"]);
+}

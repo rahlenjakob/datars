@@ -3,7 +3,7 @@
 
 import { e, group, op, recipe, repeat, shape, geom, t, text, Template } from "@datars/sdk";
 
-export interface AxisParams { scale: string; orient: "left" | "bottom" | "right" | "top"; ticks: number; format: string; label: string; line: boolean; prefix: string; suffix: string; data: string; field: string; type: string }
+export interface AxisParams { scale: string; orient: "left" | "bottom" | "right" | "top"; ticks: number; format: string; label: string; name: string; line: boolean; prefix: string; suffix: string; data: string; field: string; type: string }
 
 export const axis = recipe<AxisParams>({
   id: "@datars/std/axis",
@@ -14,6 +14,7 @@ export const axis = recipe<AxisParams>({
     ticks: t.number(0, "Tick count hint (0 = automatic: from the axis length, and across, from how many of its measured labels fit)."),
     format: t.string(undefined, "Number format for labels (d3-format)."),
     label: t.string(undefined, "Axis title: under the end of a horizontal axis; above the top of a vertical one, over its labels (a plot draws `yLabel` above its top-left corner instead, in a row of its own)."),
+    name: t.string(undefined, "What a screen reader calls the axis when its title is drawn elsewhere (a plot's `yLabel`, in a row above the plot): \"Seats: 0, 50, 100\" rather than \"y axis: 0, 50, 100\". Defaults to `label`, else \"x axis\" / \"y axis\"."),
     line: t.bool(true, "Draw the domain line."),
     prefix: t.string(undefined, "Before each number label ('$')."), suffix: t.string(undefined, "After it ('M', ' kr')."),
     data: t.table("The table a band scale's categories come from (with `field`): their names are measured, so a horizontal axis wraps, turns or leaves out labels only as they need."),
@@ -98,7 +99,7 @@ export const axis = recipe<AxisParams>({
       // Whatever the rules above miss — a last label nudged in from the edge onto its neighbour, a
       // first turned name pushed right — the later label gives way.
       declutter: true,
-      semantics: { role: "axis", label: p.label ?? `${s} axis` },
+      semantics: { role: "axis", label: p.label ?? p.name ?? `${s} axis` },
       children: [
         p.line ? domainLine : null,
         repeat(from, group({ when: whole, semantics: { role: "tick", label: e(label) }, children: [tickMark, tickLabel, catLabel, turnedLabel] })),
