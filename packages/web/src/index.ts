@@ -11,6 +11,9 @@
 
 import { FrameProfiler, perfRequested } from "./perf.js";
 import { TEXT_CSS, TextLayer } from "./textlayer.js";
+// Push feeds (WebSocket, server-sent events, polls) into a chart's live sources.
+export { liveFeed, socket, events, poll } from "./live.js";
+export type { LiveFeed, LiveFeedOptions, FeedContext, FeedStatus } from "./live.js";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Wasm = any;
