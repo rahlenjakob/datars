@@ -265,11 +265,12 @@ var annotate = recipe3({
       });
     }
     const x = p.x, y = p.y;
-    const w = `min(measure(${JSON.stringify(p.text)}, token("size.label"), 600), ${p.width})`;
+    const W = `(${p.width} * max(1, textScale))`;
+    const w = `min(measure(${JSON.stringify(p.text)}, token("size.label"), 600), ${W})`;
     const flip = p.dx >= 0 ? `((${exprOf(x)}) + ${p.dx} + ${w} > box.w + 4)` : `((${exprOf(x)}) + ${p.dx} - ${w} < -4)`;
     const dxs = `(${flip} ? ${-p.dx} : ${p.dx})`;
     const size = 'token("size.label")';
-    const h = `(ceil(measure(${JSON.stringify(p.text)}, ${size}, 600) / ${p.width}) * ${size} * 1.25)`;
+    const h = `(ceil(measure(${JSON.stringify(p.text)}, ${size}, 600) / ${W}) * ${size} * 1.25)`;
     const flipY = p.dy < 0 ? `((${exprOf(y)}) + ${p.dy} - ${h} < -2)` : `((${exprOf(y)}) + ${p.dy} + ${h} > box.h + 2)`;
     const dys = `(${flipY} ? ${-p.dy} : ${p.dy})`;
     const tx = e3(`(${exprOf(x)}) + ${dxs}`), ty = e3(`(${exprOf(y)}) + ${dys}`);
@@ -283,7 +284,8 @@ var annotate = recipe3({
       children: [
         conn,
         p.dot ? shape3(geom3.circle({ cx: x, cy: y, r: 3 }), { key: "dot", fill: p.ink }) : null,
-        text2(p.text, [tx, ty], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: p.width, align, contain: true, baseline }, halo: ["$paper", 3] })
+        // Kept on the canvas: wrapped to the room it has before the edge, else nudged in.
+        text2(p.text, [tx, ty], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: e3(W), align, contain: "wrap", baseline }, halo: ["$paper", 3] })
       ]
     });
   }
@@ -2434,7 +2436,9 @@ var sankey = recipe9({
       scales: { color: { type: "categorical", domain: { data: nodes, field: "name" }, range: "$categorical" } },
       children: [
         group9({ key: "links", children: [repeat8(links, shape9(geom9.path(e9("d.path")), { fill: e9(`scale.color(d.${p.source})`), opacity: p.selected ? e9(`${p.selected}.isEmpty() || ${p.selected}.has(d.${p.source}) || ${p.selected}.has(d.${p.target}) ? 0.42 : 0.12`) : 0.42, semantics: { role: "datum", label: p.label ?? e9(`\`\${d.${p.source}} \u2192 \${d.${p.target}}: \${d.${p.value}}\``) }, pickable: true }))] }),
-        group9({ key: "nodes", children: [repeat8(nodes, group9({ children: [
+        // Nodes closer than a line of their names (a short box, a reader's big text): a name that
+        // would touch an earlier one is left out (its node still says it, to a pointer and a reader).
+        group9({ key: "nodes", declutter: true, children: [repeat8(nodes, group9({ children: [
           shape9(geom9.rect({ x: e9("d.x0"), y: e9("d.y0"), w: e9("d.x1 - d.x0"), h: e9("d.y1 - d.y0") }), { key: "node", fill: e9("scale.color(d.name)"), semantics: { role: "datum", label: e9("`${d.name}: ${d.value}`") } }),
           text8(e9("d.name"), [e9("d.x0 < box.w / 2 ? d.x1 + 6 : d.x0 - 6"), e9("(d.y0 + d.y1) / 2")], { key: "label", style: { size: "$size.label", align: e9('d.x0 < box.w / 2 ? "start" : "end"'), baseline: "middle" } })
         ] }))] })
@@ -4043,7 +4047,7 @@ function hierarchyTree(p, cx, method) {
         key: e15(col(id)),
         when: e15("d.leaf"),
         rotate: leafRotate,
-        style: { size: "$size.label", ink: "$ink-2", align: leafAlign, baseline: leafBaseline, contain: true }
+        style: { size: "$size.label", ink: "$ink-2", align: leafAlign, baseline: leafBaseline, contain: "wrap" }
       }))] }) : null,
       p.labels ? group14({ key: "branch-labels", declutter: orient === "radial", children: [repeat11(laid, text13(e15(label), branchAt, {
         key: e15(col(id)),

@@ -236,3 +236,25 @@ fn stacked_segments_are_labelled_where_the_labels_fit() {
     assert_eq!(labels.iter().map(|(t, _)| t.as_str()).collect::<Vec<_>>(), ["100 seats", "244 seats"], "{}", s.snapshot());
     assert!(labels.iter().all(|(_, r)| segs.iter().any(|b| r.x >= b.x && r.x1() <= b.x1() && r.y >= b.y && r.y1() <= b.y1())));
 }
+
+/// `contain: "wrap"`: a text that would cross the edge first wraps to the room it has there,
+/// rather than being pushed back over what it labels; `contain: true` still nudges.
+#[test]
+fn a_wrapping_label_takes_the_room_before_the_edge() {
+    let doc = |contain: serde_json::Value| serde_json::json!({ "datars": 1, "size": { "width": 300, "height": 100 }, "scene": { "kind": "group", "key": "root", "children": [
+        { "kind": "text", "key": "t", "text": "Social Democrats", "at": [230, 50], "style": { "size": 11, "align": "start", "baseline": "middle", "contain": contain } }
+    ] } });
+    let laid = |contain| {
+        let mut e = Engine::new();
+        e.load(datars_ir::Doc::from_json(&doc(contain).to_string()).unwrap());
+        let s = e.scene();
+        let t = match &s.root.children()[0].kind { datars_scene::NodeKind::Text(t) => t.clone(), _ => unreachable!() };
+        let r = datars_engine::text_rect(&t, &datars_math::Affine::IDENTITY);
+        (t, r)
+    };
+    let (t, r) = laid(serde_json::json!("wrap"));
+    assert_eq!(t.origin.x, 230.0, "it stays beside its point");
+    assert!(r.x1() <= 298.5 && r.h > 20.0, "on two lines, inside: {r:?}");
+    let (t, r) = laid(serde_json::json!(true));
+    assert!(t.origin.x < 230.0 && r.x1() <= 298.5 && r.h < 20.0, "nudged in on one line: {r:?}");
+}

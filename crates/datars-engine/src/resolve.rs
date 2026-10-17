@@ -340,7 +340,7 @@ impl<'a> Resolver<'a> {
         nodes.iter().for_each(|n| text_quads(n, Affine::IDENTITY, &mut texts, false));
         let canvas = Rect::new(0.0, 0.0, width, height);
         for n in &mut nodes {
-            contain(n, Affine::IDENTITY, canvas, false, &texts);
+            contain(n, Affine::IDENTITY, canvas, false, &texts, self.fonts);
         }
         for p in std::mem::take(&mut *self.declutters.borrow_mut()) {
             let mut texts = Vec::new();
@@ -1349,7 +1349,9 @@ impl<'a> Resolver<'a> {
         let mut node = TextNode::new(content, origin, style);
         node.number = number;
         node.rotate = self.num(&t.rotate, cx, 0.0).to_radians();
-        node.contain = !st.contain.is_null() && self.truthy(&st.contain, cx);
+        let wrap = !st.contain.is_null() && self.string(&st.contain, cx) == "wrap";
+        node.contain = wrap || (!st.contain.is_null() && self.truthy(&st.contain, cx));
+        node.wrap_to_fit = wrap;
         if let Some([dx, dy]) = &t.offset {
             node.offset = Vec2::new(self.num(dx, cx, 0.0), self.num(dy, cx, 0.0));
         }
@@ -1815,7 +1817,7 @@ fn move_text(t: &mut datars_scene::TextNode, xf: &Affine, d: Vec2) {
 /// (a sideways `offset`: a place name right of its dot) first tries the point's other side; what
 /// still crosses is nudged in by the overhang. Under a camera only labels whose point is in view
 /// are kept in: the label of a place panned away goes with it.
-fn contain(n: &mut Node, parent: Affine, frame: Rect, in_view: bool, texts: &[[Vec2; 4]]) {
+fn contain(n: &mut Node, parent: Affine, frame: Rect, in_view: bool, texts: &[[Vec2; 4]], fonts: &datars_text::FontDb) {
     const MARGIN: f64 = 2.0;
     let xf = n.common.placed(parent);
     match &mut n.kind {
@@ -1827,6 +1829,26 @@ fn contain(n: &mut Node, parent: Affine, frame: Rect, in_view: bool, texts: &[[V
                     n.common.visible = false;
                 }
                 return;
+            }
+            // `contain: "wrap"`: across the edge, the text first takes the room it has there on
+            // more lines (a name beside a line's end on a phone, or in a reader's big text).
+            if t.wrap_to_fit && t.rotate == 0.0 {
+                let r = crate::bounds::text_rect(t, &xf);
+                if r.x < frame.x + MARGIN || r.x1() > frame.x1() - MARGIN {
+                    let a = anchor.x + t.offset.x;
+                    let room = match t.style.align {
+                        datars_scene::text::Align::Start => frame.x1() - MARGIN - a,
+                        datars_scene::text::Align::End => a - frame.x - MARGIN,
+                        datars_scene::text::Align::Middle => 2.0 * (a - frame.x).min(frame.x1() - a) - 2.0 * MARGIN,
+                    };
+                    let sx = xf.apply_vec(Vec2::new(1.0, 0.0)).x.abs();
+                    let local = if t.screen_size || sx < 1e-9 { room } else { room / sx };
+                    // (Only to a width a word or two fits in: narrower, nudging reads better.)
+                    if local >= 2.0 * t.style.size && t.style.max_width.is_none_or(|m| m > local) {
+                        t.style.max_width = Some(local);
+                        datars_text::layout(fonts, t);
+                    }
+                }
             }
             let own = crate::bounds::text_quad(t, &xf);
             let mut r = crate::bounds::text_rect(t, &xf);
@@ -1858,11 +1880,11 @@ fn contain(n: &mut Node, parent: Affine, frame: Rect, in_view: bool, texts: &[[V
         NodeKind::View { viewport, camera, children, .. } => {
             let inner = xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y)));
             let Some(shown) = crate::bounds::transform_rect(*viewport, &xf).intersect(&frame) else { return };
-            children.iter_mut().for_each(|c| contain(c, inner, shown, true, texts));
+            children.iter_mut().for_each(|c| contain(c, inner, shown, true, texts, fonts));
         }
         _ => {
             if let Some(kids) = n.children_mut() {
-                kids.iter_mut().for_each(|c| contain(c, xf, frame, in_view, texts));
+                kids.iter_mut().for_each(|c| contain(c, xf, frame, in_view, texts, fonts));
             }
         }
     }

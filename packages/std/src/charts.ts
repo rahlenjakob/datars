@@ -266,7 +266,9 @@ export const sankey = recipe<SankeyParams>({
       scales: { color: { type: "categorical", domain: { data: nodes, field: "name" }, range: "$categorical" } },
       children: [
         group({ key: "links", children: [repeat(links, shape(geom.path(e("d.path")), { fill: e(`scale.color(d.${p.source})`), opacity: p.selected ? e(`${p.selected}.isEmpty() || ${p.selected}.has(d.${p.source}) || ${p.selected}.has(d.${p.target}) ? 0.42 : 0.12`) : 0.42, semantics: { role: "datum", label: p.label ?? e(`\`\${d.${p.source}} → \${d.${p.target}}: \${d.${p.value}}\``) }, pickable: true }))] }),
-        group({ key: "nodes", children: [repeat(nodes, group({ children: [
+        // Nodes closer than a line of their names (a short box, a reader's big text): a name that
+        // would touch an earlier one is left out (its node still says it, to a pointer and a reader).
+        group({ key: "nodes", declutter: true, children: [repeat(nodes, group({ children: [
           shape(geom.rect({ x: e("d.x0"), y: e("d.y0"), w: e("d.x1 - d.x0"), h: e("d.y1 - d.y0") }), { key: "node", fill: e("scale.color(d.name)"), semantics: { role: "datum", label: e("`${d.name}: ${d.value}`") } }),
           text(e("d.name"), [e("d.x0 < box.w / 2 ? d.x1 + 6 : d.x0 - 6"), e("(d.y0 + d.y1) / 2")], { key: "label", style: { size: "$size.label", align: e('d.x0 < box.w / 2 ? "start" : "end"'), baseline: "middle" } }),
         ] }))] }),

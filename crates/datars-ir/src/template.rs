@@ -349,7 +349,9 @@ pub struct TTextStyle {
     #[serde(default, skip_serializing_if = "Prop::is_null")]
     pub max_width: Prop,
     /// Keep the label inside the canvas: after layout it's nudged back in, only as far as needed
-    /// (the last tick label of an axis, a callout near the edge). A boolean.
+    /// (the last tick label of an axis, a callout near the edge). A boolean, or `"wrap"`: first
+    /// wrap the text to the room it has before the edge (a series' name beside its line's end),
+    /// nudging only what still crosses.
     #[serde(default, skip_serializing_if = "Prop::is_null")]
     pub contain: Prop,
 }

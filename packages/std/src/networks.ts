@@ -475,7 +475,7 @@ function hierarchyTree(p: TreeParams, cx: Cx, method: "tidy" | "cluster"): Templ
       // to screen readers).
       p.labels ? group({ key: "leaf-labels", declutter: true, children: [repeat(laid, text(e(label), leafAt, {
         key: e(col(id)), when: e("d.leaf"), rotate: leafRotate,
-        style: { size: "$size.label", ink: "$ink-2", align: leafAlign, baseline: leafBaseline, contain: true },
+        style: { size: "$size.label", ink: "$ink-2", align: leafAlign, baseline: leafBaseline, contain: "wrap" },
       }))] }) : null,
       p.labels ? group({ key: "branch-labels", declutter: orient === "radial", children: [repeat(laid, text(e(label), branchAt, {
         key: e(col(id)), when: e("!d.leaf"),

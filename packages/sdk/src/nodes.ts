@@ -159,7 +159,7 @@ export function shape(g: Geom, opts: NodeOpts & { fill?: Prop; stroke?: StrokeOp
   return node("shape", rest, { geom: g, fill, stroke: stroke(st), markers });
 }
 
-export interface TextStyleOpts { font?: string; size?: Prop; weight?: Prop; ink?: Prop; align?: Prop; baseline?: Prop; maxWidth?: Prop; /** Nudged back inside the canvas if it would cross an edge. */ contain?: Prop }
+export interface TextStyleOpts { font?: string; size?: Prop; weight?: Prop; ink?: Prop; align?: Prop; baseline?: Prop; maxWidth?: Prop; /** Nudged back inside the canvas if it would cross an edge; `"wrap"`: first wrapped to the room it has before the edge. */ contain?: Prop }
 
 /** Text at `at`. `offset` shifts it in screen px (a label beside a point, at any camera zoom). */
 export function text(content: Prop, at: [Prop, Prop], opts: NodeOpts & { style?: TextStyleOpts; halo?: [Prop, Prop]; number?: { value: Prop; format?: Prop }; rotate?: Prop; offset?: [Prop, Prop] } = {}): Template {

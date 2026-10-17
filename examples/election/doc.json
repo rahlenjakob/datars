@@ -99,7 +99,10 @@
      "font": "font.title",
      "size": "$size.title",
      "ink": "$ink",
-     "baseline": "top"
+     "baseline": "top",
+     "max_width": {
+      "expr": "box.w"
+     }
     }
    },
    {

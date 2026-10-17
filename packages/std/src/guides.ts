@@ -163,13 +163,15 @@ export const annotate = recipe<AnnotateParams>({
     const x = p.x as never, y = p.y as never;
     // The text goes to the side `dx` asks for, unless it would run out of the box there: then it
     // mirrors to the other side of its point (a callout on the last point of a line stays inside).
-    const w = `min(measure(${JSON.stringify(p.text)}, token("size.label"), 600), ${p.width})`;
+    // (`width` is at the theme's text size: a reader's bigger text keeps the note's lines.)
+    const W = `(${p.width} * max(1, textScale))`;
+    const w = `min(measure(${JSON.stringify(p.text)}, token("size.label"), 600), ${W})`;
     const flip = p.dx >= 0 ? `((${exprOf(x)}) + ${p.dx} + ${w} > box.w + 4)` : `((${exprOf(x)}) + ${p.dx} - ${w} < -4)`;
     const dxs = `(${flip} ? ${-p.dx} : ${p.dx})`;
     // Likewise up and down: text above a point near the top of the plot (a peak) would run into
     // the title, so it goes below the point instead — and text below one near the bottom, above.
     const size = 'token("size.label")';
-    const h = `(ceil(measure(${JSON.stringify(p.text)}, ${size}, 600) / ${p.width}) * ${size} * 1.25)`;
+    const h = `(ceil(measure(${JSON.stringify(p.text)}, ${size}, 600) / ${W}) * ${size} * 1.25)`;
     const flipY = p.dy < 0 ? `((${exprOf(y)}) + ${p.dy} - ${h} < -2)` : `((${exprOf(y)}) + ${p.dy} + ${h} > box.h + 2)`;
     const dys = `(${flipY} ? ${-p.dy} : ${p.dy})`;
     const tx = e(`(${exprOf(x)}) + ${dxs}`), ty = e(`(${exprOf(y)}) + ${dys}`);
@@ -187,7 +189,8 @@ export const annotate = recipe<AnnotateParams>({
       children: [
         conn,
         p.dot ? shape(geom.circle({ cx: x, cy: y, r: 3 }), { key: "dot", fill: p.ink }) : null,
-        text(p.text, [tx, ty], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: p.width, align, contain: true, baseline }, halo: ["$paper", 3] }),
+        // Kept on the canvas: wrapped to the room it has before the edge, else nudged in.
+        text(p.text, [tx, ty], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: e(W), align, contain: "wrap", baseline }, halo: ["$paper", 3] }),
       ],
     });
   },

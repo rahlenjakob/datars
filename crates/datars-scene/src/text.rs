@@ -129,6 +129,10 @@ pub struct TextNode {
     /// Nudged back inside the canvas after layout when it would cross an edge.
     #[serde(default, skip_serializing_if = "is_false")]
     pub contain: bool,
+    /// With `contain`: a text crossing the edge first wraps to the room it has there (lines broken
+    /// at words), and is nudged only if that isn't enough (`contain: "wrap"`).
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub wrap_to_fit: bool,
 }
 
 fn is_false(v: &bool) -> bool {
@@ -138,7 +142,7 @@ fn is_false(v: &bool) -> bool {
 impl TextNode {
     /// An unshaped text node; the engine's text stage fills `runs` and `bounds`.
     pub fn new(text: impl Into<String>, origin: Vec2, style: TextStyle) -> TextNode {
-        TextNode { text: text.into(), origin, style, runs: Vec::new(), bounds: Rect::default(), halo: None, screen_size: true, offset: Vec2::ZERO, number: None, rotate: 0.0, contain: false }
+        TextNode { text: text.into(), origin, style, runs: Vec::new(), bounds: Rect::default(), halo: None, screen_size: true, offset: Vec2::ZERO, number: None, rotate: 0.0, contain: false, wrap_to_fit: false }
     }
     pub fn is_shaped(&self) -> bool {
         !self.runs.is_empty() || self.text.is_empty()

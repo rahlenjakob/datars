@@ -21,7 +21,7 @@ export default doc({
     layout: { type: "rows", gap: 8, padding: [16, 20, 12, 12] },
     children: [
       text(e('`Election night — ${format(table.max("count", "counted"), ".0f")}% of districts counted`'), [0, 0], {
-        key: "headline", size: { h: "auto" }, style: { font: "font.title", size: "$size.title", ink: "$ink", baseline: "top" },
+        key: "headline", size: { h: "auto" }, style: { font: "font.title", size: "$size.title", ink: "$ink", baseline: "top", maxWidth: e("box.w") },
       }),
       plot({ data: "ranked", x: "share", y: "party", xType: "linear", yType: "band", color: "party", xDomain: [0, 35],
         title: "Vote share (%)", children: [bar({ labels: true, format: ".1f" })] }, { key: "chart" }),
