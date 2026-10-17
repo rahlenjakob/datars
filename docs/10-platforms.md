@@ -86,8 +86,14 @@ finger, a tap's pinned until the next tap, a scroll or a step. Apps can show it 
   web, iOS, Android and video.
 - **System fonts** are available as an opt-in for apps that want a native look; the scene is then
   deterministic *per platform* rather than across platforms, and the conformance suite knows it.
-- The platform's **text size preference** (Dynamic Type, Android font scale) is a signal; std recipes
-  scale label sizes and re-lay out.
+- The reader's **text size** is an engine input (`set_text_scale`, 0.75–3 × the theme's): the
+  theme's `size.*` tokens scale, so text and everything measured with it lays out again — axes
+  widen, ticks thin, names wrap or turn — and the chart moves there like any other change. The
+  size class is judged in the reader's text (an 800 px chart at 2 × lays out as a phone one).
+  Hosts follow the platform: the browser's default font size (`<datars-view>`, `text-scale`
+  overrides), Dynamic Type (DatarsKit), `Configuration.fontScale` (Android), Ctrl/⌘ +/− in the
+  desktop viewer; all live. Literal text sizes in a document stay as written; posters and video
+  are at the theme's size. `datars labels` checks charts at 1, 1.5 and 2 ×.
 - The web runtime has no font compiled in (bundles bring theirs; raw documents fetch the default
   family from the runtime package's `fonts/`). Native runtimes compile Inter in by default
   (`bundled-fonts`) so their raw-document development mode draws text; apps that only play bundles

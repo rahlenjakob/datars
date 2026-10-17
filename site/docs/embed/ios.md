@@ -67,10 +67,11 @@ chart.targetState = 2            // go to a state now, or as soon as the chart h
 | `engine: DatarsEngine` | The runtime underneath, for everything else. |
 | `renderLoop()` | Draw now, and keep drawing while something moves. Call it after changing the engine directly. |
 | `updateAccessibility()` | Rebuild the VoiceOver elements (the view does this itself after loads, taps and data). |
+| `textScale: Double?` | The chart's text size as a multiple of the theme's; `nil` (the default) follows Dynamic Type, live. |
 
 On macOS the view follows the mouse: marks show their labels as tooltips, controls show where the pointer is (`hover()`), and the cursor is the one the engine asks for (`engine.cursor`) — a pointing hand over what a click acts on, an open hand over a view that pans, a crosshair over a brushable area.
 
-The view renders on demand: a display link runs only while something moves, and a one-shot timer wakes it for autoplay holds and live refreshes. It follows **Reduce Motion** by itself: transitions become short crossfades.
+The view renders on demand: a display link runs only while something moves, and a one-shot timer wakes it for autoplay holds and live refreshes. It follows **Reduce Motion** by itself: transitions become short crossfades. It follows **Dynamic Type** too: a bigger text size lays the chart out again with bigger labels, as the setting changes (macOS has no system text size: `textScale` sets one).
 
 ## Mode, brand and state from Swift
 
@@ -145,11 +146,13 @@ DatarsChart(source: .url(Bundle.main.url(forResource: "spending", withExtension:
 
 The chart reaches VoiceOver as its content, not as a picture:
 
-- every mark with semantics is an accessibility element with its label and its frame on screen, so explore-by-touch finds the bar under your finger; titles are headers;
+- the chart comes first: its name, and as its value what it shows (*"8 data points, from 4.6 to 30.3"*);
+- every mark with semantics is an accessibility element with its name, its value and its frame on screen, so explore-by-touch finds the bar under your finger; the chart's parts are headers (the rotor's Headings); an axis or a legend is one element (*"y axis: 0, 5, 10 …"*);
+- a story step's narration is announced when the chart moves to it;
 - interactive marks are buttons — a double-tap runs their click intent;
-- engine-drawn sliders are adjustable elements — swipe up or down to change the value;
+- engine-drawn sliders are adjustable elements — swipe up or down to change the value, which they say as drawn (*"32,000"*);
 - engine-drawn switches, checkboxes, segments and buttons are buttons; a `select` is the system's menu button — a tap on it opens the iOS menu of its options (with a check on the chosen one) instead of the chart's drawn list;
-- on macOS, the chart is a group whose children are the marks.
+- on macOS, the chart is a group (its summary as help) whose children are the same elements; clickable marks press.
 
 See [accessibility](/docs/accessibility/) for what the semantics contain and how to check them with `datars semantics`.
 

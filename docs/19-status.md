@@ -111,11 +111,24 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   emulator's Vulkan can't run on a macOS host). Neither has run on a physical phone yet, so the GPU
   path on real phones, and Vulkan on Android at all, are untested. The performance page's native
   figures are from the simulator and the emulator.
-- **Accessibility:** semantics with frames; the web mirror (ARIA list, live narration, native range
-  inputs, buttons for interactive marks); iOS VoiceOver; macOS children; labelled SVG posters;
-  reduced motion everywhere; Android TalkBack through an AccessibilityNodeProvider (the node tree
-  checked on the emulator, not yet driven by TalkBack itself); desktop through AccessKit (tree and
-  actions unit-tested, not yet driven by a screen reader).
+- **Accessibility:** a chart's name (its title) and summary (its description, how many data
+  points, their range) on every host; the web mirror (data tables with name and value columns,
+  axes and legends as a line each, one Tab stop into the data and arrow keys through it with the
+  mark outlined and named on the chart, native range inputs and selects, buttons for interactive
+  marks, step narration announced once) — checked in Chrome's accessibility tree by a browser
+  test, not yet with a screen reader driving it; native bridges read one reading order from the
+  runtime (`readout`): iOS VoiceOver elements (summary element, headings, values, adjustable
+  sliders, step announcements) dumped in the simulator; macOS children with press actions; Android
+  TalkBack virtual nodes (dumped with `uiautomator` on the emulator, not yet driven by TalkBack
+  itself); desktop AccessKit (a figure with its description, unit-tested, not yet driven by a
+  screen reader). Reduced motion everywhere; `prefers-contrast: more` and forced colours on the
+  web; the reader's text size on every host (above); labelled SVG posters.
+- **Legibility:** `datars labels` reads every chart at 390/768/1200 px and 1, 1.5, 2 × text;
+  `datars test` keeps each example's count as a ratchet. Over the examples, the std reference and
+  gallery figures (126 documents), 289 unreadable labels remain of 1182 found — none in the
+  examples at 1 ×, most of the rest at 2 × on a phone (dense networks, a phone-sized dashboard,
+  tables wider than the screen). Content taller than a fixed-height chart at large text still
+  runs off its bottom.
 - **Selectable chart text (web):** done — transparent text spans over the canvas (select, copy,
   find-in-page); `aria-hidden`, since the semantics mirror is what screen readers read.
 - **Tooltips:** hover on the web and desktop; tap on touch screens (web, iOS, Android), placed above

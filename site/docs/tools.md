@@ -10,6 +10,7 @@ lede: Everything runs locally, without a GPU or a browser, and prints text you �
 datars dev doc.ts                     # a live page: edit, save, watch it morph
 datars check doc.ts                   # does it load? diagnostics with the reason
 datars lint doc.ts                    # chart-design mistakes, with a fix for each
+datars labels doc.ts                  # can every label be read on a phone, with big text?
 datars render doc.ts --state 2        # look at a state as a PNG
 datars film doc.ts --from 0 --to 1    # look at a transition as a filmstrip
 datars explain doc.ts --key '("SE",)' # why does this element look like that?
@@ -53,6 +54,7 @@ Maps with an [automatic basemap](/docs/maps/#where-the-tiles-come-from) show at 
 | `identity/mismatch` | a transition where most data marks lose their identity and cross-fade instead of moving |
 | `legibility/label-collisions` | overlapping labels |
 | `legibility/offscreen` | labels cut off at the canvas edge |
+| `legibility/clipped` | labels their box's clip cuts |
 | `encoding/too-many-colours` | more categorical colours than a reader can tell apart |
 | `a11y/semantics` | interactive elements without an accessible label |
 | `maps/attribution` | vector tiles drawn without the OpenStreetMap credit |
@@ -69,11 +71,13 @@ warning  identity/row-keys source `sales` has no key: rows are identified by pos
 
 Lint exits with an error code when it finds errors, so it fits in CI.
 
+`datars labels` reads a chart the way readers on other screens get it: every state at a phone (390 px), a tablet (768) and a wide column (1200), each at the theme's text size and at 1.5 and 2 × — the sizes readers choose in their browser or phone settings — and counts the labels cut off, drawn over one another or clipped by their box, per reading. Give it documents or whole folders; `--widths` and `--text-scale` take other lists, `--verbose` names the labels, `--json` is for tools.
+
 ## Look at it
 
 | Command | Gives you |
 |---|---|
-| `datars render doc.ts --state 2 --size 360x640 --dpr 2 --mode dark` | one state as a PNG from the CPU reference renderer — the same pixels on every machine. `--out x.svg` or `--out x.pdf` for vector output; `--hash` prints the pixel hash to compare targets |
+| `datars render doc.ts --state 2 --size 360x640 --dpr 2 --mode dark --text-scale 1.5` | one state as a PNG from the CPU reference renderer — the same pixels on every machine. `--out x.svg` or `--out x.pdf` for vector output; `--hash` prints the pixel hash to compare targets |
 | `datars film doc.ts --from 0 --to 1 --frames 8` | a filmstrip of a transition plus its motion trails — where every mark travels |
 | `datars inspect doc.ts --state 1` | the scene as text: every node's key, geometry, inks and role |
 | `datars semantics doc.ts --state 1` | the accessibility tree — what a screen reader gets |

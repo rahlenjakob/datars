@@ -95,7 +95,8 @@ Mounting charts as they come near the viewport keeps a long article light: each 
 | `src` | URL | The chart: a manifest (`…/c/<alias>`) or a single `.datars` file. |
 | `doc` | URL | A raw document (JSON) instead — for development; loads the full engine. |
 | `height` | px | The height to reserve and draw at. The chart fills the element's width. |
-| `mode` | `light`, `dark`, `high-contrast` | The theme mode. Without it the chart follows the reader's `prefers-color-scheme`, live. |
+| `mode` | `light`, `dark`, `high-contrast` | The theme mode. Without it the chart follows the reader, live: `high-contrast` when they ask for more contrast (`prefers-contrast: more`) or the system forces its colours, else `prefers-color-scheme`. |
+| `text-scale` | number, `auto` | Text size as a multiple of the theme's (`1`: its own). Without it (or `auto`) the chart follows the reader's browser font size, live — labels grow and the chart lays out again around them. |
 | `state` | number | Go to this program state (0-based); the transition plays. |
 | `steps` | CSS selector | Scroll-triggered story: each matching element on the page is a step (see below). |
 | `scrub` | — | Scroll-scrubbed story: the page's scroll position drives the program (see below). |
@@ -139,6 +140,7 @@ chart.addEventListener("state", (e) => {
 | `data = { slot: rows, … }` | Every slot at once. |
 | `seek(position)` | Put the program at a position in states: `0` the first, `states − 1` the last, and a fraction the transition between two states that far through — the exact frame it would show then. For your own scrubbers and scroll-driven stories (`scrub` uses it). The chart holds the position until the next `seek`, step or event; asked before the chart has opened, it's applied when it does. |
 | `reducedMotion` | Whether the chart plays reduced motion now: the `reduced-motion` attribute when set, else the reader's `prefers-reduced-motion`. |
+| `textScale` | The text size now (the `text-scale` attribute, else the reader's browser font size over 16 px); set a number, or `"auto"` to follow the reader again. |
 | `setDocument(doc)` | Show a document held by the page (JSON text or object) — an editor's working copy; morphs from what's on screen. |
 | `reload()` | Fetch the `doc` attribute's document again and morph to it (the edit loop). |
 | `status` | The current state, all states, narration, the accessibility tree, resolved tokens, diagnostics. `null` until loaded. |
@@ -219,7 +221,8 @@ The element sets the chart's resolved theme colours on itself as custom properti
 - **Reduced motion.** With `prefers-reduced-motion: reduce`, transitions become short crossfades and autoplay stays paused. The `reduced-motion` attribute overrides it per chart: `reduce` to force it, `no-preference` for a reader who opted in to the full motion.
 - **Fair to the chart being read.** Charts loading further down wait while another is mid-transition, and busy charts off the reader's focus draw at a lower rate.
 - **Prepares the next step.** While the reader is on a step, the engine resolves and plans the neighbouring steps in idle time and fetches the map tiles their flights will need.
-- **Accessible.** A hidden list mirrors the chart's semantics (roles, labels, reading order), story narration is announced through a live region, and engine-drawn sliders become native range inputs. See [accessibility](/docs/accessibility/).
+- **Accessible.** The element is a `figure` named by the chart, its summary as its description; beside the canvas, its content for screen readers — data as tables, axes and legends as a line each — one Tab stop into the data and arrow keys through it, story steps announced once, engine-drawn sliders and selects as native controls. See [accessibility](/docs/accessibility/).
+- **Follows the reader's text size, contrast and colours.** Bigger browser text lays the chart out again with bigger labels (and no poster at the theme's size shows first); more contrast is the high-contrast mode; forced colours paint its text in the system's.
 
 ## Browsers and security
 

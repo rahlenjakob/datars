@@ -92,13 +92,16 @@ Rows can be provided before the chart has loaded — they wait for it — and ne
 
 The chart reaches TalkBack as its content, not as a picture. The view exposes the engine's semantics as virtual accessibility nodes:
 
-- every mark with semantics is a node with its label and its bounds on screen, so explore-by-touch finds the bar under your finger;
+- the chart comes first: its name, and what it shows (*"8 data points, from 4.6 to 30.3"*);
+- every mark with semantics is a node with its name, its value and its bounds on screen, so explore-by-touch finds the bar under your finger; the chart's parts are headings; an axis or a legend is one node;
 - interactive marks are buttons — a double-tap runs their click intent;
 - engine-drawn sliders are seek bars with their range — swipe to step the value, or set it directly;
 - engine-drawn switches, checkboxes, segments and buttons are buttons; a `select` is a spinner whose double-tap opens Android's own list dialog — the same dialog a tap on it opens for everyone;
-- the view's content description is the chart's title.
+- the view's content description is the chart's name, and a story step's narration is announced when the chart moves to it.
 
 "Remove animations" (Settings › Accessibility) is honoured as reduced motion: transitions become short crossfades. The setting is read when the view is created.
+
+The reader's **font size** (Settings › Display › Font size) lays the chart out again with bigger labels — at creation, and when it changes while an activity that handles `fontScale` itself stays up. `view.textScale = 1.0` keeps the theme's sizes; `null` follows the setting.
 
 ## Try the sample app
 

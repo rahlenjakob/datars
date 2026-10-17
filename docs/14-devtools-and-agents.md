@@ -18,6 +18,7 @@ datars uses the same protocol.
 | `datars explain <doc> --key '("SE")'` | why this element exists and looks the way it does: recipe, rule, data row, expression values |
 | `datars diff <docA> <docB>` / `--states A B` | element-level scene diff |
 | `datars lint <doc>` | design, accessibility and correctness checks (below) |
+| `datars labels <doc\|dir>…` | every state at a phone, a tablet and a wide column, at 1, 1.5 and 2 × text: the labels a reader can't read there (cut off, overlapping, clipped by their box) |
 | `datars test [filter]` | the visual and motion suite ([13](13-testing.md)); `--explain`, `--accept` |
 | `datars describe <package/recipe>` | param schema, defaults, examples, motion defaults — for humans and agents |
 | `datars data profile <file>` | column types, cardinality, ranges, nulls, suggested keys and semantic hints |

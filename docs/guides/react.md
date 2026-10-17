@@ -210,6 +210,7 @@ a reader was on comes back with it. `lazy={false}` mounts after hydration and st
 | `state` | the step to go to (name or index) when it changes; also where the chart opens |
 | `mode` | `"light"`, `"dark"`, `"high-contrast"` (default: `prefers-color-scheme`) |
 | `reducedMotion` | `"reduce"` or `"no-preference"` (a reader who opted in to the full motion); default: `prefers-reduced-motion` |
+| `textScale` | text size as a multiple of the theme's (`1`: its own), or `"auto"`; default: the reader's browser font size |
 | `height`, `aspectRatio` | the box's size (default: the document's aspect across the width) |
 | `signals`, `tokens`, `data` | signals, theme token overrides, data slots — applied as they change, and before the first frame |
 | `lazy` | mount near the viewport (default `true`), `false`, or a rootMargin |
