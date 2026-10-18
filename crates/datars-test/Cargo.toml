@@ -20,6 +20,13 @@ serde_json.workspace = true
 datars-color = { workspace = true, optional = true }
 datars-render-wgpu = { workspace = true, optional = true }
 
+[dev-dependencies]
+datars-color.workspace = true
+datars-theme.workspace = true
+datars-render.workspace = true
+datars-ir.workspace = true
+datars-runtime.workspace = true
+
 [features]
 # GPU equivalence (`datars gpu`): needs a GPU adapter, so it's a separate, opt-in layer.
 gpu = ["dep:datars-render-wgpu", "dep:datars-color"]
