@@ -18,6 +18,7 @@ fn tools() -> Value {
         { "name": "explain", "description": "Why an element exists and looks the way it does: the recipes that expanded into it, its template, the data row, every expression with its value, bounds and intents. `key` is a key path as `inspect` prints it, or its end (`(\"SE\",)`).", "inputSchema": { "type": "object", "properties": { "doc": doc, "key": { "type": "string" }, "state": { "type": "integer" } }, "required": ["doc", "key"] } },
         { "name": "diff", "description": "Element-level scene diff: nodes added, removed and changed (with their before/after snapshot lines) between two states of a document (`from`, `to`), or between two documents (`doc`, `other`) at `state`.", "inputSchema": { "type": "object", "properties": { "doc": doc, "other": { "type": "string" }, "from": { "type": "integer" }, "to": { "type": "integer" }, "state": { "type": "integer" } }, "required": ["doc"] } },
         { "name": "data_profile", "description": "Profile a CSV/JSON data file before charting it: column types, missing values, cardinality, ranges, candidate keys, and hints (years as numbers, atlas ids, log-scale spans, categories).", "inputSchema": { "type": "object", "properties": { "file": { "type": "string" } }, "required": ["file"] } },
+        { "name": "search_icons", "description": "Search the built-in icon set (Lucide, ISC) by name and tags, best match first: each icon's name (use it as icon(\"name\", …) or \"lucide:name\") and its tags. An empty query lists every icon.", "inputSchema": { "type": "object", "properties": { "query": { "type": "string", "description": "words, e.g. \"bike\" or \"arrow up\"" }, "limit": { "type": "integer", "description": "at most this many (default 40)" } } } },
         { "name": "describe_recipes", "description": "Every standard-library recipe with its parameters, docs and tokens.", "inputSchema": { "type": "object", "properties": {} } },
         { "name": "run_tests", "description": "Run the visual + motion suite over examples/ (snapshots, dense transition sweeps, invariants).", "inputSchema": { "type": "object", "properties": { "filter": { "type": "string" }, "update": { "type": "boolean" } } } },
         { "name": "bundle", "description": "Publish a document to a bundle (.datars) and report variants, bytes, gzip bytes per tier and per chunk, and the compiler's decisions.", "inputSchema": { "type": "object", "properties": { "doc": doc, "out": { "type": "string" } }, "required": ["doc"] } },
@@ -168,6 +169,7 @@ fn call(name: &str, a: &Value) -> Result<Value, String> {
             serde_json::to_value(datars_devtools::profile::profile_bytes(file, &bytes, &ids)?).unwrap_or_default()
         }
         "describe_recipes" => json!(datars_devtools::describe_std(&datars_engine::Engine::new())),
+        "search_icons" => search_icons(a["query"].as_str().unwrap_or(""), a["limit"].as_u64().unwrap_or(40) as usize)?,
         "run_tests" => {
             let r = datars_test::run(&datars_test::Options { root: root(), filter: a["filter"].as_str().unwrap_or("").into(), update: a["update"].as_bool().unwrap_or(false), samples: 64, pixels: true });
             serde_json::to_value(&r).unwrap_or_default()
@@ -245,5 +247,34 @@ fn main() {
             let _ = writeln!(stdout, "{msg}");
             let _ = stdout.flush();
         }
+    }
+}
+
+/// `search_icons`: the default set's icons whose names or tags say the query, best first (what
+/// `datars icons <word>` prints), with their tags.
+fn search_icons(query: &str, limit: usize) -> Result<Value, String> {
+    let set = datars_icon::set::bundled(datars_icon::DEFAULT_SET).ok_or("the default icon set isn't compiled into this build")?;
+    let hits: Vec<&str> = if query.trim().is_empty() { set.names().collect() } else { set.search(query) };
+    let total = hits.len();
+    let icons: Vec<Value> = hits.into_iter().take(limit.max(1)).map(|n| json!({ "name": n, "use": format!("icon(\"{n}\", [x, y])"), "tags": set.tags(n) })).collect();
+    Ok(json!({ "set": set.name, "version": set.version, "licence": set.licence, "matches": total, "icons": icons }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn search_icons_finds_the_set_by_name_and_tag() {
+        let r = call("search_icons", &json!({ "query": "bike", "limit": 5 })).unwrap();
+        assert_eq!((r["set"].as_str(), r["licence"].as_str()), (Some("lucide"), Some("ISC")));
+        let names: Vec<&str> = r["icons"].as_array().unwrap().iter().filter_map(|i| i["name"].as_str()).collect();
+        assert_eq!(names.first(), Some(&"bike"), "{names:?}");
+        assert!(names.len() <= 5 && r["matches"].as_u64().unwrap() >= names.len() as u64);
+        // By tag: "love" names no icon, but the heart says it.
+        let r = call("search_icons", &json!({ "query": "love" })).unwrap();
+        assert!(r["icons"].as_array().unwrap().iter().any(|i| i["name"] == "heart"), "{r}");
+        // And it's listed for agents.
+        assert!(tools().as_array().unwrap().iter().any(|t| t["name"] == "search_icons"));
     }
 }

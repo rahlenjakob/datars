@@ -208,8 +208,7 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
         }
         let xf = n.common.placed(parent);
         let clip = match &n.common.clip {
-            Some(datars_scene::Clip::Rect { rect }) => narrow(clip, corners(xf, *rect)),
-            Some(datars_scene::Clip::Path { path }) => narrow(clip, corners(xf, path.bounds())),
+            Some(c) => narrow(clip, corners(xf, c.bounds())),
             None => clip,
         };
         match &n.kind {

@@ -173,12 +173,14 @@ interpolation for million-point morphs (CPU today, ~17 ms at 10⁶), incremental
   **mood** (a five-zone dial). The web runtime reads no SVG and decodes no picture: icons arrive
   read (compact drawings in bundles, `doc.icons` from `datars dev`, the default set as one file per
   icon beside the runtime) and the browser decodes pictures (any format it reads); iOS and Android
-  decode with ImageIO and BitmapFactory, the tools and the desktop host with `png` and `zune-jpeg`.
+  decode with ImageIO and BitmapFactory, the tools and the desktop host with `png`, `zune-jpeg` and `image-webp`. Pictures cut round
+  (`crop: "circle"`, an elliptical clip that morphs) and carry their credits (`credits` → the
+  manifest).
   The features themselves add ~30 KB gzipped to the core engine (resolving icons and text paths,
   drawing pictures on the CPU and GPU, icon instances and markers). Open: icons inside map tile
   layers, mipmapped picture sampling for strong downscales, an `image` role for hosts (labelled
   pictures read as labels today), instanced icon drawing on the GPU in one draw call (per instance
-  today), WebP in the tools (they read PNG and JPEG), notebook widgets' raw documents (they don't
+  today), notebook widgets' raw documents (they don't
   carry the default set's files).
 - **Fonts:** open — WOFF2 input, subsetting CFF outlines, lazy script subsets in the Swift and Kotlin
   hosts, a shared default-family subset across the charts of a page.

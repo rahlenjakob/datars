@@ -129,3 +129,19 @@ view("iconography-a11y").then((v) => {
   const scales = $$("[data-scale]");
   scales.forEach((b) => b.addEventListener("click", () => { press(scales, b); v.setAttribute("text-scale", b.dataset.scale); }));
 });
+
+// ---- pictures: the planets ---------------------------------------------------------------------
+
+const PLANET_NOTES = {
+  size: "Jupiter is 29 times as wide as Mercury; Earth is a dot beside it.",
+  distance: "On a log scale: Neptune is 78 times as far from the Sun as Mercury.",
+  moons: "Saturn has 274 known moons; Mercury and Venus have none.",
+};
+view("iconography-planets").then((v) => {
+  const steps = $$("[data-planets]");
+  steps.forEach((b) => b.addEventListener("click", () => {
+    press(steps, b);
+    v.send(`goto:${b.dataset.planets}`);
+    say("planets-note", PLANET_NOTES[b.dataset.planets]);
+  }));
+});

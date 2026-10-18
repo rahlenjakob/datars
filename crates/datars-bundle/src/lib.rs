@@ -141,6 +141,12 @@ pub struct AssetCredit {
     /// The icons drawn from a set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub names: Vec<String>,
+    /// Who to credit (`NASA/JPL-Caltech`), from the document's `credits`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub credit: Option<String>,
+    /// Where it was published (a URL), from the document's `credits`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 }
 
 impl TryFrom<serde_json::Value> for AssetCredit {
@@ -153,6 +159,8 @@ impl TryFrom<serde_json::Value> for AssetCredit {
             licence: text("licence").unwrap_or_default(),
             version: text("version"),
             names: v["names"].as_array().map(|a| a.iter().filter_map(|n| n.as_str().map(String::from)).collect()).unwrap_or_default(),
+            credit: text("credit"),
+            source: text("source"),
         })
     }
 }

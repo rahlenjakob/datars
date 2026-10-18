@@ -29,7 +29,7 @@ use crate::rules::{MorphStrategy, MotionRules, Resolved};
 use crate::camera::interpolate_camera;
 use crate::{PlanCx, TextShaper};
 use datars_color::Color;
-use datars_math::{lerp, Affine, Hash64, PathData, Vec2};
+use datars_math::{lerp, Affine, Hash64, Vec2};
 use datars_scene::{Camera, Clip, Common, Curve, Geom, Key, KeyPart, KeyPath, Node, NodeKind, Scene, Stroke, TextNode};
 use datars_theme::{Ink, ResolvedTheme};
 use std::collections::BTreeMap;
@@ -677,10 +677,7 @@ impl NodeTrack {
                             common.transform = Affine::IDENTITY;
                             common.clip = (if late { &b.common } else { &a.common }).clip.as_ref().map(|c| {
                                 let xf = if late { b.common.transform } else { a.common.transform };
-                                let p = match c {
-                                    Clip::Rect { rect } => PathData::rect(*rect),
-                                    Clip::Path { path } => (**path).clone(),
-                                };
+                                let p = c.path();
                                 Clip::Path { path: Arc::new(p.transform(&xf)) }
                             });
                             stroke = stroke_at(&self.stroke, mg.stroke_a.as_ref(), mg.stroke_b.as_ref(), e, u);

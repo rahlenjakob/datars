@@ -229,17 +229,17 @@ fn a_picture_fits_its_rect_and_is_decorative_without_alt() {
 
 #[test]
 fn a_picture_this_build_cant_decode_is_the_hosts_to_decode() {
-    // A WebP: no Rust decoder here reads it, as none in the web runtime reads any picture.
-    let file = b"RIFF\x10\0\0\0WEBPVP8 \0\0\0\0".to_vec();
-    let mut e = load(serde_json::json!({ "kind": "image", "key": "w", "asset": "p.webp", "rect": [0, 0, 100, 100], "fit": "fill" }));
-    e.provide("image:p.webp", &file).unwrap();
+    // A GIF: no Rust decoder here reads it, as none in the web runtime reads any picture.
+    let file = b"GIF89a\x01\0\x01\0".to_vec();
+    let mut e = load(serde_json::json!({ "kind": "image", "key": "w", "asset": "p.gif", "rect": [0, 0, 100, 100], "fit": "fill" }));
+    e.provide("image:p.gif", &file).unwrap();
     // The file is held, and the host asked to decode it; nothing drawn meanwhile (no stand-in).
-    assert!(e.requests().contains(&Request::Decode { name: "image:p.webp".into() }));
+    assert!(e.requests().contains(&Request::Decode { name: "image:p.gif".into() }));
     assert_eq!(e.pictures_decoding(), 1);
-    assert_eq!(e.picture_file("image:p.webp"), Some(&file[..]));
+    assert_eq!(e.picture_file("image:p.gif"), Some(&file[..]));
     assert!(find(&e.scene().root, "w").is_none());
     // The host's decoder hands back straight RGBA: drawn, premultiplied, named by its file.
-    e.provide_pixels("image:p.webp", 2, 1, &[255, 0, 0, 255, 0, 0, 255, 128]).unwrap();
+    e.provide_pixels("image:p.gif", 2, 1, &[255, 0, 0, 255, 0, 0, 255, 128]).unwrap();
     assert_eq!(e.pictures_decoding(), 0);
     assert!(!e.requests().iter().any(|r| matches!(r, Request::Decode { .. })));
     let scene = e.scene();
@@ -249,9 +249,9 @@ fn a_picture_this_build_cant_decode_is_the_hosts_to_decode() {
     assert_eq!((img.width, img.texel(1, 0)), (2, [0, 0, 128, 128]));
     assert_eq!(&img.encoded[..], &file[..], "exports embed the file as shipped");
     // A decoder that can't read it says why, once.
-    let mut e = load(serde_json::json!({ "kind": "image", "key": "w", "asset": "q.webp", "rect": [0, 0, 10, 10] }));
-    e.provide("image:q.webp", &file).unwrap();
-    e.asset_failed("image:q.webp", "the platform's decoder couldn't read the picture");
+    let mut e = load(serde_json::json!({ "kind": "image", "key": "w", "asset": "q.gif", "rect": [0, 0, 10, 10] }));
+    e.provide("image:q.gif", &file).unwrap();
+    e.asset_failed("image:q.gif", "the platform's decoder couldn't read the picture");
     assert!(e.requests().is_empty());
     let _ = e.scene();
     assert!(e.diagnostics().iter().any(|d| d.message.contains("couldn't read the picture")));
@@ -285,4 +285,45 @@ fn inline_markup_ships_read_as_a_drawn_icon() {
     again.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap());
     assert!(find(&again.scene().root, "i").is_some());
     assert_eq!(again.icons_drawn(), drawn);
+}
+
+#[test]
+fn a_picture_cut_round_keeps_its_circle_as_it_flies() {
+    let mut png = Vec::new();
+    {
+        let mut enc = png::Encoder::new(&mut png, 4, 4);
+        enc.set_color(png::ColorType::Rgba);
+        enc.write_header().unwrap().write_image_data(&[90u8; 64]).unwrap();
+    }
+    let doc = serde_json::json!({ "datars": 1, "size": { "width": 400, "height": 200 },
+        "program": { "states": [ { "name": "small" }, { "name": "big" } ] },
+        "scene": { "kind": "image", "key": "planet", "asset": "p.png", "fit": "cover", "crop": "circle",
+            "rect": ["=state == \"big\" ? 200 : 20", 20, "=state == \"big\" ? 120 : 20", "=state == \"big\" ? 120 : 40"] } });
+    let mut e = Engine::new();
+    e.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap());
+    e.provide("image:p.png", &png).unwrap();
+    let clip = |e: &mut Engine| -> datars_scene::Clip { find(&e.scene().root, "planet").unwrap().common.clip.clone().unwrap() };
+    // The largest circle centred in its rect: 20 across in a 20 × 40 rect.
+    assert_eq!(clip(&mut e), datars_scene::Clip::Ellipse { ellipse: datars_math::Rect::new(20.0, 30.0, 20.0, 20.0) });
+    e.resize(400.0, 200.0, 1.0);
+    e.set_clock(0.0);
+    e.frame(0.0);
+    e.set_clock(1.0);
+    e.goto(1);
+    // Every frame of the flight: the cut is a circle (a curved outline as wide as tall), and some
+    // frames are between the two sizes.
+    let mut between = 0;
+    for i in 0..60 {
+        let out = e.frame(1.0 + i as f64 * 0.02);
+        for o in &out.display.ops {
+            if let datars_render::Op::PushClip { path, .. } = o {
+                let b = path.path.bounds();
+                assert!(path.path.els.iter().any(|el| matches!(el, datars_math::PathEl::Cubic { .. })) && (b.w - b.h).abs() < 0.5, "frame {i}: {} × {}", b.w, b.h);
+                between += (b.w > 21.0 && b.w < 119.0) as usize;
+            }
+        }
+    }
+    assert!(between > 5, "{between} frames mid-flight");
+    let _ = e.frame(5.0);
+    assert_eq!(clip(&mut e), datars_scene::Clip::Ellipse { ellipse: datars_math::Rect::new(200.0, 20.0, 120.0, 120.0) });
 }

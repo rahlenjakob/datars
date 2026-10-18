@@ -186,6 +186,11 @@ pub enum TKind {
         /// cut to it), `fill` (stretched to the rect), `none` (its own size, centred, cut).
         #[serde(default, skip_serializing_if = "Option::is_none")]
         fit: Option<String>,
+        /// Cut it to a shape: `circle` (the largest circle centred in `rect`: a portrait, a
+        /// planet) or `ellipse` (the one inscribed in `rect`); `rect` or unset: none. May be an
+        /// expression (one picture of a set kept whole). Morphs with the picture.
+        #[serde(default, skip_serializing_if = "Prop::is_null")]
+        crop: Prop,
     },
     /// An icon (docs/04-primitives.md §Icons): a vector drawing from the default set
     /// (`"heart"`, `"lucide:heart"`), a theme icon token (`"$icon.up"`), a project SVG or an

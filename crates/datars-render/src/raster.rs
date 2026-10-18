@@ -6,7 +6,8 @@
 //! ([`Raster::from_rgba`]). Who decodes depends on the build — the platform hosts decode with
 //! their own decoders (the browser's `createImageBitmap`, CGImageSource on Apple, BitmapFactory on
 //! Android), so the web runtime carries no decoder and every format the platform reads works;
-//! the tools, headless renders and the desktop host decode PNG (`png`) and JPEG (`jpeg`) in Rust
+//! the tools, headless renders and the desktop host decode PNG (`png`), JPEG (`jpeg`) and WebP
+//! (`webp`) in Rust
 //! ([`Raster::decode`]). PNG is lossless, so every decoder gives the same pixels (P1); JPEG and
 //! WebP are decoded by each platform's own decoder, and may differ by a level here and there.
 
@@ -80,14 +81,14 @@ impl Raster {
     /// hands in its pixels ([`Raster::from_rgba`]).
     pub fn decodes(bytes: &[u8]) -> bool {
         let f = sniff(bytes);
-        (cfg!(feature = "png") && f == Some("png")) || (cfg!(feature = "jpeg") && f == Some("jpeg"))
+        (cfg!(feature = "png") && f == Some("png")) || (cfg!(feature = "jpeg") && f == Some("jpeg")) || (cfg!(feature = "webp") && f == Some("webp"))
     }
 
     /// Why a file can't be read here: not a picture at all, or a format no decoder in this build
     /// reads.
     pub fn unreadable(bytes: &[u8]) -> String {
         match sniff(bytes) {
-            Some(f) => format!("this build doesn't decode {} pictures (the tools read PNG and JPEG; apps and browsers decode the rest)", f.to_uppercase()),
+            Some(f) => format!("this build doesn't decode {} pictures (the tools read PNG, JPEG and WebP; apps and browsers decode the rest)", f.to_uppercase()),
             None => "the picture isn't a PNG, JPEG or WebP file".into(),
         }
     }
@@ -105,6 +106,11 @@ impl Raster {
             #[cfg(feature = "jpeg")]
             Some("jpeg") => {
                 let (w, h, rgba) = decode_jpeg(bytes)?;
+                Raster::from_rgba(w, h, &rgba, Arc::from(bytes))
+            }
+            #[cfg(feature = "webp")]
+            Some("webp") => {
+                let (w, h, rgba) = decode_webp(bytes)?;
                 Raster::from_rgba(w, h, &rgba, Arc::from(bytes))
             }
             _ => Err(Raster::unreadable(bytes)),
@@ -180,6 +186,23 @@ fn decode_jpeg(bytes: &[u8]) -> Result<(u32, u32, Vec<u8>), String> {
     Ok((w as u32, h as u32, px))
 }
 
+/// A WebP's pixels, straight RGBA8 (lossy or lossless; opaque without an alpha chunk).
+#[cfg(feature = "webp")]
+fn decode_webp(bytes: &[u8]) -> Result<(u32, u32, Vec<u8>), String> {
+    let mut dec = image_webp::WebPDecoder::new(std::io::Cursor::new(bytes)).map_err(|e| format!("WebP: {e}"))?;
+    let (w, h) = dec.dimensions();
+    if w == 0 || h == 0 || w > MAX_SIDE || h > MAX_SIDE {
+        return Err(format!("the picture is {w} × {h} px; at most {MAX_SIDE} px a side is read"));
+    }
+    let n = dec.output_buffer_size().ok_or("WebP: too big")?;
+    let mut buf = vec![0u8; n];
+    dec.read_image(&mut buf).map_err(|e| format!("WebP: {e}"))?;
+    if dec.has_alpha() {
+        return Ok((w, h, buf));
+    }
+    Ok((w, h, buf.chunks_exact(3).flat_map(|p| [p[0], p[1], p[2], 255]).collect()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -214,7 +237,7 @@ mod tests {
 
     #[test]
     fn other_formats_say_what_they_are() {
-        assert!(Raster::decode(b"RIFF\0\0\0\0WEBPVP8 ").unwrap_err().contains("WEBP"));
+        assert!(Raster::decode(b"GIF89a....").unwrap_err().contains("GIF"));
         assert!(Raster::decode(b"hello").unwrap_err().contains("isn't a PNG, JPEG or WebP"));
         assert_eq!(sniff(&[0xff, 0xd8, 0xff, 0xe0]), Some("jpeg"));
         assert_eq!(media_type(&[0xff, 0xd8, 0xff, 0xe0]), "image/jpeg");
@@ -229,6 +252,19 @@ mod tests {
         assert_eq!(r.premul, png.premul, "a host's decode and ours give the same picture");
         assert!(Raster::from_rgba(2, 2, &[0; 8], Arc::from(&b""[..])).unwrap_err().contains("bytes of pixels"));
         assert!(Raster::from_rgba(0, 1, &[], Arc::from(&b""[..])).is_err());
+    }
+
+    #[test]
+    #[cfg(feature = "webp")]
+    fn a_webp_decodes_with_its_alpha() {
+        // 8 × 8, lossless: red on the left half, a transparent blue on the right.
+        let webp = include_bytes!("../tests/half8.webp");
+        assert!(Raster::decodes(webp));
+        let r = Raster::decode(webp).unwrap();
+        assert_eq!((r.width, r.height), (8, 8));
+        assert_eq!(r.texel(1, 1), [200, 40, 30, 255]);
+        assert_eq!(r.texel(6, 1)[3], 0, "its alpha kept");
+        assert_eq!(media_type(webp), "image/webp");
     }
 
     #[test]

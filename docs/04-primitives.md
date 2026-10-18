@@ -302,13 +302,17 @@ pub enum Proto { Circle, Square, Rect, Symbol(SymbolKind), Geom(Geom), Glyph(Gly
   of what assistive technology reads; with one, it reads as that word. `datars lint` checks a
   labelled icon's ink against what's behind it for 3:1 (WCAG 1.4.11, `a11y/icon-contrast`).
 
-**Pictures** are `image(src, rect, { fit, alt })`: a picture file drawn into `rect` as `fit` says —
-`contain` (default), `cover` (cut to the rect), `fill`, `none`. The engine is format-agnostic: a
+**Pictures** are `image(src, rect, { fit, crop, alt })`: a picture file drawn into `rect` as `fit`
+says — `contain` (default), `cover` (cut to the rect), `fill`, `none` — and cut to `crop`'s shape:
+`circle` (the largest circle centred in the rect), `ellipse` (the one inscribed in it) or `rect`
+(the default), an expression per instance. A round crop is a `Clip::Ellipse` on the image node, so
+it interpolates with the picture in a morph (scene `Clip::path()` gives every clip as a path for the
+rasterizers). The engine is format-agnostic: a
 picture is straight RGBA handed in (`Engine::provide_pixels`), decoded by whoever has a decoder —
 the browser (`ImageDecoder`, else `createImageBitmap`), ImageIO on Apple platforms, BitmapFactory on
 Android — so the web runtime carries none and every format the platform reads works; the tools, the
-headless renderer and the desktop host decode PNG (`png`) and JPEG (`zune-jpeg`, its scalar path)
-in Rust (`Raster::decode`). A file the engine can't decode itself is a `Request::Decode`: the host
+headless renderer and the desktop host decode PNG (`png`), JPEG (`zune-jpeg`, its scalar path) and
+WebP (`image-webp`, lossy and lossless, with alpha) in Rust (`Raster::decode`). A file the engine can't decode itself is a `Request::Decode`: the host
 reads it (`picture_file`) and hands back its pixels. PNG is lossless, so every decoder gives the
 same pixels (P1, and what the goldens use); JPEG and WebP are decoded by each platform's own
 decoder and may differ by a level here and there. The CPU reference samples premultiplied texels

@@ -112,6 +112,11 @@ impl Set {
         self.svg(name).map(|s| crate::parse_svg(&s).map(|i| i.to_json()))
     }
 
+    /// An icon's tags (what it shows, in words): the set's own, empty when it has none.
+    pub fn tags(&self, name: &str) -> &[String] {
+        self.tags.get(name).map(Vec::as_slice).unwrap_or(&[])
+    }
+
     pub fn len(&self) -> usize {
         self.icons.len()
     }

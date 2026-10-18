@@ -139,6 +139,8 @@ fn settle_assets(engine: &mut Engine, fetch: &dyn Fn(&Request) -> Option<Vec<u8>
 /// every icon, by key) and an `image` chunk per picture (its file as shipped) — and their credits.
 fn asset_chunks(engine: &Engine, b: &mut Builder, report: &mut Report) -> (Option<String>, Vec<String>, Vec<datars_bundle::AssetCredit>) {
     let mut credits: Vec<datars_bundle::AssetCredit> = Vec::new();
+    // The document's own credits for its files: licence, who to credit, where from.
+    let declared = |from: &str| engine.doc().credits.get(from).cloned();
     let icons = engine.icons_drawn();
     let icons_chunk = (!icons.is_empty()).then(|| {
         let mut all = serde_json::Map::new();
@@ -149,11 +151,14 @@ fn asset_chunks(engine: &Engine, b: &mut Builder, report: &mut Report) -> (Optio
                     let s = datars_icon::set::bundled(&set);
                     (format!("datars:icons/{set}"), Some(name), s.map(|s| s.licence.clone()).unwrap_or_else(|| "unknown".into()), s.map(|s| s.version.clone()))
                 }
-                _ => (key.clone(), None, "unknown".to_string(), None),
+                _ => (key.clone(), None, declared(key).map_or_else(|| "unknown".to_string(), |c| c.licence), None),
             };
             match credits.iter_mut().find(|c| c.kind == "icons" && c.from == from) {
                 Some(c) => c.names.extend(name),
-                None => credits.push(datars_bundle::AssetCredit { kind: "icons".into(), from, licence, version, names: name.into_iter().collect() }),
+                None => {
+                    let d = declared(&from);
+                    credits.push(datars_bundle::AssetCredit { kind: "icons".into(), from, licence, version, names: name.into_iter().collect(), credit: d.as_ref().and_then(|c| c.credit.clone()), source: d.and_then(|c| c.source) });
+                }
             }
         }
         let bytes = serde_json::to_vec(&serde_json::Value::Object(all)).unwrap_or_default();
@@ -164,7 +169,16 @@ fn asset_chunks(engine: &Engine, b: &mut Builder, report: &mut Report) -> (Optio
     for (src, raster) in engine.images_drawn() {
         report.decisions.push(format!("picture `{src}`: {} × {} px, {} KB, shipped with every playable tier", raster.width, raster.height, raster.encoded.len() / 1024));
         images.push(b.chunk("image", raster.encoded.to_vec(), meta(&[("source", src.clone().into()), ("width", raster.width.into()), ("height", raster.height.into())])));
-        credits.push(datars_bundle::AssetCredit { kind: "image".into(), from: src, licence: "unknown".into(), version: None, names: Vec::new() });
+        let d = declared(&src);
+        credits.push(datars_bundle::AssetCredit {
+            kind: "image".into(),
+            licence: d.as_ref().map_or_else(|| "unknown".into(), |c| c.licence.clone()),
+            credit: d.as_ref().and_then(|c| c.credit.clone()),
+            source: d.and_then(|c| c.source),
+            from: src,
+            version: None,
+            names: Vec::new(),
+        });
     }
     for c in credits.iter().filter(|c| c.licence == "unknown") {
         report.decisions.push(format!("note: {} `{}` has no licence on record; make sure you may publish it", if c.kind == "image" { "picture" } else { "icon" }, c.from));

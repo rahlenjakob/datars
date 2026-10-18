@@ -225,6 +225,10 @@ export interface ImageOpts extends NodeOpts {
   /** `contain` (default: all of it, aspect kept, centred), `cover` (fills the rect, cut to it),
    * `fill` (stretched), `none` (its own size, centred, cut). */
   fit?: "contain" | "cover" | "fill" | "none";
+  /** Cut it to a shape: `circle` (the largest circle centred in `rect`: a portrait, a planet),
+   * `ellipse` (the one inscribed in `rect`) or `rect` (none: the default) — or an expression giving
+   * one, per instance. A morph moves and resizes the shape with the picture. */
+  crop?: "circle" | "ellipse" | "rect" | Prop;
   /** What the picture shows, for screen readers. Without it the picture is decorative. */
   alt?: Prop;
 }
@@ -232,9 +236,9 @@ export interface ImageOpts extends NodeOpts {
 /** A picture (a raster logo, a photo — PNG, JPEG or WebP) drawn into `rect` (`[x, y, w, h]`): a path relative
  * to the document or an `https://` URL, shipped in the bundle by the build step. */
 export function image(src: Prop, rect: [Prop, Prop, Prop, Prop], opts: ImageOpts = {}): Template {
-  const { fit, alt, ...rest } = opts;
+  const { fit, crop, alt, ...rest } = opts;
   const semantics = rest.semantics ?? (alt !== undefined ? { role: "label" as Role, label: alt } : undefined);
-  return node("image", { ...rest, semantics }, { asset: src, rect, fit });
+  return node("image", { ...rest, semantics }, { asset: src, rect, fit, crop });
 }
 
 export type RepeatFrom = string | { groups: string; by: string } | { ticks: string; count?: Prop } | { legend: string } | { count: Prop };

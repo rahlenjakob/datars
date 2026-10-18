@@ -16,6 +16,7 @@ datars-scene.workspace = true
 serde.workspace = true
 png = { workspace = true, optional = true }
 zune-jpeg = { workspace = true, optional = true }
+image-webp = { workspace = true, optional = true }
 
 [features]
 # Decoders in Rust, for builds with no platform decoder (the tools, headless renders, the desktop
@@ -23,6 +24,8 @@ zune-jpeg = { workspace = true, optional = true }
 png = ["dep:png"]
 # The portable scalar decoder (no SIMD paths): the same pixels on every target.
 jpeg = ["dep:zune-jpeg"]
+# WebP (lossy and lossless, with alpha): the tools' decoder for what browsers and apps read natively.
+webp = ["dep:image-webp"]
 
 [dev-dependencies]
 png.workspace = true

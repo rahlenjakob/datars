@@ -22,6 +22,10 @@ export interface DocDef {
   /** User packages the sandbox loads: `source` inline, or `file` — a module next to the document
    * (relative path), embedded as its source when the document is built. */
   packages?: { name: string; version?: string; source?: string; file?: string }[];
+  /** Who made the project's own pictures and icons, by file (`"assets/jupiter.jpg"`): `licence`
+   * (SPDX-style, or `public-domain`), `credit`, `source` (a URL). The build credits each in the
+   * bundle's manifest. */
+  credits?: Record<string, { licence: string; credit?: string; source?: string }>;
 }
 
 export const FORMAT = 1;
@@ -48,6 +52,7 @@ export function doc(d: DocDef) {
     scene: d.scene,
     motion: d.motion,
     program: d.program,
+    credits: d.credits,
   });
 }
 

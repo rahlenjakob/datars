@@ -155,6 +155,30 @@
       ],
       "type": "object"
     },
+    "Credit": {
+      "description": "A file's credit: its licence (SPDX-style, or `public-domain`), who to credit, where it's from.",
+      "properties": {
+        "credit": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "licence": {
+          "type": "string"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "licence"
+      ],
+      "type": "object"
+    },
     "Derived": {
       "description": "A derived table: `from` + ops, each op a small JSON object interpreted by the engine\n(`filter`, `derive`, `aggregate`, `sort`, `top`, `bin`, `window`, `join`, `pivot`, `unpivot`,\n`interpolate`, and layout algorithms like `stack`, `pie`, `treemap`, `beeswarm`, …).",
       "properties": {
@@ -1864,6 +1888,10 @@
             "asset": {
               "$ref": "#/$defs/Prop"
             },
+            "crop": {
+              "$ref": "#/$defs/Prop",
+              "description": "Cut it to a shape: `circle` (the largest circle centred in `rect`: a portrait, a\nplanet) or `ellipse` (the one inscribed in `rect`); `rect` or unset: none. May be an\nexpression (one picture of a set kept whole). Morphs with the picture."
+            },
             "fit": {
               "description": "`contain` (the default: all of it, its aspect kept, centred), `cover` (fills the rect,\ncut to it), `fill` (stretched to the rect), `none` (its own size, centred, cut).",
               "type": [
@@ -2096,6 +2124,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "A datars document.",
   "properties": {
+    "credits": {
+      "additionalProperties": {
+        "$ref": "#/$defs/Credit"
+      },
+      "description": "Who made the project's own pictures and icons, and under what licence, by file\n(`\"assets/jupiter.jpg\"`): the build credits each in the bundle's manifest (a file it ships\nwithout one is \"unknown\", and it says so).",
+      "type": "object"
+    },
     "data": {
       "additionalProperties": {
         "$ref": "#/$defs/Source"

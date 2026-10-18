@@ -126,6 +126,7 @@ pub(crate) fn lerp_common(a: &Common, b: &Common, e: f64, op: f64, u: f64) -> Co
         clip: match (&a.clip, &b.clip) {
             (x, y) if x == y => x.clone(),
             (Some(Clip::Rect { rect: ra }), Some(Clip::Rect { rect: rb })) => Some(Clip::Rect { rect: lerp_rect(ra, rb, e) }),
+            (Some(Clip::Ellipse { ellipse: ra }), Some(Clip::Ellipse { ellipse: rb })) => Some(Clip::Ellipse { ellipse: lerp_rect(ra, rb, e) }),
             _ => {
                 if late {
                     b.clip.clone()

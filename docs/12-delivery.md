@@ -233,8 +233,10 @@ everywhere (P1), and no runtime fetches what a chart needs from a CDN.
   an `image` chunk (the file as shipped), with every playable tier. The 2,121-icon set never ships.
 - **Credited.** The manifest's `assets` lists each set with its version, licence and the icons drawn
   (`{ "kind": "icons", "from": "datars:icons/lucide", "licence": "ISC", "names": ["car", …] }`) and
-  each picture or project icon by where it came from; project files have no licence on record, and
-  the build says so (make sure you may publish them).
+  each picture or project icon by where it came from. A document's `credits` (`{ "assets/earth.jpg":
+  { "licence": "public-domain", "credit": "NASA", "source": "https://…" } }`) records a file's
+  licence, credit line and source, and the manifest carries them; a project file without one has no
+  licence on record, and the build says so (make sure you may publish it).
 - **Sealed.** A runtime that opens a bundle asks for no icon or picture: what the bundle doesn't
   carry draws nothing and says so (a diagnostic), it is never fetched. `datars dev` writes the
   icons a document draws into the document it serves (`doc.icons`), so the dev page's runtime

@@ -197,7 +197,7 @@ impl Resolver<'_> {
 
     /// An `image` node: the picture, if it's here (else asked for), and its rect as `fit` says,
     /// with the clip `cover` and `none` cut it to.
-    pub(crate) fn image_node(&self, asset: &Prop, rect: &[Prop; 4], fit: Option<&str>, cx: &Cx) -> Option<(NodeKind, Option<Rect>)> {
+    pub(crate) fn image_node(&self, asset: &Prop, rect: &[Prop; 4], fit: Option<&str>, crop: Option<&str>, cx: &Cx) -> Option<(NodeKind, Option<datars_scene::Clip>)> {
         let src = self.string(asset, cx);
         if src.is_empty() {
             return None;
@@ -233,6 +233,21 @@ impl Resolver<'_> {
                 let s = (r.w / iw).min(r.h / ih);
                 (Rect::new(c.x - iw * s / 2.0, c.y - ih * s / 2.0, iw * s, ih * s), None)
             }
+        };
+        // A crop to a shape replaces the fit's own cut (the shape lies inside the rect).
+        let clip = match crop {
+            Some("circle") => {
+                let d = r.w.min(r.h);
+                Some(datars_scene::Clip::Ellipse { ellipse: Rect::new(c.x - d / 2.0, c.y - d / 2.0, d, d) })
+            }
+            Some("ellipse") => Some(datars_scene::Clip::Ellipse { ellipse: r }),
+            Some(other) => {
+                if other != "rect" {
+                    self.diag(format!("image `crop: {other}`: expected circle or ellipse"));
+                }
+                clip.map(|rect| datars_scene::Clip::Rect { rect })
+            }
+            None => clip.map(|rect| datars_scene::Clip::Rect { rect }),
         };
         Some((NodeKind::Image { asset: Arc::from(src.as_str()), rect: drawn }, clip))
     }

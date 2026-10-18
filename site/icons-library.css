@@ -1,0 +1,98 @@
+/* The icon library (site/pages/docs/icons/library.html; icons-library.js drives it). Every cell has
+   its size before its icon arrives, and the page's first cells come drawn in its HTML: nothing on
+   the page moves as the script, the index or a sprite chunk lands. */
+
+.il-head { padding-bottom: 0; }
+.il-head .lede-2 { max-width: 46em; }
+.il { padding-top: 12px; }
+.il-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 32px; align-items: start; }
+
+/* Categories: a list down the side; a row that scrolls on its own on a phone. */
+.il-side { position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; padding: 4px 4px 24px 0; }
+.il-side-h { font-size: 12.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 10px 0 8px; }
+.il-cats { display: flex; flex-direction: column; gap: 1px; }
+.il-cats button { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; text-align: left; font: 500 14px/1.3 var(--font); color: var(--ink-2); background: transparent; border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer; }
+.il-cats button span { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.il-cats button:hover { background: var(--chip); color: var(--ink); }
+.il-cats button[aria-pressed="true"] { background: color-mix(in srgb, var(--accent) 13%, var(--chip)); color: var(--ink); font-weight: 600; }
+.il-cats button[aria-pressed="true"] span { color: var(--ink-2); }
+
+/* The search: sticky under the site's bar, so a result is always one look from the field. */
+.il-bar { position: sticky; top: 61px; z-index: 5; display: flex; flex-direction: column; align-items: stretch; gap: 6px; padding: 10px 0 12px; background: var(--bg); }
+.il-search { position: relative; flex: 1; min-width: 0; display: block; }
+.il-search-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.il-search svg { position: absolute; left: 14px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%); fill: none; stroke: var(--muted); stroke-width: 2; stroke-linecap: round; pointer-events: none; }
+.il-search input { width: 100%; font: 400 16px/1.3 var(--font); color: var(--ink); background: var(--surface); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px 12px 42px; box-shadow: 0 1px 2px rgba(13, 19, 33, .04); }
+.il-search input::placeholder { color: var(--muted); }
+.il-search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.il-count { margin: 0 0 0 2px; font-size: 13.5px; line-height: 1.4; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* The grid: square-ish cells of one size, the name under the icon (two lines at most). */
+.il-grid { list-style: none; margin: 0; padding: 2px; display: grid; grid-template-columns: repeat(auto-fill, minmax(max(104px, 6.6rem), 1fr)); gap: 8px; }
+.il-grid li { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 8px; height: calc(48px + 2.6em + 14px); padding: 14px 6px 0; border-radius: 12px; background: var(--surface); border: 1px solid var(--rule); color: var(--ink); cursor: pointer; font-size: 12px; line-height: 1.3; contain: layout paint; }
+.il-grid svg { flex: 0 0 auto; width: calc(20px + .5rem); height: calc(20px + .5rem); fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; margin-top: 6px; }
+.il-grid span { color: var(--ink-2); text-align: center; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-width: 100%; }
+.il-grid li:hover { border-color: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+.il-grid li:hover svg { color: var(--accent); }
+.il-grid li[aria-selected="true"] { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+.il-grid li:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-color: transparent; }
+.il-empty { color: var(--ink-2); margin: 24px 0; }
+.il-more { height: 1px; }
+
+/* The details. */
+.il-detail { width: min(860px, calc(100% - 32px)); max-height: calc(100% - 48px); padding: 0; border: 1px solid var(--rule); border-radius: 18px; background: var(--surface); color: var(--ink); box-shadow: var(--shadow); overflow: auto; }
+.il-detail::backdrop { background: rgba(8, 11, 18, .45); backdrop-filter: blur(2px); }
+.il-d-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 22px 22px 18px; border-bottom: 1px solid var(--rule); }
+.il-d-big { width: 84px; height: 84px; border-radius: 16px; background: var(--chip); display: grid; place-items: center; }
+.il-d-big svg { width: 48px; height: 48px; fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.il-d-head h2 { margin: 0 0 6px; font-size: 1.45rem; letter-spacing: -0.02em; overflow-wrap: anywhere; font-family: var(--mono); font-weight: 600; }
+.il-d-meta { margin: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13.5px; color: var(--ink-2); }
+.il-d-meta .il-tags { color: var(--muted); }
+.il-close { align-self: start; width: 36px; height: 36px; border-radius: 10px; border: 0; background: var(--chip); color: var(--ink); font: 400 22px/1 var(--font); cursor: pointer; }
+.il-close:focus-visible, .il-copy:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.il-d-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; padding: 20px 22px 24px; }
+.il-d-body h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.il-d-body h3:not(:first-child) { margin-top: 22px; }
+
+/* Its sizes on both papers: the site's light and dark surfaces, whatever the page's mode. */
+.il-sw { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; padding: 18px 16px; border-radius: 12px; }
+.il-sw + .il-sw { margin-top: 8px; }
+.il-sw-light { background: #ffffff; color: #0d1321; border: 1px solid #e3e6ed; --acc: #3b63f3; }
+.il-sw-dark { background: #111318; color: #eef1f6; border: 1px solid #232834; --acc: #7a9cf0; }
+.il-sw span { display: block; }
+.il-sw svg { display: block; width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.il-sw .s16 { width: 16px; height: 16px; } .il-sw .s24 { width: 24px; height: 24px; } .il-sw .s32 { width: 32px; height: 32px; } .il-sw .s48 { width: 48px; height: 48px; }
+.il-sw .acc { color: var(--acc); }
+
+.il-snips { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.il-s-label { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+.il-s-row { display: flex; align-items: stretch; gap: 0; border-radius: 10px; background: var(--code-bg); overflow: hidden; }
+.il-s-row code { flex: 1; min-width: 0; padding: 10px 12px; font: 13px/1.45 var(--mono); color: var(--code-ink); background: none; overflow-wrap: anywhere; white-space: pre-wrap; }
+.il-copy { flex: 0 0 auto; min-width: 72px; font: 600 12.5px var(--font); color: var(--code-ink); background: rgba(255, 255, 255, .08); border: 0; border-left: 1px solid rgba(255, 255, 255, .1); cursor: pointer; }
+.il-copy:hover { background: rgba(255, 255, 255, .16); }
+.il-s-note { display: block; font-size: 12.5px; color: var(--muted); margin-top: 5px; }
+.il-d-chart { border: 1px solid var(--rule); border-radius: 12px; padding: 8px; background: var(--surface); }
+.il-d-view { height: 150px; }
+.il-d-view datars-view { display: block; }
+.il-d-view datars-view::part(card), .il-d-view datars-view::part(controls) { display: none; }
+.il-d-sizes .fine { margin-top: 8px; }
+
+@media (max-width: 860px) {
+  .il-layout { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .il-side { position: static; max-height: none; overflow: visible; padding: 0; }
+  .il-side-h { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .il-cats { flex-direction: row; overflow-x: auto; gap: 6px; padding: 2px 2px 8px; scrollbar-width: thin; }
+  .il-cats button { flex: 0 0 auto; white-space: nowrap; background: var(--chip); border-radius: 999px; padding: 6px 12px; font-size: 13.5px; }
+  .il-bar { top: 61px; }
+  .il-d-body { grid-template-columns: minmax(0, 1fr); }
+  .il-d-use { order: -1; }
+}
+@media (max-width: 520px) {
+  .il-grid { grid-template-columns: repeat(auto-fill, minmax(max(84px, 5.4rem), 1fr)); gap: 6px; }
+  .il-d-head { grid-template-columns: auto minmax(0, 1fr); padding: 16px; gap: 14px; }
+  .il-d-big { width: 64px; height: 64px; }
+  .il-close { position: absolute; right: 12px; top: 12px; }
+  .il-d-head h2 { padding-right: 40px; font-size: 1.2rem; }
+  .il-d-body { padding: 16px; }
+  .il-sw { padding: 14px 12px; }
+}

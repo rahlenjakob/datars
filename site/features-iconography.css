@@ -76,3 +76,18 @@
   .ic-brands button { padding: 6px 9px; font-size: 12.5px; }
   .ic-facts dd { font-size: 15px; }
 }
+
+/* ---- pictures ---- */
+.ic-note { margin: 0; font-size: 14px; color: var(--ink-2); min-height: 1.5em; flex: 1; min-width: 14em; }
+.ic-pic-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 22px; }
+.ic-pic-grid article { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 18px 20px; min-width: 0; }
+.ic-pic-grid h3 { font-size: 1.02rem; margin: 0 0 8px; }
+.ic-pic-grid p { margin: 0 0 10px; color: var(--ink-2); font-size: 14.5px; }
+.ic-pic-grid .output { font-size: 11px; margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ic-pic-grid .output code { white-space: inherit; }
+.ic-pic-grid .ic-code { min-height: 0; margin-top: 8px; }
+.ic-h3-gap { margin-top: 30px; font-size: 1.15rem; }
+.ic-pics td.num, .ic-pics th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ic-pics tfoot td { color: var(--muted); font-size: 13px; }
+@media (max-width: 900px) { .ic-pic-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 560px) { .ic-pics th:nth-child(2), .ic-pics td:nth-child(2), .ic-pics th:nth-child(3), .ic-pics td:nth-child(3) { display: none; } .ic-pics tfoot td:first-child { display: table-cell; } }

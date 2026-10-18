@@ -6,7 +6,7 @@
 use crate::bounds::transform_rect;
 use crate::pick::{seen, INVISIBLE};
 use datars_math::{Affine, Rect, Vec2};
-use datars_scene::{Clip, KeyPath, Node, NodeKind, Role, Scene, TextNode};
+use datars_scene::{KeyPath, Node, NodeKind, Role, Scene, TextNode};
 use datars_text::FontDb;
 
 /// A text as the frame draws it.
@@ -91,8 +91,7 @@ fn walk(n: &Node, path: &KeyPath, parent: Affine, acc: f64, clip: Rect, role: Op
     let own = role_of(n);
     let role = own.as_deref().or(role);
     let clip = match &n.common.clip {
-        Some(Clip::Rect { rect }) => transform_rect(*rect, &xf).intersect(&clip),
-        Some(Clip::Path { path }) => transform_rect(path.bounds(), &xf).intersect(&clip),
+        Some(c) => transform_rect(c.bounds(), &xf).intersect(&clip),
         None => Some(clip),
     };
     let Some(clip) = clip else { return };
@@ -193,7 +192,7 @@ mod tests {
         let plain = shaped(&db, "Zoomed", Vec2::new(10.0, 20.0));
         let hidden = shaped(&db, "Clipped", Vec2::new(150.0, 20.0));
         let mut clipped = Node::group(Key::name("clipped"), vec![Node::text(Key::name("hidden"), hidden)]);
-        clipped.common.clip = Some(Clip::Rect { rect: Rect::new(0.0, 0.0, 100.0, 100.0) });
+        clipped.common.clip = Some(datars_scene::Clip::Rect { rect: Rect::new(0.0, 0.0, 100.0, 100.0) });
         let root = Node::group(Key::name("root"), vec![Node::text(Key::name("zoomed"), zoomed).transform(Affine::scale(2.0, 2.0)), Node::text(Key::name("plain"), plain), clipped]);
         let out = texts(&Scene::new(400.0, 200.0, root), &db);
         assert_eq!(out.len(), 2, "{out:?}");

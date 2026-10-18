@@ -1,0 +1,57 @@
+---
+title: Icon library — the {{icons:count}} built-in icons · datars
+description: Browse and search the {{icons:count}} icons built into datars (Lucide, ISC) by name, tag and category. Each icon's snippet, its theme token, the icon at several sizes in light and dark, and a live chart drawing it.
+css: icons-library.css
+---
+<section class="page-head il-head">
+  <div class="wrap">
+    <p class="eyebrow"><a href="/docs/icons/">Icons</a> · Library</p>
+    <h1>The {{icons:count}} built-in icons</h1>
+    <p class="lede-2">The default set — <a href="https://lucide.dev">Lucide</a> {{icons:version}}, ISC — drawn in your theme's inks. Pick one for its snippet and to see it as chart material; a published chart carries only the icons it draws. In a terminal, <code>datars icons bike</code> searches the same set, and coding agents have the MCP tool <code>search_icons</code>.</p>
+  </div>
+</section>
+
+<section class="section il">
+  <div class="wrap il-layout">
+    <div class="il-side">
+      <h2 class="il-side-h" id="il-cats-h">Categories</h2>
+      <div class="il-cats" role="group" aria-labelledby="il-cats-h">{{icons:categories}}</div>
+    </div>
+    <div class="il-main">
+      <div class="il-bar">
+        <label class="il-search" for="il-q"><span class="il-search-label">Search icons</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg><input type="search" id="il-q" placeholder="bike, arrow up, weather…" autocomplete="off" spellcheck="false" aria-describedby="il-count" aria-controls="il-grid"></label>
+        <p class="il-count" id="il-count" role="status" aria-live="polite">{{icons:count}} icons</p>
+      </div>
+      <ul class="il-grid" id="il-grid" role="listbox" aria-label="Icons — Enter shows one's details">{{icons:first}}</ul>
+      <p class="il-empty" id="il-empty" hidden>No icon says that. Try another word — or draw your own: any SVG file is an icon too (<a href="/docs/icons/">how</a>).</p>
+      <div class="il-more" id="il-more" aria-hidden="true"></div>
+    </div>
+  </div>
+</section>
+
+<dialog class="il-detail" id="il-detail" aria-labelledby="il-d-name">
+  <div class="il-d-head">
+    <div class="il-d-big" aria-hidden="true"><svg viewBox="0 0 24 24" id="il-d-svg"></svg></div>
+    <div>
+      <h2 id="il-d-name">icon</h2>
+      <p class="il-d-meta" id="il-d-meta"></p>
+    </div>
+    <button type="button" class="il-close" id="il-close" aria-label="Close" autofocus>×</button>
+  </div>
+  <div class="il-d-body">
+    <div class="il-d-sizes">
+      <div class="il-sw il-sw-light" aria-label="On light paper"><span class="s16"></span><span class="s24"></span><span class="s32"></span><span class="s48"></span><span class="s48 acc"></span></div>
+      <div class="il-sw il-sw-dark" aria-label="On dark paper"><span class="s16"></span><span class="s24"></span><span class="s32"></span><span class="s48"></span><span class="s48 acc"></span></div>
+      <p class="fine">16, 24, 32 and 48 px in <code>$ink</code>, and in <code>$accent</code>.</p>
+      <h3>As chart material</h3>
+      <div class="il-d-chart"><div class="il-d-view" id="il-d-view"></div></div>
+      <p class="fine">A live <code>&lt;datars-view&gt;</code>: the icon as a pictogram's units, in your page's mode. Handed to the runtime as a raw document, it fetches the icon as its compact file from beside the runtime; a published chart carries its icons inside.</p>
+    </div>
+    <div class="il-d-use">
+      <h3>Use it</h3>
+      <ul class="il-snips" id="il-snips"></ul>
+    </div>
+  </div>
+</dialog>
+
+<script type="module" src="/icons-library.js"></script>

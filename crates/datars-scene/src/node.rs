@@ -22,6 +22,28 @@ pub enum Blend {
 pub enum Clip {
     Rect { rect: Rect },
     Path { path: Arc<PathData> },
+    /// The ellipse inscribed in `ellipse` (a circle in a square): a picture cropped round — kept as
+    /// a box, not a path, so a morph moves and resizes it with the picture.
+    Ellipse { ellipse: Rect },
+}
+
+impl Clip {
+    /// The clip's outline, in its node's coordinates.
+    pub fn path(&self) -> PathData {
+        match self {
+            Clip::Rect { rect } => PathData::rect(*rect),
+            Clip::Path { path } => (**path).clone(),
+            Clip::Ellipse { ellipse: r } => PathData::ellipse(r.center(), r.w / 2.0, r.h / 2.0),
+        }
+    }
+
+    /// The box the clip lies in.
+    pub fn bounds(&self) -> Rect {
+        match self {
+            Clip::Rect { rect } | Clip::Ellipse { ellipse: rect } => *rect,
+            Clip::Path { path } => path.bounds(),
+        }
+    }
 }
 
 /// Nodes whose `z` is at least this float: they're drawn — and picked — above the whole scene,

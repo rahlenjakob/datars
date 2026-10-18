@@ -20,6 +20,7 @@ import { DOCS_NAV, FEATURES, docsPrevNext, docsSidebar, docsToc, featureIcon, lo
 import { STD_GROUPS, figureAlias, firstSentence, stdPages } from "./site/std.mjs";
 import { sdkApi } from "./site/sdk.mjs";
 import { wcag } from "./site/wcag.mjs";
+import { iconLibrary } from "./site/icons.mjs";
 import { chartTokens, studioChecks, studioData, studioJson, studioTab } from "./site/studio.mjs";
 import { delivered, engineTable, missesTable, nativeSummary, nativeTable, scrollTable, transitionsSummary, transitionsTable, webCards } from "./site/perf.mjs";
 
@@ -487,6 +488,8 @@ copyFileSync(join(root, "docs/reference/ir.schema.json"), join(out, "schema/ir-1
 
 const std = JSON.parse(execFileSync(cli, ["describe", "--json"], { maxBuffer: 1 << 26 }).toString());
 const recipeCount = Object.keys(std).length;
+// The icon library's data (search index, sprite chunks) beside its page, and its first cells.
+const iconLib = iconLibrary(root, join(out, "docs/icons/library"));
 // Every recipe's parameters, defaults and docs, and the catalogue's families, for the pages that
 // build documents in the browser (the charts page's recipe playground makes its controls from them).
 mkdirSync(join(out, "play"), { recursive: true });
@@ -659,6 +662,27 @@ function assetsOf(alias) {
   return `<pre class="output"><code data-lang="json" data-hl>${highlight(text, "json")}</code></pre><p class="fine">From <code>c/${alias}</code>, the published manifest. The icons chunk: ${kb(gz("icons"))} gzipped${gz("image") ? `; pictures: ${kb(gz("image"))}` : ""}.</p>`;
 }
 
+/** The pictures a chart's bundle ships (`{{pictures:alias}}`), as a table: each file as shipped
+ * (its format, its pixels, its bytes) and its credit from the manifest — read from the published
+ * bundle. */
+function picturesOf(alias) {
+  const m = JSON.parse(readFileSync(join(out, "c", alias), "utf8"));
+  const pics = m.chunks.filter((c) => c.kind === "image");
+  if (!pics.length) throw new Error(`{{pictures:${alias}}}: the bundle ships no pictures`);
+  const credit = Object.fromEntries((m.assets ?? []).filter((a) => a.kind === "image").map((a) => [a.from, a]));
+  let total = 0;
+  const rows = pics.map((c) => {
+    const src = c.meta?.source ?? "";
+    const bytes = statSync(join(out, "chunks", c.hash.replace(":", "_"))).size;
+    total += bytes;
+    const fmt = (src.split(".").pop() ?? "").toUpperCase().replace("JPG", "JPEG");
+    const a = credit[src] ?? {};
+    const who = a.credit ? escapeHtml(a.credit) : "—";
+    return `<tr><td><code>${escapeHtml(src.split("/").pop())}</code></td><td>${fmt}</td><td class="num">${c.meta?.width ?? "?"} × ${c.meta?.height ?? "?"}</td><td class="num">${kb(bytes)}</td><td>${a.source ? `<a href="${escapeAttr(a.source)}">${who}</a>` : who}</td></tr>`;
+  });
+  return `<div class="table-wrap"><table class="ic-pics"><thead><tr><th>File</th><th>Format</th><th class="num">Pixels</th><th class="num">Bytes</th><th>Credit (${escapeHtml(((m.assets ?? []).find((a) => a.kind === "image")?.licence ?? "unknown").replace(/^public-domain$/, "public domain"))})</th></tr></thead><tbody>${rows.join("")}</tbody><tfoot><tr><td colspan="3">${pics.length} pictures, as the bundle ships them</td><td class="num">${kb(total)}</td><td></td></tr></tfoot></table></div>`;
+}
+
 // ---- pages -------------------------------------------------------------------------------------
 
 /** The theme studio's starting data (the built-in theme, resolved by the CLI per mode), once. */
@@ -691,6 +715,10 @@ function fill(html, where) {
     .replaceAll("{{count:recipes}}", String(recipeCount))
     .replaceAll("{{count:charts}}", String(showcase.length))
     .replaceAll("{{count:mcp}}", String(mcpTools.length))
+    .replaceAll("{{icons:count}}", iconLib.count)
+    .replaceAll("{{icons:version}}", iconLib.version)
+    .replaceAll("{{icons:first}}", iconLib.first)
+    .replaceAll("{{icons:categories}}", iconLib.categories)
     .replaceAll("{{std:list}}", stdList())
     .replace(/\{\{std:cards\}\}/g, () => stdCards())
     .replace(/\{\{families:([a-z0-9_-]+)\}\}/g, (_, a) => familiesOf(known(a)))
@@ -704,6 +732,7 @@ function fill(html, where) {
     .replace(/\{\{tier:([a-z0-9_-]+):(T\d)\}\}/g, (_, a, t) => kb(tiers[known(a)][t] ?? 0))
     .replace(/\{\{variants:([a-z0-9_-]+)\}\}/g, (_, a) => variantBars(known(a)))
     .replace(/\{\{assets:([a-z0-9_-]+)\}\}/g, (_, a) => assetsOf(known(a)))
+    .replace(/\{\{pictures:([a-z0-9_-]+)\}\}/g, (_, a) => picturesOf(known(a)))
     .replace(/\{\{archive:([a-z0-9_-]+)\}\}/g, (_, a) => {
       if (!archives[known(a)]) throw new Error(`${where}: chart \`${a}\` reads no archive`);
       return mb(archives[a]);

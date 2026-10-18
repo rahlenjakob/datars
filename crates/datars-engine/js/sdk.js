@@ -113,9 +113,9 @@ function icon(name, at, opts = {}) {
   return node("icon", { ...rest, semantics }, { icon: name, at, icon_size: size, ink, inks: inks?.length ? inks : void 0, rotate, anchor });
 }
 function image(src2, rect, opts = {}) {
-  const { fit, alt, ...rest } = opts;
+  const { fit, crop, alt, ...rest } = opts;
   const semantics = rest.semantics ?? (alt !== void 0 ? { role: "label", label: alt } : void 0);
-  return node("image", { ...rest, semantics }, { asset: src2, rect, fit });
+  return node("image", { ...rest, semantics }, { asset: src2, rect, fit, crop });
 }
 function repeat(from, template) {
   return clean({ kind: "repeat", from, template });
@@ -530,7 +530,8 @@ function doc(d) {
     keys: d.keys,
     scene: d.scene,
     motion: d.motion,
-    program: d.program
+    program: d.program,
+    credits: d.credits
   });
 }
 var signal = {

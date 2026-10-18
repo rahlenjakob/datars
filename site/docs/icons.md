@@ -1,7 +1,7 @@
 ---
 title: Icons, pictures and curved text
-description: Draw icons from a built-in open set, your own SVGs or URLs in your theme's inks — one at a time, as symbols and markers, or thousands as one pictogram — plus PNG pictures with alt text and labels that follow arcs. Everything travels inside the published chart.
-lede: Icons are vector drawings painted with your theme's inks, pictures are PNGs fitted to a box, and text can follow an arc. All three are read the same way on every platform, and a published chart carries what it draws, so no reader's device fetches an icon.
+description: Draw icons from a built-in open set, your own SVGs or URLs in your theme's inks — one at a time, as symbols and markers, or thousands as one pictogram — plus PNG, JPEG and WebP pictures with alt text and labels that follow arcs. Everything travels inside the published chart.
+lede: Icons are vector drawings painted with your theme's inks, pictures are photographs and logos fitted to a box, and text can follow an arc. All three are read the same way on every platform, and a published chart carries what it draws, so no reader's device fetches an icon.
 ---
 
 ## An icon in one line
@@ -42,6 +42,8 @@ Find an icon by what it shows:
 datars icons car          # car, car-front, car-taxi-front, …
 datars icons person       # user, users, person-standing, …
 ```
+
+Or browse them: the [icon library](/docs/icons/library/) searches all {{icons:count}} by name, tag and category and gives each one's snippet. Coding agents have the same search as the MCP tool `search_icons`.
 
 A name the set doesn't have is a diagnostic in `datars check`, never a silent blank.
 
@@ -131,9 +133,15 @@ image("assets/valley.png", [0, 0, 240, 150], { fit: "cover", alt: "A valley with
 | `fill` | stretched to the rect |
 | `none` | its own size, centred, cut to the rect |
 
+`crop` cuts the picture to a shape: `"circle"`, the largest circle centred in the rect (a portrait, a planet), `"ellipse"`, the one inscribed in it, or `"rect"`, the rect itself (the default). It can be an expression, so one picture can be round and the next square. When the picture moves or resizes in a transition, its crop moves and resizes with it.
+
+```ts
+image(e("'assets/' + d.id + '.jpg'"), rect, { fit: "cover", crop: "circle", alt: e("d.name") })
+```
+
 <figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-image-fit" data-phone-ratio="1.6" data-caption></div></div><figcaption>One picture, four fits. The dashed frame is the rect. <a href="{{src}}/site/figures/sdk/image-fit.ts">Figure source</a></figcaption>{{alt:sdk-image-fit}}</figure>
 
-Each platform decodes pictures with its own decoder: the browser on the web, ImageIO on iOS and macOS, BitmapFactory on Android, and Rust's PNG and JPEG decoders in the tools. A PNG is lossless, so it shows the same pixels everywhere. A JPEG or WebP can differ by a shade between platforms, so use PNG where a picture must match exactly. The tools read PNG and JPEG; a WebP file draws in browsers and apps, but `datars render` and a bundle's static fallback leave it out and say so.
+Each platform decodes pictures with its own decoder: the browser on the web, ImageIO on iOS and macOS, BitmapFactory on Android, and Rust's PNG, JPEG and WebP decoders in the tools. A PNG is lossless, so it shows the same pixels everywhere. A JPEG or a lossy WebP can differ by a shade between platforms, so use PNG where a picture must match exactly. WebP keeps an alpha channel at a fraction of a PNG's size: a cut-out photograph, like a planet with its rings, on any paper.
 
 ## Text along a path
 
@@ -170,10 +178,25 @@ Until an icon arrives in a preview, nothing is drawn in its place, so nothing ju
 
 ## Limits
 
-- The tools read PNG and JPEG pictures, not WebP. Browsers and apps draw all three.
+- Pictures are PNG, JPEG or WebP: the tools read nothing else (GIF, AVIF and HEIC aren't read).
 - Icons inside a map's tile layers aren't drawn yet. Use instances over the map's points.
 - SVG text, clip paths, masks, filters and dashes aren't read (see above).
 - A picture shrunk to a small fraction of its size can shimmer: export it near the size it's shown.
+
+### Credits
+
+A picture you didn't make needs its credit kept with it. Name each file's licence and credit in the document's `credits` (a picture, or an SVG of your own), and the build writes them into the bundle's manifest beside the file:
+
+```ts
+doc({
+  credits: {
+    "assets/earth.jpg": { licence: "public-domain", credit: "NASA", source: "https://images.nasa.gov/details/as17-148-22727" },
+  },
+  // …
+})
+```
+
+Without a credit, the build reminds you that it has no licence on record for the file. A page can show what the manifest lists, as the [iconography page's planets](/features/iconography/#pictures) do.
 
 ## See also
 

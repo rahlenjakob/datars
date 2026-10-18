@@ -50,6 +50,22 @@ pub struct Doc {
     /// (`datars dev`) writes them here, so any runtime draws them without asking.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub icons: BTreeMap<String, serde_json::Value>,
+    /// Who made the project's own pictures and icons, and under what licence, by file
+    /// (`"assets/jupiter.jpg"`): the build credits each in the bundle's manifest (a file it ships
+    /// without one is "unknown", and it says so).
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub credits: BTreeMap<String, Credit>,
+}
+
+/// A file's credit: its licence (SPDX-style, or `public-domain`), who to credit, where it's from.
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+pub struct Credit {
+    pub licence: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub credit: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
 }
 
 fn default_locale() -> String {

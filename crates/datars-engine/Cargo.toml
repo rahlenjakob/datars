@@ -48,6 +48,7 @@ svg = ["datars-icon/svg"]
 # with the platform's decoder and hands in pixels (`Request::Decode`, `Engine::provide_pixels`).
 png = ["datars-render/png"]
 jpeg = ["datars-render/jpeg"]
+webp = ["datars-render/webp"]
 
 [dev-dependencies]
 datars-icon = { workspace = true, features = ["bundled"] }

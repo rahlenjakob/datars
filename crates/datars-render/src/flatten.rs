@@ -1,7 +1,7 @@
 use crate::{trim_path, DPaint, DisplayList, InstancesOp, Op, SharedPath, StrokeStyle};
 use datars_color::Color;
 use datars_math::{Affine, FillRule, PathData, Rect, Vec2};
-use datars_scene::{Clip, Geom, Marker, Markers, Node, NodeKind, Paint, Scene, Stroke};
+use datars_scene::{Geom, Marker, Markers, Node, NodeKind, Paint, Scene, Stroke};
 use datars_theme::ResolvedTheme;
 use std::sync::Arc;
 
@@ -131,10 +131,7 @@ fn node(cx: &mut Cx, n: &Node, parent: Affine, parent_opacity: f64) {
     };
     let mut clips = 0;
     if let Some(clip) = &c.clip {
-        let path = match clip {
-            Clip::Rect { rect } => PathData::rect(*rect),
-            Clip::Path { path } => (**path).clone(),
-        };
+        let path = clip.path();
         cx.ops.push(Op::PushClip { path: SharedPath::new(path), xf, rule: FillRule::NonZero });
         clips += 1;
     }

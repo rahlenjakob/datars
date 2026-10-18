@@ -8,7 +8,7 @@ css: features-iconography.css
   <div class="wrap">
     <p class="eyebrow">Iconography</p>
     <h1>Icons that wear your theme, on every screen</h1>
-    <p class="lede-2">In datars an icon isn't a picture pasted on a chart: it's chart material. Draw any of the 2,121 icons of the built-in set (Lucide, ISC) or your own SVGs — one at a time, or thousands as one pictogram that a bar splits into. Every colour is an <em>ink</em> from your theme, never the file's own hex, so a brand or dark mode repaints the icons with everything else. Dials name their zones along the arc, labels follow curves, logos keep their colours as pictures. And a published chart carries only the icons it draws, with their licence: no reader's device ever fetches one.</p>
+    <p class="lede-2">In datars an icon isn't a picture pasted on a chart: it's chart material. Draw any of the 2,121 icons of the <a href="/docs/icons/library/">built-in set</a> (Lucide, ISC) or your own SVGs — one at a time, or thousands as one pictogram that a bar splits into. Every colour is an <em>ink</em> from your theme, never the file's own hex, so a brand or dark mode repaints the icons with everything else. Dials name their zones along the arc, labels follow curves, logos keep their colours as pictures. And a published chart carries only the icons it draws, with their licence: no reader's device ever fetches one.</p>
     <p class="ic-jump"><a href="#pictograms">Pictograms</a><a href="#inks">Your inks</a><a href="#svg">Bring an SVG</a><a href="#dials">Dials</a><a href="#curved">Curved text</a><a href="#pictures">Pictures</a><a href="#accessible">Accessible</a><a href="#everywhere">Everywhere</a><a href="#travels">What travels</a></p>
   </div>
 </section>
@@ -143,18 +143,42 @@ view.setTokens({});</code></pre>
 
 <section class="section ic-section" id="pictures">
   <div class="wrap">
-    <div class="ic-grid">
-      <div class="ic-stage">
-        <div class="frame ic-frame"><div class="chart" data-chart="iconography-roasters" data-phone-ratio="0.8"></div></div>
-      </div>
-      <aside class="ic-panel">
-        <p class="eyebrow">Pictures</p>
-        <h2>Logos keep their colours, and say what they are</h2>
-        <p>When a mark must look exactly as its owner made it — a company's logo, a portrait — draw it as a picture: <code>image()</code> fits a PNG, JPEG or WebP into its box (<code>contain</code>, <code>cover</code>, <code>fill</code>, <code>none</code>). With <code>alt</code>, screen readers name it; without, it's decorative. The build ships the files in the bundle, and each platform decodes them with its own decoder.</p>
-<pre class="live-code ic-code"><code data-lang="ts">image(d.logo, [x, y, 40, 40], { alt: d.name + " logo" })</code></pre>
-      </aside>
+    <header class="section-head">
+      <p class="eyebrow">Pictures</p>
+      <h2>The planets, photographed — and drawn to scale</h2>
+      <p>NASA's photographs of the eight planets, each a picture in the chart: cut to a circle and sized by its true diameter, then placed by distance from the Sun, then at the end of a bar of its moons. Every photo is one keyed <code>image()</code>, so it flies from layout to layout with its crop. Saturn stays whole — a WebP with an alpha channel, its rings over the page in light and dark.</p>
+    </header>
+    <div class="ic-controls">
+      <div class="seg" role="group" aria-label="Layout"><button type="button" data-planets="size" aria-pressed="true">To scale</button><button type="button" data-planets="distance" aria-pressed="false">By distance</button><button type="button" data-planets="moons" aria-pressed="false">By moons</button></div>
+      <p class="ic-note" id="planets-note" aria-live="polite">Jupiter is 29 times as wide as Mercury; Earth is a dot beside it.</p>
     </div>
-    {{alt:iconography-roasters}}
+    <div class="frame ic-frame"><div class="chart" data-chart="iconography-planets" data-steps="" data-phone-ratio="1.15"></div></div>
+    {{alt:iconography-planets}}
+    <div class="ic-pic-grid">
+      <article>
+        <h3>Cropped, fitted, keyed</h3>
+        <p><code>fit: "cover"</code> fills each circle, <code>crop: "circle"</code> cuts it, and the crop is part of the node: it moves and grows with the picture through every morph. Saturn is <code>fit: "cover"</code> with no crop, in a box its rings' shape.</p>
+<pre class="live-code ic-code"><code data-lang="ts">image("assets/planets/" + d.file, [x, y, w, h], {
+  fit: "cover",
+  crop: "circle",
+  alt: d.name + ", photographed by " + d.by,
+})</code></pre>
+      </article>
+      <article>
+        <h3>Decoded by your platform</h3>
+        <p>Seven JPEGs and a WebP with alpha. The web runtime carries no image decoder: the browser decodes them, as ImageIO does on iOS and BitmapFactory on Android, and the tools read PNG, JPEG and WebP for exports and posters. The bundle's pictures are decoded before the chart's first frame, so none pops in.</p>
+        <p class="fine">The engine takes pixels, not files: a format your platform reads is a format the chart draws.</p>
+      </article>
+      <article>
+        <h3>Named for screen readers</h3>
+        <p>With <code>alt</code>, each photo is read with its planet; without, a picture is decorative.</p>
+        {{run:semantics site/figures/iconography/planets.ts|6}}
+      </article>
+    </div>
+    <h3 class="ic-h3 ic-h3-gap">In the bundle, credited</h3>
+    <p class="ic-p">Each file is shipped as it is — sized for the chart and compressed before it's added: datars doesn't resample or re-encode pictures. The document's <code>credits</code> name each photograph's licence, credit and source, and the build writes them into the bundle's manifest.</p>
+    {{pictures:iconography-planets}}
+    <p class="fine">Planet figures: NASA's <a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/">Planetary Fact Sheet</a> (updated 18 March 2025). NASA's photographs are not subject to copyright in the United States; see NASA's <a href="https://www.nasa.gov/nasa-brand-center/images-and-media/">image use guidelines</a>.</p>
   </div>
 </section>
 
@@ -230,11 +254,11 @@ view.setTokens({});</code></pre>
     <div class="next">
       <div>
         <h2>Draw your first icon</h2>
-        <p><code>datars icons bike</code> finds one in the set; <code>icon("bike", [x, y])</code> draws it in your ink.</p>
+        <p>Browse all {{icons:count}} in the <a href="/docs/icons/library/">icon library</a>, or let <code>datars icons bike</code> find one; <code>icon("bike", [x, y])</code> draws it in your ink.</p>
       </div>
       <div class="cta">
         <a class="btn btn-primary" href="/docs/icons/">Read the docs <span aria-hidden="true">→</span></a>
-        <a class="btn btn-ghost" href="/gallery/">Gallery</a>
+        <a class="btn btn-ghost" href="/docs/icons/library/">Icon library</a>
       </div>
     </div>
   </div>

@@ -578,7 +578,7 @@ impl<'a> Resolver<'a> {
                         icon_ink = Some(ink);
                         k
                     }),
-                    TKind::Image { asset, rect, fit } => self.image_node(asset, rect, fit.as_deref(), cx).map(|(k, clip)| {
+                    TKind::Image { asset, rect, fit, crop } => self.image_node(asset, rect, fit.as_deref(), (!crop.is_null()).then(|| self.string(crop, cx)).as_deref(), cx).map(|(k, clip)| {
                         cut = clip;
                         k
                     }),
@@ -590,8 +590,8 @@ impl<'a> Resolver<'a> {
                 if let Some(xf) = place {
                     n.common.transform = n.common.transform.mul(xf);
                 }
-                if let (Some(r), None) = (cut, &n.common.clip) {
-                    n.common.clip = Some(Clip::Rect { rect: r });
+                if let (Some(c), None) = (cut, &n.common.clip) {
+                    n.common.clip = Some(c);
                 }
                 // Decorative unless labelled (WCAG 1.1.1): an icon or picture without semantics
                 // is left out of what assistive technology reads.

@@ -25,3 +25,4 @@ datars-build.workspace = true
 datars-bundle.workspace = true
 datars-ir.workspace = true
 serde_json.workspace = true
+datars-icon = { workspace = true, features = ["bundled"] }

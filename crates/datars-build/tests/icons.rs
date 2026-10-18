@@ -83,3 +83,33 @@ fn every_tier_draws_them_without_asking() {
     }
     assert!(want.windows(2).all(|w| w[0] == w[1]), "every tier, the same scenes: {want:?}");
 }
+
+#[test]
+fn a_document_credits_its_own_files_and_the_tools_read_webp() {
+    // A WebP picture (decoded by the tools for the poster and the baked tier), and the document's
+    // own credit for it: licence, who, where from — carried into the manifest.
+    let webp = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../datars-render/tests/half8.webp")).unwrap();
+    let doc = serde_json::json!({
+        "datars": 1, "size": { "width": 100, "height": 60 },
+        "credits": { "half.webp": { "licence": "public-domain", "credit": "NASA/JPL", "source": "https://photojournal.jpl.nasa.gov/catalog/PIA00001" } },
+        "scene": { "kind": "image", "asset": "half.webp", "rect": [10, 10, 40, 40], "fit": "cover", "crop": "circle", "semantics": { "role": "label", "label": "Half and half" } }
+    })
+    .to_string();
+    let fetch = |r: &Request| match r {
+        Request::Source { url, .. } if url == "half.webp" => Some(webp.clone()),
+        _ => None,
+    };
+    let (bundle, report) = datars_build::build_with(&doc, &datars_build::Options::default(), &fetch).unwrap();
+    let pic = bundle.manifest.assets.iter().find(|a| a.kind == "image").unwrap();
+    assert_eq!((pic.licence.as_str(), pic.credit.as_deref(), pic.source.as_deref()), ("public-domain", Some("NASA/JPL"), Some("https://photojournal.jpl.nasa.gov/catalog/PIA00001")));
+    assert!(!report.decisions.iter().any(|d| d.contains("no licence on record")), "{:?}", report.decisions);
+    // The credit reads back from the manifest as written.
+    let back = datars_bundle::Manifest::from_json(&bundle.manifest.to_json()).unwrap();
+    assert_eq!(back.assets, bundle.manifest.assets);
+    // Shipped as the file it is, and drawn into the poster, cut round.
+    let image = bundle.manifest.chunks.iter().find(|c| c.kind == "image").unwrap();
+    assert_eq!(bundle.chunks[&image.hash], webp);
+    let poster = bundle.manifest.chunks.iter().find(|c| c.kind == "poster").unwrap();
+    let svg = String::from_utf8(bundle.chunks[&poster.hash].clone()).unwrap();
+    assert!(svg.contains("image/webp") && svg.contains("<clipPath"), "{}", &svg[..svg.len().min(600)]);
+}
