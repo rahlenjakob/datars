@@ -32,6 +32,33 @@ export function slug(text) {
 const INLINE_TAGS = /^<\/?(kbd|br|b|i|em|strong|code|a|span|sup|sub|small|abbr|mark|s)\b[^>]*>/;
 
 /** Inline Markdown: code spans, images, links, bold, italic; allowed inline HTML kept. */
+/** Code in a table cell breaks only where it reads: at its spaces, and after `/`, `.`, `,`, `=`
+ * and `(` (a `<wbr>`); never after a hyphen (`--out`, `-v`, `view-box` stay whole). Each stretch
+ * between those points is a `nowrap` span (site.css), so the browser's own breaks after hyphens
+ * can't happen; copying the code copies exactly its text. */
+export function breakableCode(html) {
+  return html.replace(/([([]?)<code([^>]*)>([^<]*)<\/code>([,.;:!?)\]]*)/g, (_, open, attrs, text, close) => {
+    // Split the escaped text into entities and characters, so `&lt;` stays one.
+    const parts = text.match(/&[#a-z0-9]+;|[\s\S]/gi) ?? [];
+    let out = "", seg = "";
+    const flush = () => { if (seg) out += `<span class="nb">${seg}</span>`; seg = ""; };
+    parts.forEach((ch, k) => {
+      if (ch === " ") { flush(); out += " "; return; }
+      seg += ch;
+      if (!"/.,=(".includes(ch)) return;
+      // Not inside a number (`1.5`, `1,000`), nor before a file's extension (`doc.ts`, `.sh`).
+      const rest = parts.slice(k + 1).join("").split(" ")[0].replace(/&[#a-z0-9]+;/gi, "x");
+      if ((ch === "." || ch === ",") && (/^\d/.test(rest) || (ch === "." && /^[a-z0-9]{1,4}$/i.test(rest)))) return;
+      flush(); out += "<wbr>";
+    });
+    flush();
+    const code = `<code${attrs.includes("class=") ? attrs.replace(/class="/, 'class="brk ') : `${attrs} class="brk"`}>${out.replace(/<wbr>$/, "")}</code>`;
+    // A bracket or punctuation mark right against the code goes with it: "(`x`," never breaks
+    // between the two (the break would fall at the edge of the code's last unbroken stretch).
+    return open || close ? `<span class="nbt">${open}${code}${close}</span>` : code;
+  });
+}
+
 /** A docs table: the first cell of each row is its header (`<th scope="row">`). On a phone (site.css,
  * `table.stack`) each row becomes a card — its first cell as the heading, the others under it,
  * each named by its column when there are three or more — so nothing scrolls sideways. The roles
@@ -40,7 +67,13 @@ const INLINE_TAGS = /^<\/?(kbd|br|b|i|em|strong|code|a|span|sup|sub|small|abbr|m
 export function table(head, rows, aligns = [], { cls = "", num = [] } = {}) {
   const al = (j) => (aligns[j] ? ` style="text-align:${aligns[j]}"` : "");
   const plain = (h) => h.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+  head = head.map(breakableCode);
+  rows = rows.map((r) => r.map(breakableCode));
   const labelled = head.length >= 3;
+  // Paragraphs in two or more columns (the accessibility guide's platforms): columns of even
+  // width (site.css, `table.long`), not one wide and one tall and narrow.
+  const long = rows.length > 0 && head.slice(1).filter((_, k) => rows.reduce((n, r) => n + plain(r[k + 1] ?? "").length, 0) / rows.length > 160).length >= 2;
+  if (long) cls = `${cls} long`.trim();
   const label = (j) => (labelled && j > 0 && plain(head[j]) ? ` data-label="${escapeAttr(plain(head[j]))}"` : "");
   const n = (j) => (num.includes(j) ? ` class="num"` : "");
   const cell = (c, j) => (j === 0 ? `<th scope="row" role="rowheader"${al(j)}>${c}</th>` : `<td role="cell"${n(j)}${al(j)}${label(j)}>${c}</td>`);

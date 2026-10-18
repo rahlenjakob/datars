@@ -486,10 +486,19 @@ pre.output .prompt { color: #82aaff; }
   .table-wrap table.stack td + td { padding-top: 6px; }
   table.stack.labelled td[data-label]::before { content: attr(data-label); content: attr(data-label) / ""; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 1px; }
   table.stack td:empty { display: none; }
-  .table-wrap table.stack th code, .table-wrap table.stack td code { white-space: normal; overflow-wrap: anywhere; }
 }
 .table-wrap td code, .table-wrap th[scope=row] code { white-space: nowrap; }
 .table-wrap td:last-child code { white-space: normal; }
+/* Code in a docs table (markdown.mjs `breakableCode`) breaks at its spaces and after / . , = ( —
+   never after a hyphen: each stretch between those points stays whole. */
+.table-wrap table code.brk { white-space: normal; overflow-wrap: normal; }
+.table-wrap table code.brk .nb, .table-wrap table .nbt { white-space: nowrap; }
+.table-wrap table .nbt > code.brk { white-space: normal; }
+/* Paragraphs in several columns: even columns rather than one tall and narrow. */
+@media (min-width: 721px) {
+  .table-wrap table.long { table-layout: fixed; }
+  .table-wrap table.long thead th:first-child { width: 24%; }
+}
 table.params td:first-child, table.cli td:first-child { white-space: nowrap; }
 table.params small, table.params .ty { color: var(--muted); }
 table.params .ty { font-family: var(--mono); font-size: 13px; }
