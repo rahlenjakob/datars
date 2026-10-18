@@ -96,3 +96,14 @@
   .il-d-body { padding: 16px; }
   .il-sw { padding: 14px 12px; }
 }
+
+/* Printed: the icons drawn so far as a sheet, without the search and the categories. */
+@media print {
+  .il-layout { grid-template-columns: minmax(0, 1fr); }
+  .il-side, .il-bar .il-search, .il-more, .il-detail { display: none; }
+  .il-bar { position: static; padding: 0 0 8px; }
+  .il-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; }
+  .il-grid li { break-inside: avoid; border-color: #d5d9e2; background: #fff; color: #0d1321; }
+  .il-grid li[aria-selected="true"] { border-color: #d5d9e2; }
+  .il-grid span { color: #3a4353; }
+}
