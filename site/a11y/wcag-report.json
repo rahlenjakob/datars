@@ -1,0 +1,294 @@
+{
+ "about": "What scripts/a11y-report.mjs found: each wcag_ test's result, what it checked and where it is. Written by the script; read by the site build.",
+ "date": "2026-10-18",
+ "commit": "e8868ea",
+ "corpus": 227,
+ "tests": {
+  "wcag_1_1_1_text_alternatives": {
+   "result": "pass",
+   "checked": "227 documents × states: a name, a summary, a label on every data mark",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 427
+  },
+  "wcag_1_2_1_media_alternative": {
+   "result": "pass",
+   "checked": "the votes example's film",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1159
+  },
+  "wcag_1_3_1_info_and_relationships": {
+   "result": "pass",
+   "checked": "227 documents × states: every interactive mark has semantics; controls say their kind and state",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 448
+  },
+  "wcag_1_3_2_meaningful_sequence": {
+   "result": "pass",
+   "checked": "227 documents × states: the reading order is the chart, its narration, its content, then Pause and the story's steps",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 468
+  },
+  "wcag_1_3_3_sensory_characteristics": {
+   "result": "pass",
+   "checked": "227 documents: title, description, every step's narration",
+   "authored": 6,
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 498
+  },
+  "wcag_1_3_4_orientation": {
+   "result": "pass",
+   "checked": "227 documents laid out in a portrait and a landscape box",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 510
+  },
+  "wcag_1_4_1_dashes_tell_lines_apart": {
+   "result": "pass",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 560
+  },
+  "wcag_1_4_1_use_of_colour": {
+   "result": "pass",
+   "checked": "227 documents × states: colours that tell data apart are named too",
+   "authored": 19,
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 533
+  },
+  "wcag_1_4_10_reflow": {
+   "result": "pass",
+   "checked": "227 documents × states at 320 px wide",
+   "authored": 49,
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 683
+  },
+  "wcag_1_4_11_adjacent_segments": {
+   "result": "pass",
+   "checked": "227 documents: touching filled marks in the theme's colours × states, high contrast",
+   "authored": 11,
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 704
+  },
+  "wcag_1_4_11_controls_against_background": {
+   "result": "pass",
+   "checked": "227 documents: controls × states × light, dark, high contrast",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 386
+  },
+  "wcag_1_4_11_focus_indicator": {
+   "result": "pass",
+   "checked": "4 documents: themes × light, dark, high contrast",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 747
+  },
+  "wcag_1_4_11_marks_against_background": {
+   "result": "pass",
+   "checked": "227 documents: data marks in the theme's colours × states, high contrast",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 301
+  },
+  "wcag_1_4_11_marks_against_background_light_dark": {
+   "result": "fail",
+   "checked": "227 documents: data marks in the theme's colours × states, light and dark",
+   "found": 210,
+   "examples": [
+    "site/charts/brand.ts: light 1.91:1 #efb118",
+    "site/charts/brand.ts: light 2.05:1 #6cc5b0",
+    "site/charts/brand.ts: light 2.69:1 #ff725c"
+   ],
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 316
+  },
+  "wcag_1_4_12_text_spacing": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 90
+  },
+  "wcag_1_4_13_content_on_hover_or_focus": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 102
+  },
+  "wcag_1_4_3_text_contrast": {
+   "result": "pass",
+   "checked": "227 documents × states × light, dark, high contrast",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 184
+  },
+  "wcag_1_4_3_text_contrast_in_every_std_theme": {
+   "result": "pass",
+   "checked": "21 documents: examples × 4 themes × light, dark, high contrast",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 586
+  },
+  "wcag_1_4_4_resize_text": {
+   "result": "pass",
+   "checked": "227 documents × states at the reader's 2× text: every run of text the theme sizes is twice as big",
+   "authored": 121,
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 625
+  },
+  "wcag_1_4_6_text_contrast_enhanced_in_high_contrast": {
+   "result": "pass",
+   "checked": "227 documents: text on the paper × states, high contrast",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 661
+  },
+  "wcag_2_1_1_keyboard": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 784
+  },
+  "wcag_2_1_2_no_keyboard_trap": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 130
+  },
+  "wcag_2_1_4_character_key_shortcuts": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 150
+  },
+  "wcag_2_2_2_pause_stop_hide": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 808
+  },
+  "wcag_2_2_4_interruptions": {
+   "result": "pass",
+   "checked": "1 documents: live example",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 842
+  },
+  "wcag_2_3_1_three_flashes": {
+   "result": "pass",
+   "checked": "227 documents: every transition of every document, frame by frame at 30 fps",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 886
+  },
+  "wcag_2_3_3_animation_from_interactions": {
+   "result": "pass",
+   "checked": "227 documents: every transition with reduced motion: no mark moves",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 894
+  },
+  "wcag_2_4_11_focus_not_obscured": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 204
+  },
+  "wcag_2_4_13_focus_appearance": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 204
+  },
+  "wcag_2_4_3_focus_order": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 195
+  },
+  "wcag_2_4_6_headings_and_labels": {
+   "result": "pass",
+   "checked": "227 documents × states: headings and controls in the reading order",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1107
+  },
+  "wcag_2_4_7_focus_visible": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 204
+  },
+  "wcag_2_5_1_pointer_gestures": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 230
+  },
+  "wcag_2_5_2_pointer_cancellation": {
+   "result": "pass",
+   "checked": "the dashboard example's bars",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 921
+  },
+  "wcag_2_5_3_label_in_name": {
+   "result": "pass",
+   "checked": "227 documents: controls and buttons × states: the words drawn in each are in its name",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 939
+  },
+  "wcag_2_5_7_dragging_movements": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 966
+  },
+  "wcag_2_5_8_target_size": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1011
+  },
+  "wcag_2_5_8_target_size_marks": {
+   "result": "fail",
+   "checked": "227 documents: data marks a click acts on × states",
+   "found": 68,
+   "examples": [
+    "site/charts/europe-drill.ts: state 0: \"Vatican: no data\" 3×3",
+    "site/charts/europe-drill.ts: state 0: \"U.S. Virgin Is.: no data\" 7×10",
+    "site/charts/europe-drill.ts: state 0: \"American Samoa: no data\" 4×4"
+   ],
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 330
+  },
+  "wcag_3_1_2_language_of_parts": {
+   "result": "pass",
+   "checked": "a Swedish document",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1028
+  },
+  "wcag_3_2_1_on_focus": {
+   "result": "pass",
+   "checked": "227 documents: reading the semantics and the reading order of each state",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1043
+  },
+  "wcag_3_2_2_on_input": {
+   "result": "pass",
+   "checked": "227 documents with engine-drawn sliders or selects: each set to another value",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1063
+  },
+  "wcag_3_3_2_labels_or_instructions": {
+   "result": "pass",
+   "checked": "227 documents: controls × states",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1084
+  },
+  "wcag_4_1_2_name_role_value": {
+   "result": "pass",
+   "checked": "227 documents: actionable items × states: a name; a checkbox, switch or radio its state",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1129
+  },
+  "wcag_4_1_3_status_messages": {
+   "result": "pass",
+   "checked": "the dashboard example's filter",
+   "file": "crates/datars-test/tests/wcag.rs",
+   "line": 1148
+  },
+  "wcag_axe": {
+   "result": "pass",
+   "checked": "in Chrome, through Playwright",
+   "file": "packages/web/test/wcag.browser.test.mjs",
+   "line": 255
+  }
+ }
+}

@@ -129,11 +129,11 @@ css: features-accessibility.css
       <h2>The native way, everywhere</h2>
     </header>
     <ul class="platforms">
-      <li><h3>Web</h3><p>A <code>figure</code> named by the chart, its summary — what it shows, how many points, their range — as its description. Beside the canvas, kept in step with it: the data as tables (name and value columns), axes and legends as a line each, clickable marks as buttons, engine-drawn sliders and dropdowns as native controls, real links over linked text. One Tab stop into the data, arrow keys through it, each mark outlined and named on the chart; a brush or a pannable view one stop with keys of its own; a polite live region announces each step once, and what a click or a key changed. Checked in the accessibility trees of Chromium, WebKit and Gecko, and driven with VoiceOver in Safari and Chrome.</p></li>
-      <li><h3>iOS and macOS</h3><p>VoiceOver walks the chart first (a summary element), its controls (sliders say their value as drawn), headings for its parts, then each mark with its name, value and frame, so explore-by-touch finds each bar where it is drawn; activatable marks, a brush adjustable; step announcements and what an action changed. Increase Contrast and Bold Text followed, live. Dumped and operated in the simulator; not yet driven by VoiceOver itself.</p></li>
+      <li><h3>Web</h3><p>A <code>figure</code> named by the chart, its summary — what it shows, how many points, their range — as its description. Beside the canvas, kept in step with it: the data as tables (name and value columns), axes and legends as a line each, clickable marks as buttons, engine-drawn sliders and dropdowns as native controls, real links over linked text. One Tab stop into the data, arrow keys through it, each mark outlined and named on the chart; a brush or a pannable view one stop with keys of its own; a polite live region announces each step once, and what a click or a key changed. Checked in the accessibility trees of Chromium, WebKit and Gecko, by axe-core, and driven with VoiceOver in Safari and Chrome.</p></li>
+      <li><h3>iOS and macOS</h3><p>VoiceOver walks the chart first (a summary element), its controls (sliders say their value as drawn), headings for its parts, then each mark with its name, value and frame, so explore-by-touch finds each bar where it is drawn; activatable marks, a brush adjustable; step announcements and what an action changed. Increase Contrast and Bold Text followed, live. On the Mac the chart is one group, read in order: driven with VoiceOver itself. On iOS checked by Xcode's own accessibility audit in the simulator; not yet driven by VoiceOver there.</p></li>
       <li><h3>Android</h3><p>TalkBack reads the same order through an accessibility node provider: virtual nodes with screen bounds, headings, values, clickable marks, adjustable sliders, a brush adjustable, the story's steps as buttons, step announcements and what an action changed; the reader's contrast and bold-text settings followed, live. Driven with TalkBack itself on an emulator — real swipes and taps, what it spoke recorded in the <a href="/docs/accessibility/#what-talkback-says">accessibility guide</a>.</p></li>
-      <li><h3>Desktop</h3><p>The same through AccessKit, for VoiceOver, Narrator/NVDA and Orca: a figure with its summary, interactive marks as buttons, sliders adjustable — unit-tested, not yet exercised with a real screen reader.</p></li>
-      <li><h3>Video</h3><p>WebVTT captions generated from the story's narration, alongside every MP4 <code>datars video</code> renders.</p></li>
+      <li><h3>Desktop</h3><p>The same through AccessKit, for VoiceOver, Narrator/NVDA and Orca: a figure with its summary, interactive marks as buttons, sliders adjustable, the story's steps and Pause last — unit-tested, not yet exercised with a real screen reader.</p></li>
+      <li><h3>Video</h3><p>A transcript — the chart's name, each step's narration and what it shows — and WebVTT captions, beside every MP4 <code>datars video</code> renders.</p></li>
       <li><h3>SVG and PDF</h3><p>SVG exports and posters carry titles, descriptions and roles; PDF keeps text as searchable text.</p></li>
     </ul>
   </div>
@@ -187,14 +187,27 @@ css: features-accessibility.css
 <section class="section">
   <div class="wrap">
     <header class="section-head">
+      <p class="eyebrow">WCAG 2.2</p>
+      <h2>Every success criterion, and a test for each</h2>
+      {{wcag:summary}}
+      <p>Each criterion datars answers for is checked by a test named for it, over every example, the site's charts and every figure on this site: text contrast against what's drawn under it, in every mode and theme; marks and controls against the paper; flashes, frame by frame; targets, keyboard paths, Esc on a tooltip, Pause, the language of each word. VoiceOver, TalkBack, Xcode's audit and axe-core add what a test can't hear. It is the project's reading of the criteria, not a third-party audit.</p>
+      <a class="more" href="/docs/accessibility/#wcag">The criterion-by-criterion table <span aria-hidden="true">→</span></a>
+    </header>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <header class="section-head">
       <p class="eyebrow">Plainly</p>
       <h2>What isn't there yet</h2>
     </header>
     <ul class="al-gaps">
-      <li><b>Two screen readers driven so far:</b> TalkBack on an emulator, and VoiceOver on macOS with the web element in Safari and Chrome, what they said recorded. The iOS elements are dumped and operated in the simulator, not yet with VoiceOver; NVDA and JAWS haven't been driven, nor any real phone.</li>
+      <li><b>Two screen readers driven so far:</b> TalkBack on an emulator, and VoiceOver on macOS — the web element in Safari and Chrome, and a native Mac chart — what they said recorded. On iOS Xcode's accessibility audit runs in the simulator, not VoiceOver itself. NVDA has a prepared run on a Windows machine that hasn't run yet; JAWS hasn't been tried, nor any real phone.</li>
+      <li><b>Not every criterion is met.</b> In the default light and dark modes three of the palette's ten colours (yellow, coral, teal) have under 3:1 against white — the high-contrast mode's all have it; data marks a click acts on can be smaller than 24 px (a map's small countries, a dense ranked chart); text drawn on the canvas can't take a style sheet's letter and line spacing. <a href="/docs/accessibility/#wcag">What's met and what isn't →</a></li>
+      <li><b>Chrome with VoiceOver reads a table row's name twice</b> ("row 2 of 8, Sweden Democrats, Sweden Democrats"): it does on any HTML table with row headers; Safari reads it once.</li>
       <li><b>A click's result is said generically:</b> the clicked mark's new label, the parts whose label changed, how much data is shown now. A selection that only changes how marks look is not announced unless its label says it.</li>
       <li><b>Safari's Tab key skips buttons</b> unless the reader asks it not to: there, Tab goes from the chart to its data; the chart's own arrow keys still step the story.</li>
-      <li><b>Long lists stop at 500 marks</b> on the web — a map of thousands of counties is in the text description and the summary's count, not read out mark by mark.</li>
       <li><b>Text size follows the theme's sizes only.</b> Text a document sizes in pixels stays as written; posters and videos are at the theme's size; iOS and Android apps get the height bigger text needs (<code>contentHeight</code>) but lay their views out themselves.</li>
       <li><b>Two languages.</b> The words the element adds — the summary, “Step 2 of 4”, captions — are English and Swedish so far; other locales read them in English.</li>
     </ul>
