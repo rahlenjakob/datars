@@ -205,6 +205,11 @@ function stageDoc(alias, src) {
     }
   };
   assets(doc.scene);
+  assets(doc.data);
+  // A document that builds its icons' paths in expressions (`"assets/" + d.kind + ".svg"`) names
+  // no file literally: its `assets/` folder goes with it whole.
+  const own = join(dirname(file), "assets");
+  if (/\.ts$/.test(src) && existsSync(own) && statSync(own).isDirectory()) cpSync(own, join(stage, "c", "assets"), { recursive: true });
   // An automatic basemap is found next to the document: stage its archive and lockfile with it.
   const staged = join(stage, "c", `${alias}.json`);
   for (const [name, s] of Object.entries(doc.data ?? {})) {
@@ -643,6 +648,17 @@ function variantBars(alias) {
   return `<div class="hv">${rows.map((r) => `<div class="hv-row"><span class="hv-tier"><b>${r.tier}</b> ${NAMES[r.tier] ?? ""}</span>${bar(r)}<span class="hv-size">${kb(r.total)}</span></div>`).join("")}<div class="hv-key" aria-hidden="true">${KINDS.filter(([n]) => used.has(n)).map(([n, l]) => `<span><i class="hv-${n}"></i>${l}</span>`).join("")}</div></div>`;
 }
 
+/** What a chart's bundle ships beyond its document (`{{assets:alias}}`): the manifest's `assets` —
+ * each icon set with its version, licence and the icons drawn, each picture or project file — and
+ * the gzipped size of its icons chunk and pictures, read from the published bundle. */
+function assetsOf(alias) {
+  const m = JSON.parse(readFileSync(join(out, "c", alias), "utf8"));
+  if (!m.assets?.length) throw new Error(`{{assets:${alias}}}: the bundle ships no icons or pictures`);
+  const gz = (kind) => m.chunks.filter((c) => c.kind === kind).reduce((n, c) => n + gzipSync(readFileSync(join(out, "chunks", c.hash.replace(":", "_"))), { level: 9 }).length, 0);
+  const text = JSON.stringify({ assets: m.assets }, null, 2).replace(/\[\n\s+("[^"\n]*",?\s*)+\]/g, (list) => list.replace(/\s*\n\s*/g, " ").replace("[ ", "[").replace(" ]", "]"));
+  return `<pre class="output"><code data-lang="json" data-hl>${highlight(text, "json")}</code></pre><p class="fine">From <code>c/${alias}</code>, the published manifest. The icons chunk: ${kb(gz("icons"))} gzipped${gz("image") ? `; pictures: ${kb(gz("image"))}` : ""}.</p>`;
+}
+
 // ---- pages -------------------------------------------------------------------------------------
 
 /** The theme studio's starting data (the built-in theme, resolved by the CLI per mode), once. */
@@ -687,6 +703,7 @@ function fill(html, where) {
     .replace(/\{\{size:([a-z0-9_-]+)\}\}/g, (_, a) => kb(sizes[known(a)]))
     .replace(/\{\{tier:([a-z0-9_-]+):(T\d)\}\}/g, (_, a, t) => kb(tiers[known(a)][t] ?? 0))
     .replace(/\{\{variants:([a-z0-9_-]+)\}\}/g, (_, a) => variantBars(known(a)))
+    .replace(/\{\{assets:([a-z0-9_-]+)\}\}/g, (_, a) => assetsOf(known(a)))
     .replace(/\{\{archive:([a-z0-9_-]+)\}\}/g, (_, a) => {
       if (!archives[known(a)]) throw new Error(`${where}: chart \`${a}\` reads no archive`);
       return mb(archives[a]);
@@ -749,6 +766,8 @@ function walk(dir, ext, fn, base = dir) {
 }
 walk(join(siteDir, "pages"), ".html", (rel, src) => {
   const [fm, body] = frontMatter(src);
+  // The head's title and description count what this build counts too (they can't go stale).
+  for (const k of ["title", "description"]) if (typeof fm[k] === "string") fm[k] = fm[k].replaceAll("{{count:recipes}}", String(recipeCount));
   const file = rel === "index.html" || rel.endsWith("/index.html") || rel === "404.html" ? rel : rel.replace(/\.html$/, "/index.html");
   pages.push({ file, kind: "page", fm, body });
 });

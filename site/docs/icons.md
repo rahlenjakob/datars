@@ -177,6 +177,8 @@ Until an icon arrives in a preview, nothing is drawn in its place, so nothing ju
 
 ## See also
 
+- [Iconography](/features/iconography/): the feature page, every part live
+
 - [Nodes: icon and image](/docs/sdk/nodes/#icons-and-pictures) in the SDK reference
 - [Themes: icon tokens](/docs/theming/#icons)
 - [pictogram](/docs/std/pictogram/), [gauge](/docs/std/gauge/), [legend](/docs/std/legend/), [annotate](/docs/std/annotate/)

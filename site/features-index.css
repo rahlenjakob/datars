@@ -1,4 +1,4 @@
-/* The features overview (site/pages/features/index.html: `css:` in its front matter): twelve cards,
+/* The features overview (site/pages/features/index.html: `css:` in its front matter): thirteen cards,
    each a live chart the page plays one at a time (features-index.js), its name, its claim and the
    call the page just made. */
 .fx-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }

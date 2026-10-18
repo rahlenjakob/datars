@@ -1,4 +1,4 @@
-// The features overview (/features/): twelve published charts, each driven by this page through
+// The features overview (/features/): thirteen published charts, each driven by this page through
 // the public `<datars-view>` API — `send("goto:…")` for the stories, `provideData()` for the live
 // feed, `setTokens()` for the brands, `setSignal()` for selection and focus. A conductor plays one
 // card at a time among those on screen (and the one under the pointer at once), so the page never
@@ -138,6 +138,7 @@ const ACTS = {
       requestAnimationFrame(step);
     },
   },
+  iconography: story((s) => ({ bars: "plot({ children: [bar()] })", icons: 'pictogram({ icons: { Car: "car", … }, per: 2 })', grid: 'pictogram({ layout: "grid" }) // 100 icons' })[s]),
   "big-data": story((s) => `view.send("goto:${s}") // of 60,000 rows`),
   platforms: story((s) => `view.send("goto:${s}") // same document, re-laid out`),
   maps: story((s) => `view.send("goto:${s}") // the camera flies`),

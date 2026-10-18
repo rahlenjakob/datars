@@ -73,13 +73,12 @@
   .prim-grid { grid-template-columns: minmax(0, 1fr); }
 }
 
-/* The icon lab: the pictogram's controls over it, the dial's slider. */
-.icons-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 18px; align-items: start; margin-top: 18px; }
-.icons-controls { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 10px; }
-.icons-controls .seg { flex: 0 1 auto; }
-.icons-controls .seg button { padding: 6px 10px; }
-.icons-slider { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
-.icons-slider span { flex: none; min-width: 6.5em; }
-.icons-slider input { flex: 1; min-width: 0; accent-color: var(--accent); }
-.icons-lab pre { margin-top: 18px; }
-@media (max-width: 860px) { .icons-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* The icon section moved to its own page (/features/iconography/): a card pointing there. */
+.icons-pointer { padding-top: 8px; padding-bottom: 8px; }
+.icons-card { display: flex; align-items: center; gap: 18px; padding: 20px 24px; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: var(--shadow); color: var(--ink); text-decoration: none; transition: border-color .15s; }
+.icons-card:hover { border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); }
+.icons-card svg { width: 38px; height: 38px; flex: none; fill: none; stroke: var(--accent); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.icons-card b { display: block; font-size: 1.12rem; letter-spacing: -0.01em; }
+.icons-card small { display: block; margin-top: 4px; font-size: 14.5px; color: var(--ink-2); line-height: 1.45; }
+.icons-go { color: var(--accent); font-weight: 600; white-space: nowrap; }

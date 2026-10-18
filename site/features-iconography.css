@@ -1,0 +1,78 @@
+/* The iconography page's own styles (site/pages/features/iconography.html: `css:` in its front
+   matter; features-iconography.js drives it): a chart with its controls and an aside per section. */
+
+/* A chart's phone ratio (`data-phone-ratio`) is site.js's choice for a slot narrower than 600 px;
+   the reserved space follows the slot's own width the same way, so nothing moves on mount — and
+   to the pixel, as site.js rounds the view's height. */
+.ic-frame { container-type: inline-size; padding: 12px; }
+.ic-frame > .chart[style*="--aspect"]:not(:has(datars-view)) { aspect-ratio: auto; height: max(var(--min, 160px), round(nearest, 100cqw * var(--aspect), 1px)); }
+@container (max-width: 599.98px) { .ic-frame > .chart[style*="--phone"]:not(:has(datars-view)) { height: max(var(--min, 160px), round(nearest, 100cqw * var(--phone), 1px)); } }
+.ic-frame datars-view::part(card), .ic-frame datars-view::part(controls) { display: none; }
+/* The forecast's frame wears the chart's paper (the brand the page laid over it). */
+.ic-paper { background: var(--ic-paper, var(--surface)); transition: background-color .25s; }
+
+.ic-jump { display: flex; flex-wrap: wrap; gap: 6px; margin: 22px 0 0; }
+.ic-jump a { font-size: 13.5px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--chip); color: var(--ink-2); text-decoration: none; }
+.ic-jump a:hover { color: var(--ink); background: color-mix(in srgb, var(--accent) 14%, var(--chip)); }
+
+.ic-section { scroll-margin-top: 70px; }
+.ic-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: center; }
+.ic-grid-flip { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.ic-grid-even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.ic-grid-top { align-items: start; }
+.ic-h3 { font-size: 1rem; margin: 0 0 10px; }
+.ic-code-tall { min-height: 7.4em; }
+.ic-stage { min-width: 0; }
+.ic-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin-bottom: 12px; }
+.ic-controls .seg { flex: 0 1 auto; }
+.ic-controls .seg button, .ic-seg-narrow button { padding: 7px 12px; white-space: nowrap; }
+.ic-seg-narrow { display: inline-flex; margin: 0 0 12px; }
+.ic-panel h2, .ic-h2 { font-size: clamp(1.5rem, 2.4vw, 2rem); font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; margin: 0 0 12px; }
+.ic-panel > p:not(.eyebrow), .ic-p { color: var(--ink-2); font-size: 1.02rem; margin: 0 0 16px; }
+.ic-panel .chips { margin-bottom: 14px; }
+.ic-panel .output, .ic-out .output { font-size: 11.5px; margin: 0; }
+.ic-code { margin-top: 14px; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 4.2em; }
+.ic-code code { white-space: inherit; }
+.ic-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 16px 0 0; }
+.ic-facts div { background: var(--chip); border-radius: 10px; padding: 9px 10px; }
+.ic-facts dt { font-size: 11.5px; color: var(--muted); line-height: 1.3; }
+.ic-facts dd { margin: 4px 0 0; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.ic-brands { display: flex; flex-wrap: wrap; gap: 6px; }
+.ic-brands button { display: inline-flex; align-items: center; gap: 8px; font: 600 13px var(--font); padding: 7px 11px; border-radius: 9px; border: 1px solid var(--rule); background: var(--surface); color: var(--ink); cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.ic-brands button:hover { border-color: color-mix(in srgb, var(--ink) 30%, var(--rule)); }
+.ic-brands button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 30%, transparent); }
+.ic-dots { display: flex; }
+.ic-dots i { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--surface); box-shadow: 0 0 0 1px var(--rule); margin-left: -4px; }
+.ic-dots i:first-child { margin-left: 0; }
+
+.ic-slider { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: var(--ink); margin: 2px 4px 6px; }
+.ic-slider span { flex: none; min-width: 5.5em; }
+.ic-slider output { font-variant-numeric: tabular-nums; }
+.ic-slider input { flex: 1; min-width: 0; accent-color: var(--accent); }
+
+.ic-out h3 { font-size: 1rem; margin: 0 0 8px; }
+.ic-out h3 + .output { margin-bottom: 18px; }
+
+.ic-exports { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.ic-exports figure { margin: 0; background: var(--surface); border: 1px solid var(--rule); border-radius: var(--radius); padding: 12px; }
+.ic-exports img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.ic-exports figcaption { margin-top: 10px; font-size: 13px; color: var(--ink-2); }
+.ic-exports figcaption code { font-size: 11.5px; }
+
+#travels .hv { margin-top: 6px; }
+#travels .output, .ic-out .output, .ic-panel .output { white-space: pre-wrap; overflow-wrap: anywhere; }
+:is(.ic-out, #travels, .ic-panel) .output code { white-space: inherit; }
+
+@media (max-width: 900px) {
+  .ic-grid, .ic-grid-flip, .ic-grid-even { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  /* The chart first, its words after, whichever side they sat on. */
+  .ic-grid-flip > .ic-stage { order: -1; }
+  .ic-exports { grid-template-columns: minmax(0, 1fr); }
+  .ic-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .ic-frame { padding: 8px; }
+  .ic-brands button { padding: 6px 9px; font-size: 12.5px; }
+  .ic-facts dd { font-size: 15px; }
+}

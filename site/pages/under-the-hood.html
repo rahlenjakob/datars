@@ -7,7 +7,7 @@ og: votes
   <div class="wrap">
     <p class="eyebrow">Under the hood</p>
     <h1>How a chart gets from a TypeScript file to a frame</h1>
-    <p class="lede-2">This page follows one small chart through every layer of datars: the document it compiles to, the bundle it is published as, the runtime that loads it, the engine that resolves and animates it, and the renderers that draw it. Along the way it explains why each piece works the way it does, what each frame is allowed to cost, and how the tests keep every platform drawing the same pixels. The figures quoted come from the source code or from benchmark data committed with this site, and each one says which.</p>
+    <p class="lede-2">This page follows one small chart through every layer of datars: the document it compiles to, the bundle it is published as, the runtime that loads it, the engine that resolves and animates it, and the renderers that draw it — icons and pictures included. Along the way it explains why each piece works the way it does, what each frame is allowed to cost, and how the tests keep every platform drawing the same pixels. The figures quoted come from the source code or from benchmark data committed with this site, and each one says which.</p>
   </div>
 </section>
 
@@ -23,10 +23,11 @@ og: votes
   <a href="#motion">5 · Motion</a>
   <a href="#maps">6 · Maps and big data</a>
   <a href="#rendering">7 · Rendering</a>
-  <a href="#determinism">8 · Determinism</a>
-  <a href="#testing">9 · Testing</a>
-  <a href="#platforms">10 · Platforms</a>
-  <a href="#delivery">11 · Delivery</a>
+  <a href="#icons">8 · Icons, pictures and curved text</a>
+  <a href="#determinism">9 · Determinism</a>
+  <a href="#testing">10 · Testing</a>
+  <a href="#platforms">11 · Platforms</a>
+  <a href="#delivery">12 · Delivery</a>
 </nav>
 
 <article class="prose hood-body">
@@ -360,8 +361,42 @@ og: votes
 <p>One renderer is written to be <em>identical everywhere</em> rather than fast. Geometry is flattened at 0.1 device px and stroked in double precision using only basic IEEE operations (+, −, ×, ÷, √, rounding) plus the engine's own maths for round joins and caps. Rust never fuses or reorders float operations, so this is bit-identical on every CPU. Coverage is computed in 24.8 fixed point with integer accumulation, which gives exact-area anti-aliasing. Compositing is integer arithmetic on premultiplied RGBA8, with one correctly rounded division by 255 per result. It's single-threaded, with no hash maps, no time and no IO. The bytes it produces are the same on x86-64, arm64 and WebAssembly, which makes it the anchor of every test. It renders goldens, server-side images and the fallback. The iOS and Android views draw on the GPU; they draw with the CPU reference only before their surface is attached, when wgpu gets no device for that surface, and after a frame loses the device, until the host attaches again. SVG and PDF backends draw the same display list as vectors.</p>
 </section>
 
+<section id="icons">
+<h2>8 · Icons, pictures and curved text</h2>
+<p>An icon in datars is chart material, not an image pasted on top: a vector drawing whose colours are inks, resolved like every other mark, laid out, hit-tested, animated and exported with the rest of the scene. Pictures (logos, photos) keep their own colours, and come in as pixels. Both are things the engine never fetches, so both follow the same path as fonts: found when the chart is built, shipped with it, handed in by the host.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="commute" data-caption></div></div><figcaption><b>Commuters by mode</b>: bars, then an icon per two thousand commuters, then a grid of a hundred. Each unit is keyed (mode, unit), so each bar splits into its icons. {{size:commute}} gzipped, icons included.</figcaption>{{alt:commute}}</figure>
+<h3>From a name to a bundle</h3>
+<p>An icon names where it comes from: the default set (<code>"bus"</code>, <code>"lucide:bus"</code>, Lucide's 2,121 icons under ISC, vendored with the toolchain), a theme token (<code>"$icon.warning"</code>), a project file, an <code>https://</code> URL, inline markup or path data. A missing one is a request like a data source: <code>icon:lucide:bus</code>, at <code>datars:icons/lucide/bus.json</code>. The build step resolves every state and answers each request, the default set from the toolchain and files from disk, and resolves again until nothing is missing.</p>
+<p>SVG is read there, once, by the engine's own reader: XML without entity declarations and with depth and size limits, a subset of CSS (style attributes and simple rules), and the SVG that icons and logos are made of. It refuses scripts, event attributes, embedded images and references outside the file. Every colour becomes an <em>ink slot</em>, numbered in the order the file first uses it; <code>currentColor</code>, or a file drawn in one colour, becomes the node's own ink. The hex values are kept only as notes for the author (<code>datars icons --slots</code>), never drawn. What comes out is the icon's compact form: its box, and each layer's path as exact SVG path text (shortest round-tripping numbers, so it reads back to the same bits), its fill and stroke by slot:</p>
+<pre><code data-lang="json">{ "vb": [0, 0, 24, 24], "layers": [
+  { "d": "M8 6L8 12", "stroke": { "ink": "c", "w": 2, "cap": "round", "join": "round" } },
+  { "d": "M2 12L21.6 12", "stroke": { "ink": "c", "w": 2, "cap": "round", "join": "round" } },
+  … ] }</code></pre>
+<p>A bundle carries one <code>icons</code> chunk holding the compact form of every icon its chart draws, with the T2 and T3 variants; T1's baked scenes already hold the icons' shapes. The manifest credits each set with its version, its licence and the names drawn, and each project file by where it came from. A runtime that opens a bundle asks for no icon: one the bundle lacks draws nothing and says so.</p>
+<figure class="fig hood-fig"><svg viewBox="0 0 720 200" role="img" aria-labelledby="icons-t icons-d"><title id="icons-t">How an icon travels</title><desc id="icons-d">At build time a name, a file or a URL is read once by the SVG reader into the compact form with ink slots. The bundle carries those drawings in one icons chunk and credits them in the manifest. The web runtime reads only the compact form and draws it in the theme's inks.</desc>
+  <rect class="hf-stand" x="10" y="40" width="150" height="120" rx="6"/><text class="hf-t" x="85" y="70" text-anchor="middle">"bus"</text><text class="hf-s" x="85" y="94" text-anchor="middle">assets/logo.svg</text><text class="hf-s" x="85" y="114" text-anchor="middle">https://…/mark.svg</text><text class="hf-s" x="85" y="140" text-anchor="middle">a name, a file, a URL</text>
+  <path class="hf-arrow" d="M166 100 H 196"/><path class="hf-arrow-head" d="M196 94 L206 100 L196 106 Z"/>
+  <rect class="hf-box" x="212" y="40" width="150" height="120" rx="6"/><text class="hf-t" x="287" y="70" text-anchor="middle">build step</text><text class="hf-s" x="287" y="94" text-anchor="middle">SVG read once</text><text class="hf-s" x="287" y="114" text-anchor="middle">colours → ink slots</text><text class="hf-s" x="287" y="140" text-anchor="middle">only what states draw</text>
+  <path class="hf-arrow" d="M368 100 H 398"/><path class="hf-arrow-head" d="M398 94 L408 100 L398 106 Z"/>
+  <rect class="hf-box" x="414" y="40" width="140" height="120" rx="6"/><text class="hf-t" x="484" y="70" text-anchor="middle">bundle</text><text class="hf-s" x="484" y="94" text-anchor="middle">icons chunk</text><text class="hf-s" x="484" y="114" text-anchor="middle">manifest: licences</text><text class="hf-s" x="484" y="140" text-anchor="middle">no SVG, no hex</text>
+  <path class="hf-arrow" d="M560 100 H 590"/><path class="hf-arrow-head" d="M590 94 L600 100 L590 106 Z"/>
+  <rect class="hf-own" x="606" y="40" width="104" height="120" rx="6"/><text class="hf-t" x="658" y="70" text-anchor="middle">runtime</text><text class="hf-s" x="658" y="94" text-anchor="middle">compact form</text><text class="hf-s" x="658" y="114" text-anchor="middle">theme's inks</text><text class="hf-s" x="658" y="140" text-anchor="middle">fetches none</text>
+</svg><figcaption>An icon is read where the tools run, not on the reader's device. The reader's runtime gets paths and slots, and paints them in the theme's inks at each frame, so a brand or a dark mode repaints icons with everything else.</figcaption></figure>
+<h3>Why the web runtime reads no SVG</h3>
+<p>Every chart on every page pays for the runtime's size, and an SVG reader and image decoders would be about 48 KB of it, gzipped, for work the build has already done. So the web runtime has none: what it draws arrives read. A document handed to it directly, with no build in between (<code>&lt;datars-view doc&gt;</code>, the theme studio), gets the default set from the runtime's own <code>icons/</code> folder, one compact file per icon at about 300 bytes gzipped, fetched only when named, like the default fonts beside it. <code>datars dev</code> serves a document with every icon it draws already read, inline markup included. The tools and the native hosts' development mode keep the reader.</p>
+<h3>One icon is shapes; a thousand are one node</h3>
+<p>A single <code>icon</code> node resolves to plain shapes: a group of paths in its ink and slots, fitted to its box. Hit tests, bounds, exports and morphs need nothing new, because they're shapes. Many of one icon (a pictogram's units, map markers) are an <code>instances</code> node with an icon prototype: the drawing normalized once to a box centred on the origin, its longer side −1…1, each instance a position, a size and a fill. The GPU renderer tessellates each of its layers once and draws every instance from that mesh; the SVG export writes the drawing once in <code>&lt;defs&gt;</code> and a <code>&lt;use&gt;</code> per instance. When a pictogram's unit flies into a bar, the engine pairs the two by key and the unit travels as its own drawing, crossfading to the rectangle, so it looks like itself at both ends of the flight.</p>
+<h3>Pictures: decoded by the host</h3>
+<p>The engine is format-agnostic about pictures. It takes straight RGBA pixels, and a file it can't decode itself becomes a request of its own: the host reads the file and hands back its pixels. Each host decodes with what its platform has: the browser with <code>ImageDecoder</code> (or an <code>ImageBitmap</code> drawn to a canvas), Apple platforms with ImageIO, Android with BitmapFactory, and the tools, headless renders and the desktop host with Rust's PNG decoder and JPEG's portable scalar one. So PNG, JPEG and WebP all work, and the web runtime carries no decoder. A bundle's pictures are decoded before its first frame, so none pops in after it. PNG is lossless and gives the same pixels everywhere; a JPEG can differ by a shade between platforms' decoders, so the goldens use PNG.</p>
+<p>Every renderer draws the same picture op. The CPU reference samples premultiplied texels bilinearly with integer weights (1/256 steps), so every platform blends the same. wgpu draws it as a textured paint, the picture's texels stretched over its rectangle, through the same shader as gradients. The SVG export embeds the file as a <code>data:</code> URL of its own type, and the PDF export as an image object with its alpha as a soft mask.</p>
+<h3>Curved text</h3>
+<p>A text with a path is shaped and measured as a straight label would be: same glyphs, same kerning, same size. Then each glyph is placed along the curve its baseline sits on, which isn't the path itself: with <code>baseline: middle</code> the baseline is a little below the path, with <code>bottom</code> a little above. On a tight curve that offset curve is shorter on the inside and longer on the outside, so spacing glyphs by the path's own length would crowd letters where a ring curves one way and spread them where a wave curves the other. The engine offsets the path by the baseline's distance (cutting out the loops a bend tighter than the offset would make), places each glyph from where its advance starts on that curve to where it ends, and turns it to that chord, the tangent at its middle. Consecutive glyphs meet on their baseline whichever way the line bends, and a test measures exactly that on a convex and a concave arc. A text longer than its curve is left out, not squeezed or wrapped round, and <code>datars labels</code> reports it.</p>
+<figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-text-path" data-phone-ratio="0.8" data-caption></div></div><figcaption><b>Text along a ring and a wave.</b> Both ring labels read left to right; the wave's letters keep their spacing through the crest and the trough. <a href="{{src}}/site/figures/sdk/text-path.ts">Figure source</a></figcaption>{{alt:sdk-text-path}}</figure>
+<p>All of it live, with the page driving each chart: <a href="/features/iconography/">Iconography</a>. How to use it: <a href="/docs/icons/">Icons, pictures and curved text</a>.</p>
+</section>
+
 <section id="determinism">
-<h2>8 · Determinism</h2>
+<h2>9 · Determinism</h2>
 <p>The first principle is that the same document and the same inputs give the same pixels on every target. It's what lets a chart be authored on a Mac, tested on Linux CI and shown on an Android phone with confidence that all three agree. Keeping it takes discipline in a few specific places:</p>
 <ul>
   <li><b>Maths.</b> Platform maths libraries differ in their last bits. The engine's crates are forbidden by lint (<code>clippy.toml</code>) from calling <code>sin</code>, <code>cos</code>, <code>exp</code>, <code>ln</code>, <code>powf</code>, <code>atan2</code>, <code>hypot</code> and the rest, and must use <code>datars_math::m</code>, a wrapper over a pure-Rust libm that gives the same bits natively and in WebAssembly. <code>sqrt</code>, <code>floor</code>, <code>ceil</code>, <code>round</code> and <code>abs</code> are exact IEEE operations and allowed. Fused multiply-add is banned, because targets differ in it.</li>
@@ -389,7 +424,7 @@ og: votes
 </section>
 
 <section id="testing">
-<h2>9 · Testing</h2>
+<h2>10 · Testing</h2>
 <h3>Goldens: the cross-target oracle</h3>
 <p><code>datars test</code> runs every example document. For each state it records a hash of the scene and a hash of the CPU reference's pixels. Each transition is sampled 64 times and the samples are hashed together. Over the samples it checks the motion invariants: <code>at(0)</code> is the old scene and <code>at(1)</code> the new one, bit for bit; no NaN appears anywhere; entering elements never fade back out and exiting ones never come back (a flash); an element on both sides never dips in opacity and recovers (a blink); and nothing visible jumps more than about a third of the view's diagonal between two samples (a pop). That morphing outlines never turn inside out is property-tested in the motion crate itself.</p>
 <figure class="fig"><div class="frame"><div class="chart" data-chart="how-sweep" data-phone-ratio="1.42" data-caption></div></div><figcaption><b>A transition, sampled 64 times.</b> One element's opacity or position at every sample: in blue a plan that passes, in red the bug each check exists for, with the kind of message <code>datars test</code> prints. The curves are made up; the rules are the harness's (<code>check_motion</code> in <code>crates/datars-test/src/lib.rs</code>). <a href="{{src}}/site/figures/how/sweep.ts">Figure source</a></figcaption>{{alt:how-sweep}}</figure>
@@ -407,7 +442,7 @@ og: votes
 </section>
 
 <section id="platforms">
-<h2>10 · Platforms</h2>
+<h2>11 · Platforms</h2>
 <p>A <em>host</em> owns the surface, the clock, input, IO, accessibility and native overlays, and hands everything else to the engine. Hosts are thin, so a chart behaves the same everywhere: the same layout, line breaks, motion and hit-testing, because the engine decides all of them.</p>
 <div class="table-wrap"><table>
 <thead><tr><th>Where</th><th>Host</th><th>Draws with</th></tr></thead>
@@ -424,7 +459,7 @@ og: votes
 </section>
 
 <section id="delivery">
-<h2>11 · Delivery</h2>
+<h2>12 · Delivery</h2>
 <p>A published chart is two kinds of file: <code>c/&lt;alias&gt;</code>, the live manifest, and <code>chunks/&lt;hash&gt;</code>, immutable content. Any static host serves that layout, GitHub Pages included, under any subpath. This site's charts are published exactly that way. <code>datars serve</code> is a small server for the same layout plus the runtime, and it behaves the way a CDN would:</p>
 <ul>
   <li>It answers HTTP <code>Range</code> requests: tile and point archives are tens of megabytes, and a view asks for a few kilobytes of them at a time.</li>

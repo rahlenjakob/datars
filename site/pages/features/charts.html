@@ -1,6 +1,6 @@
 ---
-title: Batteries included — 88 chart types in 12 families · datars
-description: The datars standard library — 88 recipes in 12 families, from bars to sankeys, maps to cards — each family shown live on one dataset, morphing between its members; and the primitives every recipe is built from, open to you too.
+title: Batteries included — {{count:recipes}} chart types in 12 families · datars
+description: The datars standard library — {{count:recipes}} recipes in 12 families, from bars to sankeys, maps to cards — each family shown live on one dataset, morphing between its members; and the primitives every recipe is built from, open to you too.
 og: charts-fits
 css: features-charts.css
 ---
@@ -324,33 +324,12 @@ Ads,4</textarea>
   <div class="wrap fam-alt">{{alt:controls}}</div>
 </section>
 
-<section class="section icons-lab" id="icons" aria-labelledby="icons-h">
+<section class="section icons-pointer" id="icons" aria-labelledby="icons-h">
   <div class="wrap">
-    <header class="section-head">
-      <p class="eyebrow">Icons, pictures and curved text</p>
-      <h2 id="icons-h">Icons are chart material, in your inks</h2>
-      <p>Draw any of the 2,121 icons of the built-in open set (Lucide, ISC), your own SVGs or logos, one at a time or thousands as one pictogram, and write labels along arcs. Every colour is an ink: switch the set or the inks below and the published chart redraws, no recipe code run. A bundle carries only the icons it draws, with their licence in its manifest — no reader's device ever fetches one.</p>
-    </header>
-    <div class="icons-grid">
-      <div class="fam-chart">
-        <div class="icons-controls" id="charts-icons-pills" role="group" aria-label="The icon lab">
-          <div class="seg" role="group" aria-label="Shape"><button type="button" data-icons-shape="bars" aria-pressed="true">Bars</button><button type="button" data-icons-shape="icons" aria-pressed="false">Pictogram</button><button type="button" data-icons-shape="grid" aria-pressed="false">Grid</button></div>
-          <div class="seg" role="group" aria-label="Icon set"><button type="button" data-icons-set="transport" aria-pressed="true">Transport</button><button type="button" data-icons-set="people" aria-pressed="false">People</button></div>
-          <div class="chips" role="group" aria-label="Inks"><button type="button" data-icons-inks="theme" aria-pressed="true"><span class="pal" style="--s: linear-gradient(90deg, #4269d0 0 20%, #ba8804 20% 40%, #f36752 40% 60%, #35917e 60% 80%, #3ca951 80%)"></span>Theme</button><button type="button" data-icons-inks="sea" aria-pressed="false"><span class="pal" style="--s: linear-gradient(90deg, #2a6f97 0 20%, #2c9c94 20% 40%, #56b38a 40% 60%, #8cc084 60% 80%, #61a5c2 80%)"></span>Sea</button><button type="button" data-icons-inks="mono" aria-pressed="false"><span class="pal" style="--s: var(--ink)"></span>One ink</button></div>
-        </div>
-        <div class="chart" data-chart="charts-icons" data-phone-ratio="1.15"></div>
-      </div>
-      <div class="fam-chart">
-        <label class="icons-slider"><span>Mood <output id="mood-out">62</output></span><input type="range" id="mood" min="0" max="100" step="1" value="62" aria-describedby="mood-note"></label>
-        <div class="chart" data-chart="charts-dial" data-phone-ratio="0.75"></div>
-        <p class="fam-fine" id="mood-note">The slider sets the published dial's <code>mood</code> with <code>view.setSignal("mood", …)</code>: the needle turns, and the band names follow the arc.</p>
-      </div>
-    </div>
-<pre><code data-lang="ts">pictogram({ data: "trips", value: "thousands", category: "mode", icons: { Car: "car", Bus: "bus" }, per: 2 })
-icon("$icon.warning", [x, y], { size: 18, ink: "$highlight", label: "Delayed" })
-text("Neutral", [0, 0], { path: { arc: [cx, cy, r, a0, a1] } })</code></pre>
-    <div class="wrap fam-alt">{{alt:charts-icons}}{{alt:charts-dial}}</div>
-    <p class="fam-fine"><a href="/docs/icons/">Icons, pictures and curved text</a> · <a href="/docs/std/pictogram/">pictogram</a> · <a href="/docs/std/gauge/">gauge</a></p>
+    <a class="icons-card" href="/features/iconography/">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><circle cx="17" cy="7" r="3.5"/><path d="M7 14l3.5 6.5h-7z"/><path d="M17 13.5l1.2 2.4 2.6.4-1.9 1.8.5 2.6-2.4-1.3-2.4 1.3.5-2.6-1.9-1.8 2.6-.4z"/></svg>
+      <span><b id="icons-h">Icons, pictograms, dials and curved text have a page of their own</b><small>A pictogram that a bar splits into, icons in your theme's inks, logos with colour slots, a dial with named zones, labels along arcs, pictures with alt text. <span class="icons-go">Iconography →</span></small></span>
+    </a>
   </div>
 </section>
 

@@ -6,7 +6,7 @@ What is built, how it is verified, and what is still open, measured against the 
 ## How to verify everything
 
 ```sh
-cargo test --workspace --release              # Rust: unit + integration tests (~1,100)
+cargo test --workspace --release              # Rust: unit + integration tests (1,293 on 2026-10-18)
 target/release/datars test                    # goldens: every example state, 64-sample sweeps of every transition, motion invariants
 target/release/datars gpu                     # wgpu vs CPU reference on this machine's GPU (ΔE, solid-region check)
 target/release/datars budgets                 # bundle and runtime sizes against budgets.json
@@ -66,9 +66,9 @@ PyO3 module over `datars-headless`, brush and selection signals mirrored to Pyth
 | Simple animated bar story (votes), first load | 24 KB (most of it the chart's Inter subsets) | ≤ 10 KB ✗ since fonts travel with each chart |
 | Same, poster and accessible text only (the fallback tier) | 7.5 KB | — |
 | World choropleth (renewables), first load | 116 KB (the countries atlas is most of it, shared by hash) | ≤ 150 KB for a national choropleth ✓ |
-| Web runtime, core (WebGPU + CPU renderers; plays T0–T2, the default) | 1.45 MB | — |
-| Web runtime, full (+ QuickJS for T3 and raw documents; loaded only when needed) | 1.83 MB | — |
-| Web runtime, core-gl (core + the WebGL2 fallback; loaded only by browsers without a WebGPU adapter) | 2.10 MB | — |
+| Web runtime, core (WebGPU + CPU renderers; plays T0–T2, the default) | 1.52 MB (1,590,533 B) | — |
+| Web runtime, full (+ QuickJS for T3 and raw documents; loaded only when needed) | 1.90 MB (1,996,761 B) | — |
+| Web runtime, core-gl (core + the WebGL2 fallback; loaded only by browsers without a WebGPU adapter) | 2.17 MB (2,271,951 B) | — |
 
 Atlases and region files ship as **decimal topologies** (borders stored once, integer deltas, decoded
 by dividing by 10^d so every coordinate is the double the GeoJSON parsed to): charts stay

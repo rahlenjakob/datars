@@ -1,0 +1,243 @@
+---
+title: Iconography — icons, logos, pictograms, dials and curved text · datars
+description: Icons are chart material in datars — 2,121 built-in icons or your own SVGs, painted in your theme's inks, never the file's colours. Pictograms that morph from bars, logos with colour slots, dials with named zones, text along arcs, pictures with alt text. Bundles carry only what they draw, with licences.
+og: iconography-lab
+css: features-iconography.css
+---
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Iconography</p>
+    <h1>Icons that wear your theme, on every screen</h1>
+    <p class="lede-2">In datars an icon isn't a picture pasted on a chart: it's chart material. Draw any of the 2,121 icons of the built-in set (Lucide, ISC) or your own SVGs — one at a time, or thousands as one pictogram that a bar splits into. Every colour is an <em>ink</em> from your theme, never the file's own hex, so a brand or dark mode repaints the icons with everything else. Dials name their zones along the arc, labels follow curves, logos keep their colours as pictures. And a published chart carries only the icons it draws, with their licence: no reader's device ever fetches one.</p>
+    <p class="ic-jump"><a href="#pictograms">Pictograms</a><a href="#inks">Your inks</a><a href="#svg">Bring an SVG</a><a href="#dials">Dials</a><a href="#curved">Curved text</a><a href="#pictures">Pictures</a><a href="#accessible">Accessible</a><a href="#everywhere">Everywhere</a><a href="#travels">What travels</a></p>
+  </div>
+</section>
+
+<section class="section ic-section" id="pictograms" style="padding-top:8px" data-own-look>
+  <div class="wrap">
+    <div class="ic-grid">
+      <div class="ic-stage">
+        <div class="ic-controls" role="group" aria-label="The pictogram lab">
+          <div class="seg" role="group" aria-label="Shape"><button type="button" data-lab-shape="bars" aria-pressed="true">Bars</button><button type="button" data-lab-shape="icons" aria-pressed="false">Pictogram</button><button type="button" data-lab-shape="grid" aria-pressed="false">Grid of 100</button></div>
+          <div class="seg" role="group" aria-label="Icon set"><button type="button" data-lab-set="transport" aria-pressed="true">Transport</button><button type="button" data-lab-set="people" aria-pressed="false">People</button></div>
+          <div class="chips" role="group" aria-label="Inks"><button type="button" data-lab-inks="theme" aria-pressed="true"><span class="pal" style="--s: linear-gradient(90deg, #4269d0 0 20%, #ba8804 20% 40%, #f36752 40% 60%, #35917e 60% 80%, #3ca951 80%)"></span>Theme</button><button type="button" data-lab-inks="sea" aria-pressed="false"><span class="pal" style="--s: linear-gradient(90deg, #2a6f97 0 20%, #2c9c94 20% 40%, #56b38a 40% 60%, #8cc084 60% 80%, #61a5c2 80%)"></span>Sea</button><button type="button" data-lab-inks="mono" aria-pressed="false"><span class="pal" style="--s: var(--ink)"></span>One ink</button></div>
+        </div>
+        <div class="frame ic-frame"><div class="chart" data-chart="iconography-lab" data-steps="" data-phone-ratio="1.15"></div></div>
+      </div>
+      <aside class="ic-panel">
+        <h2>Bars that split into their icons</h2>
+        <p>One survey of 100,000 commuters, three ways. Each unit is keyed (mode, unit), the way a bar's parts are, so the engine sees every bar as the parent of its icons and morphs one into the other. A pictogram of a thousand icons is one node — one icon, drawn a thousand times.</p>
+<pre class="live-code ic-code"><code data-lang="js" id="lab-code">// the published chart, driven by this page
+view.setSignal("shape", "bars");</code></pre>
+        <dl class="ic-facts">
+          <div><dt>Published once</dt><dd>{{size:iconography-lab}}</dd></div>
+          <div><dt>Icons in its bundle</dt><dd>10</dd></div>
+          <div><dt>Icons fetched by your device</dt><dd>0</dd></div>
+        </dl>
+      </aside>
+    </div>
+    {{alt:iconography-lab}}
+  </div>
+</section>
+
+<section class="section ic-section" id="inks" data-own-look>
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Your icons, our inks</p>
+      <h2>The theme paints the icons. The file never does.</h2>
+      <p>A week's forecast in the built-in set's outlines — or in filled, two-colour SVGs of your own. Either way each colour is an ink: <code>$highlight</code> for the sun, <code>$muted</code> for cloud, <code>$accent</code> for rain. Pick a brand and the page lays its tokens over the published chart with <code>setTokens()</code>; both icon sets repaint, and nothing was republished.</p>
+    </header>
+    <div class="ic-grid ic-grid-top">
+      <div class="ic-stage">
+        <div class="ic-controls">
+          <div class="seg" role="group" aria-label="Icon set"><button type="button" data-fc-set="lucide" aria-pressed="true">Built-in set</button><button type="button" data-fc-set="ours" aria-pressed="false">Your SVG files</button></div>
+        </div>
+        <div class="frame ic-frame ic-paper" id="fc-frame"><div class="chart" data-chart="iconography-forecast" data-steps="" data-phone-ratio="0.9"></div></div>
+      </div>
+      <aside class="ic-panel">
+        <h3 class="ic-h3">Lay a brand over it</h3>
+        <div class="ic-brands" role="group" aria-label="Theme">
+          <button type="button" data-fc-brand="light" aria-pressed="true"><span class="ic-dots" aria-hidden="true"><i style="background:#ffffff"></i><i style="background:#4269d0"></i><i style="background:#ba8804"></i></span>datars</button>
+          <button type="button" data-fc-brand="dark" aria-pressed="false"><span class="ic-dots" aria-hidden="true"><i style="background:#111318"></i><i style="background:#7a9cf0"></i><i style="background:#efb118"></i></span>datars dark</button>
+          <button type="button" data-fc-brand="larkspur" aria-pressed="false"><span class="ic-dots" aria-hidden="true"><i style="background:#f1f6f5"></i><i style="background:#0f766e"></i><i style="background:#c9861f"></i></span>Larkspur</button>
+          <button type="button" data-fc-brand="quill" aria-pressed="false"><span class="ic-dots" aria-hidden="true"><i style="background:#f4eee2"></i><i style="background:#1d3f6e"></i><i style="background:#b3261e"></i></span>Daily Quill</button>
+          <button type="button" data-fc-brand="neonfall" aria-pressed="false"><span class="ic-dots" aria-hidden="true"><i style="background:#0b0620"></i><i style="background:#22e5ff"></i><i style="background:#ffd23f"></i></span>Neonfall</button>
+        </div>
+<pre class="live-code ic-code ic-code-tall"><code data-lang="js" id="fc-code">// datars, light: the theme's own inks
+view.setAttribute("mode", "light");
+view.setTokens({});</code></pre>
+        <p class="fine">Three tokens and a sun colour make a brand here: the built-in theme derives its greys, surfaces and the cloud's <code>$muted</code> from <code>paper</code>, <code>ink</code> and <code>accent</code>. <a href="/features/theming/">Your brand →</a></p>
+      </aside>
+    </div>
+    {{alt:iconography-forecast}}
+  </div>
+</section>
+
+<section class="section ic-section" id="svg" data-own-look>
+  <div class="wrap">
+    <div class="ic-grid ic-grid-flip">
+      <aside class="ic-panel">
+        <p class="eyebrow">Bring an SVG</p>
+        <h2>Your logo, your party symbol — in slots, not hex</h2>
+        <p>Four party symbols from SVG files in the project, two or three colours each. datars reads each file's colours into ink slots in the order the file uses them, and the document says which ink fills each slot — here the party's own tokens. Restyle them all for a house style or for print with one call. The file's hexes never reach a pixel.</p>
+        <div class="chips" role="group" aria-label="Logo inks"><button type="button" data-party-look="own" aria-pressed="true">Their colours</button><button type="button" data-party-look="house" aria-pressed="false">House style</button><button type="button" data-party-look="print" aria-pressed="false">One ink, for print</button></div>
+        {{run:icons --slots site/figures/iconography/assets/fernmouth-first.svg|6}}
+      </aside>
+      <div class="ic-stage">
+        <div class="frame ic-frame"><div class="chart" data-chart="iconography-parties" data-phone-ratio="0.8"></div></div>
+<pre class="live-code ic-code"><code data-lang="ts">icon("assets/fernmouth-first.svg", [x, y], {
+  size: 44,
+  inks: ["$party.first", "$party.first.mark", "$party.first.detail"],
+  label: "Fernmouth First symbol",
+})</code></pre>
+      </div>
+    </div>
+    {{alt:iconography-parties}}
+  </div>
+</section>
+
+<section class="section ic-section" id="dials">
+  <div class="wrap">
+    <div class="ic-grid">
+      <div class="ic-stage">
+        <div class="ic-controls">
+          <div class="seg" role="group" aria-label="Needle"><button type="button" data-dial-needle="wedge" aria-pressed="true">Wedge</button><button type="button" data-dial-needle="line" aria-pressed="false">Line</button><button type="button" data-dial-needle="arrow" aria-pressed="false">Arrow</button></div>
+          <div class="seg" role="group" aria-label="Zone names"><button type="button" data-dial-names="curved" aria-pressed="true">Along the arc</button><button type="button" data-dial-names="rotated" aria-pressed="false">Turned</button></div>
+        </div>
+        <div class="frame ic-frame">
+          <label class="ic-slider"><span>Mood <output id="dial-out">62</output></span><input type="range" id="dial-mood" min="0" max="100" step="1" value="62"></label>
+          <div class="chart" data-chart="iconography-dial" data-phone-ratio="0.8"></div>
+        </div>
+      </div>
+      <aside class="ic-panel">
+        <p class="eyebrow">Gauges and dials</p>
+        <h2>Named zones along the arc, a needle that turns</h2>
+        <p>The standard library's <a href="/docs/std/gauge/"><code>gauge</code></a> writes each zone's name along its band — at the reader's text size, the band growing to hold it, or left out when it truly can't fit — and says the zone with the value ("62, Greed"). The needle is a wedge, a line or an arrow; it swings the long way round when the value crosses the dial.</p>
+<pre class="live-code ic-code"><code data-lang="js" id="dial-code">view.setSignal("mood", 62);</code></pre>
+      </aside>
+    </div>
+    {{alt:iconography-dial}}
+  </div>
+</section>
+
+<section class="section ic-section" id="curved">
+  <div class="wrap">
+    <div class="ic-grid ic-grid-flip">
+      <aside class="ic-panel">
+        <p class="eyebrow">Curved text</p>
+        <h2>Labels that follow the ring</h2>
+        <p>Any text can follow an arc or SVG path data. Each letter sits on the curve its baseline rides, turned with it, keeping its spacing whichever way the line bends — and on the ring's lower half it still reads left to right. A name longer than its arc isn't squeezed or run off the end: it's left out, and <code>datars labels</code> says so, so a recipe measures first and gives way.</p>
+        <div class="seg ic-seg-narrow" role="group" aria-label="Day"><button type="button" data-day="weekday" aria-pressed="true">Weekday</button><button type="button" data-day="weekend" aria-pressed="false">Weekend</button></div>
+<pre class="live-code ic-code"><code data-lang="ts">text(d.name, [0, 0], {
+  path: { arc: [cx, cy, r, a0, a1] },   // or { d: "M … C …" }
+  when: e("measure(d.name, size) &lt; arcLength"),
+})</code></pre>
+      </aside>
+      <div class="ic-stage">
+        <div class="frame ic-frame"><div class="chart" data-chart="iconography-day" data-steps="" data-phone-ratio="0.95"></div></div>
+      </div>
+    </div>
+    {{alt:iconography-day}}
+  </div>
+</section>
+
+<section class="section ic-section" id="pictures">
+  <div class="wrap">
+    <div class="ic-grid">
+      <div class="ic-stage">
+        <div class="frame ic-frame"><div class="chart" data-chart="iconography-roasters" data-phone-ratio="0.8"></div></div>
+      </div>
+      <aside class="ic-panel">
+        <p class="eyebrow">Pictures</p>
+        <h2>Logos keep their colours, and say what they are</h2>
+        <p>When a mark must look exactly as its owner made it — a company's logo, a portrait — draw it as a picture: <code>image()</code> fits a PNG, JPEG or WebP into its box (<code>contain</code>, <code>cover</code>, <code>fill</code>, <code>none</code>). With <code>alt</code>, screen readers name it; without, it's decorative. The build ships the files in the bundle, and each platform decodes them with its own decoder.</p>
+<pre class="live-code ic-code"><code data-lang="ts">image(d.logo, [x, y, 40, 40], { alt: d.name + " logo" })</code></pre>
+      </aside>
+    </div>
+    {{alt:iconography-roasters}}
+  </div>
+</section>
+
+<section class="section ic-section" id="accessible">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Accessible by default</p>
+      <h2>Decorative unless it means something</h2>
+      <p>Most icons repeat the word beside them, so they're left out of what a screen reader reads. One that stands for a word — a trend arrow that means "Rising" — gets a <code>label</code>, and is read as that word. Icons sized by the theme grow with the reader's text size, like labels.</p>
+    </header>
+    <div class="ic-grid ic-grid-top">
+      <div class="ic-stage">
+        <div class="seg ic-seg-narrow" role="group" aria-label="Text size"><button type="button" data-scale="1" aria-pressed="true">Text 1×</button><button type="button" data-scale="1.5" aria-pressed="false">1.5×</button><button type="button" data-scale="2" aria-pressed="false">2×</button></div>
+        <div class="frame ic-frame"><div class="chart" data-chart="iconography-a11y" data-phone-ratio="0.85"></div></div>
+      </div>
+      <div class="ic-out">
+        <h3>What a screen reader gets</h3>
+        {{run:semantics site/figures/iconography/a11y.ts|12}}
+        <h3>What lint catches</h3>
+        {{run:lint site/figures/iconography/_contrast.ts|4}}
+        <p class="fine">A labelled icon in a pale ink is under the 3:1 that <a href="https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html">WCAG 1.4.11</a> asks of an icon that means something; the decorative one beside it isn't held to it. <a href="/features/accessibility/">Accessibility in datars →</a></p>
+      </div>
+    </div>
+    {{alt:iconography-a11y}}
+  </div>
+</section>
+
+<section class="section ic-section" id="everywhere">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Everywhere alike</p>
+      <h2>The same icons on the web, in apps, in print</h2>
+      <p>The engine reads each icon once, into paths and ink slots, and every renderer draws those: the browser's WebGPU, the iOS, Android and desktop hosts, and the exports. Below, the forecast in its two-colour SVG icons, as this site's build exported it — the same document, untouched, every slot in its ink.</p>
+    </header>
+    <div class="ic-exports">
+      <figure><img class="thumb-light" src="{{export:iconography-forecast|1|640x260|2|png|light}}" alt="The forecast, in the page's own SVG icons, exported as PNG" width="640" height="260" loading="lazy"><img class="thumb-dark" src="{{export:iconography-forecast|1|640x260|2|png|dark}}" alt="The forecast, in the page's own SVG icons, exported as PNG" width="640" height="260" loading="lazy"><figcaption><b>PNG</b> · {{exportsize:iconography-forecast|1|640x260|2|png|light}} · the CPU reference renderer</figcaption></figure>
+      <figure><img class="thumb-light" src="{{export:iconography-forecast|1|640x260|1|svg|light}}" alt="The forecast, in the page's own SVG icons, exported as SVG" width="640" height="260" loading="lazy"><img class="thumb-dark" src="{{export:iconography-forecast|1|640x260|1|svg|dark}}" alt="The forecast, in the page's own SVG icons, exported as SVG" width="640" height="260" loading="lazy"><figcaption><b>SVG</b> · {{exportsize:iconography-forecast|1|640x260|1|svg|light}} · each icon's paths, in the theme's inks · <a href="{{export:iconography-forecast|1|640x260|1|pdf|light}}">vector PDF</a> ({{exportsize:iconography-forecast|1|640x260|1|pdf|light}})</figcaption></figure>
+    </div>
+    <p class="fine">The engine checks itself the same way: every example renders to the same pixels on macOS, in WebAssembly, on the iOS simulator and an Android emulator. <a href="/features/platforms/">Every platform →</a></p>
+  </div>
+</section>
+
+<section class="section ic-section" id="travels">
+  <div class="wrap">
+    <div class="ic-grid ic-grid-even">
+      <div>
+        <p class="eyebrow">What travels</p>
+        <h2 class="ic-h2">Only the icons it draws, with their licence</h2>
+        <p class="ic-p">The build step reads every state of the chart, fetches the icons and pictures it draws — the default set from the toolchain, your files from disk, URLs once into a cache — and ships them as compact drawings in one chunk. The 2,121-icon set never ships, and no runtime asks for an icon: what isn't in the bundle draws nothing and says so. The forecast's bundle, each tier as its first load:</p>
+        {{variants:iconography-forecast}}
+      </div>
+      <div>
+        <h3>In its manifest</h3>
+        {{assets:iconography-forecast}}
+        <p class="fine">Your own files have no licence on record: the build says so, so you can check you may publish them.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="cards3">
+      <article><h3>The docs</h3><p>Where icons come from, inks and slots, what SVG is read, pictograms, pictures, curved text, and the limits. <a href="/docs/icons/">Icons, pictures and curved text →</a></p></article>
+      <article><h3>In the gallery</h3><p>A commute in bars, icons and a grid of a hundred; a market-mood dial week by week. <a href="/gallery/#commute">Commute</a> · <a href="/gallery/#mood">Market mood</a></p></article>
+      <article><h3>The recipes</h3><p><a href="/docs/std/pictogram/"><code>pictogram</code></a> (rows or a grid, an icon per category), <a href="/docs/std/gauge/"><code>gauge</code></a> (named zones, needles), legends and callouts with icons. <a href="/gallery/#std-pictogram">In the gallery →</a></p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="wrap">
+    <div class="next">
+      <div>
+        <h2>Draw your first icon</h2>
+        <p><code>datars icons bike</code> finds one in the set; <code>icon("bike", [x, y])</code> draws it in your ink.</p>
+      </div>
+      <div class="cta">
+        <a class="btn btn-primary" href="/docs/icons/">Read the docs <span aria-hidden="true">→</span></a>
+        <a class="btn btn-ghost" href="/gallery/">Gallery</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="module" src="/features-iconography.js"></script>

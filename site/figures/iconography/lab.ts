@@ -1,4 +1,4 @@
-// The charts page's icon lab: one survey as bars, as a pictogram, as a grid of a hundred icons —
+// The iconography page's pictogram lab: one survey as bars, as a pictogram, as a grid of a hundred icons —
 // in either of two icon sets. The page drives it through the public API: `setSignal("shape", …)`,
 // `setSignal("set", …)` and `setTokens({ categorical })` for the inks. Every combination is a state
 // too, so the published bundle carries both sets' icons (a runtime never fetches one).
@@ -12,7 +12,7 @@ const pick = (set: "transport" | "people") => e(`set == "${set}"`);
 const when = (shape: string, set?: "transport" | "people") => e(set ? `shape == "${shape}" && set == "${set}"` : `shape == "${shape}"`);
 
 export default doc({
-  id: "charts-icons",
+  id: "iconography-lab",
   title: "How Fernmouth gets to work, in icons",
   description: "A fictional city's 100,000 commuters by mode — 41,000 by car, 23,000 by bus, 17,000 by train, 12,000 by bike, 7,000 on foot — as bars, as a pictogram of one icon per two thousand, and as a grid of a hundred icons.",
   size: [640, 300],

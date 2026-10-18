@@ -223,7 +223,7 @@ everywhere (P1), and no runtime fetches what a chart needs from a CDN.
   Rust's `png` and `zune-jpeg`.
 - **Raw documents in the browser** (`<datars-view doc>`, the theme studio, notebooks) get the
   default set from the runtime's `icons/` folder — one compact file per icon
-  (`icons/lucide/heart.json`, ~400 B gzipped), fetched when named, like `fonts/` and `atlas/`.
+  (`icons/lucide/heart.json`, about 300 B gzipped), fetched when named, like `fonts/` and `atlas/`.
   Their own SVG files and inline markup need a tool to read them: `datars dev` serves the document
   with every icon it draws already read (`doc.icons`), and `datars icons --compact logo.svg` writes
   one icon's compact file to serve in place of the SVG.
