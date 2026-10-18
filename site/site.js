@@ -176,6 +176,12 @@ const near = new IntersectionObserver((entries) => {
   // at a reading scroll, less than a start on a slow connection.
 }, { rootMargin: "150% 0px" });
 document.querySelectorAll(".chart[data-src]").forEach((s) => near.observe(s));
+// Printing: the charts the reader hasn't come near start now. A print has already begun by then,
+// so they show in the next one (or when a print preview redraws); the ones already drawn print
+// their current state (the runtime's own print copy).
+const mountAll = () => document.querySelectorAll(".chart[data-src]:not(:has(datars-view))").forEach((s) => { near.unobserve(s); mount(s); });
+addEventListener("beforeprint", mountAll);
+matchMedia("print").addEventListener?.("change", (e) => e.matches && mountAll());
 
 // ---- per-chart wiring ------------------------------------------------------------------------
 const hooks = {

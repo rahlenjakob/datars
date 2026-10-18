@@ -96,6 +96,7 @@ Mounting charts as they come near the viewport keeps a long article light: each 
 | `doc` | URL | A raw document (JSON) instead — for development; loads the full engine. |
 | `height` | px | The height to reserve and draw at. The chart fills the element's width. With a reader's bigger text (past the theme's size), a chart whose text would run off the bottom grows to fit — never shrinks below this. |
 | `mode` | `light`, `dark`, `high-contrast` | The theme mode. Without it the chart follows the reader, live: `high-contrast` when they ask for more contrast (`prefers-contrast: more`) or the system forces its colours, else `prefers-color-scheme`. |
+| `print-mode` | `light`, `dark`, `high-contrast`, `screen` | The mode the chart prints in (default `light`: paper is white). `screen` prints it as it shows. See [Printing](#printing). |
 | `text-scale` | number, `auto` | Text size as a multiple of the theme's (`1`: its own). Without it (or `auto`) the chart follows the reader's browser font size, live — labels grow and the chart lays out again around them. |
 | `state` | number | Go to this program state (0-based); the transition plays. |
 | `steps` | CSS selector | Scroll-triggered story: each matching element on the page is a step (see below). |
@@ -224,6 +225,20 @@ The element sets the chart's resolved theme colours on itself as custom properti
 - **Prepares the next step.** While the reader is on a step, the engine resolves and plans the neighbouring steps in idle time and fetches the map tiles their flights will need.
 - **Accessible.** The element is a `figure` named by the chart, its summary as its description; beside the canvas, its content for screen readers — data as tables, axes and legends as a line each — one Tab stop into the data and arrow keys through it, story steps announced once, engine-drawn sliders and selects as native controls. See [accessibility](/docs/accessibility/).
 - **Follows the reader's text size, contrast and colours.** Bigger browser text lays the chart out again with bigger labels (and no poster at the theme's size shows first); more contrast is the high-contrast mode; forced colours paint its text in the system's.
+
+## Printing {#printing}
+
+Printed — the browser's Print, `window.print()`, a PDF — every chart on the page that has drawn prints its current state, whether it's on screen, was on screen and scrolled away, or has never been in view. It prints at the page's width, at its own aspect, and isn't split across pages. Its narration card prints under it as text. The reader's controls, the tooltip, the focus ring and Pause don't print.
+
+- **In light, by default.** A chart that shows dark on screen prints on white paper. `print-mode="dark"`, `"high-contrast"` or `"screen"` (as on screen) says otherwise. A chart with a theme that is dark in every mode prints as its theme says.
+- **How.** When printing starts (`beforeprint`, or print media), each chart draws once more in the print mode and copies the picture into a plain canvas that only print shows. The live canvas is untouched on screen. GPU canvases keep no pixels a print can rely on: a chart that was never on screen used to print blank in Firefox. After printing (`afterprint`), the copies go.
+- **Resolution.** The copy has the canvas's pixels: the screen's device pixel ratio, scaled to the page's width.
+- **A chart still loading** when printing starts prints what it shows meanwhile: its poster, or nothing. A print can't wait for one to load, but a chart that has loaded by the next print (or by the time a print preview redraws) is in it. A page that starts its charts only near the viewport should start the rest when printing starts. A page that takes charts off far from the viewport can keep a picture of each for print: `printPicture()` gives the chart as it prints now, as a PNG blob. `@datars/react` does both, and so do this site's articles. This site's pages start the rest on `beforeprint` and on print media:
+
+```js
+addEventListener("beforeprint", startEveryChart);
+matchMedia("print").addEventListener("change", (e) => e.matches && startEveryChart());
+```
 
 ## Browsers and security
 

@@ -42,8 +42,10 @@ function mount(slot) {
   slot.appendChild(view);
   const ready = () => {
     if (!view.isConnected) return;
-    if (view.dataset.renderer) slot.classList.remove("pending");
-    else setTimeout(ready, 150);
+    if (view.dataset.renderer) {
+      slot.classList.remove("pending");
+      dropPicture(slot); // drawn again: the picture kept for printing goes
+    } else setTimeout(ready, 150);
   };
   ready();
   const stepper = slot.closest("figure")?.querySelector(".stepper");
@@ -52,11 +54,28 @@ function mount(slot) {
 
 function unmount(slot) {
   const view = slot.querySelector("datars-view");
-  if (!view) return;
+  if (!view || printing) return; // (printing, every chart stays)
+  // A picture of it for printing, which can't wait for it to load again: one PNG, shown only in
+  // print (articles.css), gone when it mounts again.
+  if (view.dataset.renderer && view.printPicture) {
+    void view.printPicture().then((blob) => {
+      if (!blob || slot.querySelector("datars-view")) return;
+      dropPicture(slot);
+      const img = document.createElement("img");
+      img.className = "print-picture";
+      img.alt = "";
+      img.src = URL.createObjectURL(blob);
+      slot.appendChild(img);
+    });
+  }
   view.remove(); // the runtime frees the engine
   slot.classList.remove("pending");
   // Its step buttons go with it (they'd drive a freed engine); a new view brings its own.
   slot.closest("figure")?.querySelector(".stepper")?.replaceChildren();
+}
+
+function dropPicture(slot) {
+  slot.querySelectorAll("img.print-picture").forEach((img) => { URL.revokeObjectURL(img.src); img.remove(); });
 }
 
 /** Numbered step buttons and "next" under a figure whose story has steps. */
@@ -97,6 +116,13 @@ for (const s of slots) {
   near.observe(s);
   far.observe(s);
 }
+// Printing: every chart on the page — the ones not near yet start now (for this print if they're
+// quick, else the next), and none is let go until it's over.
+let printing = false;
+const printStart = () => { printing = true; slots.forEach(mount); };
+addEventListener("beforeprint", printStart);
+addEventListener("afterprint", () => { if (!matchMedia("print").matches) printing = false; });
+matchMedia("print").addEventListener?.("change", (e) => (e.matches ? printStart() : (printing = false)));
 // Keep each chart sized to its column (and a scroll story's to the screen).
 let resizing = 0;
 addEventListener("resize", () => {

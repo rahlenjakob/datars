@@ -162,3 +162,13 @@ figcaption .credit { display: block; margin-top: 4px; font-size: 13px; color: co
 .card-link .k { margin: 0 0 8px; font: 700 12px/1.3 var(--c-title); letter-spacing: .14em; text-transform: uppercase; color: var(--c-accent); }
 .card-link h2 { margin: 0 0 10px; font: 700 24px/1.12 var(--c-title); letter-spacing: -0.015em; text-wrap: balance; }
 .card-link p { margin: 0; font: 15px/1.5 var(--ui); opacity: .82; }
+
+/* A chart let go far off screen keeps a picture of itself for printing (articles.js): shown in
+   print until the chart has drawn again. */
+.chart > img.print-picture { display: none; }
+@media print {
+  .chart:not(:has(> datars-view[data-renderer])) > img.print-picture { display: block; width: 100%; height: auto; }
+  .chart:has(> img.print-picture):not(:has(> datars-view[data-renderer])) { height: auto !important; }
+  .chart:has(> img.print-picture):not(:has(> datars-view[data-renderer])) > datars-view { display: none; }
+  .chart { break-inside: avoid; }
+}

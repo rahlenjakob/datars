@@ -294,6 +294,31 @@ function isFontRequest(name: string, url: string): boolean {
   return name.startsWith("font:") || url.startsWith("google:") || /\.(ttf|otf|woff2?|ttc)(\?|$)/i.test(url);
 }
 
+/** Printing. A GPU canvas keeps no pixels a print can rely on: WebGL and WebGPU present a frame
+ * and let it go (no `preserveDrawingBuffer`), and a chart that has never been on screen may have
+ * no presented frame at all — Firefox prints it blank. So when the page is printed, every chart
+ * that has drawn draws its current state once more, in this task, and copies it into a plain 2D
+ * canvas that only print shows (`preparePrint`): no cost while reading, and gone after printing.
+ * `beforeprint` covers the browser's Print; `matchMedia("print")` covers emulated print media. */
+const printable = new Set<{ preparePrint(): void; endPrint(): void }>();
+let printing = false;
+function beginPrint() {
+  if (printing) return;
+  printing = true;
+  for (const v of printable) v.preparePrint();
+}
+function endPrint() {
+  if (!printing) return;
+  printing = false;
+  for (const v of printable) v.endPrint();
+}
+if (typeof window !== "undefined" && typeof matchMedia !== "undefined") {
+  addEventListener("beforeprint", beginPrint);
+  // (Unless print media is still on: a page emulating it, as a PDF export does around its print.)
+  addEventListener("afterprint", () => { if (!matchMedia("print").matches) endPrint(); });
+  matchMedia("print").addEventListener?.("change", (e) => (e.matches ? beginPrint() : endPrint()));
+}
+
 /** Does a manifest offer a variant that runs without the sandbox? */
 function coreSuffices(manifest: { variants?: { requires?: { modules?: string[] } }[] }): boolean {
   return (manifest.variants ?? []).some((v) => !(v.requires?.modules ?? []).includes("sandbox"));
@@ -349,7 +374,19 @@ canvas { transition: opacity .22s ease-out; }
 /* The reader's default font size (the browser's Font size setting), whatever the page's own CSS
    says: \`medium\` is that setting. Its width is watched, so a change there reaches the chart. */
 .em { position: absolute; visibility: hidden; pointer-events: none; font-size: medium; width: 1em; height: 0; overflow: hidden; }
-${TEXT_CSS}`;
+${TEXT_CSS}
+/* Printed: the chart's copy for print (see \`preparePrint\`) in place of the live canvas, the page's
+   width wide at its own aspect, never split across pages; the narration under it as text; the
+   reader's controls, tooltip, focus ring and the invisible text layer left out. */
+.stage > canvas.print { display: none; }
+@media print {
+  :host { break-inside: avoid; page-break-inside: avoid; }
+  .stage.printed { height: auto !important; }
+  .stage.printed > canvas.print { display: block; position: static; width: 100%; height: auto; }
+  .stage.printed > canvas:not(.print), .stage.printed > .poster { display: none !important; }
+  .stage.printed > .card:not(:empty) { position: static !important; transform: none !important; opacity: 1 !important; max-width: none; margin-top: 8px; box-shadow: none; border: 1px solid var(--rule, #ccc); }
+  .texts, .links, .pickers, .tip, .focus, .perf, .playback, .controls { display: none !important; }
+}`;
 
 /** `HTMLElement`, or (on a server, where there is none) a stand-in so the module still loads. */
 const ElementBase: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as typeof HTMLElement) : HTMLElement;
@@ -600,6 +637,7 @@ export class DatarsView extends ElementBase {
     document.addEventListener("copy", this.onCopy);
     // A web font the layer's spans use arrived: they're stretched to the drawn widths again.
     document.fonts?.addEventListener?.("loadingdone", this.onFonts);
+    printable.add(this);
     void this.start();
   }
 
@@ -689,6 +727,8 @@ export class DatarsView extends ElementBase {
    * Put back, it starts again (`connectedCallback`). */
   disconnectedCallback() {
     this.generation++; // a start still loading gives up
+    printable.delete(this);
+    this.endPrint();
     document.removeEventListener("keydown", this.onTipKey, { capture: true });
     clearTimeout(this.describeTimer);
     this.describeTimer = 0;
@@ -1125,6 +1165,98 @@ export class DatarsView extends ElementBase {
     }
     if (this.hasAttribute("steps")) this.stopSteps = this.triggerSteps(this.getAttribute("steps")!);
     this.kick();
+    if (printing) requestAnimationFrame(() => printing && this.preparePrint());
+  }
+
+  /** The mode a printed chart is in: the `print-mode` attribute (`light`, `dark`,
+   * `high-contrast`, or `screen` for whatever it shows on screen), else light — paper is white. */
+  private printMode(): string {
+    const a = this.getAttribute("print-mode");
+    return !a ? "light" : a === "screen" ? this.wantedMode() : a;
+  }
+
+  private printCopy: HTMLCanvasElement | null = null;
+  /** The live canvas drew the print mode last (it draws the screen's again at its next frame). */
+  private printTinted = false;
+  private printStyle: HTMLStyleElement | null = null;
+
+  /** For printing (see `printable`): the chart's current state drawn once more, in the print
+   * mode, and copied into a 2D canvas only print shows. The live canvas is put back in the screen's
+   * mode at once (it draws again at its next frame: the reader never sees the print look). A
+   * chart still loading prints what it shows meanwhile — its poster, or nothing. */
+  preparePrint(redraw = true) {
+    if (this.printCopy) return;
+    const drawn = this.drawForPrint();
+    if (!drawn) return;
+    const { copy, tokens } = drawn;
+    copy.className = "print";
+    copy.setAttribute("aria-hidden", "true");
+    this.canvas.after(copy); // before the narration card, which prints under it
+    this.printCopy = copy;
+    this.stage.classList.add("printed");
+    if (tokens) {
+      // The narration card in the print mode's colours too.
+      const vars = ["ink", "paper", "muted", "rule", "surface", "surface-ink", "accent"].filter((k) => tokens[k]).map((k) => `--${k}: ${tokens[k]} !important;`).join(" ");
+      this.printStyle = document.createElement("style");
+      this.printStyle.textContent = `@media print { :host { ${vars} } }`;
+      this.root.appendChild(this.printStyle);
+    }
+    // The screen's own frame, next (not from the frame loop itself, which would go round).
+    if (redraw && this.printTinted) this.kick();
+  }
+
+  /** The chart as it prints, now: its current state drawn in the print mode and copied into a 2D
+   * canvas (in this task: a GPU canvas's pixels are gone after it), with the print mode's colour
+   * tokens when they aren't the screen's. The live canvas goes back to the screen's mode (it
+   * draws it again at its next frame). Null before the chart has drawn. */
+  private drawForPrint(): { copy: HTMLCanvasElement; tokens: Record<string, string> | null } | null {
+    const view = this.view;
+    if (!view?.ready() || !this.drawn) return null;
+    const screen = this.wantedMode();
+    const mode = this.printMode();
+    try {
+      if (mode !== screen) view.set_mode(mode);
+      view.frame(performance.now());
+      const copy = document.createElement("canvas");
+      copy.width = this.canvas.width;
+      copy.height = this.canvas.height;
+      copy.getContext("2d")?.drawImage(this.canvas, 0, 0);
+      let tokens: Record<string, string> | null = null;
+      if (mode !== screen) {
+        tokens = (view.chrome?.() ?? view.status()).tokens?.tokens ?? {};
+        view.set_mode(screen);
+        this.printTinted = true;
+      }
+      return { copy, tokens };
+    } catch (e) {
+      console.warn("datars: print", e);
+      return null;
+    }
+  }
+
+  /** The chart as it would print now (its current state, in its `print-mode`), as a PNG — for a
+   * page that keeps a picture of a chart it takes off the page (`@datars/react` does, so a chart
+   * unmounted far off screen still prints). Null before the chart has drawn. */
+  printPicture(): Promise<Blob | null> {
+    const drawn = this.drawForPrint();
+    if (this.printTinted && !printing) {
+      this.printTinted = false;
+      this.kick();
+    }
+    return drawn ? new Promise((resolve) => drawn.copy.toBlob(resolve, "image/png")) : Promise.resolve(null);
+  }
+
+
+  /** After printing: the print copy and its style go (no memory held). */
+  endPrint(redraw = true) {
+    this.printCopy?.remove();
+    this.printStyle?.remove();
+    this.printCopy = this.printStyle = null;
+    this.stage?.classList.remove("printed");
+    if (redraw && this.printTinted) {
+      this.printTinted = false;
+      this.kick();
+    }
   }
 
   /** The arrows under a story, unless the page drives the steps itself (`no-controls`). */
@@ -1409,7 +1541,8 @@ export class DatarsView extends ElementBase {
     clearTimeout(this.timer);
     const tick = (now: number) => {
       this.raf = 0;
-      if (this.drawn && !this.onScreen) {
+      // (While printing it keeps on until it settles: its print copy is of the finished state.)
+      if (this.drawn && !this.onScreen && !printing) {
         setMoving(this, false);
         return; // picked up again by the visibility observer
       }
@@ -1438,6 +1571,12 @@ export class DatarsView extends ElementBase {
       }
       this.lastTick = animating ? now : 0;
       this.drawn = true;
+      // Printing, a chart that draws again (its fonts or data arrived, it was still moving) has
+      // its print copy taken again: the print shows what it shows now.
+      if (printing && this.printCopy) {
+        this.endPrint(false);
+        this.preparePrint(false);
+      }
       if (this.fadeIn) {
         this.fadeIn = false;
         this.canvas.style.opacity = "1"; // the first frame is drawn: fade it in (see `.stage canvas`)

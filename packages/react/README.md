@@ -26,11 +26,12 @@ export function Votes() {
   The runtime (`@datars/web`) is a lazy chunk loaded after hydration; nothing touches `window`
   during render. `"use client"` is included: server components can render it.
 - **Props:** `chart` (a chart import or a document object), `document`, `src`, `doc`, `state`,
-  `mode`, `reducedMotion`, `height`, `aspectRatio`, `signals`, `tokens`, `data`, `lazy`, `label`, `attributes`,
+  `mode`, `reducedMotion`, `printMode`, `height`, `aspectRatio`, `signals`, `tokens`, `data`, `lazy`, `label`, `attributes`,
   `runtime`, `onStateChange`, `onReady`, `onError`, plus any `div` attribute for the box.
 - **Ref:** `goto`, `next`, `prev`, `seek`, `send`, `setSignal`, `setTokens`, `setData`, `element`, `status`,
   `subscribe`. **Hook:** `useDatarsState(ref)`.
 - Mounts near the viewport and unmounts far away (`lazy`, default on), keeping the reader's step.
+  Printing, every chart mounts; one unmounted far away prints the picture it kept of itself.
 - React 18 and 19. ESM with types.
 
 Setup with Vite or Next.js, publish mode, HMR and how the runtime is served:

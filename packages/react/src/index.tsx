@@ -77,6 +77,8 @@ export interface DatarsViewProps extends Omit<HTMLAttributes<HTMLDivElement>, "c
   /** Reduced motion: `"reduce"` always, `"no-preference"` never (a reader who opted in to the
    * full motion); default: follows `prefers-reduced-motion`. */
   reducedMotion?: "reduce" | "no-preference";
+  /** The mode it prints in (default `"light"`: paper is white); `"screen"`: as it shows. */
+  printMode?: "light" | "dark" | "high-contrast" | "screen";
   /** Text size as a multiple of the theme's (`1`: the theme's own); default: follows the reader's
    * browser font size. Labels scale and the chart lays out again around them. */
   textScale?: number | "auto";
@@ -172,8 +174,57 @@ function changed(prev: Record<string, unknown> | undefined, next: Record<string,
   return out;
 }
 
+/** Printing (`beforeprint`, or print media): every `<DatarsView>` mounts. */
+let printingNow = false;
+const printingListeners = new Set<() => void>();
+function setPrinting(on: boolean) {
+  if (printingNow === on) return;
+  printingNow = on;
+  printingListeners.forEach((l) => l());
+}
+if (typeof window !== "undefined" && typeof matchMedia !== "undefined") {
+  addEventListener("beforeprint", () => setPrinting(true));
+  addEventListener("afterprint", () => { if (!matchMedia("print").matches) setPrinting(false); });
+  matchMedia("print").addEventListener?.("change", (e) => setPrinting(e.matches));
+}
+function usePrinting(): boolean {
+  return useSyncExternalStore(
+    (l) => { printingListeners.add(l); return () => void printingListeners.delete(l); },
+    () => printingNow,
+    () => false,
+  );
+}
+
+/** The picture an unmounted chart prints (see the unmount above): an `<img>` in its box, shown
+ * only in print. */
+let printCss = false;
+function keepPrintPicture(host: HTMLElement, picture: Promise<Blob | null>) {
+  if (!printCss) {
+    printCss = true;
+    const st = window.document.createElement("style");
+    // In print, the picture until the chart has drawn again (then the chart's own print copy).
+    st.textContent = "[data-datars-view] > img[data-datars-print] { display: none; } @media print { [data-datars-view]:not(:has(> datars-view[data-renderer])) > img[data-datars-print] { display: block; width: 100%; height: auto; } [data-datars-view]:has(> img[data-datars-print]):not(:has(> datars-view[data-renderer])) { height: auto !important; aspect-ratio: auto !important; break-inside: avoid; } [data-datars-view]:has(> img[data-datars-print]):not(:has(> datars-view[data-renderer])) > datars-view { display: none; } }";
+    window.document.head.appendChild(st);
+  }
+  void picture.then((blob) => {
+    if (!blob || host.querySelector("datars-view")) return; // mounted again meanwhile
+    dropPrintPicture(host);
+    const img = window.document.createElement("img");
+    img.dataset.datarsPrint = "";
+    img.alt = "";
+    img.src = URL.createObjectURL(blob);
+    host.appendChild(img);
+  });
+}
+function dropPrintPicture(host: HTMLElement | null) {
+  host?.querySelectorAll<HTMLImageElement>("img[data-datars-print]").forEach((img) => {
+    URL.revokeObjectURL(img.src);
+    img.remove();
+  });
+}
+
 export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function DatarsView(props, ref) {
-  const { chart: chartProp, document: documentProp, src: srcProp, doc: docUrl, state, mode, reducedMotion, textScale, height, aspectRatio, signals, tokens, data, lazy = true, runtime, label, attributes, onStateChange, onReady, onError, style, ...rest } = props;
+  const { chart: chartProp, document: documentProp, src: srcProp, doc: docUrl, state, mode, reducedMotion, printMode, textScale, height, aspectRatio, signals, tokens, data, lazy = true, runtime, label, attributes, onStateChange, onReady, onError, style, ...rest } = props;
 
   // A chart file edited in dev: the plugin's module hands the new version to views showing it.
   const [update, setUpdate] = useState<{ for: unknown; chart: DatarsChart } | null>(null);
@@ -196,7 +247,9 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
   latest.current = props;
   const current = useRef({ src, docUrl, document, sourceKey });
   current.current = { src, docUrl, document, sourceKey };
-  const [near, setNear] = useState(false);
+  const [nearViewport, setNear] = useState(false);
+  // Printing, every chart is on the page (one far off screen prints too; see `printPicture`).
+  const near = usePrinting() || nearViewport;
 
   useImperativeHandle(ref, () => ({
     get element() { return el.current; },
@@ -262,6 +315,7 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
     setAttr(v, "doc", now.src ? undefined : now.docUrl);
     setAttr(v, "mode", p.mode);
     setAttr(v, "reduced-motion", p.reducedMotion);
+    setAttr(v, "print-mode", p.printMode);
     setAttr(v, "text-scale", p.textScale);
     setAttr(v, "aria-label", p.label);
     setAttr(v, "height", Math.round(host.clientHeight) || undefined);
@@ -285,6 +339,7 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
       if (first) {
         first = false;
         host.dataset.datars = "ready";
+        dropPrintPicture(host); // drawn again: the picture kept for printing goes
         latest.current.onReady?.(v);
       }
       latest.current.onStateChange?.(s);
@@ -310,9 +365,13 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
     return () => {
       done = true;
       const host = box.current;
+      const v = el.current;
       el.current = null;
       status.current = null;
       if (host) {
+        // Unmounted far off screen, it keeps a picture of itself for printing (a print can't wait
+        // for it to load again): one PNG, shown only in print, gone when it mounts again.
+        if (v?.dataset.renderer && v.printPicture) keepPrintPicture(host, v.printPicture());
         host.querySelectorAll("datars-view").forEach((n) => n.remove());
         delete host.dataset.datars;
       }
@@ -348,6 +407,9 @@ export const DatarsView = forwardRef<DatarsViewHandle, DatarsViewProps>(function
   useEffect(() => {
     if (el.current) setAttr(el.current, "reduced-motion", reducedMotion);
   }, [reducedMotion]);
+  useEffect(() => {
+    if (el.current) setAttr(el.current, "print-mode", printMode);
+  }, [printMode]);
   useEffect(() => {
     if (el.current) setAttr(el.current, "text-scale", textScale);
   }, [textScale]);
