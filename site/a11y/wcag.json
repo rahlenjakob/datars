@@ -1,0 +1,704 @@
+{
+ "about": "Every WCAG 2.2 success criterion at levels A and AA, and four at AAA, against what a datars chart is: who answers for it — the runtime (engine, standard library, the web element and the native hosts), the chart's author (datars helps or checks), the page or app the chart is embedded in, or no one (not applicable) — how, and what checks it. scripts/a11y-report.mjs runs the checks and writes wcag-report.json beside this; the site's accessibility page shows both. `class`: runtime, author, page, na. `status`: met, partial, not-met, na — the project's reading, not a third-party audit.",
+ "evidence": {
+  "voiceover-web": {
+   "label": "VoiceOver, Safari and Chrome",
+   "href": "#what-voiceover-says"
+  },
+  "voiceover-mac": {
+   "label": "VoiceOver over a native Mac chart",
+   "href": "#what-voiceover-says"
+  },
+  "talkback": {
+   "label": "TalkBack, Android 15",
+   "href": "#what-talkback-says"
+  },
+  "ios-audit": {
+   "label": "Xcode's accessibility audit, iOS",
+   "href": "#ios-audit"
+  },
+  "engines": {
+   "label": "Chromium, WebKit and Gecko accessibility trees",
+   "href": "{{src}}/packages/web/test/a11y.engines.browser.test.mjs"
+  },
+  "a11y-web": {
+   "label": "the web element's screen-reader tests",
+   "href": "{{src}}/packages/web/test/a11y.browser.test.mjs"
+  },
+  "desktop": {
+   "label": "the desktop viewer's AccessKit tree",
+   "href": "{{src}}/crates/datars-host-native/src/a11y.rs"
+  },
+  "labels": {
+   "label": "datars labels, the labels ratchet",
+   "href": "#checks"
+  },
+  "nvda": {
+   "label": "NVDA (prepared, not run)",
+   "href": "{{src}}/ci/windows-nvda/README.md"
+  }
+ },
+ "criteria": [
+  {
+   "id": "1.1.1",
+   "name": "Non-text Content",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Every chart has a name (its title) and a summary (its description, how much data it shows and the range); every data mark a label; every bundle a text alternative readable without script. The canvas is hidden from screen readers: the content is what they get.",
+   "author": "Write a title, a description and labels that say what matters.",
+   "tests": [
+    "wcag_1_1_1_text_alternatives"
+   ],
+   "evidence": [
+    "voiceover-web",
+    "talkback",
+    "voiceover-mac"
+   ]
+  },
+  {
+   "id": "1.2.1",
+   "name": "Audio-only and Video-only (Prerecorded)",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "A film (`datars video`) has no sound; beside it `datars video` writes its transcript — the chart's name, then each step's narration and what the chart shows there — for the page to link.",
+   "author": "Link the transcript (and the captions) beside the video.",
+   "tests": [
+    "wcag_1_2_1_media_alternative"
+   ]
+  },
+  {
+   "id": "1.2.2",
+   "name": "Captions (Prerecorded)",
+   "level": "A",
+   "class": "na",
+   "status": "na",
+   "how": "A film has no sound to caption. (`datars video` writes WebVTT captions of the narration anyway.) If you add a soundtrack, captions are yours."
+  },
+  {
+   "id": "1.2.3",
+   "name": "Audio Description or Media Alternative (Prerecorded)",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "The transcript `datars video` writes is the film's media alternative.",
+   "tests": [
+    "wcag_1_2_1_media_alternative"
+   ]
+  },
+  {
+   "id": "1.2.4",
+   "name": "Captions (Live)",
+   "level": "AA",
+   "class": "na",
+   "status": "na",
+   "how": "No live audio."
+  },
+  {
+   "id": "1.2.5",
+   "name": "Audio Description (Prerecorded)",
+   "level": "AA",
+   "class": "na",
+   "status": "na",
+   "how": "Applies to synchronized media; a film has no audio track. If you add one, an audio description is yours."
+  },
+  {
+   "id": "1.3.1",
+   "name": "Info and Relationships",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "The semantics tree becomes each platform's structure: named groups and headings, each run of marks a data table (name, value) numbered of the whole, axes and legends as a line, controls as native checkboxes, switches, radios, sliders and selects.",
+   "author": "Give marks you draw yourself semantics (a role, a label, a value).",
+   "tests": [
+    "wcag_1_3_1_info_and_relationships"
+   ],
+   "evidence": [
+    "engines",
+    "voiceover-web",
+    "talkback"
+   ]
+  },
+  {
+   "id": "1.3.2",
+   "name": "Meaningful Sequence",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "One reading order on every host: the chart's name and summary, the step's narration, its content, then Pause and the story's steps.",
+   "tests": [
+    "wcag_1_3_2_meaningful_sequence"
+   ],
+   "evidence": [
+    "voiceover-web",
+    "voiceover-mac",
+    "talkback"
+   ]
+  },
+  {
+   "id": "1.3.3",
+   "name": "Sensory Characteristics",
+   "level": "A",
+   "class": "author",
+   "status": "met",
+   "how": "Narration is yours. `datars lint` flags words that point at a mark only by its colour or place (\"the red line\", \"the bars on the left\", Swedish too); the shipped examples have none.",
+   "author": "Name the mark as well: \"the red line, Sweden,\".",
+   "tests": [
+    "wcag_1_3_3_sensory_characteristics"
+   ]
+  },
+  {
+   "id": "1.3.4",
+   "name": "Orientation",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "Nothing locks an orientation: a chart lays itself out in any box, portrait or landscape, and says the same in each; the sample apps allow every orientation.",
+   "tests": [
+    "wcag_1_3_4_orientation"
+   ]
+  },
+  {
+   "id": "1.3.5",
+   "name": "Identify Input Purpose",
+   "level": "AA",
+   "class": "na",
+   "status": "na",
+   "how": "A chart collects no information about its reader."
+  },
+  {
+   "id": "1.4.1",
+   "name": "Use of Color",
+   "level": "A",
+   "class": "author",
+   "status": "met",
+   "how": "Colours that tell data apart need naming too. `datars lint` flags colours nothing else names (`encoding/colour-only`); the standard library offers a legend, direct labels and — `line({ dashes: true })` with `plot({ dashes: true })` — a dash pattern per series. Palettes are checked for colour-vision deficiencies.",
+   "author": "Use a legend, labels or dashes wherever colour tells series apart.",
+   "tests": [
+    "wcag_1_4_1_use_of_colour",
+    "wcag_1_4_1_dashes_tell_lines_apart"
+   ]
+  },
+  {
+   "id": "1.4.2",
+   "name": "Audio Control",
+   "level": "A",
+   "class": "na",
+   "status": "na",
+   "how": "datars plays no sound."
+  },
+  {
+   "id": "1.4.3",
+   "name": "Contrast (Minimum)",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "Measured on what's drawn: every run of text against the pixels under it, in light, dark and high contrast, over the whole corpus and in each of the standard library's themes. Text in a data colour (a series' label, a green \"+8.9 %\") is drawn legibly — moved towards the ink until it has 4.5:1 — and a label on a fill takes the ink, the paper, or black or white, whichever reads.",
+   "author": "Literal colours and your own themes are yours: the same test reports them.",
+   "tests": [
+    "wcag_1_4_3_text_contrast",
+    "wcag_1_4_3_text_contrast_in_every_std_theme"
+   ]
+  },
+  {
+   "id": "1.4.4",
+   "name": "Resize Text",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "The reader's text size (browser default size, Dynamic Type, Android's font size) lays the chart out again with every theme-sized text twice as big at 2×; on the web the page's zoom also scales the whole chart.",
+   "author": "Size text with the theme's tokens; a literal pixel size stays as written.",
+   "tests": [
+    "wcag_1_4_4_resize_text"
+   ],
+   "evidence": [
+    "labels"
+   ]
+  },
+  {
+   "id": "1.4.5",
+   "name": "Images of Text",
+   "level": "AA",
+   "class": "runtime",
+   "status": "partial",
+   "how": "On the web the chart's words lie over the canvas as real text (selectable, findable, translated by the browser), and SVG and PDF exports keep text as text; the canvas pixels are an image of it underneath. A PNG poster is an image (the bundle's text alternative goes with it).",
+   "notes": "Native hosts draw text as pixels; their accessibility trees carry the words."
+  },
+  {
+   "id": "1.4.10",
+   "name": "Reflow",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "At 320 px a chart lays out again for a phone; no label is cut off at its edge. (A chart's two-dimensional layout is WCAG's own exception.)",
+   "tests": [
+    "wcag_1_4_10_reflow"
+   ],
+   "evidence": [
+    "labels"
+   ]
+  },
+  {
+   "id": "1.4.11",
+   "name": "Non-text Contrast",
+   "level": "AA",
+   "class": "runtime",
+   "status": "partial",
+   "how": "Controls (their borders, words and thumbs) stand out 3:1 in every mode; the keyboard's ring is the accent with the paper inside it; touching pieces (stacked bars, chords, Marimekko cells) get a paper line between them. In the high-contrast mode every data colour of the theme stands out 3:1 from the paper.",
+   "notes": "Not met in the default light and dark modes: three of the default palette's ten colours (yellow #efb118, coral #ff725c, teal #6cc5b0) are under 3:1 on white. Met where marks are labelled directly (WCAG counts the text), or in the high-contrast mode. Ramps (a heat map, a choropleth) are their colour's value.",
+   "tests": [
+    "wcag_1_4_11_marks_against_background",
+    "wcag_1_4_11_adjacent_segments",
+    "wcag_1_4_11_controls_against_background",
+    "wcag_1_4_11_focus_indicator",
+    "wcag_1_4_11_marks_against_background_light_dark"
+   ]
+  },
+  {
+   "id": "1.4.12",
+   "name": "Text Spacing",
+   "level": "AA",
+   "class": "runtime",
+   "status": "partial",
+   "how": "The web element's own text (the narration card, its buttons, a tooltip) takes a reader's spacing without being cut, and the content screen readers get is plain HTML. Text drawn on the canvas can't take a style sheet's spacing: its alternative is that same HTML and the reader's text size.",
+   "notes": "Drawn text ignores letter, word and line spacing a style sheet sets.",
+   "tests": [
+    "wcag_1_4_12_text_spacing"
+   ]
+  },
+  {
+   "id": "1.4.13",
+   "name": "Content on Hover or Focus",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "A tooltip stays while the pointer moves onto it, doesn't time out, goes with Esc (without moving the pointer or the keyboard) and stays away until the pointer moves to something else; it goes when the pointer leaves, on a scroll or a tap elsewhere.",
+   "tests": [
+    "wcag_1_4_13_content_on_hover_or_focus"
+   ]
+  },
+  {
+   "id": "2.1.1",
+   "name": "Keyboard",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Whatever a click acts on is a stop the keyboard and screen readers activate; a brush and a view take keys; the story steps with the arrows; the data is walked with the arrow keys.",
+   "author": "A drag of your own (a scrub, a handle) needs a control on the same signal.",
+   "tests": [
+    "wcag_2_1_1_keyboard"
+   ],
+   "evidence": [
+    "engines",
+    "voiceover-web"
+   ]
+  },
+  {
+   "id": "2.1.2",
+   "name": "No Keyboard Trap",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Tab goes into the chart, through its stops and out of it, both ways.",
+   "tests": [
+    "wcag_2_1_2_no_keyboard_trap"
+   ]
+  },
+  {
+   "id": "2.1.4",
+   "name": "Character Key Shortcuts",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "The one character shortcut, Shift+D (the developers' stats panel), works only while the chart has the keyboard; a view's + − 0 only on the view's own stop.",
+   "tests": [
+    "wcag_2_1_4_character_key_shortcuts"
+   ]
+  },
+  {
+   "id": "2.2.1",
+   "name": "Timing Adjustable",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Nothing has a time limit; a story that plays by itself can be paused (Pause) and stepped by hand.",
+   "tests": [
+    "wcag_2_2_2_pause_stop_hide"
+   ]
+  },
+  {
+   "id": "2.2.2",
+   "name": "Pause, Stop, Hide",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "What moves by itself — an autoplaying story, a clock-driven scene, a live feed — has a Pause (Play) over the chart's corner and in the reading order on every host; paused, a feed's arrivals wait and come in order. Autoplay also stops off screen and with reduced motion.",
+   "author": "On iOS and Android a live feed is your app's: pause it with the view's own Pause, or yours.",
+   "tests": [
+    "wcag_2_2_2_pause_stop_hide"
+   ]
+  },
+  {
+   "id": "2.2.4",
+   "name": "Interruptions",
+   "level": "AAA",
+   "class": "runtime",
+   "status": "met",
+   "how": "A live source's arrivals are never announced: the reader asks (the table, the summary) when they want to.",
+   "tests": [
+    "wcag_2_2_4_interruptions"
+   ]
+  },
+  {
+   "id": "2.3.1",
+   "name": "Three Flashes or Below Threshold",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Every transition of every document, frame by frame at 30 fps: no more than three general flashes in any second (none, in practice: transitions are single moves).",
+   "tests": [
+    "wcag_2_3_1_three_flashes"
+   ]
+  },
+  {
+   "id": "2.3.3",
+   "name": "Animation from Interactions",
+   "level": "AAA",
+   "class": "runtime",
+   "status": "met",
+   "how": "With reduced motion (the platform's setting, or `reduced-motion`) a transition is a crossfade of the two scenes: nothing travels, morphs or staggers.",
+   "tests": [
+    "wcag_2_3_3_animation_from_interactions"
+   ]
+  },
+  {
+   "id": "2.4.1",
+   "name": "Bypass Blocks",
+   "level": "A",
+   "class": "page",
+   "status": "na",
+   "how": "The page's: a chart is one tab stop into its data, not a block to skip."
+  },
+  {
+   "id": "2.4.2",
+   "name": "Page Titled",
+   "level": "A",
+   "class": "page",
+   "status": "na",
+   "how": "The page's."
+  },
+  {
+   "id": "2.4.3",
+   "name": "Focus Order",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "The chart, its data and controls, then Pause and the story's buttons — the reading order.",
+   "tests": [
+    "wcag_2_4_3_focus_order"
+   ],
+   "evidence": [
+    "a11y-web"
+   ]
+  },
+  {
+   "id": "2.4.4",
+   "name": "Link Purpose (In Context)",
+   "level": "A",
+   "class": "author",
+   "status": "met",
+   "how": "A mark's `link` becomes a real link named by the mark's label.",
+   "author": "Label linked marks with where they go."
+  },
+  {
+   "id": "2.4.5",
+   "name": "Multiple Ways",
+   "level": "AA",
+   "class": "page",
+   "status": "na",
+   "how": "The site's."
+  },
+  {
+   "id": "2.4.6",
+   "name": "Headings and Labels",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "Headings come from the chart's titles and groups; controls are named by their labels; none empty, no two side by side alike.",
+   "author": "Titles and labels that say what each part is.",
+   "tests": [
+    "wcag_2_4_6_headings_and_labels"
+   ]
+  },
+  {
+   "id": "2.4.7",
+   "name": "Focus Visible",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "The mark or control the keyboard is on is ringed on the chart (Highlight under forced colours).",
+   "tests": [
+    "wcag_2_4_7_focus_visible"
+   ]
+  },
+  {
+   "id": "2.4.11",
+   "name": "Focus Not Obscured (Minimum)",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "What names the focused mark sits beside it, not over it.",
+   "tests": [
+    "wcag_2_4_11_focus_not_obscured"
+   ]
+  },
+  {
+   "id": "2.4.13",
+   "name": "Focus Appearance",
+   "level": "AAA",
+   "class": "runtime",
+   "status": "met",
+   "how": "A 2 px ring in the accent (3:1 on the paper in every theme and mode) around a 2 px ring of the paper: it changes the pixels around the mark by 3:1 whatever the mark's colour.",
+   "tests": [
+    "wcag_2_4_13_focus_appearance",
+    "wcag_1_4_11_focus_indicator"
+   ]
+  },
+  {
+   "id": "2.5.1",
+   "name": "Pointer Gestures",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "A pinch's zoom is also a double click (or the wheel), and Show all puts the view back: one pointer, no path.",
+   "tests": [
+    "wcag_2_5_1_pointer_gestures"
+   ],
+   "notes": "On iOS and Android a view zooms by pinching, and by a screen reader's gestures; a one-finger way is the app's."
+  },
+  {
+   "id": "2.5.2",
+   "name": "Pointer Cancellation",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "A click acts when the pointer comes up on what it went down on; moved off first, nothing happens.",
+   "tests": [
+    "wcag_2_5_2_pointer_cancellation"
+   ]
+  },
+  {
+   "id": "2.5.3",
+   "name": "Label in Name",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "A control's accessible name has the words drawn on it.",
+   "tests": [
+    "wcag_2_5_3_label_in_name"
+   ]
+  },
+  {
+   "id": "2.5.4",
+   "name": "Motion Actuation",
+   "level": "A",
+   "class": "na",
+   "status": "na",
+   "how": "Nothing responds to shaking or tilting."
+  },
+  {
+   "id": "2.5.7",
+   "name": "Dragging Movements",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "A brush selects by clicking its two ends; a slider, a range's ends and the interaction lab's limit line go where the track is pressed; a view zooms by double click and comes back with Show all.",
+   "author": "A drag of your own needs a click way too.",
+   "tests": [
+    "wcag_2_5_7_dragging_movements"
+   ]
+  },
+  {
+   "id": "2.5.8",
+   "name": "Target Size (Minimum)",
+   "level": "AA",
+   "class": "runtime",
+   "status": "partial",
+   "how": "The standard library's controls and the element's own buttons are at least 24 × 24 px.",
+   "notes": "Data marks a click acts on are as big as the data makes them: a map's small countries (WCAG's essential exception) and a ranked bar chart's 16 px rows (the drill example) are smaller. The report counts them.",
+   "author": "Give clickable marks room, or an equivalent control.",
+   "tests": [
+    "wcag_2_5_8_target_size",
+    "wcag_2_5_8_target_size_marks"
+   ]
+  },
+  {
+   "id": "3.1.1",
+   "name": "Language of Page",
+   "level": "A",
+   "class": "page",
+   "status": "na",
+   "how": "The page's `lang`."
+  },
+  {
+   "id": "3.1.2",
+   "name": "Language of Parts",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "The chart's words and the hosts' own (the summary, \"Step 2 of 4\", Pause) are in the document's `locale`, and the element marks them `lang`.",
+   "author": "Set `locale`.",
+   "tests": [
+    "wcag_3_1_2_language_of_parts"
+   ],
+   "evidence": [
+    "a11y-web"
+   ]
+  },
+  {
+   "id": "3.2.1",
+   "name": "On Focus",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Reading the chart — focus on a mark, a screen reader moving through it — changes nothing.",
+   "tests": [
+    "wcag_3_2_1_on_focus"
+   ]
+  },
+  {
+   "id": "3.2.2",
+   "name": "On Input",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Setting a control changes what the chart shows, never where the reader is.",
+   "tests": [
+    "wcag_3_2_2_on_input"
+   ]
+  },
+  {
+   "id": "3.2.3",
+   "name": "Consistent Navigation",
+   "level": "AA",
+   "class": "page",
+   "status": "na",
+   "how": "The site's."
+  },
+  {
+   "id": "3.2.4",
+   "name": "Consistent Identification",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "The same controls have the same names in every chart and on every host (the phrases table)."
+  },
+  {
+   "id": "3.2.6",
+   "name": "Consistent Help",
+   "level": "A",
+   "class": "page",
+   "status": "na",
+   "how": "The site's."
+  },
+  {
+   "id": "3.3.1",
+   "name": "Error Identification",
+   "level": "A",
+   "class": "na",
+   "status": "na",
+   "how": "A chart's controls can't be set to a wrong value."
+  },
+  {
+   "id": "3.3.2",
+   "name": "Labels or Instructions",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Every control is named; a brush and a view say how they work.",
+   "tests": [
+    "wcag_3_3_2_labels_or_instructions"
+   ]
+  },
+  {
+   "id": "3.3.3",
+   "name": "Error Suggestion",
+   "level": "AA",
+   "class": "na",
+   "status": "na",
+   "how": "No input can be wrong."
+  },
+  {
+   "id": "3.3.4",
+   "name": "Error Prevention (Legal, Financial, Data)",
+   "level": "AA",
+   "class": "na",
+   "status": "na",
+   "how": "A chart commits nothing."
+  },
+  {
+   "id": "3.3.7",
+   "name": "Redundant Entry",
+   "level": "A",
+   "class": "na",
+   "status": "na",
+   "how": "A chart asks for nothing."
+  },
+  {
+   "id": "3.3.8",
+   "name": "Accessible Authentication (Minimum)",
+   "level": "AA",
+   "class": "na",
+   "status": "na",
+   "how": "No sign-in."
+  },
+  {
+   "id": "4.1.2",
+   "name": "Name, Role, Value",
+   "level": "A",
+   "class": "runtime",
+   "status": "met",
+   "how": "Each platform's own roles and states: buttons, checkboxes, switches and radios with their state, sliders with their value as drawn, a select as the platform's picker.",
+   "tests": [
+    "wcag_4_1_2_name_role_value",
+    "wcag_axe"
+   ],
+   "evidence": [
+    "engines",
+    "talkback",
+    "voiceover-mac",
+    "ios-audit",
+    "desktop"
+   ]
+  },
+  {
+   "id": "4.1.3",
+   "name": "Status Messages",
+   "level": "AA",
+   "class": "runtime",
+   "status": "met",
+   "how": "What a click, a key or a step changed is said politely (a live region; the native announcements), without moving the reader.",
+   "author": "Labels that say a mark's state.",
+   "tests": [
+    "wcag_4_1_3_status_messages"
+   ],
+   "evidence": [
+    "voiceover-web",
+    "talkback"
+   ]
+  },
+  {
+   "id": "1.4.6",
+   "name": "Contrast (Enhanced)",
+   "level": "AAA",
+   "class": "runtime",
+   "status": "partial",
+   "how": "In the high-contrast mode text on the paper reaches 7:1 (data-coloured text is moved to it too).",
+   "notes": "A label on a coloured mark reaches 4.5:1, not 7:1: a mid-tone fill has under 7:1 with both black and white. The light and dark modes aim at 4.5:1.",
+   "tests": [
+    "wcag_1_4_6_text_contrast_enhanced_in_high_contrast"
+   ]
+  }
+ ]
+}

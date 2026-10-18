@@ -97,3 +97,29 @@ fn an_area_under_its_line_is_not_read_or_counted_twice() {
     assert_eq!(days.len(), 4, "{days:?}");
 }
 
+
+#[test]
+fn every_row_of_a_long_run_can_be_reached_a_page_at_a_time() {
+    // A year of days: the first 200 listed (numbered of 365), then a way to the next page and back.
+    let json = std::fs::read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/../../examples/prices/doc.json")).unwrap();
+    let mut e = Engine::new();
+    e.load(datars_ir::Doc::from_json(&json).unwrap());
+    e.frame(0.0);
+    let items = e.semantic_items();
+    let rows: Vec<&datars_engine::SemanticItem> = items.iter().filter(|i| i.index.is_some()).collect();
+    assert_eq!(rows.len(), 200);
+    assert_eq!((rows[0].index, rows[0].total, rows[199].index), (Some(0), Some(365), Some(199)));
+    let next = items.iter().find(|i| i.label.starts_with("Next rows")).expect("a way to the rest");
+    assert_eq!(next.label, "Next rows, 201 to 365 of 365");
+    assert!(next.actionable);
+    assert!(e.activate(&next.path));
+    assert_eq!(e.take_announcement().as_deref(), Some("Rows 201 to 365 of 365."));
+    let items = e.semantic_items();
+    let rows: Vec<usize> = items.iter().filter_map(|i| i.index).collect();
+    assert_eq!((rows.first(), rows.last(), rows.len()), (Some(&200), Some(&364), 165), "the rest of the year");
+    assert!(!items.iter().any(|i| i.label.starts_with("Next rows")), "nothing past the end");
+    let back = items.iter().find(|i| i.label.starts_with("Previous rows")).expect("and back");
+    assert_eq!(back.label, "Previous rows, 1 to 200 of 365");
+    assert!(e.activate(&back.path));
+    assert_eq!(e.semantic_items().iter().filter_map(|i| i.index).next(), Some(0));
+}

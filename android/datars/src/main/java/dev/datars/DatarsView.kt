@@ -530,7 +530,7 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         }
         pickers = found
         val selectLabels = found.map { it.label }.toSet()
-        for (i in 0 until minOf(items.length(), 400)) {
+        for (i in 0 until items.length()) {
             val it = items.getJSONObject(i)
             val kind = it.optString("kind")
             // A select is its list above (the drawn box isn't a second one).
@@ -542,19 +542,8 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             // The chart first, then its controls, then its content.
             if (kind == "chart") out.add(0, item) else out.add(item)
         }
-        // A story's steps, right after the chart: TalkBack has no other way to move it (a tap on
-        // the view is the app's to give a meaning).
-        val states = s.optJSONArray("states")?.length() ?: 0
-        if (states > 1) {
-            val at = out.indexOfFirst { it.role == "chart" } + 1
-            val i = s.optInt("index")
-            fun word(key: String, fallback: String) = s.optJSONObject("phrases")?.optString(key)?.takeIf { it.isNotEmpty() } ?: fallback
-            val steps = listOfNotNull(
-                if (i > 0) A11yItem(word("previous-step", "Previous step"), "step", null, "prev", true) else null,
-                if (i < states - 1) A11yItem(word("next-step", "Next step"), "step", null, "next", true) else null,
-            )
-            out.addAll(at, steps)
-        }
+        // (A story's Previous and Next steps are in the reading order, after the chart's content,
+        // as buttons: TalkBack has no other way to move it — a tap on the view is the app's.)
         a11y = out
         // The chart's name is its first item's (with its summary): the view itself says nothing
         // more, or TalkBack would read the name twice — once for the view, once for the chart.
@@ -768,7 +757,6 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
             val drag = item.role == "brush" || item.role == "pan"
             fun key(k: String) = input { Native.key(handle, item.path, k) }
             val done = when {
-                item.role == "step" && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK -> input { Native.event(handle, item.path) }
                 drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK -> key(if (item.role == "brush") "Enter" else "0")
                 drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_FORWARD -> if (item.role == "pan") key("+") else (key("ArrowRight") || key("Enter"))
                 drag && action == android.view.accessibility.AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD -> if (item.role == "pan") key("-") else (key("ArrowLeft") || key("Enter"))

@@ -872,7 +872,11 @@ fn run(a: Args) -> Result<(), String> {
             // Chapters: each state's hold (a <track kind="chapters">; pages seek a state's exact frame).
             let chapters_vtt = Path::new(&out).with_extension("chapters.vtt");
             std::fs::write(&chapters_vtt, datars_headless::webvtt(&chapters)).map_err(|e| e.to_string())?;
-            println!("{out}  ({frames} frames, {:.1} s at {fps} fps, {w}×{h})\n{}\n{}", frames as f64 / fps, vtt.display(), chapters_vtt.display());
+            // Everything the film says, as text: the alternative a page links beside it (a film has
+            // no sound; WCAG 1.2.1).
+            let text = Path::new(&out).with_extension("txt");
+            std::fs::write(&text, datars_headless::transcript(&mut engine)).map_err(|e| e.to_string())?;
+            println!("{out}  ({frames} frames, {:.1} s at {fps} fps, {w}×{h})\n{}\n{}\n{}", frames as f64 / fps, vtt.display(), chapters_vtt.display(), text.display());
         }
         "film" => {
             let from = state_index(&engine, a.flags.get("from"));

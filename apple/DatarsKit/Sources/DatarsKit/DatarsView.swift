@@ -734,24 +734,53 @@ open class DatarsChartView: PlatformView {
     public func updateAccessibility() {
         let a = engine.accessibility()
         let readout = a["readout"] as? [[String: Any]] ?? []
+        // The view is the chart, a group VoiceOver enters (an NSView that isn't an accessibility
+        // element hands its children to the window: VoiceOver read the marks with no chart, no
+        // name and no summary around them).
+        setAccessibilityElement(true)
         setAccessibilityRole(.group)
         setAccessibilityLabel(readout.first?["label"] as? String ?? "Chart")
-        setAccessibilityHelp(readout.first?["value"] as? String)
-        setAccessibilityChildren(readout.dropFirst().map { r -> NSAccessibilityElement in
+        // What it shows, as the first thing in it (help is only read after a pause, or not).
+        let summary = (readout.first?["value"] as? String).flatMap { $0.isEmpty ? nil : [["kind": "text", "label": $0] as [String: Any]] } ?? []
+        // The same item keeps its element from one update to the next (a press rebuilds the
+        // readout; new elements would drop VoiceOver's cursor back to the chart).
+        var seen: [String: Int] = [:], kept: [String: DatarsMacElement] = [:]
+        let children = (summary + readout.dropFirst()).map { r -> DatarsMacElement in
             let kind = r["kind"] as? String ?? ""
             let presses = ["button", "checkbox", "switch", "radio"].contains(kind)
             let drags = ["brush", "pan"].contains(kind)
-            let e: NSAccessibilityElement = drags ? DatarsMacDrag(view: self, path: r["path"] as? String ?? "", kind: kind) : presses ? DatarsMacActionable(view: self, path: r["path"] as? String ?? "") : NSAccessibilityElement()
+            let path = r["path"] as? String ?? ""
+            let base = drags || presses ? "\(kind) \(path)" : "\(kind) \(path) \(r["label"] as? String ?? "")"
+            let n = seen[base, default: 0]
+            seen[base] = n + 1
+            let id = "\(base) \(n)"
+            let e: DatarsMacElement = axItems[id] ?? (drags ? DatarsMacDrag(view: self, path: path, kind: kind) : presses ? DatarsMacActionable(view: self, path: path) : DatarsMacElement())
+            kept[id] = e
             e.setAccessibilityParent(self)
             e.setAccessibilityRole(kind == "checkbox" ? .checkBox : kind == "radio" ? .radioButton : kind == "switch" ? .checkBox : drags ? .group : presses ? .button : .staticText)
             if drags { e.setAccessibilityHelp((a["phrases"] as? [String: String])?["\(kind)-hint"]) }
             if kind == "switch" { e.setAccessibilitySubrole(.switch) }
             if let checked = r["checked"] as? Bool { e.setAccessibilityValue(checked ? 1 : 0) }
-            e.setAccessibilityLabel(r["label"] as? String)
-            if let v = r["value"] as? String, !v.isEmpty { e.setAccessibilityValue(v) }
+            // A line of text is its text (VoiceOver reads a static text's value before its label:
+            // "30.3 Social Democrats"); a control keeps its name and its value apart.
+            let label = r["label"] as? String ?? "", value = r["value"] as? String ?? ""
+            if !presses && !drags {
+                e.setAccessibilityValue(value.isEmpty ? label : "\(label), \(value)")
+            } else {
+                e.setAccessibilityLabel(label)
+                if !value.isEmpty { e.setAccessibilityValue(value) }
+            }
+            if kind == "heading" { e.setAccessibilityRoleDescription("heading") }
             e.setAccessibilityFrameInParentSpace(Self.frame(r["rect"]).map { CGRect(x: $0.minX, y: bounds.height - $0.maxY, width: $0.width, height: $0.height) } ?? bounds)
             return e
-        })
+        }
+        axItems = kept
+        setAccessibilityChildren(children)
+        // In the reading order, not in where things are drawn (VoiceOver on the Mac sorts by
+        // position otherwise: the y axis first, the summary in the middle of the bars). AppKit
+        // types this list with the element protocol, which NSAccessibilityElement implements
+        // without declaring it (its identifier differs in optionality), so each is passed as one.
+        setAccessibilityChildrenInNavigationOrder(children.map { unsafeBitCast($0, to: NSAccessibilityElementProtocol.self) })
         let index = a["index"] as? Int ?? 0
         if index != announced {
             let first = announced < 0
@@ -769,6 +798,8 @@ open class DatarsChartView: PlatformView {
 
     /// The step VoiceOver last heard about.
     private var announced = -1
+    /// The elements of the last update, by item.
+    private var axItems: [String: DatarsMacElement] = [:]
     #endif
 
     /// A semantics `rect` ([x, y, w, h] in points, top-left origin) as a frame.
@@ -779,8 +810,11 @@ open class DatarsChartView: PlatformView {
 }
 
 #if canImport(AppKit) && !canImport(UIKit)
+/// An item of the chart's reading order on the Mac.
+class DatarsMacElement: NSAccessibilityElement {}
+
 /// An interactive mark on the Mac: VoiceOver's press runs its click intent.
-final class DatarsMacActionable: NSAccessibilityElement {
+final class DatarsMacActionable: DatarsMacElement {
     weak var chart: DatarsChartView?
     let path: String
     init(view: DatarsChartView, path: String) {
@@ -799,7 +833,7 @@ final class DatarsMacActionable: NSAccessibilityElement {
 
 /// A brushable area or a pannable view on the Mac: press starts (and keeps) a selection, or shows
 /// all of a view; increment and decrement extend a selection, or zoom; cancel puts it back.
-final class DatarsMacDrag: NSAccessibilityElement {
+final class DatarsMacDrag: DatarsMacElement {
     weak var chart: DatarsChartView?
     let path: String
     let kind: String

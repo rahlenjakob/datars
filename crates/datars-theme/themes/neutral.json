@@ -82,6 +82,9 @@
       "grid": "mix($ink, $paper, 0.7)",
       "rule": "$ink",
       "accent": "#1f45b8",
+      "highlight": "#b07925",
+      "text.contrast": 7,
+      "categorical": { "kind": "categorical", "colors": ["#535db5", "#b07925", "#df556e", "#1c9273", "#176d17", "#856146", "#845bf2", "#7086b8", "#d96895", "#8a8e96"] },
       "dim": 0.18
     }
   },

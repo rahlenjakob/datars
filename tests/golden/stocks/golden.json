@@ -3,32 +3,32 @@
     {
       "name": "candles",
       "scene": "9d6ef5412cbb19b4",
-      "pixels": "b535c2d1e79cbc31"
+      "pixels": "e36c11a485b9b80e"
     },
     {
       "name": "month",
       "scene": "52fb1a122247ed4e",
-      "pixels": "f162c4538083f111"
+      "pixels": "4aad87d791b5442a"
     },
     {
       "name": "indicators",
       "scene": "748a17a2cddbd358",
-      "pixels": "e6433bfeb3c10ff1"
+      "pixels": "d5458bf059978281"
     },
     {
       "name": "indexed",
       "scene": "b5dc3424a6fde36b",
-      "pixels": "79b50e411617e6a1"
+      "pixels": "51332e55ce8c0031"
     },
     {
       "name": "peers",
       "scene": "a76395a17e9d15f6",
-      "pixels": "3163d53c1f6cc892"
+      "pixels": "41b48263277dc6fd"
     },
     {
       "name": "drawdown",
       "scene": "cc210eec711d1b49",
-      "pixels": "6fcfd4cd177e0d66"
+      "pixels": "48e1ece468041587"
     }
   ],
   "transitions": [

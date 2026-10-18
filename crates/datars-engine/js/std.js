@@ -131,18 +131,27 @@ var grid = recipe2({
 
 // src/guides.ts
 import { e as e3, group as group3, recipe as recipe3, repeat as repeat3, shape as shape3, geom as geom3, t as t3, text as text2 } from "@datars/sdk";
+var DASH_SWATCHES = [void 0, [7, 4], [1.5, 3.5], [8, 3, 1.5, 3]];
 var legend = recipe3({
   id: "@datars/std/legend",
   doc: "A legend for a colour scale: a swatch and a label per entry, flowing in rows (spaced by the labels' widths, wrapping at the box edge), under an optional title.",
-  params: { scale: t3.string("color"), title: t3.string(void 0, "A title above the entries (and the legend's accessible name).") },
+  params: {
+    scale: t3.string("color"),
+    title: t3.string(void 0, "A title above the entries (and the legend's accessible name)."),
+    dashes: t3.bool(false, "Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone.")
+  },
   tokens: ["ink", "ink-2", "size.label"],
   expand(p) {
     const items = repeat3({ legend: p.scale }, group3({
       semantics: { role: "legend-item", label: e3("key.name(d.label)") },
       children: [
         // The swatch beside the label's letters, at any text size (2 and 11 px at the theme's).
-        shape3(geom3.rect({ x: 0, y: e3('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e3("d.ink") }),
-        text2(e3("key.name(d.label)"), [15, e3('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } })
+        ...p.dashes ? DASH_SWATCHES.map((dash, k) => shape3(geom3.segment({ x1: 0, y1: e3('token("size.label") * 0.6 + 0.4'), x2: 22, y2: e3('token("size.label") * 0.6 + 0.4') }), {
+          key: `swatch-${k}`,
+          when: e3(`scale.${p.scale}.index(d.label) % ${DASH_SWATCHES.length} == ${k}`),
+          stroke: { paint: e3("d.ink"), width: 2, cap: "round", dash }
+        })) : [shape3(geom3.rect({ x: 0, y: e3('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e3("d.ink") })],
+        text2(e3("key.name(d.label)"), [p.dashes ? 27 : 15, e3('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } })
       ]
     }));
     const semantics = { role: "legend", label: p.title ?? "Legend" };
@@ -352,7 +361,7 @@ var card = recipe3({
       semantics: { role: "annotation", label: p.text },
       children: [
         p.kicker ? line2("kicker", p.kicker, { size: "$size.small", weight: 700, ink: "$accent" }, true) : null,
-        p.title ? line2("title", p.title, { size: e3('token("size.body") + 2'), weight: 600, ink: "$card-ink" }, true) : null,
+        p.title ? line2("title", p.title, { size: e3('token("size.body") * 15 / 13'), weight: 600, ink: "$card-ink" }, true) : null,
         line2("text", p.text, { size: "$size.body", ink: "$card-ink-2" })
       ]
     });
@@ -432,6 +441,7 @@ var bar = recipe4({
   // Entering bars grow from their base along the value axis.
   motion: (p) => [{ select: { role: "datum" }, enter: { scale: 0, origin: isBand(p.yType) && !isBand(p.xType) ? "left" : "bottom" } }]
 });
+var DASHES = [void 0, [7, 4], [1.5, 3.5], [8, 3, 1.5, 3]];
 var line = recipe4({
   id: "@datars/std/line",
   doc: "One line per series (the colour field, or `series`), through x/y. Draws on as it enters.",
@@ -447,6 +457,7 @@ var line = recipe4({
     points: t4.bool(false, "Dots at the data points."),
     stroke: t4.prop("Stroke ink or expression."),
     labels: t4.bool(false, "Label each line at its last point (labels pushed apart so they never overlap)."),
+    dashes: t4.bool(false, "Each series in a dash pattern of its own as well as its colour \u2014 solid, dashed, dotted, dash-dot \u2014 so lines aren't told apart by colour alone (a plot's `dashes` shows them in its legend)."),
     clip: t4.bool(false, "Clip the lines to the plot area (the end labels stay outside it)."),
     selected: t4.string(void 0, "A keyset signal: selected series stay strong, the others recede."),
     yScale: t4.string("y", "The value scale: `y2` for a plot's right axis.")
@@ -457,17 +468,19 @@ var line = recipe4({
     const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
     const ink = p.stroke ?? (series && p.color ? e4(`scale.color(${fld(p.color)})`) : "$mark");
     const ys = p.yScale || "y";
-    const lineShape = shape4(geom4.polyline({ from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(${fld(p.y)})`), curve: p.curve }), {
-      key: "line",
+    const lineShape = (dash, k = 0) => shape4(geom4.polyline({ from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(${fld(p.y)})`), curve: p.curve }), {
+      key: k ? `line-${k}` : "line",
+      when: p.dashes && p.color ? e4(`scale.color.index(${fld(p.color)}) % ${DASHES.length} == ${k}`) : void 0,
       opacity: p.selected && series ? e4(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(series)}) ? 1 : token("dim")`) : void 0,
-      stroke: { paint: ink, width: p.width || "$stroke.line", join: "round", cap: "round" },
+      stroke: { paint: ink, width: p.width || "$stroke.line", join: "round", cap: "round", dash },
       semantics: { role: "series", label: series ? e4(`key.name(${fld(series)})`) : p.y }
     });
+    const lines = p.dashes && p.color ? DASHES.map((d, k) => lineShape(d, k)) : [lineShape()];
     const xLabel2 = isBand(p.xType) ? `key.name(${fld(p.x)})` : `scale.x.label(${fld(p.x)})`;
     const dotLabel = series ? `\`\${key.name(${fld(series)})} \xB7 \${${xLabel2}}: \${format(${fld(p.y)}, ",.2~f")}\`` : `\`\${${xLabel2}}: \${format(${fld(p.y)}, ",.2~f")}\``;
     const pts = instances({ key: "points", from: "@group", x: e4(xExpr), y: e4(`scale.${ys}(${fld(p.y)})`), r: p.points ? 3 : 0, fill: p.points ? ink : "transparent", instanceKey: e4(`${fld(p.x)}`), label: e4(dotLabel), hit: "line" });
     const labelled = !!(p.labels && series);
-    const one = group4({ clip: p.clip && labelled ? "box" : void 0, children: [lineShape, pts] });
+    const one = group4({ clip: p.clip && labelled ? "box" : void 0, children: [...lines, pts] });
     const each = series ? repeat4({ groups: p.data, by: series }, one) : repeat4({ groups: p.data, by: p.y === "__none" ? p.x : "__all" }, one);
     if (!labelled) return group4({ key: "lines", clip: p.clip ? "box" : void 0, children: [each] });
     const ends = cx.table(
@@ -1508,6 +1521,8 @@ var marimekko = recipe6({
                     repeat6(cells, shape6(geom6.rect({ x: e6(`${x0} + ${g}`), y: e6(`${y1} + ${g}`), w: e6(`max(0, ${w})`), h: e6(`max(0, ${h})`) }), {
                       key: [e6(`${fld(p.series)}`), e6(`${fld(p.x)}`)],
                       fill: e6(`scale.color(${fld(p.series)})`),
+                      stroke: { paint: "$paper", width: 1 },
+                      // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
                       semantics: { role: "datum", label: e6(`${name} + " in " + ${colName} + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)}) + " (" + ${share} + " of " + ${colName} + ", " + format((d.y1 - d.y0) * d.__share, ".1%") + " of all)"`), value: e6(`${fld(p.value)}`) },
                       pickable: true
                     })),
@@ -1574,6 +1589,8 @@ var histogram = recipe6({
       children: [repeat6(tbl, shape6(geom6.rect({ x: e6(`scale.x(d.bin) + ${p.gap / 2}`), y: e6("scale.y(d.y1)"), w: e6(`max(0.5, scale.x(d.bin_end) - scale.x(d.bin) - ${p.gap})`), h: e6("max(0, scale.y(d.y0) - scale.y(d.y1))") }), {
         key: color ? [e6(`${fld(color)}`), e6("d.bin")] : e6("d.bin"),
         fill: p.fill ?? colorOr2(color, "$mark"),
+        stroke: color ? { paint: "$paper", width: 1 } : void 0,
+        // (stacked bins: a line between colours)
         semantics: { role: "datum", label: p.label ?? e6(`${color ? `key.name(${fld(color)}) + ", " + ` : ""}format(d.bin, ${f}) + "\u2013" + format(d.bin_end, ${f}) + ": " + ${what}`), value: e6(p.density ? "d.density" : "d.count") },
         pickable: true
       }))]
@@ -1859,7 +1876,7 @@ var stackedArea = recipe6({
         // (Kept over the layers: one thickest at the first or last x is named just inside it.)
         p.labels ? group6({ key: "labels", children: [repeat6(thick, text5(e6(name), [e6(`clamp(${xt}, ${xlo} + ${lw} / 2 + 4, ${xhi} - ${lw} / 2 - 4)`), e6("(scale.y(d.y0) + scale.y(d.y1)) / 2")], {
           when: e6('abs(scale.y(d.y0) - scale.y(d.y1)) >= token("size.label") + 6'),
-          style: { size: "$size.label", weight: 600, ink: p.color ? e6(`"on(" + scale.color(${fld(p.color)}) + ")"`) : "$accent-ink", align: "middle", baseline: "middle", contain: true }
+          style: { size: "$size.label", weight: 600, ink: p.color ? e6(`"on(" + scale.color(${fld(p.color)}) + "@" + ${p.opacity ?? 1} + ")"`) : "$accent-ink", align: "middle", baseline: "middle", contain: true }
         }))] }) : null
       ]
     });
@@ -1995,7 +2012,13 @@ function scaleDecl(type, data, field, axisName, p, domain, valueAxis) {
 function brushExtent(signal, axis2) {
   const [lo, hi] = [`scale.${axis2}(${signal}.lo)`, `scale.${axis2}(${signal}.hi)`];
   const g = axis2 === "x" ? geom7.rect({ x: e7(`min(${lo}, ${hi})`), y: 0, w: e7(`abs(${hi} - ${lo})`), h: e7("box.h") }) : geom7.rect({ x: 0, y: e7(`min(${lo}, ${hi})`), w: e7("box.w"), h: e7(`abs(${hi} - ${lo})`) });
-  return shape7(g, { key: "brush", when: e7(`${signal}.active && ${signal}.hi > ${signal}.lo`), fill: "$accent", opacity: 0.14, semantics: { role: "decoration", label: "" } });
+  const end = (at2) => axis2 === "x" ? geom7.segment({ x1: e7(at2), y1: 0, x2: e7(at2), y2: e7("box.h") }) : geom7.segment({ x1: 0, y1: e7(at2), x2: e7("box.w"), y2: e7(at2) });
+  const deco = { role: "decoration", label: "" };
+  return group7({ key: "brush", children: [
+    shape7(g, { key: "area", when: e7(`${signal}.active && ${signal}.hi > ${signal}.lo`), fill: "$accent", opacity: 0.14, semantics: deco }),
+    shape7(end(lo), { key: "lo", when: e7(`${signal}.active && ${signal}.lo == ${signal}.lo`), stroke: { paint: "$accent", width: 1.5 }, semantics: deco }),
+    shape7(end(hi), { key: "hi", when: e7(`${signal}.active && ${signal}.hi > ${signal}.lo`), stroke: { paint: "$accent", width: 1.5 }, semantics: deco })
+  ] });
 }
 var plot = recipe7({
   id: "@datars/std/plot",
@@ -2019,6 +2042,7 @@ var plot = recipe7({
     axes: t7.oneOf(["both", "x", "y", "none"], "both"),
     grid: t7.bool(true, "Gridlines along the value axis."),
     legend: t7.bool(false, "A colour legend below the plot."),
+    dashes: t7.bool(false, "The legend shows each series' dash pattern too, for lines drawn with `line({ dashes: true })`."),
     xLabel: t7.string(void 0, "Title of the x axis, under its right end."),
     yLabel: t7.string(void 0, "Title of the y axis, above its top-left corner (in a row of its own, between the title and the plot)."),
     format: t7.string(void 0, "Number format for value-axis labels (a 100 % `stacked` child: '.0%')."),
@@ -2166,7 +2190,7 @@ var plot = recipe7({
             endLabels2 ? group7({ key: "end-labels", size: { w: labelRoom } }) : null
           ]
         }),
-        p.legend && p.color ? legend({ scale: "color" }, { size: { h: "auto" } }) : null
+        p.legend && p.color ? legend({ scale: "color", dashes: p.dashes }, { size: { h: "auto" } }) : null
       ]
     });
     void cx;
@@ -2321,6 +2345,8 @@ var stacked = recipe9({
         repeat8(tbl, shape9(g, {
           key: p.segmentKey ?? [e9(`${fld(series)}`), e9(`${fld(cat)}`)],
           fill: e9(`scale.color(${fld(series)})`),
+          stroke: { paint: "$paper", width: 1 },
+          // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
           semantics: { role: "datum", label: e9(`\`\${key.name(${fld(series)})}, \${${fld(cat)}}: ${affixedLabel(`${fld(val)}`, p)}\``), value: e9(`${fld(val)}`) },
           pickable: true
         })),
@@ -2365,6 +2391,8 @@ var grouped = recipe9({
         repeat8(p.data, shape9(geom9.rect({ x: e9(x), y: e9(`min(scale.y(0), scale.y(${v}))`), w: e9("scale.dodge.bandwidth()"), h: e9(`abs(scale.y(0) - scale.y(${v}))`), r: "$radius.bar" }), {
           key: [e9(`${fld(series)}`), e9(`${fld(p.x)}`)],
           fill: e9(`scale.color(${fld(series)})`),
+          stroke: { paint: "$paper", width: 1 },
+          // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
           semantics: { role: "datum", label: e9(`\`\${key.name(${fld(series)})}, \${${fld(p.x)}}: ${affixedLabel(v, p)}\``), value: e9(v) },
           pickable: true
         })),
@@ -3045,7 +3073,7 @@ var toggle = recipe11({
   id: "@datars/std/toggle",
   doc: "A switch for a boolean signal: click to flip it. Shows its label beside the switch.",
   params: { signal: t11.string(void 0, "The boolean signal it flips."), label: t11.string("") },
-  tokens: ["accent", "rule", "paper", "ink", "size.label"],
+  tokens: ["accent", "muted", "paper", "ink", "size.label"],
   motion: SNAPPY,
   expand(p) {
     const sig = p.signal;
@@ -3058,7 +3086,8 @@ var toggle = recipe11({
       semantics: { role: "control", label: p.label || sig, kind: "switch", checked: e11(sig) },
       children: [
         shape11(geom11.rect({ x: 0, y: 0, w: e11("box.w"), h: e11(px(28)) }), { key: "hit", pickable: true, fill: "transparent" }),
-        shape11(geom11.rect({ x: 0, y: e11(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e11(`${sig} ? "$accent" : "$rule"`) }),
+        shape11(geom11.rect({ x: 0, y: e11(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e11(`${sig} ? "$accent" : "$muted"`) }),
+        // (off: still 3:1 and more on the paper — the switch is there, and off)
         shape11(geom11.circle({ cx: e11(`${sig} ? 29 : 11`), cy: e11(px(14)), r: 13 }), { key: "halo", fill: "$ink", opacity: WASH(0.1) }),
         shape11(geom11.circle({ cx: e11(`${sig} ? 29 : 11`), cy: e11(px(14)), r: 8 }), { key: "knob", fill: "$paper" }),
         p.label ? text10(p.label, [52, e11(px(14))], { key: "label", style: { size: "$size.label", ink: "$ink", baseline: "middle" } }) : null
@@ -3132,14 +3161,14 @@ var range = recipe11({
     const f = lit(p.format);
     const y = e11(px(30));
     const x = (s) => `scale.x(${s})`;
-    const half = `clamp((${x(hi)} - ${x(lo)}) / 2, 0, 16)`;
+    const mid = `(${x(lo)} + ${x(hi)}) / 2`;
     const thumb = (key) => group11({
       key,
       pickable: true,
       on: { drag: scrub(key === "lo" ? lo : hi, { step: p.step, ...key === "lo" ? { max: e11(hi) } : { min: e11(lo) } }) },
       semantics: { role: "control", label: e11(`\`${p.label || "Range"}, ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
       children: [
-        key === "lo" ? shape11(geom11.rect({ x: e11(`${x(lo)} - 16`), y: e11(`${px(30)} - 18`), w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }) : shape11(geom11.rect({ x: e11(`${x(hi)} - ${half}`), y: e11(`${px(30)} - 18`), w: e11(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
+        key === "lo" ? shape11(geom11.rect({ x: 0, y: e11(`${px(30)} - 18`), w: e11(mid), h: 32 }), { key: "hit", fill: "transparent" }) : shape11(geom11.rect({ x: e11(mid), y: e11(`${px(30)} - 18`), w: e11(`box.w - ${mid}`), h: 32 }), { key: "hit", fill: "transparent" }),
         shape11(geom11.circle({ cx: e11(x(key === "lo" ? lo : hi)), cy: y, r: 15 }), { key: "halo", fill: "$accent", opacity: WASH(0.18) }),
         shape11(geom11.circle({ cx: e11(x(key === "lo" ? lo : hi)), cy: y, r: 8 }), { key: "thumb", fill: "$accent", stroke: { paint: "$paper", width: 2 } })
       ]
@@ -3148,7 +3177,8 @@ var range = recipe11({
       key: "range",
       size: { h: e11(px(44)) },
       scales: { x: { type: "linear", domain: [p.min, p.max], range: [10, "=box.w - 10"] } },
-      semantics: { role: "control", label: e11(`\`${p.label || "Range"}: \${format(${lo}, ${f})}\u2013\${format(${hi}, ${f})}\``) },
+      // (Its name has the words drawn on it, "0 – 50", as they're drawn: WCAG 2.5.3.)
+      semantics: { role: "control", label: e11(`\`${p.label || "Range"}: \${format(${lo}, ${f})} \u2013 \${format(${hi}, ${f})}\``) },
       children: [
         text10(p.label, [0, 0], { key: "label", style: LABEL }),
         text10(e11(`\`\${format(${lo}, ${f})} \u2013 \${format(${hi}, ${f})}\``), [e11("box.w"), 0], { key: "value", style: { size: "$size.label", weight: 600, ink: "$ink", align: "end", baseline: "top" } }),
@@ -3257,7 +3287,7 @@ var basemap = recipe12({
         priority: e12("d.pop ?? (100 - (d.rank ?? 50))"),
         template: text11(e12("d.name"), [e12("d.$x"), e12("d.$y")], {
           key: e12("d.name"),
-          style: { size: e12("d.rank != null && d.rank <= 2 ? 13 : 11.5"), weight: e12("d.rank != null && d.rank <= 2 ? 600 : 400"), ink: "$map.label", align: "middle", baseline: "middle" },
+          style: { size: e12('token("size.label") * (d.rank != null && d.rank <= 2 ? 13 : 11.5) / 11'), weight: e12("d.rank != null && d.rank <= 2 ? 600 : 400"), ink: "$map.label", align: "middle", baseline: "middle" },
           halo: ["$map.label-halo", 2.5],
           semantics: { role: "label", label: e12("d.name") }
         })
@@ -3284,7 +3314,7 @@ var attribution = recipe12({
   expand(p) {
     return text11(p.text, [e12("box.w - 6"), e12("box.h - 5")], {
       key: "attribution",
-      style: { size: 10.5, ink: p.ink, align: "end", baseline: "bottom" },
+      style: { size: e12('token("size.small") * 1.05'), ink: p.ink, align: "end", baseline: "bottom", maxWidth: e12("box.w - 12") },
       halo: ["$map.label-halo", 2.5],
       semantics: { role: "annotation", label: p.text, link: p.link || void 0 }
     });
@@ -3864,13 +3894,15 @@ var chord = recipe15({
           key: [e15(col(src)), e15(col(dst))],
           fill: e15(`scale.color(${col(src)})`),
           opacity: selectedOpacity(sel, `${sel}.has(${col(src)}) || ${sel}.has(${col(dst)})`, 0.68, 0.12),
-          stroke: { paint: "$paper", width: 0.5 },
+          stroke: { paint: "$paper", width: 1 },
           semantics: { role: "datum", label: e15(`\`\${key.name(${col(src)})} \u2192 \${key.name(${col(dst)})}: \${format(${v}, ${f})}\``), value: e15(v) },
           pickable: true
         }))] }),
         group14({ key: "groups", children: [repeat11(groups, shape14(geom14.arc({ cx: e15("box.w / 2"), cy: e15("box.h / 2"), r0: e15(inner), r1: e15(outer), a0: e15("d.a0"), a1: e15("d.a1") }), {
           key: e15("d.name"),
           fill: e15("scale.color(d.name)"),
+          stroke: { paint: "$paper", width: 1 },
+          // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
           semantics: { role: "datum", label: e15(`\`\${key.name(d.name)}: \${format(d.value, ${f})}\``), value: e15("d.value") },
           pickable: true
         }))] }),
@@ -4137,7 +4169,8 @@ function partitionInk(p, cx, laid, depth0) {
   return {
     fill: e15(`scale.color(${col(by)})`),
     opacity: e15(fade),
-    ink: e15(`${fade} > 0.75 ? "on(" + scale.color(${col(by)}) + ")" : "$ink"`),
+    // (On the fill as it's drawn, faded: a label reads on what's under it.)
+    ink: e15(`${fade} > 0.75 ? "on(" + scale.color(${col(by)}) + "@" + ${fade} + ")" : "$ink"`),
     scale: { type: "categorical", domain: { data: drawn, field: by }, range: "$categorical" }
   };
 }

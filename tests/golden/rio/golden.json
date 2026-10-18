@@ -2,22 +2,22 @@
   "states": [
     {
       "name": "world",
-      "scene": "c4b174bed74373da",
+      "scene": "da203b8a15ab9bad",
       "pixels": "0c39b26621007f1c"
     },
     {
       "name": "brazil",
-      "scene": "716414cab95c59e3",
+      "scene": "ad63089ae3573164",
       "pixels": "46839e24b20a7944"
     },
     {
       "name": "rio",
-      "scene": "4ef2f1f0a67f80d1",
+      "scene": "e711de6f8864b656",
       "pixels": "30ead2e15d90c282"
     },
     {
       "name": "copacabana",
-      "scene": "82ac8feb6bf2b46c",
+      "scene": "e17d8d804ef862a0",
       "pixels": "c0ba58be9f732457"
     }
   ],
@@ -25,19 +25,19 @@
     {
       "from": "world",
       "to": "brazil",
-      "sweep": "50d1880bc10d6a7f",
+      "sweep": "e9ff1b4a965fec26",
       "samples": 64
     },
     {
       "from": "brazil",
       "to": "rio",
-      "sweep": "f2d9e25260e1906c",
+      "sweep": "23d090ade77a1985",
       "samples": 64
     },
     {
       "from": "rio",
       "to": "copacabana",
-      "sweep": "b429df1d1275e368",
+      "sweep": "589330e65e3ba1d1",
       "samples": 64
     }
   ]

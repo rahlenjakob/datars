@@ -44,12 +44,12 @@ const kpi = () => group({ key: "kpi", children: [
   shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e("box.h"), r: e('token("radius.card")') }), { key: "surface", fill: "$card", stroke: { paint: "$card-line", width: 1 } }),
   group({ key: "body", layout: { type: "rows", gap: 6, padding: [16, 18, 14, 18] }, children: [
     text("Readers this year", [0, 0], { key: "label", size: { h: "auto" }, style: { font: "font.strong", size: "$size.small", ink: "$card-ink-2", baseline: "top" } }),
-    text("4.2M", [0, 0], { key: "value", size: { h: "auto" }, style: { font: "font.title", size: 38, ink: "$accent", baseline: "top" } }),
+    text("4.2M", [0, 0], { key: "value", size: { h: "auto" }, style: { font: "font.title", size: e('token("size.title") * 38 / 17'), ink: "$accent", baseline: "top" } }),
     text("Up 38% on last year.", [0, 0], { key: "note", size: { h: "auto" }, style: { font: "font.body", size: "$size.body", ink: "$card-ink", baseline: "top", maxWidth: e("box.w") } }),
     group({ key: "stats", size: { h: 58 }, children: [
       shape(geom.segment({ x1: 0, y1: 8, x2: e("box.w"), y2: 8 }), { key: "rule", stroke: { paint: "$card-line", width: 1 } }),
       ...([["34", "countries", 0], ["820k", "top market: US", e("box.w / 2 + 4")]] as const).map(([v, l, x], i) => group({ key: `stat-${i}`, children: [
-        text(v, [x, 20], { key: "v", style: { font: "font.title", size: 20, ink: "$card-ink", baseline: "top" } }),
+        text(v, [x, 20], { key: "v", style: { font: "font.title", size: e('token("size.title") * 20 / 17'), ink: "$card-ink", baseline: "top" } }),
         text(l, [x, 44], { key: "l", style: { font: "font.body", size: "$size.small", ink: "$card-ink-2", baseline: "top" } }),
       ] })),
     ] }),

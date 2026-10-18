@@ -53,6 +53,20 @@ pub fn lint(engine: &mut Engine) -> Vec<Finding> {
             out.push(f("identity/row-keys", "warning", format!("source `{name}` has no key: rows are identified by position, so transitions pair the wrong rows when data changes"), "declare a key column: data.values(…, { key: \"id\" })"));
         }
     }
+    // Words that point at a mark only by its colour or its place (WCAG 1.3.3): the title, the
+    // description, and each step's narration.
+    let states = doc.program.as_ref().map(|p| p.states.clone()).unwrap_or_default();
+    let mut said: Vec<(String, String)> = vec![("title".into(), doc.title.clone()), ("description".into(), doc.description.clone())];
+    for st in &states {
+        if let Some(n) = &st.narration {
+            said.push((format!("step {}", st.name), format!("{}. {}", n.title, n.text)));
+        }
+    }
+    for (where_, text) in &said {
+        for phrase in sensory_phrases(text) {
+            out.push(f("a11y/sensory", "info", format!("{where_}: \"{phrase}\" points at a mark by its colour or place only"), "name it too (\"the red line, Sweden,\"): a reader who can't see the colour, or hears the chart, can't tell which it is"));
+        }
+    }
     let names = engine.state_names();
     let tiles = doc.data.values().any(|s| matches!(s.from, datars_ir::SourceKind::Tiles(_)));
     let mut credited = false;
@@ -370,11 +384,120 @@ pub fn lint_scene(scene: &Scene, state: &str) -> Vec<Finding> {
     if datum_without_sem > 0 {
         out.push(f("a11y/semantics", "warning", format!("{state}: {datum_without_sem} interactive elements have no accessible label"), "add semantics: { role: \"datum\", label: … }"));
     }
+    if let Some((n, unnamed)) = colour_only(scene) {
+        out.push(f("encoding/colour-only", "warning", format!("{state}: {n} colours tell the data apart, and nothing else names them ({})", unnamed.join(", ")), "add a legend (plot({ legend: true })), label the marks (line({ labels: true }), bar({ labels: true })), or give each series a dash or symbol too (line({ dashes: true }))"));
+    }
     if categorical_keys.len() > 10 {
         out.push(f("encoding/too-many-colours", "warning", format!("{state}: {} categorical colours — hard to tell apart", categorical_keys.len()), "group small categories into Other (op.top) or label directly"));
     }
     let _ = datum_total;
     out
+}
+
+/// Phrases that point at a mark by its colour ("the red line", "blå staplarna") or by where it is
+/// ("on the left", "till höger"), in English and Swedish: what a reader who can't see the colour,
+/// or hears the chart, can't follow — unless the mark is named too (WCAG 1.3.3, 1.4.1).
+pub fn sensory_phrases(text: &str) -> Vec<String> {
+    const COLOURS: &[&str] = &[
+        "red", "green", "blue", "orange", "yellow", "purple", "pink", "grey", "gray", "teal", "brown", "violet", "cyan", "magenta",
+        "röd", "röda", "rött", "grön", "gröna", "grönt", "blå", "blått", "gul", "gula", "gult", "lila", "rosa", "grå", "gråa",
+    ];
+    const MARKS: &[&str] = &[
+        "line", "lines", "bar", "bars", "dot", "dots", "point", "points", "area", "areas", "slice", "slices", "segment", "segments", "series", "one", "ones", "curve", "curves", "circle", "circles", "column", "columns", "band", "bands",
+        "linje", "linjen", "linjerna", "stapel", "stapeln", "staplar", "staplarna", "punkt", "punkten", "punkterna", "yta", "ytan", "kurva", "kurvan", "fältet", "fälten",
+    ];
+    const PLACES: &[&[&str]] = &[
+        &["on", "the", "left"], &["on", "the", "right"], &["to", "the", "left"], &["to", "the", "right"], &["at", "the", "top"], &["at", "the", "bottom"],
+        &["top", "left"], &["top", "right"], &["bottom", "left"], &["bottom", "right"], &["left-hand"], &["right-hand"],
+        &["till", "vänster"], &["till", "höger"], &["överst"], &["nederst"],
+    ];
+    let words: Vec<String> = text.split(|c: char| !(c.is_alphanumeric() || c == '-')).filter(|w| !w.is_empty()).map(|w| w.to_lowercase()).collect();
+    // A place points at a mark when a mark is what's there ("the bars on the left"), within a few
+    // words — not a layout said in passing ("men to the left, women to the right").
+    let near_mark = |i: usize, len: usize| (i.saturating_sub(4)..(i + len + 4).min(words.len())).any(|j| MARKS.contains(&words[j].as_str()));
+    let mut out = Vec::new();
+    for i in 0..words.len() {
+        if COLOURS.contains(&words[i].as_str()) {
+            if let Some(j) = (i + 1..(i + 3).min(words.len())).find(|&j| MARKS.contains(&words[j].as_str())) {
+                out.push(words[i..=j].join(" "));
+            }
+        }
+        for p in PLACES {
+            if words.len() >= i + p.len() && words[i..i + p.len()].iter().zip(p.iter()).all(|(a, b)| a == b) && near_mark(i, p.len()) {
+                out.push(p.join(" "));
+            }
+        }
+    }
+    out
+}
+
+/// Data marks told apart by colour alone (WCAG 1.4.1): two or more of the categorical palette's
+/// colours on data marks, no legend, and fewer than all but one of the coloured marks' names
+/// drawn anywhere as text (direct labels, an axis naming each bar). Returns how many colours, and
+/// the names nothing draws.
+pub fn colour_only(scene: &Scene) -> Option<(usize, Vec<String>)> {
+    let mut colours: BTreeMap<u32, std::collections::BTreeSet<String>> = BTreeMap::new();
+    let mut legend = false;
+    fn name_of(label: &str) -> String {
+        label.split(": ").next().unwrap_or(label).split(" · ").next().unwrap_or(label).trim().to_string()
+    }
+    fn walk(n: &Node, named: Option<&str>, data: bool, colours: &mut BTreeMap<u32, std::collections::BTreeSet<String>>, legend: &mut bool) {
+        if !n.common.visible || n.common.opacity < 0.05 {
+            return;
+        }
+        let sem = n.semantics.as_ref();
+        if sem.is_some_and(|s| s.role == Role::Legend || s.role == Role::LegendItem) {
+            *legend = true;
+            return;
+        }
+        let is_data = data || sem.is_some_and(|s| matches!(s.role, Role::Datum | Role::Series | Role::Region));
+        let named = sem.filter(|s| !s.label.is_empty() && matches!(s.role, Role::Datum | Role::Series | Role::Region)).map(|s| s.label.as_str()).or(named);
+        let palette = |i: &datars_theme::Ink| match i {
+            datars_theme::Ink::Palette { name, index, .. } if name.as_ref() == "categorical" => Some(*index),
+            _ => None,
+        };
+        match &n.kind {
+            NodeKind::Shape { fill, stroke, .. } if is_data => {
+                let ink = fill.as_ref().and_then(|p| if let datars_scene::Paint::Solid(i) = p { palette(i) } else { None }).or_else(|| stroke.as_ref().and_then(|s| if let datars_scene::Paint::Solid(i) = &s.paint { palette(i) } else { None }));
+                if let Some(ix) = ink {
+                    colours.entry(ix).or_default().extend(named.map(name_of));
+                }
+            }
+            NodeKind::Instances(i) if is_data => {
+                for k in 0..i.len() {
+                    if let Some(ix) = palette(&i.fill_at(k)) {
+                        let label = i.labels.as_ref().and_then(|l| l.get(k)).map(|l| name_of(l)).or(named.map(name_of));
+                        colours.entry(ix).or_default().extend(label);
+                    }
+                }
+            }
+            _ => {}
+        }
+        for c in n.children() {
+            walk(c, named, is_data, colours, legend);
+        }
+    }
+    walk(&scene.root, None, false, &mut colours, &mut legend);
+    if colours.len() < 2 || legend {
+        return None;
+    }
+    let texts: Vec<String> = drawn_labels(scene).into_iter().filter(|l| l.opacity > 0.05).map(|l| l.text.to_lowercase()).collect();
+    let mut unnamed = Vec::new();
+    for names in colours.values() {
+        // A colour is named when one of its marks' names — or a part of one: "Institute / Ada",
+        // "2021, Centre", "Ada – Bruno" — is drawn somewhere.
+        let parts = |nm: &str| -> Vec<String> {
+            let mut v = vec![nm.to_lowercase()];
+            for sep in [" / ", " – ", " · ", ", "] {
+                v.extend(nm.split(sep).map(|p| p.trim().to_lowercase()).filter(|p| !p.is_empty()));
+            }
+            v
+        };
+        if !names.iter().any(|nm| !nm.is_empty() && parts(nm).iter().any(|p| texts.iter().any(|t| t.contains(p.as_str())))) {
+            unnamed.push(names.iter().next().cloned().unwrap_or_default());
+        }
+    }
+    (unnamed.len() > 1).then(|| (colours.len(), unnamed))
 }
 
 /// Describe every recipe of the standard library (for `datars describe` and generated docs).

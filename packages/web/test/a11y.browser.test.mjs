@@ -43,6 +43,13 @@ const controlsDoc = {
   ] },
 };
 
+/** A long run of marks: more than one page of the mirror. */
+const longDoc = {
+  datars: 1, title: "Daily readings", size: { width: 600, height: 320 },
+  data: { d: { values: { day: Array.from({ length: 450 }, (_, i) => i + 1), v: Array.from({ length: 450 }, (_, i) => (i * 37) % 101) } } },
+  scene: use("plot", { data: "d", x: "day", y: "v", children: [use("point", {})] }),
+};
+
 const page = `<!doctype html><meta charset="utf-8"><script type="module" src="/runtime/datars.js"></script>
 <style>body { margin: 40px }</style><button id="before">Before</button>
 <datars-view doc="/doc.json" height="320" style="width:600px"></datars-view>`;
@@ -57,6 +64,8 @@ function serve() {
     if (path === "/controls") return send(page.replace("/doc.json", "/controls.json").replace('height="320"', 'height="200"'), "text/html; charset=utf-8");
     if (path === "/doc.json") return send(JSON.stringify(doc), "application/json");
     if (path === "/controls.json") return send(JSON.stringify(controlsDoc), "application/json");
+    if (path === "/long") return send(page.replace("/doc.json", "/long.json"), "text/html; charset=utf-8");
+    if (path === "/long.json") return send(JSON.stringify(longDoc), "application/json");
     if (path === "/sv") return send(page.replace("/doc.json", "/sv.json"), "text/html; charset=utf-8");
     if (path === "/sv.json") return send(JSON.stringify({ ...doc, locale: "sv-SE", title: "Frukt", description: "Kilo frukt.", program: { states: [{ name: "a" }, { name: "b" }] } }), "application/json");
     const file = normalize(join(dist, path.replace(/^\/runtime\//, "")));
@@ -95,6 +104,9 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     // The summary is the first thing inside it, read in order.
     const first = await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror").firstElementChild?.textContent);
     assert.equal(first, "Kilograms of each fruit a market stall sold. 3 data points, from 18 to 42.");
+    // Then the step's narration, the content, and only then the story's buttons (after the mirror).
+    const order = await p.evaluate(() => { const r = document.querySelector("datars-view").shadowRoot; const m = r.querySelector(".mirror"); return [...m.children].slice(0, 3).map((c) => c.tagName + ":" + c.textContent.slice(0, 20)).concat([String(m.compareDocumentPosition(r.querySelector(".controls")) & Node.DOCUMENT_POSITION_FOLLOWING ? "controls after" : "controls before")]); });
+    assert.deepEqual(order, ["P:Kilograms of each fr", "H3:Saturday", "P:Apples sold best.", "controls after"]);
     assert.equal(v(figure.description), "", "not also a description (said twice, or not at all)");
     const roles = nodes.filter((n) => !n.ignored).map((n) => `${v(n.role)}:${v(n.name)}`);
     assert.ok(!roles.some((r) => r.startsWith("Canvas")), "the canvas is a picture: not in the tree");
@@ -106,8 +118,9 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     assert.equal((tree.match(/Fruit sold \(kg\)/g) ?? []).length, 1, `the plot's title once (its group's name), not again as a title: ${tree}`);
     assert.match(tree, /table "kg by name"/, "the marks' table is named by their series");
 
-    // The keyboard: the chart itself (it steps the story), its Previous and Next, then one stop
-    // into the data.
+    // The keyboard: the chart itself (it steps the story), one stop into the data, then the
+    // story's Previous and Next — in the order they're read: what the chart shows, then how to
+    // move on.
     await p.locator("#before").focus();
     await p.keyboard.press("Tab");
     assert.equal(await p.evaluate(() => document.activeElement?.tagName), "DATARS-VIEW");
@@ -116,7 +129,9 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
       await p.keyboard.press("Tab");
       tabs.push(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.textContent));
     }
-    assert.deepEqual(tabs, ["←", "→", "Apples"]);
+    assert.deepEqual(tabs, ["Apples", "←", "→"]);
+    await p.keyboard.press("Shift+Tab");
+    await p.keyboard.press("Shift+Tab");
     const focused = () => p.evaluate(() => {
       const v = document.querySelector("datars-view");
       const a = v.shadowRoot.activeElement;
@@ -138,9 +153,9 @@ test("a screen reader gets the chart's name, summary and data; a keyboard walks 
     assert.equal((await focused()).text, "Plums", "the last stays the last");
     await p.keyboard.press("Home");
     assert.equal((await focused()).text, "Apples");
-    // Tab leaves the data in one press (one stop), and the outline goes.
+    // Tab leaves the data in one press (one stop), on to Previous, and the outline goes.
     await p.keyboard.press("Tab");
-    assert.notEqual(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.dataset?.nav), "");
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.activeElement?.textContent), "←");
     assert.equal((await focused()).ring, null);
 
     // A step: the live region says its narration once.
@@ -255,6 +270,34 @@ test("the element's own words speak the document's language", { skip, timeout: 1
     await p.keyboard.press("ArrowRight");
     await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent !== "", null, { timeout: 10_000 });
     assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent), "Steg 2 av 2");
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});
+
+test("every row of a long run is reachable: a page at a time, numbered of the whole", { skip, timeout: 120_000 }, async () => {
+  const { chromium } = await import(playwright);
+  const server = await serve();
+  const browser = await chromium.launch({ channel: process.env.DATARS_BROWSER_CHANNEL ?? "chrome", headless: true });
+  try {
+    const p = await browser.newPage({ viewport: { width: 800, height: 500 } });
+    await p.goto(`http://127.0.0.1:${server.address().port}/long`);
+    await p.locator("datars-view .mirror table").waitFor({ state: "attached", timeout: 30_000 });
+    const state = () => p.evaluate(() => {
+      const m = document.querySelector("datars-view").shadowRoot.querySelector(".mirror");
+      const t = m.querySelector("table"), rows = [...t.querySelectorAll("tr")];
+      return { count: t.getAttribute("aria-rowcount"), first: rows[0]?.getAttribute("aria-rowindex"), last: rows.at(-1)?.getAttribute("aria-rowindex"), n: rows.length, buttons: [...m.querySelectorAll("button")].map((b) => b.textContent) };
+    });
+    const one = await state();
+    assert.deepEqual(one, { count: "450", first: "1", last: "200", n: 200, buttons: ["Next rows, 201 to 400 of 450"] });
+    // The button lists the next page, says so, and the keyboard is on its first row.
+    await p.evaluate(() => [...document.querySelector("datars-view").shadowRoot.querySelectorAll(".mirror button")].find((b) => b.textContent.startsWith("Next rows")).click());
+    await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector(".mirror tr")?.getAttribute("aria-rowindex") === "201", null, { timeout: 10_000 });
+    const two = await state();
+    assert.deepEqual(two, { count: "450", first: "201", last: "400", n: 200, buttons: ["Next rows, 401 to 450 of 450", "Previous rows, 1 to 200 of 450"] });
+    await p.waitForFunction(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent.startsWith("Rows"), null, { timeout: 10_000 });
+    assert.equal(await p.evaluate(() => document.querySelector("datars-view").shadowRoot.querySelector("[aria-live]").textContent), "Rows 201 to 400 of 450.");
   } finally {
     await browser.close();
     server.close();

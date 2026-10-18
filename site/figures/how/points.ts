@@ -45,11 +45,12 @@ const side = (): Template => group({
     label("head", "LEVELS", [0, 0], { size: SIZE.small, ink: "$muted", strong: true, baseline: "top" }),
     label("h-frac", "of all rows", [e("box.w - 70"), 30], { size: SIZE.small, ink: "$muted", align: "end" }),
     label("h-view", "in view, 0–ℓ", [e("box.w"), 30], { size: SIZE.small, ink: "$muted", align: "end" }),
-    ...[0, 1, 2, 3].map((l) => group({ key: `l${l}`, opacity: e(`${DRAWN} >= ${l} ? 1 : 0.4`), children: [
-      shape(geom.circle({ cx: 5, cy: 54 + l * 24, r: 5 }), { key: "dot", fill: COLORS[l], semantics: { role: "decoration" } }),
-      label("name", `level ${l}`, [16, 54 + l * 24], { strong: true }),
-      label("frac", ["1/64", "1/16", "1/4", "all"][l], [e("box.w - 70"), 54 + l * 24], { ink: "$ink-2", align: "end" }),
-      label("n", e(`format(${count(l)}, ",.0f")`), [e("box.w"), 54 + l * 24], { ink: "$ink-2", align: "end" }),
+    // A level not drawn yet steps back: its dot fades, its words go to the muted ink.
+    ...[0, 1, 2, 3].map((l) => group({ key: `l${l}`, children: [
+      shape(geom.circle({ cx: 5, cy: 54 + l * 24, r: 5 }), { key: "dot", fill: COLORS[l], opacity: e(`${DRAWN} >= ${l} ? 1 : 0.4`), semantics: { role: "decoration" } }),
+      label("name", `level ${l}`, [16, 54 + l * 24], { strong: true, ink: e(`${DRAWN} >= ${l} ? "$ink" : "$muted"`) }),
+      label("frac", ["1/64", "1/16", "1/4", "all"][l], [e("box.w - 70"), 54 + l * 24], { ink: e(`${DRAWN} >= ${l} ? "$ink-2" : "$muted"`), align: "end" }),
+      label("n", e(`format(${count(l)}, ",.0f")`), [e("box.w"), 54 + l * 24], { ink: e(`${DRAWN} >= ${l} ? "$ink-2" : "$muted"`), align: "end" }),
     ] })),
     shape(geom.segment({ x1: 0, y1: 150, x2: e("box.w"), y2: 150 }), { key: "rule", stroke: { paint: "$grid", width: 1 }, semantics: { role: "decoration" } }),
     label("budget", `frame budget: ${BUDGET} rows`, [0, 166], { ink: "$ink-2" }),

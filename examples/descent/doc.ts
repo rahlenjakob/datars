@@ -89,7 +89,7 @@ export default doc({
               repeat("sights", text(e("d.name"), [e("geo.x(d.lon, d.lat)"), e("geo.y(d.lon, d.lat)")], {
                 key: e("d.id"),
                 offset: [0, e("-scale.r(d.visitors) - 3")],
-                style: { size: 11.5, weight: 600, ink: "$ink", align: "middle", baseline: "bottom" },
+                style: { size: e('token("size.label") * 11.5 / 11'), weight: 600, ink: "$ink", align: "middle", baseline: "bottom" },
                 halo: ["$paper", 2.5],
               })),
             ],

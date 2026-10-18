@@ -81,6 +81,45 @@ fn split(label: &str) -> (String, String) {
     }
 }
 
+/// What a screen reader walks through for an engine as it is now: [`readout_in`] over its
+/// semantics, then the step's narration right after what the chart shows (unless the chart draws
+/// it: then it's in the content already), then — after the content — a Pause (or Play) for what
+/// moves by itself and a story's Previous step and Next step (`Engine::activate` runs them by
+/// their paths: `playback:pause`, `playback:play`, `event:prev`, `event:next`) — the order the
+/// web element reads too.
+pub fn of_engine(engine: &mut datars_engine::Engine) -> Vec<Readout> {
+    let items = engine.semantic_items();
+    let name = engine.accessible_name();
+    let summary = engine.accessible_summary();
+    let locale = engine.doc().locale.clone();
+    let mut out = readout_in(&locale, &name, &summary, &items);
+    if let Some(n) = engine.narration().filter(|_| !engine.draws_narration()) {
+        let lines: Vec<Readout> = [(n.title.clone(), "heading"), (n.text.clone(), "text")]
+            .into_iter()
+            .filter(|(t, _)| !t.trim().is_empty())
+            .map(|(t, kind)| Readout { kind, label: t.trim().to_string(), value: String::new(), rect: None, path: String::new(), checked: None })
+            .collect();
+        let at = out.len().min(1);
+        out.splice(at..at, lines);
+    }
+    // What moves by itself (autoplay, a clock): the reader's Pause, or Play once paused (WCAG 2.2.2).
+    if engine.moves_by_itself() {
+        let (label, path) = if engine.held() { ("play", "playback:play") } else { ("pause", "playback:pause") };
+        out.push(Readout { kind: "button", label: datars_engine::phrases::phrase(&locale, label, &[]), value: String::new(), rect: None, path: path.into(), checked: None });
+    }
+    let (index, states) = (engine.state_index(), engine.state_names().len());
+    if states > 1 {
+        let phrase = |k: &str| datars_engine::phrases::phrase(&locale, k, &[]);
+        if index > 0 {
+            out.push(Readout { kind: "button", label: phrase("previous-step"), value: String::new(), rect: None, path: "event:prev".into(), checked: None });
+        }
+        if index + 1 < states {
+            out.push(Readout { kind: "button", label: phrase("next-step"), value: String::new(), rect: None, path: "event:next".into(), checked: None });
+        }
+    }
+    out
+}
+
 /// The reading order for a chart named `name` with `summary`, from its semantics `items`, its own
 /// words in English (see [`readout_in`]).
 pub fn readout(name: &str, summary: &str, items: &[SemanticItem]) -> Vec<Readout> {
@@ -209,7 +248,7 @@ mod tests {
     use super::*;
 
     fn item(role: &str, label: &str, depth: usize) -> SemanticItem {
-        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), actionable: false, value: None, kind: None, checked: None, missing: false }
+        SemanticItem { role: role.into(), label: label.into(), depth, rect: datars_math::Rect::new(0.0, 0.0, 10.0, 10.0), path: String::new(), ..Default::default() }
     }
 
     #[test]

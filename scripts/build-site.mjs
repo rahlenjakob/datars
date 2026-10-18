@@ -19,6 +19,7 @@ import { highlight, highlightPage } from "./site/highlight.mjs";
 import { DOCS_NAV, FEATURES, docsPrevNext, docsSidebar, docsToc, featureIcon, lookAccents, lookPresets, page, urlOf } from "./site/layout.mjs";
 import { STD_GROUPS, figureAlias, firstSentence, stdPages } from "./site/std.mjs";
 import { sdkApi } from "./site/sdk.mjs";
+import { wcag } from "./site/wcag.mjs";
 import { chartTokens, studioChecks, studioData, studioJson, studioTab } from "./site/studio.mjs";
 import { delivered, engineTable, missesTable, nativeSummary, nativeTable, scrollTable, transitionsSummary, transitionsTable, webCards } from "./site/perf.mjs";
 
@@ -636,6 +637,10 @@ function drawnInks(alias) {
   }
 }
 
+/** The accessibility page's WCAG table and its summary (checked against the sources once). */
+let wcagParts = null;
+const wcagPart = (k) => (wcagParts ??= wcag({ root, blob }))[k];
+
 /** Fill a page body's placeholders and chart slots (see site/README.md). */
 function fill(html, where) {
   const known = (a) => {
@@ -673,6 +678,7 @@ function fill(html, where) {
     .replace(/\{\{alt:([a-z0-9_-]+)\}\}/g, (_, a) => altText(known(a)))
     .replace(/\{\{code:([^}]+)\}\}/g, (_, p) => code(p))
     .replace(/\{\{run:([^}]+)\}\}/g, (_, p) => run(p))
+    .replace(/\{\{wcag:(table|summary)\}\}/g, (_, k) => wcagPart(k))
     .replace(/\{\{strip:([^}]+)\}\}/g, (_, p) => strip(p))
     .replace(/\{\{perf:([^}]+)\}\}/g, (_, p) => perf(p))
     .replace(/\{\{studio:(colours|type|shape|maps)\}\}/g, (_, t) => studioTab(t, studio()))

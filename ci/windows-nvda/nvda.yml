@@ -1,0 +1,60 @@
+# NVDA, for real, on a Windows runner: the web element on plain pages (budget, controls, votes,
+# prices), driven by Guidepup (MIT; dev-only — installed in this job, never a dependency of any
+# package), and what NVDA says kept as an artifact.
+#
+# NOT ENABLED: this file is kept outside .github/workflows. To run it, copy it to
+# .github/workflows/nvda.yml on a branch and start it from the Actions tab (workflow_dispatch).
+# It has never run.
+name: nvda
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    env:
+      WASI_SDK: /opt/wasi-sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: wasm32-unknown-unknown }
+      - uses: Swatinem/rust-cache@v2
+      - uses: taiki-e/install-action@v2
+        with: { tool: wasm-bindgen-cli@0.2.128 }
+      - name: wasi-sdk (clang + libc for QuickJS) and libclang for bindgen
+        run: |
+          curl -sSL https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-24/wasi-sdk-24.0-x86_64-linux.tar.gz | sudo tar xz -C /opt
+          sudo mv /opt/wasi-sdk-24.0-x86_64-linux $WASI_SDK
+          sudo apt-get update && sudo apt-get install -y libclang-dev
+      - uses: pnpm/action-setup@v4
+        with: { version: 8.15.1 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: pnpm install --frozen-lockfile
+      - name: Build the web runtime
+        run: LLVM=$WASI_SDK WASI_SYSROOT=$WASI_SDK/share/wasi-sysroot LIBCLANG_PATH=$(llvm-config --libdir 2>/dev/null || echo /usr/lib/llvm-18/lib) bash scripts/build-wasm.sh
+      - run: pnpm -C packages/web build
+      - run: bash scripts/build-a11y-pages.sh out/a11y-pages
+      - uses: actions/upload-artifact@v4
+        with: { name: a11y-pages, path: out/a11y-pages }
+
+  nvda:
+    needs: pages
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: a11y-pages, path: a11y-pages }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      # NVDA (portable) and the Windows settings a screen reader needs on a CI machine.
+      - run: npx --yes @guidepup/setup@0.29.3
+      - name: NVDA reads the charts
+        run: |
+          npm install --no-save @guidepup/guidepup@0.36.4
+          node ci/windows-nvda/nvda.mjs a11y-pages nvda-said
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: nvda-said, path: nvda-said }

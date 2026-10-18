@@ -92,7 +92,7 @@ export default doc({
             semantics: { role: "series", label: "Trips: time against distance" } }),
           // The limit: a line to drag up and down (the band around it is what the pointer finds).
           group({ key: "limit", on: { drag: scrub("limit", { axis: "y", scale: "limitY", step: 1, min: 5, max: 55 }) }, semantics: { role: "control", label: e("`Time limit: ${limit} minutes`") }, children: [
-            shape(geom.rect({ x: 0, y: e("(60 - limit) * 4 - 8"), w: xAt(14), h: 16 }), { key: "hit", fill: "$accent@0", pickable: true }),
+            shape(geom.rect({ x: 0, y: e("(60 - limit) * 4 - 12"), w: xAt(14), h: 24 }), { key: "hit", fill: "$accent@0", pickable: true }), // (24 px: a finger finds it, WCAG 2.5.8)
             shape(geom.segment({ x1: 0, y1: e("(60 - limit) * 4"), x2: xAt(14), y2: e("(60 - limit) * 4") }), { key: "rule", stroke: { paint: "$accent", width: 2, dash: [6, 4], nonScaling: true } }),
             text(e("`${limit} min`"), [xAt(14), e("(60 - limit) * 4")], { key: "tag", pin: true, offset: [-4, -6], style: { size: 11, weight: 600, ink: "$accent", align: "end" } }),
           ] }),

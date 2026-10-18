@@ -43,11 +43,8 @@ fn rect(r: datars_math::Rect, dpr: f64) -> Rect {
 /// live region under the figure says it.
 pub fn tree(engine: &mut Engine, title: &str, dpr: f64, said: &str) -> (TreeUpdate, Vec<(NodeId, Target)>) {
     let vp = engine.viewport();
-    let items = engine.semantic_items();
-    let name = engine.accessible_name();
-    let summary = engine.accessible_summary();
     let locale = engine.doc().locale.clone();
-    let readout = datars_runtime::readout::readout_in(&locale, &name, &summary, &items);
+    let readout = datars_runtime::readout::of_engine(engine);
     let mut nodes: Vec<(NodeId, Node)> = Vec::new();
     let mut targets = Vec::new();
     let whole = Rect { x0: 0.0, y0: 0.0, x1: vp.width * dpr, y1: vp.height * dpr };
@@ -263,5 +260,28 @@ mod tests {
         let (t, _) = tree(&mut e, "Prices", 1.0, &said);
         let live = t.nodes.iter().find(|(_, n)| n.live() == Some(accesskit::Live::Polite)).expect("a live region");
         assert_eq!(live.1.value(), Some(said.as_str()));
+    }
+
+    #[test]
+    fn a_story_steps_and_a_long_run_pages_from_the_reading_order() {
+        // votes: a story — what the chart shows, then Next step last; clicking it steps.
+        let mut e = load("votes");
+        let (t, targets) = tree(&mut e, "Votes", 1.0, "");
+        let figure = t.nodes.iter().find(|(_, n)| n.role() == Role::Figure).expect("the chart");
+        let last = figure.1.children()[figure.1.children().len() - 2]; // (the live region is last)
+        let next = t.nodes.iter().find(|(id, _)| *id == last).expect("a node");
+        assert_eq!((next.1.role(), next.1.label()), (Role::Button, Some("Next step")));
+        assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: next.0, data: None }));
+        assert_eq!(e.state_index(), 1);
+
+        // prices: 365 days, a page of rows at a time — the rest a button away.
+        let mut e = load("prices");
+        let (t, targets) = tree(&mut e, "Prices", 1.0, "");
+        let more = t.nodes.iter().find(|(_, n)| n.role() == Role::Button && n.label().is_some_and(|l| l.starts_with("Next rows"))).expect("next rows");
+        assert_eq!(more.1.label(), Some("Next rows, 201 to 365 of 365"));
+        assert!(act(&mut e, &targets, &ActionRequest { action: Action::Click, target_tree: TreeId::ROOT, target_node: more.0, data: None }));
+        assert_eq!(e.take_announcement().as_deref(), Some("Rows 201 to 365 of 365."));
+        let (t, _) = tree(&mut e, "Prices", 1.0, "");
+        assert!(t.nodes.iter().any(|(_, n)| n.role() == Role::Button && n.label() == Some("Previous rows, 1 to 200 of 365")));
     }
 }

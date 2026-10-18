@@ -53,6 +53,8 @@ const MAX_CACHED_SCENES: usize = 256;
 /// Instances listed one by one in the accessible description, per scene (the rest are summarized
 /// by their node's own label).
 const MAX_INSTANCE_ITEMS: usize = 200;
+/// The key reduced motion plans a transition's new scene under (`Engine::plan_between`).
+pub const REDUCED_MOTION_KEY: &str = "reduced-motion";
 
 /// Themes from the standard library, available to every document by name.
 pub const STD_THEMES: &[&str] = &[
@@ -190,7 +192,7 @@ pub struct Control {
 }
 
 /// One item of the accessible description.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SemanticItem {
     pub role: String,
     pub label: String,
@@ -210,6 +212,23 @@ pub struct SemanticItem {
     /// A mark that says it has a value but has none (a map's region without data): hosts read
     /// these as one ("38 regions without data"), not one by one, and don't offer them as buttons.
     pub missing: bool,
+    /// One of a long run of marks listed a page at a time (a line's points): its place in the run
+    /// (from 0) and how many the run has — hosts number the rows ("row 201 of 365").
+    pub index: Option<usize>,
+    pub total: Option<usize>,
+}
+
+/// How many marks of one run (an instances node's) the semantics list at once: the rest are a
+/// page away (`…#rows=<from>`, `Engine::activate`), so a reader can reach every one.
+pub const ROWS_PER_PAGE: usize = MAX_INSTANCE_ITEMS;
+
+/// What a semantics walk lists: marks left to list, sets of marks already listed (by what they
+/// say), and the page each long run is on.
+struct Listing {
+    left: usize,
+    seen: BTreeSet<LabelsKey>,
+    pages: BTreeMap<String, usize>,
+    locale: String,
 }
 
 /// Where a keyed point is on screen this frame (for host overlays).
@@ -388,6 +407,9 @@ pub struct Engine {
     settled_at: Option<f64>,
     /// Autoplay runs while true (hosts pause it for interaction, reduced motion, off-screen).
     playing: bool,
+    /// The reader paused what moves by itself (WCAG 2.2.2): autoplay and a clock-driven scene
+    /// stay still until they play it again, whatever the host's own pausing does.
+    held: bool,
     /// The reader asked for reduced motion: every transition is a short crossfade.
     reduced_motion: bool,
     /// The reader's text size, as a multiple of the theme's (`Engine::set_text_scale`).
@@ -424,8 +446,13 @@ pub struct Engine {
     drag: Option<Drag>,
     /// A selection being made with the keyboard (`Engine::key`).
     key_brush: Option<keyboard::KeyBrush>,
+    /// A selection being made by clicking its two ends: the brush's path and where the first
+    /// click was (WCAG 2.5.7: what a drag does, without dragging).
+    click_brush: Option<(KeyPath, Vec2)>,
     /// What the last interaction changed, in words, until a host takes it.
     announcement: Option<String>,
+    /// The page each long run of marks is on in the semantics (`ROWS_PER_PAGE`), by its node.
+    row_pages: BTreeMap<String, usize>,
     /// The element under the pointer that `hover()` asked about (the innermost), if any.
     hovered: Option<KeyPath>,
     /// What the pointer over the chart should look like, as the last pointer input left it.
@@ -541,6 +568,7 @@ impl Engine {
             clock: 0.0,
             settled_at: None,
             playing: true,
+            held: false,
             reduced_motion: false,
             text_scale: 1.0,
             bold_text: false,
@@ -557,7 +585,9 @@ impl Engine {
             seeked: None,
             drag: None,
             key_brush: None,
+            click_brush: None,
             announcement: None,
+            row_pages: BTreeMap::new(),
             hovered: None,
             cursor: Cursor::Default,
             recording: None,
@@ -1023,7 +1053,7 @@ impl Engine {
         for (a, b) in pairs {
             let (ra, rb) = (self.resolve_state(a), self.resolve_state(b));
             let cx = datars_motion::PlanCx { theme: self.theme.clone(), from_state: names.get(a).cloned(), to_state: names.get(b).cloned(), event_point: None };
-            let plan = datars_motion::plan(&ra.scene, &rb.scene, &self.rules_between(&ra.motion, &rb.motion), &cx);
+            let plan = self.plan_between(&ra.scene, &rb.scene, &self.rules_between(&ra.motion, &rb.motion), &cx);
             for k in 1..=samples {
                 let frame = self.planned_at(&plan, k as f64 / (samples + 1) as f64);
                 self.collect_views(&frame, "", &[], &mut out);
@@ -1827,6 +1857,7 @@ impl Engine {
                 self.seek(*pos);
             }
             I::Playing { on } => self.set_playing(*on),
+            I::Held { on } => self.set_held(*on),
             I::ReducedMotion { on } => self.set_reduced_motion(*on),
             I::TextScale { scale } => self.set_text_scale(*scale),
             I::BoldText { on } => self.set_bold_text(*on),
@@ -1861,6 +1892,27 @@ impl Engine {
 
     pub fn playing(&self) -> bool {
         self.playing
+    }
+
+    /// Does anything here move by itself: the program autoplays, or the scene reads the clock?
+    /// Then hosts offer the reader a way to pause it ([`Engine::set_held`]; WCAG 2.2.2).
+    pub fn moves_by_itself(&mut self) -> bool {
+        drivers::has(self.doc.program.as_ref(), "autoplay") || self.reads_clock()
+    }
+
+    /// The reader's pause (WCAG 2.2.2): held, autoplay and a clock-driven scene stay where they are
+    /// until released — separate from the host's own pausing (off screen, reduced motion), which
+    /// can't undo it. Hosts offer it as a button; the reading order has it (`playback:pause`).
+    pub fn set_held(&mut self, on: bool) {
+        self.rec(session::Input::Held { on });
+        self.held = on;
+        if !on {
+            self.settled_at = None; // the hold restarts
+        }
+    }
+
+    pub fn held(&self) -> bool {
+        self.held
     }
 
     /// Reduced motion (the platform setting): transitions become short crossfades — nothing
@@ -1903,6 +1955,23 @@ impl Engine {
             }
         }
         base.with_defaults(defaults)
+    }
+
+    /// A transition from `a` to `b`. With reduced motion it is a crossfade of the two scenes as
+    /// wholes (WCAG 2.3.3): `b`'s content is planned under a key of its own, so nothing in it
+    /// pairs with what's there — no group's layout, no camera, no mark travels; what was there
+    /// fades out where it is, what comes fades in where it will be. (Only the frames in between
+    /// carry the extra key: the transition ends on `b` itself.)
+    fn plan_between(&self, a: &Scene, b: &Scene, rules: &datars_motion::MotionRules, cx: &datars_motion::PlanCx) -> datars_motion::Plan {
+        if !self.reduced_motion {
+            return datars_motion::plan(a, b, rules, cx);
+        }
+        let mut calm = b.clone();
+        if let Some(kids) = calm.root.children_mut() {
+            let all = std::mem::take(kids);
+            kids.push(datars_scene::Node::group(datars_scene::Key::name(REDUCED_MOTION_KEY), all));
+        }
+        datars_motion::plan(a, &calm, rules, cx)
     }
 
     fn motion_rules(&self) -> std::borrow::Cow<'_, datars_motion::MotionRules> {
@@ -1954,11 +2023,17 @@ impl Engine {
         if !*animating && self.settled_at.is_none() {
             self.settled_at = Some(now);
         }
-        if !*animating && self.playing && self.baked.is_none() && drivers::has(self.doc.program.as_ref(), "autoplay") {
+        if !*animating && self.playing && !self.held && self.baked.is_none() && drivers::has(self.doc.program.as_ref(), "autoplay") {
             let due = self.settled_at.unwrap_or(now) + self.program.hold(self.program.index());
             if now >= due {
                 if self.event_inner("next") {
                     *animating = self.active.is_some();
+                    // A step that changes nothing on screen settles at once: its hold starts now
+                    // (or the host, with no frame to come, would sleep through it).
+                    if !*animating {
+                        self.settled_at = Some(now);
+                        soonest(now + self.program.hold(self.program.index()), &mut wake);
+                    }
                 }
             } else {
                 soonest(due, &mut wake);
@@ -2022,7 +2097,7 @@ impl Engine {
                 continue;
             }
             let cx = datars_motion::PlanCx { theme: self.theme.clone(), from_state: Some(names[cur].clone()), to_state: Some(names[to].clone()), event_point: None };
-            let plan = datars_motion::plan(&shown.scene, &target.scene, &self.rules_between(&shown.motion, &target.motion), &cx);
+            let plan = self.plan_between(&shown.scene, &target.scene, &self.rules_between(&shown.motion, &target.motion), &cx);
             // Its map data too: the tiles along the flight and where it lands download while the
             // reader reads (decoded when drawn).
             self.prefetch(&plan);
@@ -2119,7 +2194,7 @@ impl Engine {
                 let from = self.active.as_ref().map(|a| a.to.motion.clone()).or_else(|| self.shown.as_ref().map(|s| s.motion.clone())).unwrap_or_default();
                 let plan = match prepared {
                     Some(p) => p,
-                    None => datars_motion::plan(&cur, &target.scene, &self.rules_between(&from, &target.motion), &cx),
+                    None => self.plan_between(&cur, &target.scene, &self.rules_between(&from, &target.motion), &cx),
                 };
                 self.prefetch(&plan);
                 let duration = plan.duration().max(0.0);
@@ -2200,7 +2275,7 @@ impl Engine {
         self.fill_tiles(&mut sb, true);
         self.absorb_tile_diags();
         let cx = datars_motion::PlanCx { theme: self.theme.clone(), from_state: names.get(a).cloned(), to_state: names.get(b).cloned(), event_point: None };
-        let plan = datars_motion::plan(&ra.scene, &rb.scene, &self.rules_between(&ra.motion, &rb.motion), &cx);
+        let plan = self.plan_between(&ra.scene, &rb.scene, &self.rules_between(&ra.motion, &rb.motion), &cx);
         (sa, sb, plan)
     }
 
@@ -2286,7 +2361,7 @@ impl Engine {
                 animating = true;
             }
         }
-        if self.active.is_none() && self.playing && !self.reduced_motion && self.reads_clock() {
+        if self.active.is_none() && self.playing && !self.held && !self.reduced_motion && self.reads_clock() {
             self.clock_time += dt;
             self.shown = Some(self.resolve_now());
             animating = true;
@@ -2396,9 +2471,53 @@ impl Engine {
                         }
                         return None;
                     }
-                    if let resolve::BoundAction::Brush { signal, .. } = &d.action {
-                        // A click without a drag clears the brush.
-                        self.set_signals(vec![(format!("{signal}.active"), Value::Bool(false)), (format!("{signal}.lo"), Value::Num(f64::NAN)), (format!("{signal}.hi"), Value::Num(f64::NAN)), (signal.clone(), env::encode_keyset(&[]))]);
+                    if let resolve::BoundAction::Brush { signal, map, axis } = &d.action {
+                        // A click without a drag (not on a mark a click acts on): a selection by
+                        // its two ends, without dragging — the first click starts it there, the
+                        // second ends it; a click on a selection already made clears it.
+                        let clickable = self.shown.as_ref().is_some_and(|r| {
+                            pick::pick(&scene, at).is_some_and(|h| r.actions.iter().any(|(p, a)| h.path.0.starts_with(&p.0) && a.contains_key("activate")))
+                        });
+                        let loc = self.doc.locale.clone();
+                        match self.click_brush.take() {
+                            Some((p, start)) if p == d.path && !clickable => {
+                                self.drag = Some(Drag { path: d.path.clone(), action: d.action.clone(), start, last: start, moved: true });
+                                self.drag_to(&scene, at);
+                                self.drag = None;
+                                if let Some(range) = self.brush_range(signal, map) {
+                                    self.announcement = Some(format!("{}.", phrases::phrase(&loc, "brush-done", &[("range", &range)])));
+                                }
+                                return None;
+                            }
+                            _ if !clickable && self.brush_range(signal, map).is_none() => {
+                                // On a band scale the first click picks the band it lands nearest.
+                                let (a, b) = match map {
+                                    resolve::BrushMap::Bands { centers } => pick::node_at(&scene, &d.path)
+                                        .and_then(|(_, xf)| xf.inverse().map(|inv| (xf, inv.apply(at))))
+                                        .and_then(|(xf, l)| {
+                                            let v = if *axis == 1 { l.y } else { l.x };
+                                            let c = centers.iter().map(|(c, _)| *c).min_by(|p, q| (p - v).abs().total_cmp(&(q - v).abs()))?;
+                                            let at = |c: f64| xf.apply(if *axis == 1 { Vec2::new(l.x, c) } else { Vec2::new(c, l.y) });
+                                            Some((at(c - 0.25), at(c + 0.25)))
+                                        })
+                                        .unwrap_or((at, at)),
+                                    _ => (at, at),
+                                };
+                                self.click_brush = Some((d.path.clone(), a));
+                                self.drag = Some(Drag { path: d.path.clone(), action: d.action.clone(), start: a, last: a, moved: true });
+                                self.drag_to(&scene, b);
+                                self.drag = None;
+                                let from = self.brush_range(signal, map).map(|r| r.split(&phrases::phrase(&loc, "brush-range", &[("lo", ""), ("hi", "")])).next().unwrap_or("").to_string()).unwrap_or_default();
+                                self.announcement = Some(format!("{}.", phrases::phrase(&loc, "brush-click", &[("from", from.trim())])));
+                                return None;
+                            }
+                            _ => {
+                                self.set_signals(vec![(format!("{signal}.active"), Value::Bool(false)), (format!("{signal}.lo"), Value::Num(f64::NAN)), (format!("{signal}.hi"), Value::Num(f64::NAN)), (signal.clone(), env::encode_keyset(&[]))]);
+                                if !clickable {
+                                    self.announcement = Some(format!("{}.", phrases::phrase(&loc, "brush-clear", &[])));
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -2799,7 +2918,7 @@ impl Engine {
         let scene = self.scene();
         let mut out = Vec::new();
         #[allow(clippy::too_many_arguments)]
-        fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut (usize, BTreeSet<LabelsKey>)) {
+        fn walk(n: &datars_scene::Node, path: &KeyPath, depth: usize, parent: datars_math::Affine, acc: f64, act: &std::collections::BTreeSet<KeyPath>, out: &mut Vec<SemanticItem>, budget: &mut Listing) {
             // What can't be seen isn't read out (a layer faded out over another).
             let acc = pick::seen(n, acc);
             if acc <= pick::INVISIBLE {
@@ -2814,7 +2933,7 @@ impl Engine {
                 }
                 // Pinned content (a map callout) where it's drawn, at screen size.
                 let rect = if n.common.pin { bounds::drawn_bounds(n, parent) } else { bounds::transform_rect(bounds::node_bounds(n), &parent) };
-                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked, missing: s.value.is_some_and(|v| !v.is_finite()) });
+                out.push(SemanticItem { role: serde_json::to_string(&s.role).unwrap_or_default().trim_matches('"').to_string(), label: s.label.clone(), depth, rect, path: format!("{here}"), actionable: act.contains(&here), value: s.value.filter(|v| v.is_finite()), kind: s.kind.as_ref().map(|k| k.to_string()), checked: s.checked, missing: s.value.is_some_and(|v| !v.is_finite()), ..Default::default() });
                 d += 1;
             }
             let inner = match &n.kind {
@@ -2827,19 +2946,37 @@ impl Engine {
             if let datars_scene::NodeKind::Instances(i) = &n.kind {
                 // (Marks that say what other marks already said — an area under its line, the
                 // same points — are read once.)
-                if let Some(ls) = i.labels.as_ref().filter(|ls| budget.1.insert(labels_key(ls))) {
-                    for (k, l) in ls.iter().enumerate().filter(|(k, _)| acc * i.opacity_at(*k) > pick::INVISIBLE) {
-                        if budget.0 == 0 {
+                if let Some(ls) = i.labels.as_ref().filter(|ls| budget.seen.insert(labels_key(ls))) {
+                    let shown: Vec<usize> = (0..ls.len()).filter(|k| acc * i.opacity_at(*k) > pick::INVISIBLE).collect();
+                    let total = shown.len();
+                    // A page of them (the one the reader is on), and the way to the rest.
+                    let node = format!("{here}");
+                    let from = budget.pages.get(&node).copied().unwrap_or(0).min(total.saturating_sub(1));
+                    let mut listed = 0;
+                    for (at, &k) in shown.iter().enumerate().skip(from) {
+                        if budget.left == 0 || listed == ROWS_PER_PAGE {
                             break;
                         }
-                        budget.0 -= 1;
-                        out.push(SemanticItem { role: "datum".into(), label: l.clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), path: String::new(), actionable: false, value: None, kind: None, checked: None, missing: false });
+                        budget.left -= 1;
+                        listed += 1;
+                        out.push(SemanticItem { role: "datum".into(), label: ls[k].clone(), depth: d, rect: bounds::transform_rect(i.geom(k).bounds(), &xf), index: Some(at), total: Some(total), ..Default::default() });
+                    }
+                    let page = |from: usize, key: &str| {
+                        let to = (from + ROWS_PER_PAGE).min(total);
+                        let n = |v: usize| datars_text::format::number(v as f64, ",.0f", &budget.locale);
+                        SemanticItem { role: "control".into(), label: phrases::phrase(&budget.locale, key, &[("from", &n(from + 1)), ("to", &n(to)), ("total", &n(total))]), depth: d, path: format!("{node}#rows={from}"), actionable: true, ..Default::default() }
+                    };
+                    if listed > 0 && from + listed < total {
+                        out.push(page(from + listed, "rows-next"));
+                    }
+                    if from > 0 {
+                        out.push(page(from.saturating_sub(ROWS_PER_PAGE), "rows-previous"));
                     }
                 }
             }
         }
         // Actionable only: no instance's label (they have no intents of their own) is ever made.
-        let mut budget = (if only_actionable { 0 } else { MAX_INSTANCE_ITEMS }, BTreeSet::new());
+        let mut budget = Listing { left: if only_actionable { 0 } else { MAX_INSTANCE_ITEMS }, seen: BTreeSet::new(), pages: self.row_pages.clone(), locale: self.doc.locale.clone() };
         walk(&scene.root, &KeyPath::default(), 0, datars_math::Affine::IDENTITY, 1.0, &actionable, &mut out, &mut budget);
         // What a pointer drags (a brush, a pannable view), for the keyboard (`Engine::key`).
         if draggable {
@@ -2960,10 +3097,44 @@ impl Engine {
         walk(&scene.root, 1.0, &mut BTreeSet::new())
     }
 
+    /// List the run of marks at `node` from its `from`-th (a page of `ROWS_PER_PAGE`), and say
+    /// which: "Rows 201 to 365 of 365".
+    fn show_rows(&mut self, node: &str, from: usize) -> bool {
+        self.row_pages.insert(node.to_string(), from);
+        let items = self.semantic_items();
+        let rows: Vec<&SemanticItem> = items.iter().filter(|i| i.index.is_some()).collect();
+        if let (Some(first), Some(last)) = (rows.iter().find(|i| i.index == Some(from)), rows.iter().rev().find(|i| i.index.is_some_and(|k| k >= from))) {
+            let loc = self.doc.locale.clone();
+            let n = |v: usize| datars_text::format::number(v as f64, ",.0f", &loc);
+            self.announcement = Some(format!("{}.", phrases::phrase(&loc, "rows-shown", &[("from", &n(first.index.unwrap_or(0) + 1)), ("to", &n(last.index.unwrap_or(0) + 1)), ("total", &n(first.total.unwrap_or(0)))])));
+        }
+        true
+    }
+
     /// Run the `activate` intent of the node at `path` (as `SemanticItem::path` spells it) — the
     /// keyboard and screen-reader route to click interactions. Returns whether one ran.
     pub fn activate(&mut self, path: &str) -> bool {
         self.rec(session::Input::Activate { path: path.to_string() });
+        // A story's own buttons in a host's reading order (`event:next`, `event:prev`).
+        if let Some(ev) = path.strip_prefix("event:") {
+            return self.event_inner(ev);
+        }
+        // The reader's pause and play (`playback:pause`, `playback:play`).
+        if let Some(p) = path.strip_prefix("playback:") {
+            let held = p == "pause";
+            let changed = held != self.held;
+            self.held = held;
+            if !held {
+                self.settled_at = None;
+            }
+            let loc = self.doc.locale.clone();
+            self.announcement = changed.then(|| format!("{}.", phrases::phrase(&loc, if held { "paused" } else { "playing" }, &[])));
+            return changed;
+        }
+        // A page of a long run of marks (`…#rows=200`): the reading order lists those next.
+        if let Some((node, from)) = path.rsplit_once("#rows=") {
+            return self.show_rows(node, from.parse().unwrap_or(0));
+        }
         let Some(resolved) = self.shown.clone() else { return false };
         let Some(a) = resolved.actions.iter().find(|(p, a)| format!("{p}") == path && a.contains_key("activate")).and_then(|(_, a)| a.get("activate").cloned()) else { return false };
         self.reported(Some(path.to_string()), |e| e.run_action(&a));

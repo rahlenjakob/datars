@@ -11,7 +11,10 @@ type Cfg = { dx0: number; lane: number; top: number; phone: boolean };
 const WIDE: Cfg = { dx0: 196, lane: 60, top: 0, phone: false };
 const NARROW: Cfg = { dx0: 10, lane: 110, top: 22, phone: true };
 
+// The lane in focus stands out; the others step back — their pictures faded, their words in the
+// muted ink (faded words would drop below a readable contrast).
 const lit = (n: number) => e(`focus == ${n} ? 1 : 0.3`);
+const words = (n: number, ink: string) => e(`focus == ${n} ? "${ink}" : "$muted"`);
 const TICKS = Array.from({ length: 16 }, (_, i) => 0.42 + i * 0.0105);
 
 function timeline(c: Cfg): Template {
@@ -21,38 +24,37 @@ function timeline(c: Cfg): Template {
   const cy = (n: number) => n * c.lane + c.top; // top of a lane's picture row
   const lane = (n: number, key: string, name: string, sub: string, body: Template[]): Template => group({
     key,
-    opacity: lit(n),
     children: [
       shape(geom.rect({ x: 0, y: n * c.lane, w: e("box.w"), h: c.lane - 8, r: 6 }), { key: "bg", fill: e(`focus == ${n} ? "$accent@0.07" : "$surface"`), semantics: { role: "decoration" } }),
-      label("name", name, [10, n * c.lane + 17], { strong: true }),
+      label("name", name, [10, n * c.lane + 17], { strong: true, ink: words(n, "$ink") }),
       label("sub", sub, c.phone ? [e(`10 + measure(${JSON.stringify(name)}, 12, 600) + 8`), n * c.lane + 17] : [10, n * c.lane + 36], { size: SIZE.small, ink: "$muted" }),
       ...body,
     ],
   });
-  const chip = (key: string, x: string, y: number, w: string, s: string, ink: string) => group({ key, children: [
-    shape(geom.rect({ x: e(x), y, w: e(w), h: 22, r: 4 }), { key: "box", fill: `${ink}@0.16`, stroke: { paint: ink, width: 1 }, semantics: { role: "decoration" } }),
-    s ? text(s, [e(`${x} + ${w} / 2`), y + 11], { key: "t", style: { size: 11, ink: "$ink", align: "middle", baseline: "middle", font: "font.strong" } }) : null,
+  const chip = (n: number, key: string, x: string, y: number, w: string, s: string, ink: string) => group({ key, children: [
+    shape(geom.rect({ x: e(x), y, w: e(w), h: 22, r: 4 }), { key: "box", fill: `${ink}@0.16`, stroke: { paint: ink, width: 1 }, opacity: lit(n), semantics: { role: "decoration" } }),
+    s ? text(s, [e(`${x} + ${w} / 2`), y + 11], { key: "t", style: { size: 11, ink: words(n, "$ink"), align: "middle", baseline: "middle", font: "font.strong" } }) : null,
   ] });
   // A lane's words: beside its picture (wide) or under it (phone).
   const note = (key: string, s: string, n: number, x: number, w: number) => c.phone
-    ? label(key, s, [10, n * c.lane + 70], { size: SIZE.small, ink: "$ink-2", maxWidth: e("box.w - 20"), baseline: "top" })
-    : label(key, s, [e(dev(x)), cy(n) + 26], { size: SIZE.small, ink: "$ink-2", maxWidth: e(span(w)) });
+    ? label(key, s, [10, n * c.lane + 70], { size: SIZE.small, ink: words(n, "$ink-2"), maxWidth: e("box.w - 20"), baseline: "top" })
+    : label(key, s, [e(dev(x)), cy(n) + 26], { size: SIZE.small, ink: words(n, "$ink-2"), maxWidth: e(span(w)) });
   const axisY = 3 * c.lane + 4;
   return group({
     key: "timeline",
     children: [
       lane(0, "publish", "Publish time", "the author's machine, once", [
-        chip("work", String(c.dx0), cy(0) + 15, "110", "datars publish", "$accent"),
+        chip(0, "work", String(c.dx0), cy(0) + 15, "110", "datars publish", "$accent"),
         c.phone
           ? note("what", "expand recipes · fetch data · subset fonts · bake every state · draw the poster · cut map archives", 0, 0, 1)
-          : label("what", "expand recipes · fetch data · subset fonts · bake every state · draw the poster · cut map archives", [c.dx0 + 124, cy(0) + 26], { size: SIZE.small, ink: "$ink-2", maxWidth: e(`box.w - ${c.dx0 + 124}`) }),
+          : label("what", "expand recipes · fetch data · subset fonts · bake every state · draw the poster · cut map archives", [c.dx0 + 124, cy(0) + 26], { size: SIZE.small, ink: words(0, "$ink-2"), maxWidth: e(`box.w - ${c.dx0 + 124}`) }),
       ]),
       lane(1, "idle", "Idle time", "between steps, on the device", [
-        ...[0.07, 0.12, 0.17, 0.7, 0.75].map((f, i) => chip(`s${i}`, dev(f), cy(1) + 15, span(0.04), "", "$categorical[4]")),
+        ...[0.07, 0.12, 0.17, 0.7, 0.75].map((f, i) => chip(1, `s${i}`, dev(f), cy(1) + 15, span(0.04), "", "$categorical[4]")),
         note("what", "resolve and plan the next steps, warm their meshes, fetch their tiles", 1, 0.24, 0.42),
       ]),
       lane(2, "frame", "A frame", "16.7 ms at 60 Hz", [
-        ...TICKS.map((f, i) => shape(geom.rect({ x: e(dev(f)), y: cy(2) + 13, w: 2, h: 24 }), { key: `f${i}`, fill: i === 8 ? "$ink" : "$categorical[2]", semantics: { role: "decoration" } })),
+        ...TICKS.map((f, i) => shape(geom.rect({ x: e(dev(f)), y: cy(2) + 13, w: 2, h: 24 }), { key: `f${i}`, fill: i === 8 ? "$ink" : "$categorical[2]", opacity: lit(2), semantics: { role: "decoration" } })),
         note("what", "plan.at(t) · fill tiles and points within budgets · flatten · draw", 2, 0.62, 0.38),
       ]),
       group({ key: "axis", children: [

@@ -318,7 +318,9 @@
           }
          ],
          "style": {
-          "size": 11.5,
+          "size": {
+           "expr": "token(\"size.label\") * 11.5 / 11"
+          },
           "weight": 600,
           "ink": "$ink",
           "align": {

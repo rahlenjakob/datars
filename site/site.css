@@ -445,6 +445,32 @@ pre.output .prompt { color: #82aaff; }
 .table-wrap th, .table-wrap td { text-align: left; vertical-align: top; padding: 10px 14px; border-bottom: 1px solid var(--rule); }
 .table-wrap thead th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; white-space: nowrap; }
 .table-wrap tbody tr:last-child > * { border-bottom: 0; }
+/* The WCAG conformance table (docs/accessibility): a row per criterion, grouped by principle; on a
+   phone each row stacks, its cells named. Results are words, not colours. */
+.wcag caption { caption-side: top; text-align: left; padding: 12px 14px 4px; font-size: 13px; color: var(--muted); }
+.wcag th[scope=row] { width: 25%; font-weight: 600; }
+.wcag th[scope=row] > span { display: block; }
+.wcag-who { font-weight: 400; color: var(--muted); font-size: 13px; margin-top: 2px; }
+.wcag td:last-child { width: 32%; }
+.wcag-checks code { word-break: break-all; }
+.wcag-level { display: inline-block; margin-left: 4px; padding: 0 6px; border: 1px solid var(--rule); border-radius: 999px; font-size: 11px; font-weight: 600; color: var(--muted); vertical-align: 1px; }
+.wcag-principle th { background: var(--paper); font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.wcag-checks { margin: 0; padding-left: 1.1em; font-size: 13px; }
+.wcag-checks li { margin: 0 0 4px; }
+.wcag-checked { color: var(--muted); }
+.wcag-status { font-weight: 600; font-size: 13px; margin-top: 4px; }
+.wcag-status.wcag-partial, .wcag-status.wcag-not-met { text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
+.wcag-status.wcag-na { font-weight: 400; color: var(--muted); }
+.wcag-summary { font-size: 16px; }
+@media (max-width: 720px) {
+  .wcag thead { display: none; }
+  .wcag caption { display: block; }
+  .wcag, .wcag tbody, .wcag tr, .wcag th, .wcag td { display: block; }
+  .wcag tr { border-bottom: 1px solid var(--rule); padding: 6px 0; }
+  .wcag th, .wcag td { border-bottom: 0; padding: 4px 14px; }
+  .wcag td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+  .wcag th[scope=row], .wcag td:last-child { width: auto; font-size: 15.5px; }
+}
 .table-wrap td code { white-space: nowrap; }
 .table-wrap td:last-child code { white-space: normal; }
 table.params td:first-child, table.cli td:first-child { white-space: nowrap; }

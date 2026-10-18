@@ -52,7 +52,7 @@ function releaseGl(canvas: HTMLCanvasElement | undefined) {
 }
 
 /** A semantics item as the runtime gives it (`status().semantics`, `chrome().actions`). */
-interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio" | "brush" | "pan"; checked?: boolean; missing?: boolean }
+interface MirrorItem { role: string; label: string; depth: number; path: string; actionable: boolean; rect?: number[]; value?: number; kind?: "checkbox" | "switch" | "radio" | "brush" | "pan"; checked?: boolean; missing?: boolean; index?: number; total?: number }
 
 /** What a mirror built from these actions (`chrome().actions`) offers: their paths and labels. */
 function actionsKey(actions: { path: string; label: string }[]): string {
@@ -283,9 +283,20 @@ canvas { transition: opacity .22s ease-out; }
 .tip[hidden] { display: none; }
 /* Where the keyboard is: the mirror's buttons and sliders are hidden, so the mark or control a
    focused one stands for is outlined on the chart. */
-.focus { position: absolute; pointer-events: none; border-radius: 4px; outline: 2px solid var(--accent, #4269d0); outline-offset: 2px; }
+/* Two rings: the accent, and inside it the paper — one of them stands out on any mark or ground
+   (WCAG 2.4.7, 2.4.13), a mark drawn in the accent's own blue included. */
+.focus { position: absolute; pointer-events: none; border-radius: 4px; outline: 2px solid var(--accent, #4269d0); outline-offset: 2px; box-shadow: 0 0 0 2px var(--paper, #fff); }
 .focus[hidden] { display: none; }
 @media (forced-colors: active) { .focus, .links a:focus-visible { outline-color: Highlight; } .tip { border: 1px solid CanvasText; } }
+/* The reader's Pause (WCAG 2.2.2) for what moves by itself — autoplay, a live feed, a clock — over
+   the chart's top right corner (no room taken from the page: nothing moves when it comes), after
+   the chart's content in the reading order. 28 px: a target a finger finds (WCAG 2.5.8). */
+.playback { position: absolute; top: 6px; right: 6px; z-index: 2; display: flex; gap: 6px; }
+.playback[hidden] { display: none; }
+.playback button { box-sizing: border-box; min-width: 28px; height: 28px; padding: 0 8px; font: 600 12px/1 inherit; border-radius: 6px; border: 1px solid var(--muted, #6b6b6b); background: var(--paper, #fff); color: var(--ink, #111); cursor: pointer; opacity: .92; }
+.playback button:hover { opacity: 1; }
+.playback button:focus-visible { outline: 2px solid var(--accent, #4269d0); outline-offset: 2px; }
+.playback .reset[hidden] { display: none; }
 .controls { display: flex; gap: 8px; justify-content: center; margin-top: 8px; }
 .controls[hidden] { display: none; }
 .controls button { font: inherit; padding: 4px 12px; border-radius: 6px; border: 1px solid var(--rule, #999); background: var(--paper, #fff); color: var(--ink, #111); cursor: pointer; }
@@ -377,9 +388,11 @@ export class DatarsView extends ElementBase {
   connectedCallback() {
     this.root.innerHTML = `<style>${CSS}</style>
       <div class="stage" part="stage"><div class="poster" part="poster"></div><canvas hidden part="canvas" aria-hidden="true"></canvas>
-      <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
+      <div class="texts" part="texts" aria-hidden="true"></div><div class="card" part="card" aria-hidden="true"></div><div class="links" part="links"></div><div class="pickers"></div><div class="tip" hidden part="tooltip"></div><div class="focus" hidden part="focus"></div><div class="perf" hidden part="perf"></div></div>
+      <div class="sr mirror"></div>
+      <div class="playback" part="playback" hidden><button class="reset" part="reset" hidden></button><button class="pause" part="pause" hidden></button></div>
       <div class="controls" part="controls" hidden><button data-ev="prev" aria-label="Previous">←</button><button data-ev="next" aria-label="Next">→</button></div>
-      <div class="sr mirror"></div><div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
+      <div class="sr" aria-live="polite"></div><span class="em" aria-hidden="true"></span>`;
     this.stage = this.root.querySelector(".stage")!;
     // The height the page asked for, from the first frame the element is on the page: laid out a
     // frame later, the chart would grow into its space and push the page down.
@@ -389,6 +402,9 @@ export class DatarsView extends ElementBase {
     this.card = this.root.querySelector(".card")!;
     this.linkLayer = this.root.querySelector(".links")!;
     this.tip = this.root.querySelector(".tip")!;
+    // The reader's Pause (what moves by itself) and Show all (a view they zoomed or moved).
+    this.root.querySelector(".playback .pause")!.addEventListener("click", () => this.setPaused(!this.paused));
+    this.root.querySelector(".playback .reset")!.addEventListener("click", () => this.showAll());
     this.mirror = this.root.querySelector(".mirror")!;
     this.live = this.root.querySelector("[aria-live]")!;
     // A sighted keyboard user sees where the hidden list's focus is: the item's box on the chart.
@@ -442,7 +458,8 @@ export class DatarsView extends ElementBase {
         const own = e.composedPath()[0] === this;
         if (own && (e.key === "ArrowRight" || e.key === " ")) { this.send("next"); e.preventDefault(); }
         if (own && e.key === "ArrowLeft") { this.send("prev"); e.preventDefault(); }
-        if (e.key === "Escape") this.send("back");
+        // Esc puts away a tooltip first (WCAG 1.4.13), then leaves a drill-down chapter.
+        if (e.key === "Escape") { if (!this.tip.hidden) { this.dismissTip(); e.preventDefault(); } else this.send("back"); }
         if (e.key === "D" && e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) this.showStats(!this.profiler?.visible);
       });
       // Layout sets the stage's height, which resizes this element: done in the next frame, not
@@ -475,8 +492,15 @@ export class DatarsView extends ElementBase {
       const scale = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
       // Only an explorable view takes the wheel; otherwise the page scrolls as usual.
       // The content moves under the pointer: whatever the tooltip named isn't there any more.
-      if (this.view.wheel(e.clientX - r.left, e.clientY - r.top, e.deltaY * scale)) { e.preventDefault(); this.tip.hidden = true; this.textLayer.hide(); this.kick(); this.noteSignals(); }
+      if (this.view.wheel(e.clientX - r.left, e.clientY - r.top, e.deltaY * scale)) { e.preventDefault(); this.tip.hidden = true; this.textLayer.hide(); this.kick(); this.noteSignals(); this.noteZoom(); }
     };
+    // A double click on a view that pans and zooms zooms in there — what a pinch or the wheel does,
+    // with one pointer and no drag (WCAG 2.5.1, 2.5.7); Show all, over the chart, goes back.
+    this.canvas.addEventListener("dblclick", (e) => {
+      if (!this.view) return;
+      const r = this.canvas.getBoundingClientRect();
+      if (this.view.wheel(e.clientX - r.left, e.clientY - r.top, -462)) { e.preventDefault(); this.tip.hidden = true; this.textLayer.hide(); this.kick(); this.noteSignals(); this.noteZoom(); }
+    });
     // The pointer leaving the chart (not just going from the canvas to text over it, or back).
     // A finger leaves after every tap (touch has no hover): what the tap showed stays.
     const leave = (e: PointerEvent) => {
@@ -625,6 +649,7 @@ export class DatarsView extends ElementBase {
    * Put back, it starts again (`connectedCallback`). */
   disconnectedCallback() {
     this.generation++; // a start still loading gives up
+    document.removeEventListener("keydown", this.onTipKey, { capture: true });
     clearTimeout(this.describeTimer);
     this.describeTimer = 0;
     cancelAnimationFrame(this.raf);
@@ -1209,6 +1234,7 @@ export class DatarsView extends ElementBase {
         const to = this.pinchTo;
         if (!to || !this.pinch || !this.view) return;
         if (this.view.wheel(to.mid[0], to.mid[1], -Math.log(to.spread / this.pinch) / 0.0015)) {
+          this.noteZoom();
           this.tip.hidden = true;
           this.kick();
           this.noteSignals();
@@ -1283,6 +1309,8 @@ export class DatarsView extends ElementBase {
     }
     if (release) this.pressAt = null;
     this.now();
+    // A view the reader dragged around: Show all is offered.
+    if (release && p?.moved && this.canvas.style.cursor === "grabbing") this.noteZoom();
     const label: string | undefined = this.view.pointer(kind, x, y);
     if (release) this.sayChange();
     // The engine says what the pointer can do here: a hand over what a click acts on, grab over a
@@ -1291,13 +1319,25 @@ export class DatarsView extends ElementBase {
       const cursor: string = this.view.cursor?.() ?? "default";
       if (this.canvas.style.cursor !== cursor) this.canvas.style.cursor = cursor;
     }
-    if (label && kind !== "down") {
+    if (label !== this.tipDismissed) this.tipDismissed = null;
+    // Over the tooltip itself, or on the way to it: it stays where it is (WCAG 1.4.13, hoverable).
+    const tipBox = this.tip.hidden ? null : { x: this.tip.offsetLeft, y: this.tip.offsetTop, w: this.tip.offsetWidth, h: this.tip.offsetHeight };
+    const onTip = kind === "move" && tipBox && x >= tipBox.x - 14 && x <= tipBox.x + tipBox.w + 14 && y >= tipBox.y - 14 && y <= tipBox.y + tipBox.h + 14;
+    if (onTip && (!label || label === this.tip.textContent)) {
+      // (nothing: the tooltip stays as it is)
+    } else if (label && kind !== "down" && label !== this.tipDismissed) {
+      // The same mark as before: the tooltip stays put, so the pointer can reach it.
+      const same = !this.tip.hidden && this.tip.textContent === label && kind === "move";
       this.tip.textContent = label;
       this.tip.hidden = false;
+      if (kind === "move") document.addEventListener("keydown", this.onTipKey, { capture: true });
       this.tipPinned = kind === "tap";
       const tw = this.tip.offsetWidth, th = this.tip.offsetHeight, gap = 12;
       let left: number, top: number;
-      if (kind === "tap") {
+      if (same) {
+        left = this.tip.offsetLeft;
+        top = this.tip.offsetTop;
+      } else if (kind === "tap") {
         // Above the finger (it covers what's below it), centred on it; below where there's no room.
         left = x - tw / 2;
         top = y - 28 - th >= 0 ? y - 28 - th : y + 28;
@@ -1587,6 +1627,16 @@ export class DatarsView extends ElementBase {
    * columns the chart needs (the chart keeps showing what it had). */
   provideData(name: string, data: string | Uint8Array | object) {
     const bytes = data instanceof Uint8Array ? data : new TextEncoder().encode(typeof data === "string" ? data : JSON.stringify(data));
+    // A source that arrives again and again is a live feed: the reader can pause it (WCAG 2.2.2),
+    // and while paused what arrives waits, in order, for Play.
+    const arrivals = (this.arrivals.get(name) ?? 0) + 1;
+    this.arrivals.set(name, arrivals);
+    if (arrivals >= 2 && !this.liveFeed) { this.liveFeed = true; this.syncPlayback(); }
+    if (this.paused && this.view?.ready()) {
+      this.heldData.push([name, bytes]);
+      this.hostData.set(name, bytes);
+      return;
+    }
     if (this.view?.ready()) this.view.provide_source(name, bytes);
     this.hostData.set(name, bytes);
     this.noteData();
@@ -1765,6 +1815,9 @@ export class DatarsView extends ElementBase {
     // Without the semantics tree (thousands of items on a big map): not needed here.
     const s = this.view.chrome?.() ?? this.view.status();
     if (s.phrases) this.phrases = s.phrases;
+    // The chart's words are in the document's language (WCAG 3.1.2): its content, its
+    // announcements and its buttons say so to a screen reader's voice and a braille table.
+    if (s.locale) for (const el of [this.mirror, this.live, this.root.querySelector<HTMLElement>(".controls")]) if (el && el.lang !== s.locale) el.lang = s.locale;
     const t = s.tokens?.tokens ?? {};
     for (const k of ["ink", "paper", "muted", "rule", "surface", "surface-ink", "accent"]) if (t[k]) this.style.setProperty(`--${k}`, t[k]);
     const n = s.narration;
@@ -1798,9 +1851,88 @@ export class DatarsView extends ElementBase {
     const index = s.index ?? 0, count = s.states?.length ?? 0;
     this.root.querySelector('[data-ev="prev"]')?.setAttribute("aria-disabled", String(index <= 0));
     this.root.querySelector('[data-ev="next"]')?.setAttribute("aria-disabled", String(index >= count - 1));
+    this.moves = !!s.moves;
+    this.syncPlayback();
     this.announce(s);
     this.growForText(s);
   }
+
+  /** What moves by itself (autoplay, a clock — `status().moves`) or arrives again and again (a
+   * live feed). */
+  private moves = false;
+  private liveFeed = false;
+  private arrivals = new Map<string, number>();
+  /** The reader paused it, and what arrived meanwhile. */
+  private paused = false;
+  private heldData: [string, Uint8Array][] = [];
+  /** The reader zoomed or moved a view: Show all is offered. */
+  private zoomed = false;
+
+  /** Pause, or play again, what moves by itself (WCAG 2.2.1, 2.2.2): autoplay and a clock stop
+   * where they are (`Engine::set_held`), a live feed's arrivals wait and then come in order. */
+  setPaused(on: boolean) {
+    if (on === this.paused) return;
+    this.paused = on;
+    if (this.view) {
+      this.view.activate(on ? "playback:pause" : "playback:play");
+      if (!on && this.heldData.length) {
+        for (const [name, bytes] of this.heldData.splice(0)) this.view.provide_source(name, bytes);
+        this.noteData();
+      }
+      this.sayChange();
+      this.kick();
+    }
+    this.syncPlayback();
+  }
+
+  /** Whether the reader has paused what moves by itself. */
+  get isPaused(): boolean {
+    return this.paused;
+  }
+
+  private syncPlayback() {
+    const box = this.root.querySelector<HTMLElement>(".playback");
+    const pause = this.root.querySelector<HTMLButtonElement>(".playback .pause");
+    const reset = this.root.querySelector<HTMLButtonElement>(".playback .reset");
+    if (!box || !pause || !reset) return;
+    pause.hidden = !(this.moves || this.liveFeed);
+    const word = this.ph(this.paused ? "play" : "pause");
+    if (pause.textContent !== word) pause.textContent = word;
+    reset.hidden = !this.zoomed;
+    const all = this.ph("show-all");
+    if (reset.textContent !== all) reset.textContent = all;
+    for (const el of [pause, reset]) if (this.mirror.lang && el.lang !== this.mirror.lang) el.lang = this.mirror.lang;
+    box.hidden = pause.hidden && reset.hidden;
+  }
+
+  private noteZoom() {
+    if (this.zoomed) return;
+    this.zoomed = true;
+    this.syncPlayback();
+  }
+
+  /** Every pannable view back to all of it (its `0` key). */
+  private showAll() {
+    if (!this.view) return;
+    for (const m of this.lastMirror?.[1] ?? []) if (m.kind === "pan" && m.path) this.view.key(m.path, "0");
+    this.zoomed = false;
+    this.syncPlayback();
+    this.sayChange();
+    this.kick();
+    this.noteSignals();
+  }
+
+  /** Put away a pointer's or the keyboard's tooltip (Esc, WCAG 1.4.13): it stays away until the
+   * pointer goes to something else. */
+  private tipDismissed: string | null = null;
+  private dismissTip() {
+    this.tipDismissed = this.tip.textContent;
+    this.tip.hidden = true;
+    this.tipPinned = false;
+  }
+  private onTipKey = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && !this.tip.hidden) this.dismissTip();
+  };
 
   /** What the chart shows, said first (`Engine::accessible_summary`), as last described. */
   private summary = "";
@@ -1812,7 +1944,8 @@ export class DatarsView extends ElementBase {
 
   private ph(key: string, args: Record<string, string | number> = {}): string {
     const fallback: Record<string, string> = { step: "Step {i} of {n}", note: "Note: {text}", legend: "Legend", data: "Data", controls: "Controls", chart: "Chart", more: "{n} more",
-      "regions-missing.one": "{n} region without data", "regions-missing.other": "{n} regions without data", "points-missing.one": "{n} data point without data", "points-missing.other": "{n} data points without data" };
+      "regions-missing.one": "{n} region without data", "regions-missing.other": "{n} regions without data", "points-missing.one": "{n} data point without data", "points-missing.other": "{n} data points without data",
+      pause: "Pause", play: "Play", "show-all": "Show all" };
     let out = this.phrases[key] ?? fallback[key] ?? key;
     for (const [k, v] of Object.entries(args)) out = out.split(`{${k}}`).join(String(v));
     return out;
@@ -1872,7 +2005,12 @@ export class DatarsView extends ElementBase {
    * and each run of data marks as a table (name, value), its rows reachable with the arrow keys
    * and outlined on the chart as the keyboard moves; clickable marks are buttons. The chart's
    * name goes on the element itself (`aria-label`), its summary first inside it. */
+  /** The first data mark the mirror lists (its page), and what it was last built from. */
+  private mirrorFrom = 0;
+  private lastMirror: [Record<string, any>, MirrorItem[]] | null = null;
+
   private fillMirror(s: Record<string, any>, items: MirrorItem[]) {
+    this.lastMirror = [s, items];
     // Built aside, then merged into the mirror on the page (`morph`): the elements that stay what
     // they were (a switch whose state flipped, a slider whose value moved) are the same elements,
     // so a screen reader on one stays there. (Rebuilt from scratch, VoiceOver in Safari lost its
@@ -1979,6 +2117,24 @@ export class DatarsView extends ElementBase {
     // order by every screen reader. (Not `aria-description`: VoiceOver with Chrome files that
     // under "more content", unread, and readers that do say it would say it twice.)
     if (typeof s.summary === "string") this.summary = s.summary;
+    // Then the step's narration (the card over the chart is for the eye; this is its text in the
+    // reading order: after what the chart shows, before its content and the story's buttons).
+    const n = s.narration;
+    if (n && (n.title || n.text) && !s.narrationDrawn) {
+      const at = this.mirror.firstChild;
+      if (n.title) {
+        const h = document.createElement("h3");
+        h.className = "narration";
+        h.textContent = n.title;
+        this.mirror.insertBefore(h, at);
+      }
+      if (n.text) {
+        const p = document.createElement("p");
+        p.className = "narration";
+        p.textContent = n.text;
+        this.mirror.insertBefore(p, at);
+      }
+    }
     if (this.summary) {
       const p = document.createElement("p");
       p.className = "summary";
@@ -1995,7 +2151,8 @@ export class DatarsView extends ElementBase {
       (stack.length ? stack[stack.length - 1].kids : top).push(node);
       stack.push(node);
     }
-    let listed = 0, left = 0;
+    // Marks past the mirror's page (`MIRROR_MAX`, from `mirrorFrom`) are a button away, not gone.
+    let seen = 0, left = 0, before = 0;
     const isData = (i: MirrorItem) => i.role === "datum" || i.role === "region" || (i.actionable && i.role !== "control");
     const descend = (n: N, role: string): string[] => n.kids.flatMap((k) => (k.item.role === role ? [k.item.label] : descend(k, role))).filter((l) => l && l.trim());
     /** Labels as one line: all of a few, the ends of many. */
@@ -2013,8 +2170,9 @@ export class DatarsView extends ElementBase {
         const { role, label } = n.item;
         if (missing.includes(n)) continue;
         if (isData(n.item)) {
-          if (listed >= DatarsView.MIRROR_MAX && !n.item.actionable) { left++; continue; }
-          listed++;
+          const k = n.item.actionable ? -1 : seen++;
+          if (k >= 0 && k < this.mirrorFrom) { before++; continue; }
+          if (k >= this.mirrorFrom + DatarsView.MIRROR_MAX) { left++; continue; }
           run.push(n.item);
           continue;
         }
@@ -2080,11 +2238,23 @@ export class DatarsView extends ElementBase {
       }
     };
     render(top, this.mirror, "", name);
-    if (left) {
-      const p = document.createElement("p");
-      p.textContent = this.ph("more", { n: left });
-      this.mirror.appendChild(p);
-    }
+    // The pages of a mirror with more marks than it lists at once.
+    const page = (from: number, key: string) => {
+      const b = document.createElement("button");
+      const to = Math.min(from + DatarsView.MIRROR_MAX, seen);
+      const n = (v: number) => v.toLocaleString(this.mirror.lang || undefined);
+      b.textContent = this.ph(key, { from: n(from + 1), to: n(to), total: n(seen) });
+      b.dataset.ev = `rows:${from}`;
+      b.addEventListener("click", () => {
+        this.mirrorFrom = from;
+        if (this.lastMirror) this.fillMirror(this.lastMirror[0], this.lastMirror[1]);
+        this.live.textContent = this.ph("rows-shown", { from: n(from + 1), to: n(to), total: n(seen) }) + ".";
+        queueMicrotask(() => this.mirror.querySelector<HTMLElement>("[data-nav]")?.focus());
+      });
+      this.mirror.appendChild(b);
+    };
+    if (left) page(this.mirrorFrom + DatarsView.MIRROR_MAX, "rows-next");
+    if (before) page(Math.max(0, this.mirrorFrom - DatarsView.MIRROR_MAX), "rows-previous");
     // One stop for the keyboard among the data: where it was, else the first; arrows move on.
     const stops = [...this.mirror.querySelectorAll<HTMLElement>("[data-nav]")];
     const current = stops.find((x) => x.dataset.item === focusedItem && focusedItem) ?? stops[0];
@@ -2174,6 +2344,9 @@ export class DatarsView extends ElementBase {
       counts.push(1);
     }
     const table = document.createElement("table");
+    // A long run listed a page at a time: the rows numbered of the whole ("row 201 of 365").
+    const total = run.find((i) => i.total !== undefined)?.total;
+    if (total !== undefined) table.setAttribute("aria-rowcount", String(total));
     const cap = document.createElement("caption");
     cap.textContent = caption || this.ph("data");
     table.appendChild(cap);
@@ -2187,6 +2360,7 @@ export class DatarsView extends ElementBase {
     const body = document.createElement("tbody");
     run.forEach((item, k) => {
       const tr = document.createElement("tr");
+      if (item.index !== undefined) tr.setAttribute("aria-rowindex", String(item.index + 1));
       const th = document.createElement("th");
       th.scope = "row";
       const [label, value] = counts[k] > 1 ? [item.label, `× ${counts[k]}`] : twoColumns ? pairs[k] : [item.label, ""];

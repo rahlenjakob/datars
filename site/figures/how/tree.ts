@@ -102,7 +102,7 @@ function node(id: string, phone: boolean): Template {
     children: [
       shape(geom.path(str(elbow)), { key: "elbow", stroke: { paint: "$rule", width: 1 }, semantics: { role: "decoration" } }),
       shape(geom.rect({ x: num(x), y: num((a) => a.y + 3), w: num(chipW), h: RH - 6, r: 3 }), { key: "chip", fill: str((a) => `${INK[a.r.kind]}@0.12`), semantics: { role: "decoration" } }),
-      text(str((a) => a.r.kind), [num((a) => x(a) + chipW(a) / 2), num(mid)], { key: "kind", style: { size: 10, ink: str((a) => INK[a.r.kind]), align: "middle", baseline: "middle", font: "font.strong" } }),
+      text(str((a) => a.r.kind), [num((a) => x(a) + chipW(a) / 2), num(mid)], { key: "kind", style: { size: 10, ink: "$ink", align: "middle", baseline: "middle", font: "font.strong" } }),
       text(str((a) => a.r.label), [num((a) => x(a) + chipW(a) + 6), num(mid)], { key: "label", style: { size, ink: "$ink", baseline: "middle", font: "font.strong" } }),
       phone
         ? text(str((a) => a.r.short ?? ""), [e(`box.w`), num(mid)], { key: "note", style: { size: SIZE.small, ink: "$muted", baseline: "middle", align: "end" } })

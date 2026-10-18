@@ -257,13 +257,14 @@ export const chord = recipe<ChordParams>({
           key: [e(col(src)), e(col(dst))],
           fill: e(`scale.color(${col(src)})`),
           opacity: selectedOpacity(sel, `${sel}.has(${col(src)}) || ${sel}.has(${col(dst)})`, 0.68, 0.12),
-          stroke: { paint: "$paper", width: 0.5 },
+          stroke: { paint: "$paper", width: 1 },
           semantics: { role: "datum", label: e(`\`\${key.name(${col(src)})} → \${key.name(${col(dst)})}: \${format(${v}, ${f})}\``), value: e(v) },
           pickable: true,
         }))] }),
         group({ key: "groups", children: [repeat(groups, shape(geom.arc({ cx: e("box.w / 2"), cy: e("box.h / 2"), r0: e(inner), r1: e(outer), a0: e("d.a0"), a1: e("d.a1") }), {
           key: e("d.name"),
           fill: e("scale.color(d.name)"),
+          stroke: { paint: "$paper", width: 1 }, // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
           semantics: { role: "datum", label: e(`\`\${key.name(d.name)}: \${format(d.value, ${f})}\``), value: e("d.value") },
           pickable: true,
         }))] }),
@@ -534,7 +535,8 @@ function partitionInk(p: PartitionParams, cx: Cx, laid: string, depth0: string) 
   return {
     fill: e(`scale.color(${col(by)})`),
     opacity: e(fade),
-    ink: e(`${fade} > 0.75 ? "on(" + scale.color(${col(by)}) + ")" : "$ink"`),
+    // (On the fill as it's drawn, faded: a label reads on what's under it.)
+    ink: e(`${fade} > 0.75 ? "on(" + scale.color(${col(by)}) + "@" + ${fade} + ")" : "$ink"`),
     scale: { type: "categorical", domain: { data: drawn, field: by }, range: "$categorical" },
   };
 }

@@ -45,7 +45,7 @@ impl Cover {
 fn shown(i: &Ink) -> bool {
     match i {
         Ink::Color(c) => c.a > 0.05,
-        Ink::Token { alpha, .. } | Ink::Palette { alpha, .. } | Ink::Ramp { alpha, .. } | Ink::On { alpha, .. } => *alpha > 0.05,
+        Ink::Token { alpha, .. } | Ink::Palette { alpha, .. } | Ink::Ramp { alpha, .. } | Ink::On { alpha, .. } | Ink::Legible { alpha, .. } => *alpha > 0.05,
     }
 }
 

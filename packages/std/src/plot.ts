@@ -30,6 +30,7 @@ export interface PlotParams {
   axes: "both" | "x" | "y" | "none";
   grid: boolean;
   legend: boolean;
+  dashes: boolean;
   xLabel: string;
   yLabel: string;
   format: string;
@@ -91,13 +92,23 @@ function scaleDecl(type: ScaleType, data: string, field: string, axisName: "x" |
   };
 }
 
-/** The brushed range, shaded under the marks (continuous scales; hidden while nothing is brushed). */
+/** The brushed range, shaded under the marks, its ends drawn in the accent at full strength — where
+ * the selection starts and stops, and after a first click (a selection made by clicking its two
+ * ends) where it will start (continuous scales; hidden while nothing is brushed). */
 function brushExtent(signal: string, axis: "x" | "y"): Template {
   const [lo, hi] = [`scale.${axis}(${signal}.lo)`, `scale.${axis}(${signal}.hi)`];
   const g = axis === "x"
     ? geom.rect({ x: e(`min(${lo}, ${hi})`), y: 0, w: e(`abs(${hi} - ${lo})`), h: e("box.h") })
     : geom.rect({ x: 0, y: e(`min(${lo}, ${hi})`), w: e("box.w"), h: e(`abs(${hi} - ${lo})`) });
-  return shape(g, { key: "brush", when: e(`${signal}.active && ${signal}.hi > ${signal}.lo`), fill: "$accent", opacity: 0.14, semantics: { role: "decoration", label: "" } });
+  const end = (at: string) => axis === "x"
+    ? geom.segment({ x1: e(at), y1: 0, x2: e(at), y2: e("box.h") })
+    : geom.segment({ x1: 0, y1: e(at), x2: e("box.w"), y2: e(at) });
+  const deco = { role: "decoration" as const, label: "" };
+  return group({ key: "brush", children: [
+    shape(g, { key: "area", when: e(`${signal}.active && ${signal}.hi > ${signal}.lo`), fill: "$accent", opacity: 0.14, semantics: deco }),
+    shape(end(lo), { key: "lo", when: e(`${signal}.active && ${signal}.lo == ${signal}.lo`), stroke: { paint: "$accent", width: 1.5 }, semantics: deco }),
+    shape(end(hi), { key: "hi", when: e(`${signal}.active && ${signal}.hi > ${signal}.lo`), stroke: { paint: "$accent", width: 1.5 }, semantics: deco }),
+  ] });
 }
 
 export const plot = recipe<PlotParams>({
@@ -122,6 +133,7 @@ export const plot = recipe<PlotParams>({
     axes: t.oneOf(["both", "x", "y", "none"] as const, "both"),
     grid: t.bool(true, "Gridlines along the value axis."),
     legend: t.bool(false, "A colour legend below the plot."),
+    dashes: t.bool(false, "The legend shows each series' dash pattern too, for lines drawn with `line({ dashes: true })`."),
     xLabel: t.string(undefined, "Title of the x axis, under its right end."),
     yLabel: t.string(undefined, "Title of the y axis, above its top-left corner (in a row of its own, between the title and the plot)."),
     format: t.string(undefined, "Number format for value-axis labels (a 100 % `stacked` child: '.0%')."),
@@ -294,7 +306,7 @@ export const plot = recipe<PlotParams>({
             endLabels ? group({ key: "end-labels", size: { w: labelRoom } }) : null,
           ],
         }),
-        p.legend && p.color ? legend({ scale: "color" }, { size: { h: "auto" } }) : null,
+        p.legend && p.color ? legend({ scale: "color", dashes: p.dashes }, { size: { h: "auto" } }) : null,
       ],
     });
     void cx;

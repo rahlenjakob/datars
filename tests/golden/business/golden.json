@@ -12,8 +12,8 @@
     },
     {
       "name": "stacked",
-      "scene": "eb4179bafed49dec",
-      "pixels": "e7c1e05e67f2965b"
+      "scene": "a81debd7fbc8c013",
+      "pixels": "e7628fefd24be5d8"
     }
   ],
   "transitions": [
@@ -26,7 +26,7 @@
     {
       "from": "funnel",
       "to": "stacked",
-      "sweep": "0a18cc1c937bad8c",
+      "sweep": "dd4eb5ed0382d5f7",
       "samples": 64
     }
   ]

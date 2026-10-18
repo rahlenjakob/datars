@@ -25,6 +25,8 @@ pub enum Input {
     Resize { width: f64, height: f64, dpr: f64 },
     Seek { pos: f64 },
     Playing { on: bool },
+    /// The reader's pause (`Engine::set_held`).
+    Held { on: bool },
     ReducedMotion { on: bool },
     /// The reader's text size (`Engine::set_text_scale`).
     TextScale { scale: f64 },
