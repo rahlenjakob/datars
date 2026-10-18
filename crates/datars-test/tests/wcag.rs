@@ -297,24 +297,29 @@ fn faint_marks(e: &mut Engine, m: Mode) -> Vec<String> {
     found.into_iter().collect()
 }
 
+/// A document with colours of its own (its theme's tokens) answers for them itself.
+fn own_theme(d: &Entry) -> bool {
+    let theme = serde_json::from_str::<serde_json::Value>(&d.json).ok().and_then(|j| j.get("theme").cloned()).unwrap_or_default();
+    theme.get("tokens").and_then(|t| t.as_object()).is_some_and(|o| !o.is_empty()) || theme.get("themes").and_then(|t| t.as_array()).is_some_and(|a| !a.is_empty())
+}
+
 #[test]
 fn wcag_1_4_11_marks_against_background() {
     // In the high-contrast mode (a reader's More contrast, Increase Contrast, `mode="high-contrast"`)
     // every data colour of the theme stands out from the paper by 3:1.
-    // (A document with colours of its own — its theme's tokens — answers for them itself.)
     over_corpus("wcag_1_4_11_marks_against_background", "data marks in the theme's colours × states, high contrast", |d, e| {
-        let theme = serde_json::from_str::<serde_json::Value>(&d.json).ok().and_then(|j| j.get("theme").cloned()).unwrap_or_default();
-        let own = theme.get("tokens").and_then(|t| t.as_object()).is_some_and(|o| !o.is_empty()) || theme.get("themes").and_then(|t| t.as_array()).is_some_and(|a| !a.is_empty());
-        if own { Vec::new() } else { faint_marks(e, Mode::HighContrast) }
+        if own_theme(d) { Vec::new() } else { faint_marks(e, Mode::HighContrast) }
     });
 }
 
-/// The same in the light and dark modes: not met — three of the default palette's ten colours
-/// (yellow, coral, teal) are under 3:1 on white. Run for the report (`--ignored`), which says so.
 #[test]
-#[ignore = "not met in the light and dark modes: the report counts it"]
 fn wcag_1_4_11_marks_against_background_light_dark() {
-    over_corpus("wcag_1_4_11_marks_against_background_light_dark", "data marks in the theme's colours × states, light and dark", |_, e| {
+    // And in the light and dark modes: every colour of the default palette has 3:1 against the
+    // mode's paper (the light mode's are darkened to it; the dark mode keeps the brighter ones).
+    over_corpus("wcag_1_4_11_marks_against_background_light_dark", "data marks in the theme's colours × states, light and dark", |d, e| {
+        if own_theme(d) {
+            return Vec::new();
+        }
         let mut v = faint_marks(e, Mode::Light);
         v.extend(faint_marks(e, Mode::Dark));
         v

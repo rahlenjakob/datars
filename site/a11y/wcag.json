@@ -244,16 +244,16 @@
    "name": "Non-text Contrast",
    "level": "AA",
    "class": "runtime",
-   "status": "partial",
-   "how": "Controls (their borders, words and thumbs) stand out 3:1 in every mode; the keyboard's ring is the accent with the paper inside it; touching pieces (stacked bars, chords, Marimekko cells) get a paper line between them. In the high-contrast mode every data colour of the theme stands out 3:1 from the paper.",
-   "notes": "Not met in the default light and dark modes: three of the default palette's ten colours (yellow #efb118, coral #ff725c, teal #6cc5b0) are under 3:1 on white. Met where marks are labelled directly (WCAG counts the text), or in the high-contrast mode. Ramps (a heat map, a choropleth) are their colour's value.",
+   "status": "met",
+   "how": "Every colour of the default palette stands out 3:1 from the paper in every mode: in the light mode yellow, coral, teal, light blue, pink and grey are darkened to it (hue kept, still distinct under colour-vision deficiencies); the dark mode keeps the brighter ones, which have it on the dark paper; the high-contrast mode has a palette of its own. Controls (their borders, words and thumbs) stand out 3:1 in every mode; the keyboard's ring is the accent with the paper inside it; touching pieces (stacked bars, chords, Marimekko cells) get a paper line between them. Ramps (a heat map, a choropleth) are their colour's value.",
    "tests": [
+    "wcag_1_4_11_marks_against_background_light_dark",
     "wcag_1_4_11_marks_against_background",
     "wcag_1_4_11_adjacent_segments",
     "wcag_1_4_11_controls_against_background",
-    "wcag_1_4_11_focus_indicator",
-    "wcag_1_4_11_marks_against_background_light_dark"
-   ]
+    "wcag_1_4_11_focus_indicator"
+   ],
+   "author": "Colours of your own (literal inks, a brand theme) are yours: keep marks at 3:1 against the paper, or label them."
   },
   {
    "id": "1.4.12",

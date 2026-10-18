@@ -13,22 +13,22 @@
     {
       "name": "indicators",
       "scene": "748a17a2cddbd358",
-      "pixels": "d5458bf059978281"
+      "pixels": "0005822fc09d6ccc"
     },
     {
       "name": "indexed",
       "scene": "b5dc3424a6fde36b",
-      "pixels": "51332e55ce8c0031"
+      "pixels": "fda6ddf7f6ae2e8f"
     },
     {
       "name": "peers",
       "scene": "a76395a17e9d15f6",
-      "pixels": "41b48263277dc6fd"
+      "pixels": "f37d275b6349decf"
     },
     {
       "name": "drawdown",
       "scene": "cc210eec711d1b49",
-      "pixels": "48e1ece468041587"
+      "pixels": "09f85c9b655ee6ca"
     }
   ],
   "transitions": [

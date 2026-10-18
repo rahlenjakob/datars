@@ -70,8 +70,8 @@
 .dl-tier-list li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; padding: 4px 0; border-top: 1px solid var(--rule); }
 .dl-tier-list li b { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .dl-k { width: 11px; height: 11px; border-radius: 3px; background: var(--rule); }
-.dl-k-poster { background: #9498a0; } .dl-k-a11y { background: #6cc5b0; } .dl-k-doc { background: #4269d0; } .dl-k-data { background: #3ca951; }
-.dl-k-font { background: #efb118; } .dl-k-program { background: #a463f2; } .dl-k-scene { background: #ff725c; } .dl-k-entry { background: var(--ink-2); }
+.dl-k-poster { background: #8f939b; } .dl-k-a11y { background: #35917e; } .dl-k-doc { background: #4269d0; } .dl-k-data { background: #3ca951; }
+.dl-k-font { background: #ba8804; } .dl-k-program { background: #a463f2; } .dl-k-scene { background: #f36752; } .dl-k-entry { background: var(--ink-2); }
 .dl-tiers-h { margin: 32px 0 12px; font-size: 1.05rem; }
 .dl-tiers .fine { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
 .dl-trust { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin: 18px 0 10px; }

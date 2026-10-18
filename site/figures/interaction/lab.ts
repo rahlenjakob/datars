@@ -52,7 +52,7 @@ export default doc({
   description: "420 made-up trips in October: trips per day, trips by bike, and every trip's distance and time. Brush days, click bikes, zoom and pan the trips, drag the time limit.",
   size: [760, 560],
   data: { trips: data.values({ id, day, kind, km, min }, { key: "id" }) },
-  keys: { classic: { name: "Classic", color: "#4269d0" }, ebike: { name: "E-bike", color: "#efb118" }, cargo: { name: "Cargo", color: "#ff725c" } },
+  keys: { classic: { name: "Classic", color: "#4269d0" }, ebike: { name: "E-bike", color: "#ba8804" }, cargo: { name: "Cargo", color: "#f36752" } },
   signals: {
     days: signal.range(),          // drag across the days
     kinds: signal.keyset(),        // click a bike

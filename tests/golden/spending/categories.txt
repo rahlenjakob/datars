@@ -29,10 +29,10 @@ scene 390.00×520.00 background=$paper
               (60000,) segment (297.16, 0.00)→(297.16, 324.24) stroke=$grid/1.00 role=decoration
             group ("marks",) role=series "amount by category"
               ("Housing",) rect x=0.00 y=7.13 w=291.93 h=50.58 fill=#4269d0 role=datum "Housing: 58,944"
-              ("Food",) rect x=0.00 y=71.98 w=127.35 h=50.58 fill=#efb118 role=datum "Food: 25,713"
-              ("Shopping",) rect x=0.00 y=136.83 w=68.40 h=50.58 fill=#ff725c role=datum "Shopping: 13,811"
+              ("Food",) rect x=0.00 y=71.98 w=127.35 h=50.58 fill=#ba8804 role=datum "Food: 25,713"
+              ("Shopping",) rect x=0.00 y=136.83 w=68.40 h=50.58 fill=#f36752 role=datum "Shopping: 13,811"
               ("Leisure",) rect x=0.00 y=201.68 w=55.40 h=50.58 fill=#a463f2 role=datum "Leisure: 11,186"
-              ("Transport",) rect x=0.00 y=266.53 w=48.47 h=50.58 fill=#6cc5b0 role=datum "Transport: 9,787"
+              ("Transport",) rect x=0.00 y=266.53 w=48.47 h=50.58 fill=#35917e role=datum "Transport: 9,787"
               group ("labels",)
                 ("Housing",) text "58,944 kr" at (287.93, 32.42) size=11.00 ink=on(#4269d0)
                 ("Food",) text "25,713 kr" at (131.35, 97.27) size=11.00 ink=$ink-2

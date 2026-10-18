@@ -242,7 +242,7 @@ pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
 .look summary svg { width: 20px; height: 20px; }
 .look summary path { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linejoin: round; }
 .look summary circle { stroke: none; transition: fill .25s; }
-.look .la { fill: var(--look-a, #4269d0); } .look .lb { fill: var(--look-b, #efb118); } .look .lc { fill: var(--look-c, #ff725c); }
+.look .la { fill: var(--look-a, #4269d0); } .look .lb { fill: var(--look-b, #ba8804); } .look .lc { fill: var(--look-c, #f36752); }
 .dd-panel.look-panel { display: block; left: auto; right: -46px; width: min(330px, calc(100vw - 24px)); padding: 14px 16px 12px; }
 .look-h { margin: 0 0 4px; display: flex; flex-direction: column; gap: 1px; }
 .look-h b { font-size: 15px; }
@@ -954,8 +954,8 @@ table.api-fields td:nth-child(2) { min-width: 9em; }
 .hv-size { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
 .hv-key { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 4px; font-size: 13px; color: var(--ink-2); }
 .hv-key i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
-.hv-poster { background: #9498a0; } .hv-a11y { background: #6cc5b0; } .hv-doc { background: #4269d0; } .hv-data { background: #3ca951; }
-.hv-font { background: #efb118; } .hv-program { background: #a463f2; } .hv-scene { background: #ff725c; } .hv-other { background: var(--rule); }
+.hv-poster { background: #8f939b; } .hv-a11y { background: #35917e; } .hv-doc { background: #4269d0; } .hv-data { background: #3ca951; }
+.hv-font { background: #ba8804; } .hv-program { background: #a463f2; } .hv-scene { background: #f36752; } .hv-other { background: var(--rule); }
 @media (max-width: 560px) {
   .hv-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 4px; }
   .hv-track { grid-column: 1 / -1; grid-row: 2; }

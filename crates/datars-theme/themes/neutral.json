@@ -16,9 +16,9 @@
     "negative": "#c8423b",
     "up": "$positive",
     "down": "$negative",
-    "highlight": "#efb118",
+    "highlight": "#ba8804",
     "dim": 0.28,
-    "categorical": { "kind": "categorical", "colors": ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#9c6b4e", "#a463f2", "#97bbf5", "#ff8ab7", "#9498a0"] },
+    "categorical": { "kind": "categorical", "colors": ["#4269d0", "#ba8804", "#f36752", "#35917e", "#3ca951", "#9c6b4e", "#a463f2", "#7294cc", "#e06e9c", "#8f939b"] },
     "sequential": { "kind": "sequential", "colors": ["#eff3ff", "#bdd7e7", "#6baed6", "#3182bd", "#08519c"] },
     "diverging": { "kind": "diverging", "colors": ["#2166ac", "#92c5de", "#f2f2f2", "#f4a582", "#b2182b"] },
     "font.body": { "family": ["Inter"], "weight": 400, "src": "datars:fonts/Inter-Regular.ttf" },
@@ -66,6 +66,8 @@
   },
   "modes": {
     "dark": {
+      "highlight": "#efb118",
+      "categorical": { "kind": "categorical", "colors": ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#9c6b4e", "#a463f2", "#97bbf5", "#ff8ab7", "#9498a0"] },
       "paper": "#111318",
       "ink": "#eceef2",
       "surface": "mix($paper, $ink, 0.08)",

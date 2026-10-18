@@ -268,7 +268,7 @@ function themeChoices() {
     const cs = getComputedStyle(root);
     out.push({ id: "look", name: "Your look", sw: ["--look-a", "--look-b", "--look-c"].map((v) => cs.getPropertyValue(v).trim() || "#888") });
   }
-  out.push({ id: "datars", name: "datars", sw: ["#4269d0", "#efb118", "#ff725c"] });
+  out.push({ id: "datars", name: "datars", sw: ["#4269d0", "#ba8804", "#f36752"] });
   for (const id of ["newsprint", "nordic", "neon", "sunset"]) {
     const b = BRANDS[id];
     const c = b.light ?? b.dark;

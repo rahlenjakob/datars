@@ -18,8 +18,8 @@ export default doc({
     spending: data.slot("spending", { key: ["month", "category"], types: { amount: "num" }, sample }),
   },
   keys: {
-    Housing: { color: "#4269d0" }, Food: { color: "#efb118" }, Transport: { color: "#6cc5b0" },
-    Shopping: { color: "#ff725c" }, Leisure: { color: "#a463f2" },
+    Housing: { color: "#4269d0" }, Food: { color: "#ba8804" }, Transport: { color: "#35917e" },
+    Shopping: { color: "#f36752" }, Leisure: { color: "#a463f2" },
   },
   tables: {
     byCategory: { from: "spending", ops: [op.aggregate(["category"], { amount: ["sum", "amount"] }), op.sort(["amount", "desc"])] },

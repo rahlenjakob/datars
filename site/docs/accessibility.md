@@ -323,7 +323,6 @@ How it's checked, and how to check it again: `node scripts/a11y-report.mjs` comp
 
 **This is the project's own reading of the criteria against what the runtime does, not a third-party audit.** What isn't met:
 
-- **1.4.11, the default palette.** In the light and dark modes three of the ten categorical colours — yellow `#efb118`, coral `#ff725c`, teal `#6cc5b0` — have under 3:1 against white. Marks labelled directly are met (WCAG counts the text); the high-contrast mode's palette is all at 3:1. A default palette that meets it everywhere is a design decision still to make.
 - **2.5.8, data marks.** A mark a click acts on is as big as the data makes it: a map's small countries (WCAG's own exception: their size is the information) and a dense ranked chart's rows (the drill example's 16 px bars) are smaller than 24 px.
 - **1.4.12, drawn text.** Text drawn on the canvas can't take a style sheet's letter, word and line spacing. Its alternative is the same content as plain HTML (what screen readers get), and the reader's text size.
 - **1.4.6 (AAA).** In the high-contrast mode, text on the paper reaches 7:1; a label on a coloured mark reaches 4.5:1.

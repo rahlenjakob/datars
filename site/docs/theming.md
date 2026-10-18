@@ -63,7 +63,7 @@ A token has a type, and the type decides what you can write:
 | `mark` | `$accent` | a mark's colour when no colour scale applies |
 | `positive`, `negative`, `highlight` | green, red, yellow | gains and losses, emphasis |
 | `dim` | `0.28` | how far unselected marks recede |
-| `categorical` | ten colours | colours per category (keys without a colour of their own) |
+| `categorical` | ten colours, each 3:1 against the paper (the dark mode has brighter ones of its own) | colours per category (keys without a colour of their own) |
 | `sequential`, `diverging` | five-colour ramps | choropleths, heatmaps, stripes |
 | `font.body`, `font.strong`, `font.title`, `font.number` | Inter 400, 600, 700, 400 | all text |
 | `size.small`, `size.label`, `size.body`, `size.title` | `10`, `11`, `13`, `17` | text sizes (px) |

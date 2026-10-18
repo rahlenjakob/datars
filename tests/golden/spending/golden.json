@@ -2,20 +2,20 @@
   "states": [
     {
       "name": "months",
-      "scene": "88821da45e3a6918",
-      "pixels": "35ccd06f8fa26ad7"
+      "scene": "437d69cbbf1d5896",
+      "pixels": "b08f41f915b73c8b"
     },
     {
       "name": "categories",
-      "scene": "e2ba17f88964bd93",
-      "pixels": "53047bcb6f05e4e6"
+      "scene": "a71fc1b3a87759f2",
+      "pixels": "c377cfbd0e7d6617"
     }
   ],
   "transitions": [
     {
       "from": "months",
       "to": "categories",
-      "sweep": "74b02842db229985",
+      "sweep": "a854f8d42e6c43d9",
       "samples": 64
     }
   ]

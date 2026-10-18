@@ -321,7 +321,7 @@ export const BRANDS = {
 };
 /** The built-in theme's colours the reader's choices start from (datars/neutral). */
 const NEUTRAL = { light: { paper: "#ffffff", ink: "#1d1f24", accent: "#4269d0" }, dark: { paper: "#111318", ink: "#eceef2", accent: "#7a9cf0" },
-  categorical: ["#4269d0", "#efb118", "#ff725c", "#6cc5b0", "#3ca951", "#9c6b4e", "#a463f2", "#97bbf5", "#ff8ab7", "#9498a0"] };
+  categorical: ["#4269d0", "#ba8804", "#f36752", "#35917e", "#3ca951", "#9c6b4e", "#a463f2", "#7294cc", "#e06e9c", "#8f939b"] };
 const ACCENTS = ["#4269d0", "#0f766e", "#2f8f5b", "#e8a33d", "#e8590c", "#c8423b", "#c2185b", "#6a3fb5"];
 const PALETTES = {
   preset: { name: "Preset's" },
