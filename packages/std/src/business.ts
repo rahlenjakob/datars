@@ -281,12 +281,27 @@ export const gauge = recipe<GaugeParams>({
     const extent = needle ? Math.max(below, vTop + vS * 1.1) : below;
     // The label's line under the dial; dial and label centred together in the box.
     const lab = p.label ? 'token("size.body") * 1.3 + 4' : "0";
-    const R = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - (${ends}) - (${lab})) / ${(1 + extent).toFixed(4)}) - 2)`;
-    const cy = `((box.h - (${ends}) - (${lab}) - ${R} * ${(1 + extent).toFixed(4)}) / 2 + ${R})`;
+    // The value is text: it grows with the reader's text size like every other (WCAG 1.4.4). The
+    // dial makes room:
+    // with a needle the value has its own line under the hub, so a bigger value means a smaller
+    // dial; in a filled dial's hole it grows as far as the hole holds.
+    const TS = "max(1, textScale)";
+    const at1 = (tok: string) => `(${tok}) / max(0.01, textScale)`;
+    const R1 = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - ${at1(ends)} - ${at1(lab)}) / ${(1 + extent).toFixed(4)}) - 2)`;
+    // A display size (twice the title's, which follows the reader) as far as a dial this box
+    // holds at the theme's sizes allows — so at a reader's bigger text the value keeps growing
+    // even when the box shrinks around the page's other text, and the dial gives way to it.
+    const vBase = `clamp(min(token("size.title") * 2, ${R1} * ${vS} * 1.3 * ${TS}), 11, 56 * ${TS})`;
+    const vLine = needle ? `(${vBase}) * 1.1` : "0";
+    const eb = needle ? Math.max(below, vTop) : below;
+    const R = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - (${ends}) - (${lab}) - ${vLine}) / ${(1 + eb).toFixed(4)}) - 2)`;
+    const cy = `((box.h - (${ends}) - (${lab}) - ${vLine} - ${R} * ${(1 + eb).toFixed(4)}) / 2 + ${R})`;
     const cxs = "box.w / 2";
-    // Named bands get a band their names fit in.
-    const th = Math.min(0.6, Math.max(0.05, p.thickness ?? (names.length ? 0.3 : 0.22)));
-    const r0 = `${R} * ${1 - th}`;
+    // Named bands get a band their names fit in, at the reader's text size: the band grows
+    // thicker (to 0.6 of the radius) rather than the names smaller.
+    const th0 = Math.min(0.6, Math.max(0.05, p.thickness ?? (names.length ? 0.3 : 0.22)));
+    const th = names.length ? `clamp(token("size.small") * 2.2 / (${R}), ${th0}, 0.6)` : String(th0);
+    const r0 = `${R} * (1 - ${th})`;
     const bands = Array.isArray(p.bands) ? p.bands : [];
     const inks = Array.isArray(p.inks) ? p.inks : [];
     const arc = (key: string, f0: string, f1: string, fill: string, extra: Record<string, unknown> = {}) =>
@@ -304,15 +319,16 @@ export const gauge = recipe<GaugeParams>({
     const said = `${q(p.label ? `${p.label}: ` : "")} + ${valueText}${bandName ? ` + ", " + ${bandName}` : ""} + ${q(` (${lo} to ${hi})`)}`;
     // Band names, in each band: along it, or straight and turned to it. The size the reader asked
     // for, up to what the band's thickness holds; a name longer than its band is left out.
-    const rm = `${R} * ${(1 - th / 2).toFixed(4)}`;
-    const nameSize = `min(token("size.small"), ${R} * ${(th * 0.5).toFixed(4)})`;
+    const rm = `${R} * (1 - ${th} / 2)`;
+    // The reader's size, always; a band too thin for it (a tiny dial) leaves its name out.
+    const nameSize = 'token("size.small")';
     const bandNames = names.slice(0, bands.length).map((name, i) => {
       const f0 = i === 0 ? 0 : (bands[i - 1] - lo) / (hi - lo || 1);
       const f1 = (bands[i] - lo) / (hi - lo || 1);
       const [c0, c1] = [Math.max(0, Math.min(1, f0)), Math.max(0, Math.min(1, f1))];
       const ink = inks[i] ?? `$ink@${[0.12, 0.22, 0.34, 0.46, 0.58][Math.min(i, 4)]}`;
       const span = (c1 - c0) * sweep;
-      const fits = `measure(${q(name)}, ${nameSize}, 600) < ${rm} * ${(span * 0.86).toFixed(4)}`;
+      const fits = `measure(${q(name)}, ${nameSize}, 600) < ${rm} * ${(span * 0.86).toFixed(4)} && ${nameSize} <= ${R} * ${th} * 0.5`;
       const style = { size: e(nameSize), weight: 600, ink: `on(${ink})`, align: "middle", baseline: "middle" };
       if (p.bandText === "rotated") {
         const am = -half + ((c0 + c1) / 2) * sweep;
@@ -325,21 +341,21 @@ export const gauge = recipe<GaugeParams>({
     // 180°) so a large change swings the long way round the dial, as a needle does.
     const deg = `(${ang(frac)} * ${180 / Math.PI} / 2)`;
     // Over named bands the needle stops at their inner edge, leaving the names whole.
-    const reach = names.length ? (1 - th) - 0.04 : 0.92;
+    const reach = names.length ? `(1 - ${th} - 0.04)` : "0.92";
     const hand = p.needleStyle === "line"
-      ? shape(geom.segment({ x1: 0, y1: 0, x2: 0, y2: e(`-(${R}) * ${reach.toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5, cap: "round" }, semantics: { role: "decoration" } })
+      ? shape(geom.segment({ x1: 0, y1: 0, x2: 0, y2: e(`-(${R}) * ${reach}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5, cap: "round" }, semantics: { role: "decoration" } })
       : p.needleStyle === "arrow"
-        ? shape(geom.segment({ x1: 0, y1: 0, x2: 0, y2: e(`-(${R}) * ${(reach - 0.02).toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5 }, markers: { end: { type: "arrow", size: 11 } }, semantics: { role: "decoration" } })
-        : shape(geom.path(e(`\`M -3 0 L 0 \${-(${R}) * ${reach.toFixed(4)}} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } });
+        ? shape(geom.segment({ x1: 0, y1: 0, x2: 0, y2: e(`-(${R}) * (${reach} - 0.02)`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5 }, markers: { end: { type: "arrow", size: 11 } }, semantics: { role: "decoration" } })
+        : shape(geom.path(e(`\`M -3 0 L 0 \${-(${R}) * ${reach}} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } });
     const needleNode = group({ key: "needle", transform: { translate: [e(cxs), e(cy)], rotate: e(deg) }, children: [group({ key: "turn", transform: { rotate: e(deg) }, children: [
       hand,
       shape(geom.circle({ cx: 0, cy: 0, r: 5 }), { key: "hub", fill: "$ink", stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "decoration" } }),
     ] })] });
     // As big as the dial allows, but never wider than the hole (or the room under the hub).
-    const vSize = `clamp(min(${R} * ${vS}, ${needle ? `${R} * 1.3` : `${r0} * 1.5`} * 10 / max(1, measure(${counting ? `format(${v}, ${q(p.format)})` : valueText}, 10, 600))), 11, 56)`;
+    const vSize = `max(11, min(${vBase}, ${needle ? "box.w * 0.9" : `${r0} * 1.5`} * 10 / max(1, measure(${counting ? `format(${v}, ${q(p.format)})` : valueText}, 10, 600))))`;
     // The value sits in the middle of the dial; with a needle, under its hub.
     const vy = needle ? `${cy} + ${R} * ${vTop}` : `${cy} + ${sweep > Math.PI ? `(${vSize}) * 0.36` : `-(${vSize}) * 0.12`}`;
-    const endAt = (f: number) => [e(`${cxs} + (${R} * ${1 - th / 2}) * sin(${ang(String(f))})`), e(`${cy} - (${R} * ${1 - th / 2}) * cos(${ang(String(f))}) + ${R} * ${th / 2} + 4`)] as [Prop, Prop];
+    const endAt = (f: number) => [e(`${cxs} + (${R} * (1 - ${th} / 2)) * sin(${ang(String(f))})`), e(`${cy} - (${R} * (1 - ${th} / 2)) * cos(${ang(String(f))}) + ${R} * ${th} / 2 + 4`)] as [Prop, Prop];
     return group({
       key: "gauge",
       semantics: { role: "group", label: p.label || "Gauge" },
@@ -356,7 +372,7 @@ export const gauge = recipe<GaugeParams>({
           text(e(`format(${lo}, ${q(p.format)})`), endAt(0), { key: "min", style: { size: "$size.small", ink: "$muted", align: "middle", baseline: "top" } }),
           text(e(`format(${hi}, ${q(p.format)})`), endAt(1), { key: "max", style: { size: "$size.small", ink: "$muted", align: "middle", baseline: "top" } }),
         ] }),
-        p.label ? text(p.label, [e("box.w / 2"), e(`${cy} + max(${R} * ${extent.toFixed(4)} + 6, ${R} * ${(below + th / 2).toFixed(4)} + ${ends})`)], { key: "label", style: { size: "$size.body", weight: 600, ink: "$ink-2", align: "middle", baseline: "top", maxWidth: e("box.w") } }) : null,
+        p.label ? text(p.label, [e("box.w / 2"), e(`${cy} + max(${R} * ${eb.toFixed(4)} + ${vLine} + 6, ${R} * (${below.toFixed(4)} + ${th} / 2) + ${ends})`)], { key: "label", style: { size: "$size.body", weight: 600, ink: "$ink-2", align: "middle", baseline: "top", maxWidth: e("box.w") } }) : null,
       ],
     });
   },

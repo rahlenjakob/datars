@@ -4626,11 +4626,18 @@ var gauge = recipe16({
     const vTop = sweep > Math.PI ? 0.3 : 0.12, vS = needle ? 0.26 : 0.42;
     const extent = needle ? Math.max(below, vTop + vS * 1.1) : below;
     const lab = p.label ? 'token("size.body") * 1.3 + 4' : "0";
-    const R = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - (${ends}) - (${lab})) / ${(1 + extent).toFixed(4)}) - 2)`;
-    const cy = `((box.h - (${ends}) - (${lab}) - ${R} * ${(1 + extent).toFixed(4)}) / 2 + ${R})`;
+    const TS = "max(1, textScale)";
+    const at1 = (tok) => `(${tok}) / max(0.01, textScale)`;
+    const R1 = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - ${at1(ends)} - ${at1(lab)}) / ${(1 + extent).toFixed(4)}) - 2)`;
+    const vBase = `clamp(min(token("size.title") * 2, ${R1} * ${vS} * 1.3 * ${TS}), 11, 56 * ${TS})`;
+    const vLine = needle ? `(${vBase}) * 1.1` : "0";
+    const eb = needle ? Math.max(below, vTop) : below;
+    const R = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - (${ends}) - (${lab}) - ${vLine}) / ${(1 + eb).toFixed(4)}) - 2)`;
+    const cy = `((box.h - (${ends}) - (${lab}) - ${vLine} - ${R} * ${(1 + eb).toFixed(4)}) / 2 + ${R})`;
     const cxs = "box.w / 2";
-    const th = Math.min(0.6, Math.max(0.05, p.thickness ?? (names.length ? 0.3 : 0.22)));
-    const r0 = `${R} * ${1 - th}`;
+    const th0 = Math.min(0.6, Math.max(0.05, p.thickness ?? (names.length ? 0.3 : 0.22)));
+    const th = names.length ? `clamp(token("size.small") * 2.2 / (${R}), ${th0}, 0.6)` : String(th0);
+    const r0 = `${R} * (1 - ${th})`;
     const bands = Array.isArray(p.bands) ? p.bands : [];
     const inks = Array.isArray(p.inks) ? p.inks : [];
     const arc = (key, f0, f1, fill, extra = {}) => shape15(geom15.arc({ cx: e16(cxs), cy: e16(cy), r0: e16(r0), r1: e16(R), a0: e16(ang(f0)), a1: e16(ang(f1)) }), { key, fill, semantics: { role: "decoration" }, ...extra });
@@ -4643,15 +4650,15 @@ var gauge = recipe16({
     const counting = !(p.prefix || p.suffix);
     const bandName = names.length && bands.length ? bands.slice(0, names.length).reduceRight((rest, b, i) => `(${v} <= ${b} ? ${q2(names[i])} : ${rest})`, q2(names[Math.min(names.length, bands.length) - 1])) : "";
     const said = `${q2(p.label ? `${p.label}: ` : "")} + ${valueText}${bandName ? ` + ", " + ${bandName}` : ""} + ${q2(` (${lo} to ${hi})`)}`;
-    const rm = `${R} * ${(1 - th / 2).toFixed(4)}`;
-    const nameSize = `min(token("size.small"), ${R} * ${(th * 0.5).toFixed(4)})`;
+    const rm = `${R} * (1 - ${th} / 2)`;
+    const nameSize = 'token("size.small")';
     const bandNames = names.slice(0, bands.length).map((name, i) => {
       const f0 = i === 0 ? 0 : (bands[i - 1] - lo) / (hi - lo || 1);
       const f1 = (bands[i] - lo) / (hi - lo || 1);
       const [c0, c1] = [Math.max(0, Math.min(1, f0)), Math.max(0, Math.min(1, f1))];
       const ink = inks[i] ?? `$ink@${[0.12, 0.22, 0.34, 0.46, 0.58][Math.min(i, 4)]}`;
       const span2 = (c1 - c0) * sweep;
-      const fits = `measure(${q2(name)}, ${nameSize}, 600) < ${rm} * ${(span2 * 0.86).toFixed(4)}`;
+      const fits = `measure(${q2(name)}, ${nameSize}, 600) < ${rm} * ${(span2 * 0.86).toFixed(4)} && ${nameSize} <= ${R} * ${th} * 0.5`;
       const style = { size: e16(nameSize), weight: 600, ink: `on(${ink})`, align: "middle", baseline: "middle" };
       if (p.bandText === "rotated") {
         const am = -half + (c0 + c1) / 2 * sweep;
@@ -4661,15 +4668,15 @@ var gauge = recipe16({
       return text14(name, [0, 0], { key: `name-${i}`, when: e16(fits), style, path: { arc: [e16(cxs), e16(cy), e16(rm), e16(ang(String(c0))), e16(ang(String(c1)))] } });
     });
     const deg = `(${ang(frac)} * ${180 / Math.PI} / 2)`;
-    const reach = names.length ? 1 - th - 0.04 : 0.92;
-    const hand = p.needleStyle === "line" ? shape15(geom15.segment({ x1: 0, y1: 0, x2: 0, y2: e16(`-(${R}) * ${reach.toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5, cap: "round" }, semantics: { role: "decoration" } }) : p.needleStyle === "arrow" ? shape15(geom15.segment({ x1: 0, y1: 0, x2: 0, y2: e16(`-(${R}) * ${(reach - 0.02).toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5 }, markers: { end: { type: "arrow", size: 11 } }, semantics: { role: "decoration" } }) : shape15(geom15.path(e16(`\`M -3 0 L 0 \${-(${R}) * ${reach.toFixed(4)}} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } });
+    const reach = names.length ? `(1 - ${th} - 0.04)` : "0.92";
+    const hand = p.needleStyle === "line" ? shape15(geom15.segment({ x1: 0, y1: 0, x2: 0, y2: e16(`-(${R}) * ${reach}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5, cap: "round" }, semantics: { role: "decoration" } }) : p.needleStyle === "arrow" ? shape15(geom15.segment({ x1: 0, y1: 0, x2: 0, y2: e16(`-(${R}) * (${reach} - 0.02)`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5 }, markers: { end: { type: "arrow", size: 11 } }, semantics: { role: "decoration" } }) : shape15(geom15.path(e16(`\`M -3 0 L 0 \${-(${R}) * ${reach}} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } });
     const needleNode = group15({ key: "needle", transform: { translate: [e16(cxs), e16(cy)], rotate: e16(deg) }, children: [group15({ key: "turn", transform: { rotate: e16(deg) }, children: [
       hand,
       shape15(geom15.circle({ cx: 0, cy: 0, r: 5 }), { key: "hub", fill: "$ink", stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "decoration" } })
     ] })] });
-    const vSize = `clamp(min(${R} * ${vS}, ${needle ? `${R} * 1.3` : `${r0} * 1.5`} * 10 / max(1, measure(${counting ? `format(${v}, ${q2(p.format)})` : valueText}, 10, 600))), 11, 56)`;
+    const vSize = `max(11, min(${vBase}, ${needle ? "box.w * 0.9" : `${r0} * 1.5`} * 10 / max(1, measure(${counting ? `format(${v}, ${q2(p.format)})` : valueText}, 10, 600))))`;
     const vy = needle ? `${cy} + ${R} * ${vTop}` : `${cy} + ${sweep > Math.PI ? `(${vSize}) * 0.36` : `-(${vSize}) * 0.12`}`;
-    const endAt = (f) => [e16(`${cxs} + (${R} * ${1 - th / 2}) * sin(${ang(String(f))})`), e16(`${cy} - (${R} * ${1 - th / 2}) * cos(${ang(String(f))}) + ${R} * ${th / 2} + 4`)];
+    const endAt = (f) => [e16(`${cxs} + (${R} * (1 - ${th} / 2)) * sin(${ang(String(f))})`), e16(`${cy} - (${R} * (1 - ${th} / 2)) * cos(${ang(String(f))}) + ${R} * ${th} / 2 + 4`)];
     return group15({
       key: "gauge",
       semantics: { role: "group", label: p.label || "Gauge" },
@@ -4686,7 +4693,7 @@ var gauge = recipe16({
           text14(e16(`format(${lo}, ${q2(p.format)})`), endAt(0), { key: "min", style: { size: "$size.small", ink: "$muted", align: "middle", baseline: "top" } }),
           text14(e16(`format(${hi}, ${q2(p.format)})`), endAt(1), { key: "max", style: { size: "$size.small", ink: "$muted", align: "middle", baseline: "top" } })
         ] }),
-        p.label ? text14(p.label, [e16("box.w / 2"), e16(`${cy} + max(${R} * ${extent.toFixed(4)} + 6, ${R} * ${(below + th / 2).toFixed(4)} + ${ends})`)], { key: "label", style: { size: "$size.body", weight: 600, ink: "$ink-2", align: "middle", baseline: "top", maxWidth: e16("box.w") } }) : null
+        p.label ? text14(p.label, [e16("box.w / 2"), e16(`${cy} + max(${R} * ${eb.toFixed(4)} + ${vLine} + 6, ${R} * (${below.toFixed(4)} + ${th} / 2) + ${ends})`)], { key: "label", style: { size: "$size.body", weight: 600, ink: "$ink-2", align: "middle", baseline: "top", maxWidth: e16("box.w") } }) : null
       ]
     });
   }

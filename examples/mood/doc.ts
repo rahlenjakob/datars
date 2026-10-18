@@ -14,7 +14,7 @@ export default doc({
   id: "mood",
   title: "Market mood",
   description: "A fictional weekly index of investor mood from 0 (panic) to 100 (euphoria), in five zones: panic, fear, neutral, greed and euphoria.",
-  size: [640, 420],
+  size: [640, 460],
   data: { weeks: data.values({ week: weeks.map((w) => w.week), value: weeks.map((w) => w.value) }, { key: "week" }) },
   signals: { mood: signal.num(weeks[0].value) },
   scene: group({
@@ -29,8 +29,10 @@ export default doc({
         names: ["Panic", "Fear", "Neutral", "Greed", "Euphoria"],
         inks: ["$diverging~0", "$diverging~0.25", "$diverging~0.5", "$diverging~0.75", "$diverging~1"],
       }, { key: "dial", size: { h: "fill" } }),
+      // The week's note in its own row under the dial: never over the bands, and at a reader's
+      // bigger text the dial gives it room rather than the other way round.
+      card({ title: e("narration.title"), text: e("narration.text"), width: 220, at: "left", dodge: false }, { key: "caption", size: { h: "auto" } }),
       ] }),
-      card({ title: e("narration.title"), text: e("narration.text"), width: 220 }, { key: "caption" }),
     ],
   }),
   program: story({

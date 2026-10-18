@@ -5,7 +5,7 @@
  "description": "A fictional weekly index of investor mood from 0 (panic) to 100 (euphoria), in five zones: panic, fear, neutral, greed and euphoria.",
  "size": {
   "width": 640,
-  "height": 420
+  "height": 460
  },
  "locale": "en",
  "data": {
@@ -105,22 +105,27 @@
       "size": {
        "h": "fill"
       }
+     },
+     {
+      "kind": "use",
+      "recipe": "@datars/std/card",
+      "params": {
+       "title": {
+        "expr": "narration.title"
+       },
+       "text": {
+        "expr": "narration.text"
+       },
+       "width": 220,
+       "at": "left",
+       "dodge": false
+      },
+      "key": "caption",
+      "size": {
+       "h": "auto"
+      }
      }
     ]
-   },
-   {
-    "kind": "use",
-    "recipe": "@datars/std/card",
-    "params": {
-     "title": {
-      "expr": "narration.title"
-     },
-     "text": {
-      "expr": "narration.text"
-     },
-     "width": 220
-    },
-    "key": "caption"
    }
   ]
  },
