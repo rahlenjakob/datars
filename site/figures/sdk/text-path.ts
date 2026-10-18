@@ -15,8 +15,8 @@ export default doc({
     key: "root",
     children: [
       shape(geom.circle({ cx: e(cx), cy: e(cy), r: e(R) }), { key: "ring", stroke: { paint: "$rule", width: 1.5 } }),
-      text("Over the top of the ring", [0, 0], { key: "top", path: { arc: [e(cx), e(cy), e(`${R} + 10`), deg(-80), deg(80)] }, style: { size: "$size.label", weight: 600, ink: "$accent", align: "middle", baseline: "middle" } }),
-      text("and round the bottom", [0, 0], { key: "bottom", path: { arc: [e(cx), e(cy), e(`${R} + 10`), deg(100), deg(260)] }, style: { size: "$size.label", ink: "$ink-2", align: "middle", baseline: "middle" } }),
+      text("Over the top of the ring", [0, 0], { key: "top", path: { arc: [e(cx), e(cy), e(`${R} + 4 + token("size.label") * 0.55`), deg(-84), deg(84)] }, style: { size: "$size.label", weight: 600, ink: "$accent", align: "middle", baseline: "middle" } }),
+      text("and round the bottom", [0, 0], { key: "bottom", path: { arc: [e(cx), e(cy), e(`${R} + 4 + token("size.label") * 0.55`), deg(96), deg(264)] }, style: { size: "$size.label", ink: "$ink-2", align: "middle", baseline: "middle" } }),
       shape(geom.path(e("`M ${box.w * 0.55} ${box.h * 0.55} C ${box.w * 0.68} ${box.h * 0.2}, ${box.w * 0.8} ${box.h * 0.9}, ${box.w * 0.97} ${box.h * 0.45}`")), { key: "wave", stroke: { paint: "$rule", width: 1.5 } }),
       text("A sentence that follows its wave", [0, 0], { key: "wave-text", path: { d: e("`M ${box.w * 0.55} ${box.h * 0.55} C ${box.w * 0.68} ${box.h * 0.2}, ${box.w * 0.8} ${box.h * 0.9}, ${box.w * 0.97} ${box.h * 0.45}`") }, style: { size: e('min(token("size.label"), box.w * 0.026)'), ink: "$ink", align: "middle", baseline: "bottom" } }),
     ],
