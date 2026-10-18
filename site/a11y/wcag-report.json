@@ -1,7 +1,7 @@
 {
  "about": "What scripts/a11y-report.mjs found: each wcag_ test's result, what it checked and where it is. Written by the script; read by the site build.",
  "date": "2026-10-18",
- "commit": "e8868ea",
+ "commit": "c2e9622",
  "corpus": 227,
  "tests": {
   "wcag_1_1_1_text_alternatives": {
