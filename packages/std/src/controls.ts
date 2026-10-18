@@ -204,7 +204,7 @@ export const toggle = recipe<ToggleParams>({
   id: "@datars/std/toggle",
   doc: "A switch for a boolean signal: click to flip it. Shows its label beside the switch.",
   params: { signal: t.string(undefined, "The boolean signal it flips."), label: t.string("") },
-  tokens: ["accent", "rule", "paper", "ink", "size.label"],
+  tokens: ["accent", "muted", "paper", "ink", "size.label"],
   motion: SNAPPY,
   expand(p) {
     const sig = p.signal;
@@ -217,7 +217,7 @@ export const toggle = recipe<ToggleParams>({
       semantics: { role: "control", label: p.label || sig, kind: "switch", checked: e(sig) },
       children: [
         shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e(px(28)) }), { key: "hit", pickable: true, fill: "transparent" }),
-        shape(geom.rect({ x: 0, y: e(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e(`${sig} ? "$accent" : "$rule"`) }),
+        shape(geom.rect({ x: 0, y: e(`${px(14)} - 11`), w: 40, h: 22, r: 11 }), { key: "track", fill: e(`${sig} ? "$accent" : "$muted"`) }), // (off: still 3:1 and more on the paper — the switch is there, and off)
         shape(geom.circle({ cx: e(`${sig} ? 29 : 11`), cy: e(px(14)), r: 13 }), { key: "halo", fill: "$ink", opacity: WASH(0.1) }),
         shape(geom.circle({ cx: e(`${sig} ? 29 : 11`), cy: e(px(14)), r: 8 }), { key: "knob", fill: "$paper" }),
         p.label ? text(p.label, [52, e(px(14))], { key: "label", style: { size: "$size.label", ink: "$ink", baseline: "middle" } }) : null,
@@ -294,9 +294,10 @@ export const range = recipe<RangeParams>({
     const f = lit(p.format);
     const y = e(px(30));
     const x = (s: string) => `scale.x(${s})`;
-    // Each thumb takes the half of the gap between them that's on its side (16 px at most), so
-    // two thumbs at the same value can still be told apart: low to the left, high to the right.
-    const half = `clamp((${x(hi)} - ${x(lo)}) / 2, 0, 16)`;
+    // Each thumb takes its side of the track, up to halfway to the other: a press anywhere on the
+    // track moves the nearer thumb there (no drag needed, WCAG 2.5.7), and two thumbs at the same
+    // value can still be told apart — low to the left, high to the right.
+    const mid = `(${x(lo)} + ${x(hi)}) / 2`;
     const thumb = (key: "lo" | "hi") => group({
       key,
       pickable: true,
@@ -304,8 +305,8 @@ export const range = recipe<RangeParams>({
       semantics: { role: "control", label: e(`\`${p.label || "Range"}, ${key === "lo" ? "from" : "to"}: \${format(${key === "lo" ? lo : hi}, ${f})}\``) },
       children: [
         key === "lo"
-          ? shape(geom.rect({ x: e(`${x(lo)} - 16`), y: e(`${px(30)} - 18`), w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" })
-          : shape(geom.rect({ x: e(`${x(hi)} - ${half}`), y: e(`${px(30)} - 18`), w: e(`16 + ${half}`), h: 32 }), { key: "hit", fill: "transparent" }),
+          ? shape(geom.rect({ x: 0, y: e(`${px(30)} - 18`), w: e(mid), h: 32 }), { key: "hit", fill: "transparent" })
+          : shape(geom.rect({ x: e(mid), y: e(`${px(30)} - 18`), w: e(`box.w - ${mid}`), h: 32 }), { key: "hit", fill: "transparent" }),
         shape(geom.circle({ cx: e(x(key === "lo" ? lo : hi)), cy: y, r: 15 }), { key: "halo", fill: "$accent", opacity: WASH(0.18) }),
         shape(geom.circle({ cx: e(x(key === "lo" ? lo : hi)), cy: y, r: 8 }), { key: "thumb", fill: "$accent", stroke: { paint: "$paper", width: 2 } }),
       ],
@@ -314,7 +315,8 @@ export const range = recipe<RangeParams>({
       key: "range",
       size: { h: e(px(44)) },
       scales: { x: { type: "linear", domain: [p.min, p.max], range: [10, "=box.w - 10"] } },
-      semantics: { role: "control", label: e(`\`${p.label || "Range"}: \${format(${lo}, ${f})}–\${format(${hi}, ${f})}\``) },
+      // (Its name has the words drawn on it, "0 – 50", as they're drawn: WCAG 2.5.3.)
+      semantics: { role: "control", label: e(`\`${p.label || "Range"}: \${format(${lo}, ${f})} – \${format(${hi}, ${f})}\``) },
       children: [
         text(p.label, [0, 0], { key: "label", style: LABEL }),
         text(e(`\`\${format(${lo}, ${f})} – \${format(${hi}, ${f})}\``), [e("box.w"), 0], { key: "value", style: { size: "$size.label", weight: 600, ink: "$ink", align: "end", baseline: "top" } }),

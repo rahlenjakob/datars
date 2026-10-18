@@ -92,7 +92,10 @@ export const bar = recipe<BarParams>({
 
 // ---- line ---------------------------------------------------------------------------------------
 
-export interface LineParams { data: string; x: string; y: string; color: string; xType: string; series: string; curve: string; width: number; points: boolean; stroke: Prop; labels: boolean; clip: boolean; selected: string; yScale: string }
+export interface LineParams { data: string; x: string; y: string; color: string; xType: string; series: string; curve: string; width: number; points: boolean; stroke: Prop; labels: boolean; dashes: boolean; clip: boolean; selected: string; yScale: string }
+
+/** Dash patterns that tell series apart besides their colour: solid, dashed, dotted, dash-dot. */
+export const DASHES: (number[] | undefined)[] = [undefined, [7, 4], [1.5, 3.5], [8, 3, 1.5, 3]];
 
 export const line = recipe<LineParams>({
   id: "@datars/std/line",
@@ -105,6 +108,7 @@ export const line = recipe<LineParams>({
     points: t.bool(false, "Dots at the data points."),
     stroke: t.prop("Stroke ink or expression."),
     labels: t.bool(false, "Label each line at its last point (labels pushed apart so they never overlap)."),
+    dashes: t.bool(false, "Each series in a dash pattern of its own as well as its colour — solid, dashed, dotted, dash-dot — so lines aren't told apart by colour alone (a plot's `dashes` shows them in its legend)."),
     clip: t.bool(false, "Clip the lines to the plot area (the end labels stay outside it)."),
     selected: t.string(undefined, "A keyset signal: selected series stay strong, the others recede."),
     yScale: t.string("y", "The value scale: `y2` for a plot's right axis."),
@@ -115,12 +119,15 @@ export const line = recipe<LineParams>({
     const xExpr = isBand(p.xType) ? `scale.x(${fld(p.x)}) + scale.x.bandwidth() / 2` : `scale.x(${fld(p.x)})`;
     const ink = p.stroke ?? (series && p.color ? e(`scale.color(${fld(p.color)})`) : "$mark");
     const ys = p.yScale || "y";
-    const lineShape = shape(geom.polyline({ from: "@group", x: e(xExpr), y: e(`scale.${ys}(${fld(p.y)})`), curve: p.curve }), {
-      key: "line",
+    const lineShape = (dash?: number[], k = 0) => shape(geom.polyline({ from: "@group", x: e(xExpr), y: e(`scale.${ys}(${fld(p.y)})`), curve: p.curve }), {
+      key: k ? `line-${k}` : "line",
+      when: p.dashes && p.color ? e(`scale.color.index(${fld(p.color)}) % ${DASHES.length} == ${k}`) : undefined,
       opacity: p.selected && series ? e(`${p.selected}.isEmpty() || ${p.selected}.has(${fld(series)}) ? 1 : token("dim")`) : undefined,
-      stroke: { paint: ink, width: p.width || "$stroke.line", join: "round", cap: "round" },
+      stroke: { paint: ink, width: p.width || "$stroke.line", join: "round", cap: "round", dash },
       semantics: { role: "series", label: series ? e(`key.name(${fld(series)})`) : p.y },
     });
+    // With dashes, one shape per pattern, the series' own drawn (static patterns, chosen by its colour's place).
+    const lines = p.dashes && p.color ? DASHES.map((d, k) => lineShape(d, k)) : [lineShape()];
     // Each point says what it is: the series, where on x (as the axis writes it) and the value.
     const xLabel = isBand(p.xType) ? `key.name(${fld(p.x)})` : `scale.x.label(${fld(p.x)})`;
     const dotLabel = series ? `\`\${key.name(${fld(series)})} · \${${xLabel}}: \${format(${fld(p.y)}, ",.2~f")}\`` : `\`\${${xLabel}}: \${format(${fld(p.y)}, ",.2~f")}\``;
@@ -132,7 +139,7 @@ export const line = recipe<LineParams>({
     // Clipped with end labels, each line clips itself (to the plot area, its box): the labels sit
     // just past the area's edge, beside the lines in the same group — so a line's key path is the
     // same with labels on or off, and toggling them morphs the lines instead of cross-fading them.
-    const one = group({ clip: p.clip && labelled ? "box" : undefined, children: [lineShape, pts] });
+    const one = group({ clip: p.clip && labelled ? "box" : undefined, children: [...lines, pts] });
     const each = series ? repeat({ groups: p.data, by: series }, one) : repeat({ groups: p.data, by: p.y === "__none" ? p.x : "__all" }, one);
     if (!labelled) return group({ key: "lines", clip: p.clip ? "box" : undefined, children: [each] });
     // Each series' last point, its label pushed apart from its neighbours' (1-D spread).

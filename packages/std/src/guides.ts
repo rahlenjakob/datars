@@ -2,20 +2,30 @@
 
 import { e, group, recipe, repeat, shape, geom, t, text, Prop, Template } from "@datars/sdk";
 
-export interface LegendParams { scale: string; title: string }
+export interface LegendParams { scale: string; title: string; dashes: boolean }
+
+/** The dash patterns `line({ dashes: true })` gives series (kept in step with marks.ts). */
+const DASH_SWATCHES: (number[] | undefined)[] = [undefined, [7, 4], [1.5, 3.5], [8, 3, 1.5, 3]];
 
 export const legend = recipe<LegendParams>({
   id: "@datars/std/legend",
   doc: "A legend for a colour scale: a swatch and a label per entry, flowing in rows (spaced by the labels' widths, wrapping at the box edge), under an optional title.",
-  params: { scale: t.string("color"), title: t.string(undefined, "A title above the entries (and the legend's accessible name).") },
+  params: {
+    scale: t.string("color"), title: t.string(undefined, "A title above the entries (and the legend's accessible name)."),
+    dashes: t.bool(false, "Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone."),
+  },
   tokens: ["ink", "ink-2", "size.label"],
   expand(p) {
     const items = repeat({ legend: p.scale }, group({
       semantics: { role: "legend-item", label: e("key.name(d.label)") },
       children: [
         // The swatch beside the label's letters, at any text size (2 and 11 px at the theme's).
-        shape(geom.rect({ x: 0, y: e('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e("d.ink") }),
-        text(e("key.name(d.label)"), [15, e('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } }),
+        ...(p.dashes
+          ? DASH_SWATCHES.map((dash, k) => shape(geom.segment({ x1: 0, y1: e('token("size.label") * 0.6 + 0.4'), x2: 22, y2: e('token("size.label") * 0.6 + 0.4') }), {
+            key: `swatch-${k}`, when: e(`scale.${p.scale}.index(d.label) % ${DASH_SWATCHES.length} == ${k}`), stroke: { paint: e("d.ink"), width: 2, cap: "round", dash },
+          }))
+          : [shape(geom.rect({ x: 0, y: e('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e("d.ink") })]),
+        text(e("key.name(d.label)"), [p.dashes ? 27 : 15, e('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } }),
       ],
     }));
     const semantics = { role: "legend" as const, label: p.title ?? "Legend" };
@@ -277,7 +287,7 @@ export const card = recipe<CardParams>({
       semantics: { role: "annotation", label: p.text },
       children: [
         p.kicker ? line("kicker", p.kicker, { size: "$size.small", weight: 700, ink: "$accent" }, true) : null,
-        p.title ? line("title", p.title, { size: e('token("size.body") + 2'), weight: 600, ink: "$card-ink" }, true) : null,
+        p.title ? line("title", p.title, { size: e('token("size.body") * 15 / 13'), weight: 600, ink: "$card-ink" }, true) : null,
         line("text", p.text, { size: "$size.body", ink: "$card-ink-2" }),
       ],
     });

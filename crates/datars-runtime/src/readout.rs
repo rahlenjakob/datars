@@ -83,9 +83,10 @@ fn split(label: &str) -> (String, String) {
 
 /// What a screen reader walks through for an engine as it is now: [`readout_in`] over its
 /// semantics, then the step's narration right after what the chart shows (unless the chart draws
-/// it: then it's in the content already), and a story's Previous step and Next step after the
-/// content (`Engine::activate` runs them by their paths, `event:prev` and `event:next`) — the
-/// order the web element reads too.
+/// it: then it's in the content already), then — after the content — a Pause (or Play) for what
+/// moves by itself and a story's Previous step and Next step (`Engine::activate` runs them by
+/// their paths: `playback:pause`, `playback:play`, `event:prev`, `event:next`) — the order the
+/// web element reads too.
 pub fn of_engine(engine: &mut datars_engine::Engine) -> Vec<Readout> {
     let items = engine.semantic_items();
     let name = engine.accessible_name();
@@ -100,6 +101,11 @@ pub fn of_engine(engine: &mut datars_engine::Engine) -> Vec<Readout> {
             .collect();
         let at = out.len().min(1);
         out.splice(at..at, lines);
+    }
+    // What moves by itself (autoplay, a clock): the reader's Pause, or Play once paused (WCAG 2.2.2).
+    if engine.moves_by_itself() {
+        let (label, path) = if engine.held() { ("play", "playback:play") } else { ("pause", "playback:pause") };
+        out.push(Readout { kind: "button", label: datars_engine::phrases::phrase(&locale, label, &[]), value: String::new(), rect: None, path: path.into(), checked: None });
     }
     let (index, states) = (engine.state_index(), engine.state_names().len());
     if states > 1 {

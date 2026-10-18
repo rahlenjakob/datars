@@ -250,6 +250,10 @@ impl Core {
             "states": self.engine.state_names(),
             "narration": self.engine.narration(),
             "narrationDrawn": self.engine.draws_narration(),
+            // What moves by itself (autoplay, a clock) and whether the reader paused it: hosts
+            // show a Pause button (WCAG 2.2.2).
+            "moves": self.engine.moves_by_itself(),
+            "held": self.engine.held(),
             "controls": self.engine.controls().into_iter().map(|c| match c.kind {
                 "select" => serde_json::json!({ "kind": "select", "signal": c.signal, "label": c.label, "current": c.current, "rect": c.rect,
                     "options": c.options.iter().map(|(v, l)| serde_json::json!({ "value": v, "label": l })).collect::<Vec<_>>() }),

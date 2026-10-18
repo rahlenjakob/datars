@@ -206,6 +206,13 @@ impl Env for ResolveEnv<'_> {
                 Some("step") => Value::Num(sc.step()),
                 Some("invert") => Value::Num(sc.invert(a0.map(num_of).unwrap_or(f64::NAN))),
                 Some("ink") => Value::Str(Arc::from(sc.ink(a0.unwrap_or(&Value::Null)).to_string().as_str())),
+                // `scale.color.index(v)`: which of a categorical colour scale's colours `v` gets
+                // (0, 1, 2 …) — for telling series apart by something besides colour too (a dash,
+                // a symbol). Not a palette colour: NaN.
+                Some("index") => match sc.ink(a0.unwrap_or(&Value::Null)) {
+                    datars_theme::Ink::Palette { index, .. } => Value::Num(index as f64),
+                    _ => Value::Num(f64::NAN),
+                },
                 // `scale.x.label(v)`: the value as the axis would write it (dates in full).
                 Some("label") => Value::Str(Arc::from(sc.label(a0.unwrap_or(&Value::Null), self.locale).as_str())),
                 Some("min") => Value::Num(sc.range_min()),
