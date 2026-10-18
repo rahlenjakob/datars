@@ -471,7 +471,24 @@ pre.output .prompt { color: #82aaff; }
   .wcag td[data-label]::before { content: attr(data-label); display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
   .wcag th[scope=row], .wcag td:last-child { width: auto; font-size: 15.5px; }
 }
-.table-wrap td code { white-space: nowrap; }
+/* A docs table's row headers look like its other cells on a wide screen. */
+.table-wrap tbody th[scope=row] { font-weight: inherit; }
+/* Phones: a docs table (markdown.mjs, `table.stack`) becomes a card per row — its first cell the
+   heading, the rest under it, each named by its column in a table of three or more — instead of
+   columns too narrow to read that scroll sideways. The header row stays for screen readers. */
+@media (max-width: 720px) {
+  table.stack, table.stack tbody, table.stack tr, table.stack th[scope=row], table.stack td { display: block; width: auto; }
+  table.stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  table.stack tbody tr { padding: 10px 14px; border-bottom: 1px solid var(--rule); }
+  table.stack tbody tr:last-child { border-bottom: 0; }
+  .table-wrap table.stack th[scope=row], .table-wrap table.stack td { border: 0; padding: 2px 0; text-align: left !important; white-space: normal; }
+  .table-wrap table.stack th[scope=row] { font-weight: 600; padding-bottom: 4px; }
+  .table-wrap table.stack td + td { padding-top: 6px; }
+  table.stack.labelled td[data-label]::before { content: attr(data-label); content: attr(data-label) / ""; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 1px; }
+  table.stack td:empty { display: none; }
+  .table-wrap table.stack th code, .table-wrap table.stack td code { white-space: normal; overflow-wrap: anywhere; }
+}
+.table-wrap td code, .table-wrap th[scope=row] code { white-space: nowrap; }
 .table-wrap td:last-child code { white-space: normal; }
 table.params td:first-child, table.cli td:first-child { white-space: nowrap; }
 table.params small, table.params .ty { color: var(--muted); }

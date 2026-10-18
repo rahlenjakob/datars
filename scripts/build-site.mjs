@@ -14,7 +14,7 @@ import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync,
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
-import { escapeAttr, escapeHtml, frontMatter, inline, markdown } from "./site/markdown.mjs";
+import { escapeAttr, escapeHtml, frontMatter, inline, markdown, table } from "./site/markdown.mjs";
 import { highlight, highlightPage } from "./site/highlight.mjs";
 import { DOCS_NAV, FEATURES, docsPrevNext, docsSidebar, docsToc, featureIcon, lookAccents, lookPresets, page, urlOf } from "./site/layout.mjs";
 import { STD_GROUPS, figureAlias, firstSentence, stdPages } from "./site/std.mjs";
@@ -611,7 +611,9 @@ function perf(spec) {
 /** Every chart's bundle sizes per tier (the delivery page). */
 function sizeTable() {
   const tier = (g, t) => (g[t] ? kb(g[t]) : "—");
-  return `<div class="table-wrap"><table class="perf"><thead><tr><th>Chart</th><th class="num">T0 poster + text</th><th class="num">T1 baked</th><th class="num">T2 pre-expanded</th><th class="num">T3 source</th><th class="num">Archive, read by range</th></tr></thead><tbody>${showcase.map((a) => `<tr><td><a href="/gallery/#${a}">${escapeHtml(docs[a].title ?? a)}</a></td><td class="num">${tier(tiers[a], "T0")}</td><td class="num">${tier(tiers[a], "T1")}</td><td class="num">${tier(tiers[a], "T2")}</td><td class="num">${tier(tiers[a], "T3")}</td><td class="num">${archives[a] ? mb(archives[a]) : "—"}</td></tr>`).join("")}</tbody></table></div>`;
+  return table(["Chart", "T0 poster + text", "T1 baked", "T2 pre-expanded", "T3 source", "Archive, read by range"],
+    showcase.map((a) => [`<a href="/gallery/#${a}">${escapeHtml(docs[a].title ?? a)}</a>`, tier(tiers[a], "T0"), tier(tiers[a], "T1"), tier(tiers[a], "T2"), tier(tiers[a], "T3"), archives[a] ? mb(archives[a]) : "—"]),
+    [], { cls: "perf", num: [1, 2, 3, 4, 5] });
 }
 
 /** One chart's variants as bars (`{{variants:votes}}`): each as long as its gzipped first load, made
@@ -681,7 +683,7 @@ function fill(html, where) {
     .replaceAll("{{features:grid}}", `<div class="feature-grid">${FEATURES.map((f) => `<a class="feature-card" href="/features/${f.slug}/">${featureIcon(f)}<b>${escapeHtml(f.name)}</b><span>${escapeHtml(f.blurb)}</span></a>`).join("")}</div>`)
     .replaceAll("{{cli:table}}", cliTable())
     .replaceAll("{{sizes:table}}", sizeTable())
-    .replaceAll("{{mcp:tools}}", `<div class="table-wrap"><table><thead><tr><th>Tool</th><th>What it returns</th></tr></thead><tbody>${mcpTools.map(([n, d]) => `<tr><td><code>${n}</code></td><td>${inline(d)}</td></tr>`).join("")}</tbody></table></div>`)
+    .replaceAll("{{mcp:tools}}", table(["Tool", "What it returns"], mcpTools.map(([n, d]) => [`<code>${n}</code>`, inline(d)])))
     .replace(/\{\{size:([a-z0-9_-]+)\}\}/g, (_, a) => kb(sizes[known(a)]))
     .replace(/\{\{tier:([a-z0-9_-]+):(T\d)\}\}/g, (_, a, t) => kb(tiers[known(a)][t] ?? 0))
     .replace(/\{\{variants:([a-z0-9_-]+)\}\}/g, (_, a) => variantBars(known(a)))

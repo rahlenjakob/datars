@@ -32,6 +32,21 @@ export function slug(text) {
 const INLINE_TAGS = /^<\/?(kbd|br|b|i|em|strong|code|a|span|sup|sub|small|abbr|mark|s)\b[^>]*>/;
 
 /** Inline Markdown: code spans, images, links, bold, italic; allowed inline HTML kept. */
+/** A docs table: the first cell of each row is its header (`<th scope="row">`). On a phone (site.css,
+ * `table.stack`) each row becomes a card — its first cell as the heading, the others under it,
+ * each named by its column when there are three or more — so nothing scrolls sideways. The roles
+ * are spelled out because some browsers drop a table's semantics once CSS changes its `display`;
+ * with them, screen readers still read rows, columns and their headers. `head` and `rows` are HTML. */
+export function table(head, rows, aligns = [], { cls = "", num = [] } = {}) {
+  const al = (j) => (aligns[j] ? ` style="text-align:${aligns[j]}"` : "");
+  const plain = (h) => h.replace(/<[^>]+>/g, "").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+  const labelled = head.length >= 3;
+  const label = (j) => (labelled && j > 0 && plain(head[j]) ? ` data-label="${escapeAttr(plain(head[j]))}"` : "");
+  const n = (j) => (num.includes(j) ? ` class="num"` : "");
+  const cell = (c, j) => (j === 0 ? `<th scope="row" role="rowheader"${al(j)}>${c}</th>` : `<td role="cell"${n(j)}${al(j)}${label(j)}>${c}</td>`);
+  return `<div class="table-wrap"><table class="stack${labelled ? " labelled" : ""}${cls ? ` ${cls}` : ""}" role="table"><thead role="rowgroup"><tr role="row">${head.map((c, j) => `<th scope="col" role="columnheader"${n(j)}${al(j)}>${c}</th>`).join("")}</tr></thead><tbody role="rowgroup">${rows.map((r) => `<tr role="row">${r.map(cell).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+
 export function inline(src) {
   const codes = [];
   let s = src.replace(/(`+)([\s\S]*?[^`])\1(?!`)/g, (_, _t, code) => {
@@ -135,8 +150,7 @@ export function markdown(src) {
       i += 2;
       const rows = [];
       while (i < lines.length && lines[i].trim().startsWith("|")) rows.push(cells(lines[i++]));
-      const al = (j) => (aligns[j] ? ` style="text-align:${aligns[j]}"` : "");
-      out.push(`<div class="table-wrap"><table><thead><tr>${head.map((c, j) => `<th${al(j)}>${inline(c)}</th>`).join("")}</tr></thead><tbody>${rows.map((r) => `<tr>${r.map((c, j) => `<td${al(j)}>${inline(c)}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`);
+      out.push(table(head.map(inline), rows.map((r) => r.map(inline)), aligns));
       continue;
     }
 
