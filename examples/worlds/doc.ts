@@ -44,7 +44,7 @@ export default doc({
     key: "root",
     layout: { type: "stack", padding: [16, 16, 12, 16] },
     children: [
-      text("Eight billion, four ways", [0, 0], { key: "title", style: { font: "font.title", size: 20, ink: "$ink", baseline: "top" } }),
+      text("Eight billion, four ways", [0, 0], { key: "title", style: { font: "font.title", size: e('token("size.title") * 20 / 17'), ink: "$ink", baseline: "top", maxWidth: e("box.w") } }),
       ...(["globe", "orbits", "spiral", "blocks"] as Layout[]).map((layout) => worlds({ data: "countries", source: "world", layout, turn: e("15 - spin") }, { key: "chart", when: e(`layout == "${layout}"`) })),
       card({ title: e("narration.title"), text: e("narration.text"), at: "bottom-left", width: 230 }, { key: "caption" }),
     ],

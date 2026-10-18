@@ -89,6 +89,7 @@ scene 720.00×460.00 background=$paper
               (0,) segment (0.00, 75.62)→(652.91, 75.62) stroke=$grid/1.00 role=decoration
               (100,) segment (0.00, 37.81)→(652.91, 37.81) stroke=$grid/1.00 role=decoration
               (200,) segment (0.00, 0.00)→(652.91, 0.00) stroke=$grid/1.00 role=decoration
+            group ("brush",)
             group ("areas",)
               group ("",)
                 ("area",) area n=365 fill=$mark opacity=0.30 role=series "price"

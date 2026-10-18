@@ -389,6 +389,40 @@ pub fn film_with_chapters(engine: &mut Engine, fps: f64, default_hold: f64, mut 
     (cues, chapters)
 }
 
+/// The film's text alternative (WCAG 1.2.1, 1.2.3; a page links it beside the video): the chart's
+/// name and what it shows, then each state in order — its narration, and what the chart shows
+/// there (the state's summary) — as plain text. A film has no sound: this is everything it says.
+pub fn transcript(engine: &mut Engine) -> String {
+    let name = engine.accessible_name();
+    let mut out = String::new();
+    if !name.is_empty() {
+        out.push_str(&name);
+        out.push_str("\n\n");
+    }
+    let states: Vec<datars_ir::State> = engine.doc().program.as_ref().map(|p| p.states.clone()).unwrap_or_default();
+    let n = engine.state_names().len().max(1);
+    let loc = engine.doc().locale.clone();
+    for i in 0..n {
+        engine.goto(i);
+        engine.frame(1e6 * (i + 1) as f64);
+        if n > 1 {
+            out.push_str(&datars_engine::phrases::phrase(&loc, "step", &[("i", &(i + 1).to_string()), ("n", &n.to_string())]));
+            out.push('\n');
+        }
+        if let Some(nar) = states.get(i).and_then(|s| s.narration.as_ref()) {
+            for t in [&nar.title, &nar.text] {
+                if !t.trim().is_empty() {
+                    out.push_str(t.trim());
+                    out.push('\n');
+                }
+            }
+        }
+        out.push_str(&engine.accessible_summary());
+        out.push_str("\n\n");
+    }
+    out.trim_end().to_string() + "\n"
+}
+
 /// WebVTT captions for [`film`] cues.
 pub fn webvtt(cues: &[Cue]) -> String {
     let ts = |t: f64| {

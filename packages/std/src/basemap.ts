@@ -97,7 +97,7 @@ export const basemap = recipe<BasemapParams>({
         priority: e("d.pop ?? (100 - (d.rank ?? 50))"),
         template: text(e("d.name"), [e("d.$x"), e("d.$y")], {
           key: e("d.name"),
-          style: { size: e("d.rank != null && d.rank <= 2 ? 13 : 11.5"), weight: e("d.rank != null && d.rank <= 2 ? 600 : 400"), ink: "$map.label", align: "middle", baseline: "middle" },
+          style: { size: e('token("size.label") * (d.rank != null && d.rank <= 2 ? 13 : 11.5) / 11'), weight: e("d.rank != null && d.rank <= 2 ? 600 : 400"), ink: "$map.label", align: "middle", baseline: "middle" },
           halo: ["$map.label-halo", 2.5],
           semantics: { role: "label", label: e("d.name") },
         }),
@@ -128,7 +128,7 @@ export const attribution = recipe<AttributionParams>({
     // The corner of the box it's laid out in, whatever size the chart is drawn at: not the size it
     // was expanded for (a published chart is expanded once, at its document's size).
     return text(p.text, [e("box.w - 6"), e("box.h - 5")], {
-      key: "attribution", style: { size: 10.5, ink: p.ink, align: "end", baseline: "bottom" }, halo: ["$map.label-halo", 2.5],
+      key: "attribution", style: { size: e('token("size.small") * 1.05'), ink: p.ink, align: "end", baseline: "bottom", maxWidth: e("box.w - 12") }, halo: ["$map.label-halo", 2.5],
       semantics: { role: "annotation", label: p.text, link: p.link || undefined },
     });
   },

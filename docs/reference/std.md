@@ -933,6 +933,7 @@ Theme tokens: `ink`, `ink-2`, `muted`, `positive`, `negative`, `mark`, `size.bod
 
 | param | type | default | |
 |---|---|---|---|
+| `dashes` | bool | `false` | Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone. |
 | `scale` | string | `"color"` |  |
 | `title` | string |  | A title above the entries (and the legend's accessible name). |
 
@@ -947,6 +948,7 @@ Theme tokens: `ink`, `ink-2`, `size.label`
 | `clip` | bool | `false` | Clip the lines to the plot area (the end labels stay outside it). |
 | `color` | field |  |  |
 | `curve` | enum | `"monotone-x"` |  |
+| `dashes` | bool | `false` | Each series in a dash pattern of its own as well as its colour — solid, dashed, dotted, dash-dot — so lines aren't told apart by colour alone (a plot's `dashes` shows them in its legend). |
 | `data` | table |  |  |
 | `labels` | bool | `false` | Label each line at its last point (labels pushed apart so they never overlap). |
 | `points` | bool | `false` | Dots at the data points. |
@@ -1197,6 +1199,7 @@ Theme tokens: `categorical`, `paper`, `ink`, `muted`, `size.label`, `size.title`
 | `clip` | bool | `false` | Clip marks to the plot area (for explicit domains narrower than the data: a zoom). |
 | `color` | field |  | Field mapped to colour (categorical by default). |
 | `colorType` | enum | `"categorical"` |  |
+| `dashes` | bool | `false` | The legend shows each series' dash pattern too, for lines drawn with `line({ dashes: true })`. |
 | `data` | table |  | The table marks read by default. |
 | `format` | string |  | Number format for value-axis labels (a 100 % `stacked` child: '.0%'). |
 | `grid` | bool | `true` | Gridlines along the value axis. |
@@ -1652,7 +1655,7 @@ Theme tokens: `ink`, `ink-2`, `muted`, `rule`, `paper`, `categorical`, `size.bod
 | `label` | string | `""` |  |
 | `signal` | string |  | The boolean signal it flips. |
 
-Theme tokens: `accent`, `rule`, `paper`, `ink`, `size.label`
+Theme tokens: `accent`, `muted`, `paper`, `ink`, `size.label`
 
 ## track
 

@@ -2,6 +2,9 @@
 // each country's row, so the engine lays them out for any size and every value is exact everywhere.
 import { e, group, op, recipe, shape, geom, repeat, text, t, type Prop } from "@datars/sdk";
 
+/** The title's band at the top: 40 px at the theme's text size, more at a reader's bigger text. */
+const TOP = "(token('size.title') * 40 / 17)";
+
 export const CONTINENTS = ["Oceania", "South America", "North America", "Europe", "Asia", "Africa"];
 
 export type Layout = "globe" | "orbits" | "spiral" | "blocks";
@@ -24,7 +27,8 @@ export const worlds = recipe<WorldsParams>({
       op.window("rank", "pop", "rank_all", { order: "-pop" }),
       op.join(counts, "continent"),
       op.join(p.source, "id"));
-    const R = "min(box.w, box.h - 40)";
+    // Room for the title above, at the reader's text size (40 px at the theme's).
+    const R = `min(box.w, box.h - ${TOP})`;
     const cxy = ["box.w / 2", "(box.h + 30) / 2"];
     const size = `max(1.6, sqrt(d.pop) * ${R} / 820)`;
     const ring = `(${CONTINENTS.map((c, i) => `d.continent == "${c}" ? ${i} : `).join("")}5)`;
@@ -36,9 +40,9 @@ export const worlds = recipe<WorldsParams>({
     if (p.layout === "globe") {
       mark = shape(geom.feature(p.source, e("d.id")), { fill, stroke: { paint: "$paper", width: 0.4, nonScaling: true } as never, semantics: datum, pickable: true });
     } else if (p.layout === "blocks") {
-      const tm = cx.table("blocks", rows, op.treemap({ value: "pop", width: e("box.w"), height: e("box.h - 40"), as: ["x0", "y0", "x1", "y1"] }));
-      return group({ key: "worlds", children: [repeat(tm, shape(geom.rect({ x: e("d.x0 + 0.5"), y: e("d.y0 + 40.5"), w: e("max(0, d.x1 - d.x0 - 1)"), h: e("max(0, d.y1 - d.y0 - 1)") }), { key: e("d.id"), fill, semantics: datum, pickable: true })),
-        repeat(tm, text(e("d.name"), [e("d.x0 + 5"), e("d.y0 + 54")], { key: e("'name-' + d.id"), when: e("d.x1 - d.x0 > 60 && d.y1 - d.y0 > 22"), style: { size: 11, weight: 600, ink: e("'on(' + key.color(d.continent) + ')'"), maxWidth: e("d.x1 - d.x0 - 8") } }))] });
+      const tm = cx.table("blocks", rows, op.treemap({ value: "pop", width: e("box.w"), height: e(`box.h - ${TOP}`), as: ["x0", "y0", "x1", "y1"] }));
+      return group({ key: "worlds", children: [repeat(tm, shape(geom.rect({ x: e("d.x0 + 0.5"), y: e(`d.y0 + ${TOP} + 0.5`), w: e("max(0, d.x1 - d.x0 - 1)"), h: e("max(0, d.y1 - d.y0 - 1)") }), { key: e("d.id"), fill, semantics: datum, pickable: true })),
+        repeat(tm, text(e("d.name"), [e("d.x0 + 5"), e(`d.y0 + ${TOP} + 14`)], { key: e("'name-' + d.id"), when: e("d.x1 - d.x0 > max(60, measure(d.name, token('size.label'), 600) * 0.6 + 10) && d.y1 - d.y0 > token('size.label') * 2"), style: { size: "$size.label", weight: 600, ink: e("'on(' + key.color(d.continent) + ')'"), maxWidth: e("d.x1 - d.x0 - 8") } }))] });
     } else {
       const at = p.layout === "orbits"
         // Rings by continent, the smallest inside; around each ring by the golden angle, so the
@@ -48,7 +52,7 @@ export const worlds = recipe<WorldsParams>({
         // angle — the giants land on the rim, where there's room.
         : [`${cxy[0]} + ${R} * 0.44 * sqrt((table.count("${rows}") - d.rank_all + 0.5) / table.count("${rows}")) * cos((table.count("${rows}") - d.rank_all) * 2.39996)`, `${cxy[1]} + ${R} * 0.44 * sqrt((table.count("${rows}") - d.rank_all + 0.5) / table.count("${rows}")) * sin((table.count("${rows}") - d.rank_all) * 2.39996)`];
       mark = shape(geom.circle({ cx: e(at[0]), cy: e(at[1]), r: e(size) }), { fill, semantics: datum, pickable: true });
-      const names = repeat(rows, text(e("d.name"), [e(at[0]), e(`${at[1]} - ${size} - 4`)], { key: e("'name-' + d.id"), when: e("d.pop >= 150"), style: { size: 11, weight: 600, ink: "$ink", align: "middle" }, halo: ["$paper", 3] }));
+      const names = repeat(rows, text(e("d.name"), [e(at[0]), e(`${at[1]} - ${size} - 4`)], { key: e("'name-' + d.id"), when: e("d.pop >= 150"), style: { size: "$size.label", weight: 600, ink: "$ink", align: "middle" }, halo: ["$paper", 3] }));
       // The orbits themselves, faint, and a pale sun: decoration, not data — it mustn't read as a country.
       const system = p.layout === "orbits" ? [
         ...CONTINENTS.map((_, i) => shape(geom.ellipse({ cx: e(cxy[0]), cy: e(cxy[1]), rx: e(`${R} * ${(0.12 + i * 0.062).toFixed(3)}`), ry: e(`${R} * ${TILT} * ${(0.12 + i * 0.062).toFixed(3)}`) }), { key: `orbit-${i}`, stroke: { paint: "$muted@0.28", width: 0.75 }, semantics: { role: "decoration" } })),

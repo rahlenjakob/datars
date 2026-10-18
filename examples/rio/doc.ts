@@ -91,7 +91,7 @@ export default doc({
               repeat("sights", text(e("d.visitors >= minLabel ? d.name : \"\""), [e("geo.x(d.lon, d.lat)"), e("geo.y(d.lon, d.lat)")], {
                 key: e("d.id"),
                 offset: [0, e("-scale.r(d.visitors) - 3")],
-                style: { size: 11.5, weight: 600, ink: "$ink", align: e(`minLabel > 0 ? d.side : "start"`), baseline: "bottom", contain: true },
+                style: { size: e('token("size.label") * 11.5 / 11'), weight: 600, ink: "$ink", align: e(`minLabel > 0 ? d.side : "start"`), baseline: "bottom", contain: true },
                 halo: ["$paper", 2.5],
               })),
             ],

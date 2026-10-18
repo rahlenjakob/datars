@@ -2,8 +2,8 @@
   "states": [
     {
       "name": "months",
-      "scene": "ce1d9b3cfbb7ea31",
-      "pixels": "ac70574206023441"
+      "scene": "88821da45e3a6918",
+      "pixels": "35ccd06f8fa26ad7"
     },
     {
       "name": "categories",
@@ -15,7 +15,7 @@
     {
       "from": "months",
       "to": "categories",
-      "sweep": "cbe635ffd7e8a3d4",
+      "sweep": "74b02842db229985",
       "samples": 64
     }
   ]

@@ -2,17 +2,17 @@
   "states": [
     {
       "name": "world",
-      "scene": "e8d4e8116638b235",
+      "scene": "eda11f3cccd357d0",
       "pixels": "b489e82972183110"
     },
     {
       "name": "sweden",
-      "scene": "de54f36ba8d1fd7e",
+      "scene": "077458630953a808",
       "pixels": "82578417311933f2"
     },
     {
       "name": "stockholm",
-      "scene": "d49a56c9aabbabaf",
+      "scene": "dc74f49ce7c55261",
       "pixels": "99b730ab443f9ede"
     }
   ],
@@ -20,13 +20,13 @@
     {
       "from": "world",
       "to": "sweden",
-      "sweep": "788c179b2945c47c",
+      "sweep": "fe0782b9f26ab224",
       "samples": 64
     },
     {
       "from": "sweden",
       "to": "stockholm",
-      "sweep": "f90f26edd7289a0d",
+      "sweep": "e11e3598bf28e9af",
       "samples": 64
     }
   ]

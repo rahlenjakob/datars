@@ -62,19 +62,23 @@ export default doc({
         label: e(LABEL),
         name: "4,000,000 stars",
       }, { key: "sky" }),
-      text("4,000,000 stars", [22, 20], { key: "title", style: { font: "font.title", size: 22, ink: "$ink", baseline: "top" }, halo: ["$paper", 3] }),
-      text("A barred spiral, generated from a seed", [22, 50], { key: "subtitle", style: { size: 12.5, ink: "$ink-2", baseline: "top" }, halo: ["$paper", 3] }),
+      // The title and its subtitle in a column: at the reader's text size the subtitle sits under the
+      // title however big it is, and both wrap.
+      group({ key: "head", layout: { type: "rows", gap: 6, padding: [20, 22, 0, 22] }, children: [
+        text("4,000,000 stars", [0, 0], { key: "title", size: { h: "auto" }, style: { font: "font.title", size: e('token("size.title") * 22 / 17'), ink: "$ink", baseline: "top", maxWidth: e("box.w") }, halo: ["$paper", 3] }),
+        text("A barred spiral, generated from a seed", [0, 0], { key: "subtitle", size: { h: "auto" }, style: { size: e('token("size.label") * 12.5 / 11'), ink: "$ink-2", baseline: "top", maxWidth: e("box.w") }, halo: ["$paper", 3] }),
+      ] }),
       group({
         key: "scale",
         children: [
           shape(geom.rect({ x: 22, y: e("box.h - 26"), w: e(`${length} * (${fit})`), h: 2 }), { key: "bar", fill: "$ink-2" }),
-          text(e(`format(${length}, ",") + " light-years"`), [22, e("box.h - 32")], { key: "label", style: { size: 11.5, ink: "$ink-2", baseline: "bottom" }, halo: ["$paper", 3] }),
+          text(e(`format(${length}, ",") + " light-years"`), [22, e("box.h - 32")], { key: "label", style: { size: e('token("size.label") * 11.5 / 11'), ink: "$ink-2", baseline: "bottom" }, halo: ["$paper", 3] }),
         ],
       }),
       group({
         key: "legend",
         children: CLASSES.map(([cls, , ink], i) =>
-          text(cls, [e(`box.w - ${22 + (CLASSES.length - 1 - i) * 17}`), e("box.h - 24")], { key: cls, style: { size: 12, weight: 600, ink, align: "end", baseline: "middle" }, halo: ["$paper", 3] }),
+          text(cls, [e(`box.w - ${22 + (CLASSES.length - 1 - i) * 17}`), e("box.h - 24")], { key: cls, style: { size: e('token("size.label") * 12 / 11'), weight: 600, ink, align: "end", baseline: "middle" }, halo: ["$paper", 3] }),
         ),
       }),
     ],

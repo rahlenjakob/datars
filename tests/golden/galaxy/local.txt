@@ -1319,8 +1319,9 @@ scene 1000.00×680.00 background=$paper
           · (1811636,) (-15816.91, 21283.64) fill=#ffd29c
           · (3958190,) (-15750.22, 21238.52) fill=#ffd29c
           · … 38 more
-    ("title",) text "4,000,000 stars" at (22.00, 20.00) size=22.00 ink=$ink
-    ("subtitle",) text "A barred spiral, generated from a seed" at (22.00, 50.00) size=12.50 ink=$ink-2
+    group ("head",)
+      ("title",) text "4,000,000 stars" at (0.00, 0.00) size=22.00 ink=$ink transform=[1.00 0.00 0.00 1.00 22.00 20.00]
+      ("subtitle",) text "A barred spiral, generated from a seed" at (0.00, 0.00) size=12.50 ink=$ink-2 transform=[1.00 0.00 0.00 1.00 22.00 52.62]
     group ("scale",)
       ("bar",) rect x=22.00 y=654.00 w=72.89 h=2.00 fill=$ink-2
       ("label",) text "100 light-years" at (22.00, 648.00) size=11.50 ink=$ink-2

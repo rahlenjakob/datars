@@ -2,31 +2,31 @@
   "states": [
     {
       "name": "year",
-      "scene": "10f6eed52b9b95ba",
+      "scene": "c25c2f0e1fe6e5f6",
       "pixels": "f990e2df0f46dbff"
     },
     {
       "name": "winter",
-      "scene": "2f168b94e0a9f2d4",
-      "pixels": "82b0a91232bbe5bc"
+      "scene": "3ccdbcc800ef67d7",
+      "pixels": "2dc641c10bfa3560"
     },
     {
       "name": "summer",
-      "scene": "a71f96c5402bc8ea",
-      "pixels": "7a4361cf19d842ec"
+      "scene": "f019e32913c72484",
+      "pixels": "26f56ac428bc0219"
     }
   ],
   "transitions": [
     {
       "from": "year",
       "to": "winter",
-      "sweep": "565b109506db28a6",
+      "sweep": "7bc13f91ad263ae3",
       "samples": 64
     },
     {
       "from": "winter",
       "to": "summer",
-      "sweep": "ba68441ed7bf1a8e",
+      "sweep": "577c31156014f08f",
       "samples": 64
     }
   ]

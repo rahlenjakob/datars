@@ -2,53 +2,53 @@
   "states": [
     {
       "name": "galaxy",
-      "scene": "62546c4787f5807a",
-      "pixels": "315c5a3eeb589074"
+      "scene": "413831942df93daf",
+      "pixels": "083cb7b39e326eba"
     },
     {
       "name": "arm",
-      "scene": "40cab9a804595590",
-      "pixels": "1d08a3cedf2819e1"
+      "scene": "9389451e959ea79b",
+      "pixels": "de4b9ac30948dcb5"
     },
     {
       "name": "bar",
-      "scene": "7c8e61f8df6e5877",
-      "pixels": "1ee6ceaccdad3464"
+      "scene": "d68bce1e78efd8f3",
+      "pixels": "46e0e5154618f524"
     },
     {
       "name": "cluster",
-      "scene": "68fbe18a767621ba",
-      "pixels": "e73c9c1feceeece3"
+      "scene": "0b6b2a22e3528ffd",
+      "pixels": "1d40ae963fdcf14a"
     },
     {
       "name": "local",
-      "scene": "75aa7c18baed4db1",
-      "pixels": "a0724fe50a6057a5"
+      "scene": "02c7e8ecf1fa0d46",
+      "pixels": "d2c13d13a6119d2c"
     }
   ],
   "transitions": [
     {
       "from": "galaxy",
       "to": "arm",
-      "sweep": "2467798f05d5b32b",
+      "sweep": "1c400bdd7056576f",
       "samples": 64
     },
     {
       "from": "arm",
       "to": "bar",
-      "sweep": "4bf75ba335f2cbf8",
+      "sweep": "8d43cf3f6fdb7a15",
       "samples": 64
     },
     {
       "from": "bar",
       "to": "cluster",
-      "sweep": "31a76d25d3073c31",
+      "sweep": "eede8dbec4b0fbdd",
       "samples": 64
     },
     {
       "from": "cluster",
       "to": "local",
-      "sweep": "407989e61359f279",
+      "sweep": "91b89744a00eb2ff",
       "samples": 64
     }
   ]
