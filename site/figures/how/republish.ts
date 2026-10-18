@@ -46,17 +46,19 @@ const tile = (c: Chunk, i: number, cols: number): Template => {
   return group({
     key: c.id,
     when: e(c.v === 2 ? "phase >= 1" : "true"),
-    opacity: e(c.v === 2 ? "1" : `${named} ? 1 : 0.35`),
     children: [
       shape(geom.rect({ x: e(x), y, w: e(w), h: 30, r: 5 }), {
         key: "box",
+        // (A chunk no manifest names steps back: its box fades, its words go to the muted ink —
+        // faded words would drop below a readable contrast.)
+        opacity: e(c.v === 2 ? "1" : `${named} ? 1 : 0.35`),
         fill: e(`${named} ? "$accent@0.14" : "$surface"`),
         stroke: { paint: e(`${named} ? "$accent" : "$rule"`), width: 1 },
         semantics: { role: "decoration" },
       }),
       // Written but not yet named by the manifest readers see: dashed.
       c.v === 2 ? shape(geom.rect({ x: e(x), y, w: e(w), h: 30, r: 5 }), { key: "pending", when: e("phase == 1"), stroke: { paint: "$accent", width: 1, dash: [4, 3] }, fill: "$surface", semantics: { role: "decoration" } }) : null,
-      text(c.kind, [e(`${x} + 8`), y + 10], { key: "kind", style: { size: 10, ink: "$ink", baseline: "middle", font: "font.strong" } }),
+      text(c.kind, [e(`${x} + 8`), y + 10], { key: "kind", style: { size: 10, ink: e(c.v === 2 ? '"$ink"' : `${named} ? "$ink" : "$muted"`), baseline: "middle", font: "font.strong" } }),
       text(c.what, [e(`${x} + 8`), y + 21], { key: "what", style: { size: 10, ink: "$muted", baseline: "middle" } }),
       // New in the second publish: a dot in the corner.
       c.v === 2 ? shape(geom.circle({ cx: e(`${x} + ${w} - 8`), cy: y + 8, r: 3 }), { key: "new", fill: "$accent", semantics: { role: "decoration" } }) : null,

@@ -106,6 +106,7 @@ export const stacked = recipe<StackedParams>({
         repeat(tbl, shape(g, {
           key: p.segmentKey ?? [e(`${fld(series)}`), e(`${fld(cat)}`)],
           fill: e(`scale.color(${fld(series)})`),
+          stroke: { paint: "$paper", width: 1 }, // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
           semantics: { role: "datum", label: e(`\`\${key.name(${fld(series)})}, \${${fld(cat)}}: ${affixedLabel(`${fld(val)}`, p)}\``), value: e(`${fld(val)}`) },
           pickable: true,
         })),
@@ -147,6 +148,7 @@ export const grouped = recipe<GroupedParams>({
         repeat(p.data, shape(geom.rect({ x: e(x), y: e(`min(scale.y(0), scale.y(${v}))`), w: e("scale.dodge.bandwidth()"), h: e(`abs(scale.y(0) - scale.y(${v}))`), r: "$radius.bar" }), {
           key: [e(`${fld(series)}`), e(`${fld(p.x)}`)],
           fill: e(`scale.color(${fld(series)})`),
+          stroke: { paint: "$paper", width: 1 }, // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
           semantics: { role: "datum", label: e(`\`\${key.name(${fld(series)})}, \${${fld(p.x)}}: ${affixedLabel(v, p)}\``), value: e(v) },
           pickable: true,
         })),

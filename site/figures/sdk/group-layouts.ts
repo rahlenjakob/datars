@@ -7,7 +7,7 @@ const child = (name: string, i: number) => group({
   key: name,
   children: [
     shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e("box.h"), r: 3 }), { key: "box", fill: `$categorical[${i}]`, opacity: 0.85 }),
-    text(name, [e("box.w / 2"), e("box.h / 2")], { key: "name", style: { font: "font.strong", size: "$size.label", ink: `on($categorical[${i}])`, align: "middle", baseline: "middle" } }),
+    text(name, [e("box.w / 2"), e("box.h / 2")], { key: "name", style: { font: "font.strong", size: "$size.label", ink: `on($categorical[${i}]@0.85)`, align: "middle", baseline: "middle" } }),
   ],
 });
 /** A child with a size of its own (a flow measures what its children draw). */
@@ -15,7 +15,7 @@ const chip = (name: string, i: number, w: number) => group({
   key: name,
   children: [
     shape(geom.rect({ x: 0, y: 0, w, h: 22, r: 11 }), { key: "box", fill: `$categorical[${i}]`, opacity: 0.85 }),
-    text(name, [w / 2, 11], { key: "name", style: { font: "font.strong", size: "$size.label", ink: `on($categorical[${i}])`, align: "middle", baseline: "middle" } }),
+    text(name, [w / 2, 11], { key: "name", style: { font: "font.strong", size: "$size.label", ink: `on($categorical[${i}]@0.85)`, align: "middle", baseline: "middle" } }),
   ],
 });
 
@@ -36,7 +36,7 @@ const panels = (): Template[] => [
   panel("stack", { type: "stack" }, [
     group({ key: "A", children: [shape(geom.rect({ x: 0, y: 0, w: e("box.w"), h: e("box.h"), r: 3 }), { key: "box", fill: "$categorical[0]", opacity: 0.85 })] }),
     group({ key: "B", children: [shape(geom.circle({ cx: e("box.w / 2"), cy: e("box.h / 2"), r: e("min(box.w, box.h) / 3") }), { key: "dot", fill: "$categorical[1]" })] }),
-    text("C", [e("box.w / 2"), e("box.h / 2")], { key: "C", style: { font: "font.title", size: 17, ink: "on($categorical[1])", align: "middle", baseline: "middle" } }),
+    text("C", [e("box.w / 2"), e("box.h / 2")], { key: "C", style: { font: "font.title", size: 17, ink: "on($categorical[1]@0.85)", align: "middle", baseline: "middle" } }),
   ], "each child fills the box, on top of the last"),
   panel("rows", { type: "rows" }, ["A", "B", "C"].map(child), "one under the other"),
   panel("columns", { type: "columns" }, ["A", "B", "C"].map(child), "side by side"),

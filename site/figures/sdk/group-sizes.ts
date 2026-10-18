@@ -9,8 +9,8 @@ const box = (name: string, i: number, w: Size, content?: Template) => group({
   size: { w },
   children: [
     shape(geom.rect({ x: 0, y: 0, w: w === "auto" ? 64 : e("box.w"), h: e("box.h"), r: 3 }), { key: "box", fill: `$categorical[${i}]`, opacity: 0.85 }),
-    content ?? text(name, [e("box.w / 2"), e("box.h / 2 - 7")], { key: "name", style: { font: "font.strong", size: "$size.label", ink: `on($categorical[${i}])`, align: "middle", baseline: "middle" } }),
-    text("", [w === "auto" ? 32 : e("box.w / 2"), e("box.h / 2 + 9")], { key: "px", number: { value: e("box.w"), format: ".0f" }, style: { size: "$size.small", ink: `on($categorical[${i}])`, align: "middle", baseline: "middle" } }),
+    content ?? text(name, [e("box.w / 2"), e("box.h / 2 - 7")], { key: "name", style: { font: "font.strong", size: "$size.label", ink: `on($categorical[${i}]@0.85)`, align: "middle", baseline: "middle" } }),
+    text("", [w === "auto" ? 32 : e("box.w / 2"), e("box.h / 2 + 9")], { key: "px", number: { value: e("box.w"), format: ".0f" }, style: { size: "$size.small", ink: `on($categorical[${i}]@0.85)`, align: "middle", baseline: "middle" } }),
   ],
 });
 
@@ -46,7 +46,7 @@ export default doc({
         children: [
           box("90", 0, 90),
           box('"22%"', 1, "22%"),
-          box('"auto"', 2, "auto", text('"auto"', [32, e("box.h / 2 - 7")], { key: "name", style: { font: "font.strong", size: "$size.label", ink: "on($categorical[2])", align: "middle", baseline: "middle" } })),
+          box('"auto"', 2, "auto", text('"auto"', [32, e("box.h / 2 - 7")], { key: "name", style: { font: "font.strong", size: "$size.label", ink: "on($categorical[2]@0.85)", align: "middle", baseline: "middle" } })),
           box('"fill"', 3, "fill"),
           box("{ fill: 2 }", 4, { fill: 2 }),
         ],

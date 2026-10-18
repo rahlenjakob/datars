@@ -509,6 +509,7 @@ export const marimekko = recipe<MarimekkoParams>({
                     repeat(cells, shape(geom.rect({ x: e(`${x0} + ${g}`), y: e(`${y1} + ${g}`), w: e(`max(0, ${w})`), h: e(`max(0, ${h})`) }), {
                       key: [e(`${fld(p.series)}`), e(`${fld(p.x)}`)],
                       fill: e(`scale.color(${fld(p.series)})`),
+                      stroke: { paint: "$paper", width: 1 }, // (a line between touching pieces: told apart however close their colours, WCAG 1.4.11)
                       semantics: { role: "datum", label: e(`${name} + " in " + ${colName} + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)}) + " (" + ${share} + " of " + ${colName} + ", " + format((d.y1 - d.y0) * d.__share, ".1%") + " of all)"`), value: e(`${fld(p.value)}`) },
                       pickable: true,
                     })),
@@ -576,6 +577,7 @@ export const histogram = recipe<HistogramParams>({
       children: [repeat(tbl, shape(geom.rect({ x: e(`scale.x(d.bin) + ${p.gap / 2}`), y: e("scale.y(d.y1)"), w: e(`max(0.5, scale.x(d.bin_end) - scale.x(d.bin) - ${p.gap})`), h: e("max(0, scale.y(d.y0) - scale.y(d.y1))") }), {
         key: color ? [e(`${fld(color)}`), e("d.bin")] : e("d.bin"),
         fill: p.fill ?? colorOr(color, "$mark"),
+        stroke: color ? { paint: "$paper", width: 1 } : undefined, // (stacked bins: a line between colours)
         semantics: { role: "datum", label: p.label ?? e(`${color ? `key.name(${fld(color)}) + ", " + ` : ""}format(d.bin, ${f}) + "–" + format(d.bin_end, ${f}) + ": " + ${what}`), value: e(p.density ? "d.density" : "d.count") },
         pickable: true,
       }))],
@@ -864,7 +866,7 @@ export const stackedArea = recipe<StackedAreaParams>({
         // (Kept over the layers: one thickest at the first or last x is named just inside it.)
         p.labels ? group({ key: "labels", children: [repeat(thick, text(e(name), [e(`clamp(${xt}, ${xlo} + ${lw} / 2 + 4, ${xhi} - ${lw} / 2 - 4)`), e("(scale.y(d.y0) + scale.y(d.y1)) / 2")], {
           when: e('abs(scale.y(d.y0) - scale.y(d.y1)) >= token("size.label") + 6'),
-          style: { size: "$size.label", weight: 600, ink: p.color ? e(`"on(" + scale.color(${fld(p.color)}) + ")"`) : "$accent-ink", align: "middle", baseline: "middle", contain: true },
+          style: { size: "$size.label", weight: 600, ink: p.color ? e(`"on(" + scale.color(${fld(p.color)}) + "@" + ${p.opacity ?? 1} + ")"`) : "$accent-ink", align: "middle", baseline: "middle", contain: true },
         }))] }) : null,
       ],
     });

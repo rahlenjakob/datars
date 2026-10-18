@@ -16,7 +16,7 @@ mod resolve;
 mod validate;
 
 pub use expr::{parse_color_expr, CExpr};
-pub use ink::Ink;
+pub use ink::{legible_on, Ink, TEXT_CONTRAST};
 pub use resolve::{resolve, Diag, ResolvedTheme};
 pub use validate::{validate, Finding, Severity};
 

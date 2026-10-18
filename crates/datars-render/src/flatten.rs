@@ -155,7 +155,8 @@ fn node(cx: &mut Cx, n: &Node, parent: Affine, parent_opacity: f64) {
                 let origin = xf.apply(t.origin) + t.offset * scale;
                 let halo = t.halo.as_ref().map(|(i, w)| (i.resolve(cx.theme).fade(opacity as f32), *w));
                 for (i, r) in t.runs.iter().enumerate() {
-                    let color = r.ink.resolve(cx.theme).fade(opacity as f32);
+                    // (A data colour as text is drawn legibly: see `Ink::as_text`.)
+                    let color = r.ink.as_text().resolve(cx.theme).fade(opacity as f32);
                     let text = (i == 0 && !t.text.is_empty()).then(|| Arc::<str>::from(t.text.as_ref()));
                     cx.ops.push(Op::Glyphs { font: r.font.clone(), size: r.size, glyphs: r.glyphs.clone(), origin, scale, rotate: t.rotate, color, halo, text });
                 }
