@@ -82,6 +82,11 @@ pub enum Request {
     /// hand them to [`Engine::provide_range`]. Fewer bytes are fine at the end of the file.
     /// Appear as views need tiles: after loading (the header), and as cameras move.
     Range { name: String, url: String, offset: u64, length: u64 },
+    /// A picture's file arrived (`provide`, a bundle's image chunk) in a format this build doesn't
+    /// decode — the platform hosts decode with their own decoders (the web runtime has none):
+    /// read the file with [`Engine::picture_file`], decode it, and hand the pixels to
+    /// [`Engine::provide_pixels`] (or say why not with [`Engine::asset_failed`]).
+    Decode { name: String },
 }
 
 /// A host function answering an icon or picture request at once: (request name, URL) → bytes.
@@ -679,12 +684,12 @@ impl Engine {
         for (k, v) in &self.doc.icons {
             match datars_icon::Icon::from_value(v) {
                 Ok(i) => {
-                    self.assets.icons.insert(k.clone(), Arc::new(i));
+                    self.assets.all.insert(assets::icon_name(k), assets::Asset::Icon(Arc::new(i)));
                 }
                 Err(e) => self.diags.push(Diag { message: format!("icons.{k}: {e}") }),
             }
         }
-        let mut literal = BTreeMap::new();
+        let mut literal = assets::AssetMap::default();
         assets::literal_sources(&self.doc.scene, &self.theme, &mut literal);
         self.ask_assets(literal);
         self.diags.clone()
@@ -935,7 +940,8 @@ impl Engine {
         let mut r = self.requests.clone();
         r.extend(self.tiles.borrow().requests());
         r.extend(self.font_requests());
-        r.extend(self.assets.pending.iter().map(|(name, url)| Request::Source { name: name.clone(), url: url.clone() }));
+        r.extend(self.assets.pending().map(|(name, url)| Request::Source { name: name.clone(), url: url.clone() }));
+        r.extend(self.assets.undecoded().map(|(name, _)| Request::Decode { name: name.clone() }));
         r
     }
 
@@ -945,16 +951,17 @@ impl Engine {
     /// what arrived.
     pub fn set_asset_fetch(&mut self, fetch: Box<AssetFetch>) {
         self.asset_fetch = Some(fetch);
-        let pending = std::mem::take(&mut self.assets.pending);
+        let pending = self.assets.take_pending();
         self.ask_assets(pending);
     }
 
     /// Icons and pictures the engine needs: fetched now when it can, else requests.
-    fn ask_assets(&mut self, asks: BTreeMap<String, String>) -> bool {
+    fn ask_assets(&mut self, asks: assets::AssetMap) -> bool {
         let mut got = false;
-        for (name, url) in asks {
-            let have = name.strip_prefix(assets::ICON_PREFIX).is_some_and(|k| self.assets.icons.contains_key(k)) || name.strip_prefix(assets::IMAGE_PREFIX).is_some_and(|k| self.assets.images.contains_key(k));
-            if have || self.assets.pending.contains_key(&name) || self.assets.failed.contains_key(&name) {
+        for (name, ask) in asks {
+            let assets::Asset::Pending(url) = ask else { continue };
+            // Here, asked for already, waiting for a decoder, or failed: nothing to ask.
+            if self.assets.all.contains_key(&name) {
                 continue;
             }
             match self.asset_fetch.as_ref().map(|f| f(&name, &url)) {
@@ -963,11 +970,11 @@ impl Engine {
                     got = true;
                 }
                 Some(None) => {
-                    self.assets.failed.insert(name.clone(), format!("{url} could not be read"));
+                    self.assets.all.insert(name.clone(), assets::Asset::Failed(format!("{url} could not be read")));
                 }
                 None if self.assets.sealed => {}
                 None => {
-                    self.assets.pending.insert(name, url);
+                    self.assets.all.insert(name, assets::Asset::Pending(url));
                 }
             }
         }
@@ -976,38 +983,67 @@ impl Engine {
 
     /// Read an icon's or picture's bytes into the store (no re-resolve).
     fn store_asset(&mut self, name: &str, bytes: &[u8]) -> Result<(), String> {
-        self.assets.pending.remove(name);
-        if let Some(key) = name.strip_prefix(assets::ICON_PREFIX) {
-            let read = std::str::from_utf8(bytes).map_err(|_| "not text (an SVG file is XML)".to_string()).and_then(datars_icon::parse_svg);
-            return match read {
-                Ok(icon) => {
-                    self.assets.icons.insert(key.to_string(), Arc::new(icon));
-                    Ok(())
-                }
-                Err(e) => {
-                    self.assets.failed.insert(name.to_string(), e.clone());
-                    Err(format!("icon `{key}`: {e}"))
-                }
-            };
-        }
-        let src = name.strip_prefix(assets::IMAGE_PREFIX).unwrap_or(name);
-        match datars_render::Raster::decode(bytes) {
-            Ok(r) => {
-                self.assets.images.insert(src.to_string(), Arc::new(r));
-                Ok(())
+        use assets::Asset;
+        let (got, err) = if let Some(key) = name.strip_prefix(assets::ICON_PREFIX) {
+            // The compact form (the default set's files, a tool's answer), else SVG where the
+            // reader is compiled in.
+            match datars_icon::read_icon(bytes) {
+                Ok(icon) => (Asset::Icon(Arc::new(icon)), None),
+                Err(e) => (Asset::Failed(e.clone()), Some(format!("icon `{key}`: {e}"))),
             }
-            Err(e) => {
-                self.assets.failed.insert(name.to_string(), e.clone());
-                Err(format!("picture `{src}`: {e}"))
+        } else if !datars_render::Raster::decodes(bytes) && datars_render::raster::sniff(bytes).is_some() {
+            // A picture this build doesn't decode: the host's decoder does (`Request::Decode`).
+            (Asset::Undecoded(Arc::from(bytes)), None)
+        } else {
+            match datars_render::Raster::decode(bytes) {
+                Ok(r) => (Asset::Image(Arc::new(r)), None),
+                Err(e) => (Asset::Failed(e.clone()), Some(format!("picture `{}`: {e}", name.strip_prefix(assets::IMAGE_PREFIX).unwrap_or(name)))),
             }
+        };
+        self.assets.all.insert(name.to_string(), got);
+        err.map_or(Ok(()), Err)
+    }
+
+    /// The file of a picture waiting to be decoded ([`Request::Decode`]).
+    pub fn picture_file(&self, name: &str) -> Option<&[u8]> {
+        match self.assets.all.get(name) {
+            Some(assets::Asset::Undecoded(f)) => Some(f),
+            _ => None,
         }
     }
 
-    /// An icon or picture request the host couldn't answer (a 404, no such icon in the set), and
-    /// why: said as a diagnostic, and not asked for again.
+    /// A decoded picture for a [`Request::Decode`] (or any `image:<src>` request a host fetched and
+    /// decoded itself): `rgba` straight RGBA8, `width` × `height`, top row first. The file it came
+    /// from, when the engine has it, names the picture and is what SVG and PDF exports embed.
+    pub fn provide_pixels(&mut self, name: &str, width: u32, height: u32, rgba: &[u8]) -> Result<(), String> {
+        use assets::Asset;
+        if self.recording.is_some() {
+            self.rec(session::Input::Pixels { name: name.to_string(), width, height, rgba: session::base64(rgba) });
+        }
+        let src = name.strip_prefix(assets::IMAGE_PREFIX).ok_or_else(|| format!("`{name}` isn't a picture request (image:<src>)"))?;
+        let file = match self.assets.all.get(name) {
+            Some(Asset::Undecoded(f)) => f.clone(),
+            _ => Arc::from(&[][..]),
+        };
+        let (got, out) = match datars_render::Raster::from_rgba(width, height, rgba, file) {
+            Ok(r) => (Asset::Image(Arc::new(r)), Ok(())),
+            Err(e) => (Asset::Failed(e.clone()), Err(format!("picture `{src}`: {e}"))),
+        };
+        self.assets.all.insert(name.to_string(), got);
+        self.assets_changed();
+        out
+    }
+
+    /// Pictures still waiting for the host's decoder: a host holds a chart's first frame until
+    /// they're in (no picture popping in after it).
+    pub fn pictures_decoding(&self) -> usize {
+        self.assets.undecoded().count()
+    }
+
+    /// An icon or picture request the host couldn't answer (a 404, no such icon in the set, a
+    /// picture its decoder can't read), and why: said as a diagnostic, and not asked for again.
     pub fn asset_failed(&mut self, name: &str, why: &str) {
-        self.assets.pending.remove(name);
-        self.assets.failed.insert(name.to_string(), why.to_string());
+        self.assets.all.insert(name.to_string(), assets::Asset::Failed(why.to_string()));
         self.assets_changed();
     }
 
@@ -1032,8 +1068,7 @@ impl Engine {
     pub fn add_icons(&mut self, json: &[u8], seal: bool) -> Result<(), String> {
         let v: serde_json::Value = serde_json::from_slice(json).map_err(|e| e.to_string())?;
         for (k, i) in v.as_object().ok_or("an icons chunk is an object")? {
-            self.assets.icons.insert(k.clone(), Arc::new(datars_icon::Icon::from_value(i)?));
-            self.assets.pending.remove(&format!("{}{k}", assets::ICON_PREFIX));
+            self.assets.all.insert(assets::icon_name(k), assets::Asset::Icon(Arc::new(datars_icon::Icon::from_value(i)?)));
         }
         if seal {
             self.seal_assets();
@@ -1053,21 +1088,42 @@ impl Engine {
     /// Opened from a bundle: ask for no icon or picture (a bundle carries what its chart draws).
     pub fn seal_assets(&mut self) {
         self.assets.sealed = true;
-        self.assets.pending.clear();
+        self.assets.all.retain(|_, a| !matches!(a, assets::Asset::Pending(_)));
     }
 
     /// The icons the document has drawn so far (resolve every state first): by key, what a
     /// bundle ships — with the set and licence each came from.
+    /// Inline markup counts too (`inline:<hash>`): the web runtime reads no SVG, so a bundle (or
+    /// `datars dev`) hands it every drawing already read.
     pub fn icons_drawn(&self) -> Vec<(String, Arc<datars_icon::Icon>)> {
         let used = self.assets.used.borrow();
-        self.assets.icons.iter().filter(|(k, _)| used.contains(&format!("{}{k}", assets::ICON_PREFIX))).map(|(k, i)| (k.clone(), i.clone())).collect()
+        let inline = self.assets.inline.borrow();
+        let mut all: BTreeMap<String, Arc<datars_icon::Icon>> = BTreeMap::new();
+        for (name, a) in self.assets.all.iter() {
+            if let (Some(k), assets::Asset::Icon(i)) = (name.strip_prefix(assets::ICON_PREFIX), a) {
+                all.insert(k.to_string(), i.clone());
+            }
+        }
+        for (k, a) in inline.iter() {
+            if let assets::Asset::Icon(i) = a {
+                all.insert(k.clone(), i.clone());
+            }
+        }
+        all.into_iter().filter(|(k, _)| used.contains(&assets::icon_name(k))).collect()
     }
 
     /// The pictures the document has drawn so far: by source, the decoded picture (its file in
     /// `encoded`).
     pub fn images_drawn(&self) -> Vec<(String, Arc<datars_render::Raster>)> {
         let used = self.assets.used.borrow();
-        self.assets.images.iter().filter(|(k, _)| used.contains(&format!("{}{k}", assets::IMAGE_PREFIX))).map(|(k, i)| (k.clone(), i.clone())).collect()
+        self.assets
+            .all
+            .iter()
+            .filter_map(|(name, a)| match a {
+                assets::Asset::Image(r) if used.contains(name) => Some((name.strip_prefix(assets::IMAGE_PREFIX).unwrap_or(name).to_string(), r.clone())),
+                _ => None,
+            })
+            .collect()
     }
 
     /// Hand over bytes for a [`Request::Range`] of a tiles source. Tiles waiting on them decode
@@ -2001,6 +2057,7 @@ impl Engine {
             I::Signal { name, value } => self.set_signal(name, resolve::json_to_value(value)),
             I::Provide { source, bytes } => self.provide(source, &session::unbase64(bytes)?)?,
             I::Range { source, offset, bytes } => self.provide_range(source, *offset, &session::unbase64(bytes)?)?,
+            I::Pixels { name, width, height, rgba } => self.provide_pixels(name, *width, *height, &session::unbase64(rgba)?)?,
             I::Resize { width, height, dpr } => self.resize(*width, *height, *dpr),
             I::Seek { pos } => {
                 self.seek(*pos);
@@ -2406,10 +2463,10 @@ impl Engine {
     pub fn display_list(&self, scene: &Scene) -> DisplayList {
         let mut list = datars_render::flatten_cached(scene, &self.theme, &mut self.flatten_cache.borrow_mut());
         // Pictures: the decoded files, from the store (the scene names them).
-        if !self.assets.images.is_empty() {
+        if self.assets.has_images() {
             for op in &mut list.ops {
                 if let datars_render::Op::Image { asset, image, .. } = op {
-                    *image = self.assets.images.get(asset.as_ref()).cloned();
+                    *image = self.assets.image(asset.as_ref()).cloned();
                 }
             }
         }

@@ -49,6 +49,7 @@ pub fn load_at_with_assets(json: &str, dir: Option<&Path>, fetch: &dyn Fn(&Reque
         let name = match &req {
             Request::Atlas { name, .. } | Request::Source { name, .. } | Request::Slot { name, .. } => name.clone(),
             Request::Range { .. } => continue, // through the range reader above
+            Request::Decode { .. } => continue, // below
         };
         match fetch(&req) {
             Some(bytes) => e.provide(&name, &bytes).map_err(|err| format!("{name}: {err}"))?,
@@ -61,7 +62,19 @@ pub fn load_at_with_assets(json: &str, dir: Option<&Path>, fetch: &dyn Fn(&Reque
             None => eprintln!("warning: nothing on disk for request {req:?}"),
         }
     }
+    decline_decodes(&mut e);
     Ok(e)
+}
+
+/// Pictures in a format the Rust decoders don't read (WebP, GIF): the tools have no platform
+/// decoder to hand them to, so each fails, saying why (a platform host decodes them).
+pub fn decline_decodes(e: &mut Engine) {
+    for req in e.requests() {
+        if let Request::Decode { name } = req {
+            let why = datars_render::Raster::unreadable(e.picture_file(&name).unwrap_or(&[]));
+            e.asset_failed(&name, &why);
+        }
+    }
 }
 
 /// An icon or picture from disk: `datars:icons/…` from the default set compiled in, relative
@@ -78,7 +91,7 @@ pub fn asset_from_disk(_name: &str, url: &str, dir: Option<&Path>) -> Option<Vec
 
 /// The bytes for a `datars:fonts/<file>` URL: the default fonts that ship with the datars
 /// toolchain and runtimes (compiled into this build, else the source tree's `fonts/`) — or for
-/// `datars:icons/<set>/<name>.svg`, an icon of a default set.
+/// `datars:icons/<set>/<name>.json`, an icon of a default set (answered as SVG: the tools read it).
 pub fn datars_asset(url: &str) -> Option<Vec<u8>> {
     if url.starts_with("datars:icons/") {
         return datars_icon::set::bundled_svg(url).map(String::into_bytes);

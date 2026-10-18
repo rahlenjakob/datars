@@ -216,7 +216,7 @@ impl Writer {
                 if *opacity < 1.0 {
                     let _ = write!(s, " opacity=\"{}\"", num(opacity.max(0.0) as f64));
                 }
-                let data = format!("data:image/png;base64,{}", base64(&img.encoded));
+                let data = format!("data:{};base64,{}", datars_render::raster::media_type(&img.encoded), base64(&img.encoded));
                 let _ = write!(s, " href=\"{data}\" xlink:href=\"{data}\"/>");
                 self.line(&s);
             }

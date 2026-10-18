@@ -48,7 +48,7 @@ fn an_icon_is_asked_for_then_drawn_in_its_ink() {
         { "kind": "icon", "key": "h", "icon": "heart", "at": [50, 50], "icon_size": 24, "ink": "$accent" } ] }));
     // Named in the document: asked for as soon as it loads, with the default set's URL.
     let asks: Vec<(String, String)> = e.requests().into_iter().filter_map(|r| if let Request::Source { name, url } = r { Some((name, url)) } else { None }).collect();
-    assert_eq!(asks, vec![("icon:lucide:heart".to_string(), "datars:icons/lucide/heart.svg".to_string())]);
+    assert_eq!(asks, vec![("icon:lucide:heart".to_string(), "datars:icons/lucide/heart.json".to_string())]);
     // Not here yet: nothing drawn (no stand-in to jump from).
     assert!(find(&e.scene().root, "h").is_none());
     serve(&mut e);
@@ -225,4 +225,64 @@ fn a_picture_fits_its_rect_and_is_decorative_without_alt() {
     assert!(e.semantics().iter().any(|(_, l, _)| l == "A grey card"));
     let list = e.display_list(&scene);
     assert!(list.ops.iter().any(|o| matches!(o, datars_render::Op::Image { image: Some(i), .. } if i.width == 4)));
+}
+
+#[test]
+fn a_picture_this_build_cant_decode_is_the_hosts_to_decode() {
+    // A WebP: no Rust decoder here reads it, as none in the web runtime reads any picture.
+    let file = b"RIFF\x10\0\0\0WEBPVP8 \0\0\0\0".to_vec();
+    let mut e = load(serde_json::json!({ "kind": "image", "key": "w", "asset": "p.webp", "rect": [0, 0, 100, 100], "fit": "fill" }));
+    e.provide("image:p.webp", &file).unwrap();
+    // The file is held, and the host asked to decode it; nothing drawn meanwhile (no stand-in).
+    assert!(e.requests().contains(&Request::Decode { name: "image:p.webp".into() }));
+    assert_eq!(e.pictures_decoding(), 1);
+    assert_eq!(e.picture_file("image:p.webp"), Some(&file[..]));
+    assert!(find(&e.scene().root, "w").is_none());
+    // The host's decoder hands back straight RGBA: drawn, premultiplied, named by its file.
+    e.provide_pixels("image:p.webp", 2, 1, &[255, 0, 0, 255, 0, 0, 255, 128]).unwrap();
+    assert_eq!(e.pictures_decoding(), 0);
+    assert!(!e.requests().iter().any(|r| matches!(r, Request::Decode { .. })));
+    let scene = e.scene();
+    assert!(find(&scene.root, "w").is_some());
+    let list = e.display_list(&scene);
+    let img = list.ops.iter().find_map(|o| if let datars_render::Op::Image { image: Some(i), .. } = o { Some(i.clone()) } else { None }).unwrap();
+    assert_eq!((img.width, img.texel(1, 0)), (2, [0, 0, 128, 128]));
+    assert_eq!(&img.encoded[..], &file[..], "exports embed the file as shipped");
+    // A decoder that can't read it says why, once.
+    let mut e = load(serde_json::json!({ "kind": "image", "key": "w", "asset": "q.webp", "rect": [0, 0, 10, 10] }));
+    e.provide("image:q.webp", &file).unwrap();
+    e.asset_failed("image:q.webp", "the platform's decoder couldn't read the picture");
+    assert!(e.requests().is_empty());
+    let _ = e.scene();
+    assert!(e.diagnostics().iter().any(|d| d.message.contains("couldn't read the picture")));
+}
+
+#[test]
+fn an_icon_file_may_be_its_compact_form() {
+    // What the web runtime fetches for the default set (`icons/lucide/heart.json`): read, not SVG.
+    let mut e = load(serde_json::json!({ "kind": "icon", "key": "h", "icon": "heart", "at": [20, 20] }));
+    let svg = datars_icon::set::bundled_svg("datars:icons/lucide/heart.json").unwrap();
+    let compact = datars_icon::parse_svg(&svg).unwrap().to_json();
+    e.provide("icon:lucide:heart", compact.as_bytes()).unwrap();
+    assert!(e.requests().is_empty());
+    let drawn = e.icons_drawn();
+    assert_eq!(drawn.len(), 1);
+    assert_eq!(*drawn[0].1, datars_icon::parse_svg(&svg).unwrap(), "the same drawing as the SVG read");
+}
+
+#[test]
+fn inline_markup_ships_read_as_a_drawn_icon() {
+    // A bundle (or `datars dev`) hands the web runtime every drawing read, inline ones included.
+    let mut e = load(serde_json::json!({ "kind": "icon", "key": "i", "icon": LOGO, "at": [20, 20] }));
+    let _ = e.scene();
+    let drawn = e.icons_drawn();
+    assert_eq!(drawn.len(), 1);
+    assert!(drawn[0].0.starts_with("inline:"), "{}", drawn[0].0);
+    // Given back as the document's `icons`, it draws without reading markup.
+    let doc = serde_json::json!({ "datars": 1, "icons": { drawn[0].0.clone(): serde_json::from_str::<serde_json::Value>(&drawn[0].1.to_json()).unwrap() },
+        "scene": { "kind": "icon", "key": "i", "icon": LOGO, "at": [20, 20] } });
+    let mut again = Engine::new();
+    again.load(datars_ir::Doc::from_json(&doc.to_string()).unwrap());
+    assert!(find(&again.scene().root, "i").is_some());
+    assert_eq!(again.icons_drawn(), drawn);
 }

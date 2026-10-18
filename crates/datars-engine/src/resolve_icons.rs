@@ -62,7 +62,7 @@ impl Resolver<'_> {
         }
         let key = src.key();
         let assets = self.assets?;
-        if let Some(i) = assets.icons.get(&key) {
+        if let Some(i) = assets.icon(&key) {
             assets.used.borrow_mut().insert(format!("{}{key}", crate::assets::ICON_PREFIX));
             // What the reader skipped in the file (text, clipping): said in `datars check`.
             for n in &i.notes {
@@ -70,13 +70,13 @@ impl Resolver<'_> {
             }
             return Some((key, i.clone()));
         }
-        if let Some(why) = assets.failed.get(&format!("{}{key}", crate::assets::ICON_PREFIX)) {
+        if let Some(why) = assets.failed(&crate::assets::icon_name(&key)) {
             self.diag(format!("icon `{name}`: {why}"));
             return None;
         }
         if !assets.sealed {
             if let Some((n, u)) = icon_request(&src) {
-                self.asks.borrow_mut().entry(n).or_insert(u);
+                self.asks.borrow_mut().ask(n, crate::assets::Asset::Pending(u));
             }
         } else {
             self.diag(format!("icon `{name}` isn't in this bundle (it wasn't drawn when it was published)"));
@@ -86,18 +86,25 @@ impl Resolver<'_> {
 
     fn inline_icon(&self, svg: &str) -> Option<(String, Arc<Icon>)> {
         let key = Source::Inline(svg.to_string()).key();
+        if let Some(a) = self.assets {
+            a.used.borrow_mut().insert(format!("{}{key}", crate::assets::ICON_PREFIX));
+            // Read by a tool already: a bundle's icons chunk, or a document's `icons` (`datars dev`).
+            if let Some(i) = a.icon(&key) {
+                return Some((key, i.clone()));
+            }
+        }
         let cache = self.assets.map(|a| &a.inline);
-        if let Some(i) = cache.and_then(|c| c.borrow().get(&key).cloned()) {
+        if let Some(crate::assets::Asset::Icon(i)) = cache.and_then(|c| c.borrow().get(&key).cloned()) {
             return Some((key, i));
         }
-        match datars_icon::parse_svg(svg) {
+        match datars_icon::read_svg(svg) {
             Ok(i) => {
                 for n in &i.notes {
                     self.diag(format!("inline icon: {n}"));
                 }
                 let i = Arc::new(i);
                 if let Some(c) = cache {
-                    c.borrow_mut().insert(key.clone(), i.clone());
+                    c.borrow_mut().insert(key.clone(), crate::assets::Asset::Icon(i.clone()));
                 }
                 Some((key, i))
             }
@@ -198,12 +205,12 @@ impl Resolver<'_> {
         let r = Rect::new(self.num(&rect[0], cx, 0.0), self.num(&rect[1], cx, 0.0), self.num(&rect[2], cx, 0.0), self.num(&rect[3], cx, 0.0));
         let (name, url) = image_request(&src);
         let assets = self.assets?;
-        let Some(img) = assets.images.get(&src) else {
-            match assets.failed.get(&name) {
+        let Some(img) = assets.image(&src) else {
+            match assets.failed(&name) {
                 Some(why) => self.diag(format!("picture `{src}`: {why}")),
                 None if assets.sealed => self.diag(format!("picture `{src}` isn't in this bundle")),
                 None => {
-                    self.asks.borrow_mut().entry(name).or_insert(url);
+                    self.asks.borrow_mut().ask(name, crate::assets::Asset::Pending(url));
                 }
             }
             return None;

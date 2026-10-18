@@ -290,7 +290,10 @@ export const pictogram = recipe<PictogramParams>({
     const avail = `max(20, box.w - ${labelW} - ${valueW} - 14)`;
     // The icons as big as the box allows: on one line per row, or wrapped to two when that makes
     // them much bigger (a narrow, tall box: a phone). Every row is as tall as the longest one's lines.
-    const room = `(box.h - ${p.per !== 1 ? 28 : 0})`;
+    // (The note under the rows takes its own lines: at the reader's text size, not a fixed 28 px. In
+    // a box too short for rows and note at a reader's big text it gives way: each row says it too.)
+    const noted = per !== 1 && p.note !== false;
+    const room = `(box.h - ${noted ? '(token("size.small") * 2 + 8)' : 0})`;
     const sized = (k: number) => `min(${avail} / ceil(${most} / ${k}), 40, ${room} / (${n} * ${(k * 1.15 + 0.4).toFixed(2)}))`;
     // (Two lines only for icons half as big again: rows of uneven length read best on one.)
     const lines = `(${sized(2)} > ${sized(1)} * 1.5 ? 2 : 1)`;
@@ -299,6 +302,9 @@ export const pictogram = recipe<PictogramParams>({
     const step = `max(4, ${best})`;
     const rowH = `max(${lines} * ${step} * 1.15, token("size.label") * 2) + ${step} * 0.4`;
     const r = `${step} * ${((1 - Math.min(0.6, Math.max(0, p.gap))) / 2).toFixed(3)}`;
+    // Rows and note centred in a box taller than they need (a figure sized for its other states),
+    // as a gauge centres its dial: no block of empty space under them.
+    const off = `max(0, (box.h - ${n} * (${rowH}) - ${noted ? '(token("size.small") * 2 + 8)' : 0}) / 2)`;
     const top = `scale.row(${fld(p.category)}) + ${step} * 0.2`;
     const line = `floor(d.__unit / ${perLine})`;
     const x = `${labelW} + 8 + (d.__unit - ${line} * ${perLine} + 0.5) * ${step}`;
@@ -308,7 +314,7 @@ export const pictogram = recipe<PictogramParams>({
     const last = `floor((${own} - 1) / ${perLine})`;
     return group({
       key: "pictogram",
-      scales: { ...color, row: { type: "band", domain: { data: p.data, field: p.category }, range: [0, `=${n} * (${rowH})`], padding: 0 } },
+      scales: { ...color, row: { type: "band", domain: { data: p.data, field: p.category }, range: [`=${off}`, `=${off} + ${n} * (${rowH})`], padding: 0 } },
       semantics: { role: "group", label: "Pictogram" },
       children: [
         ...nodes(x, y, r),
@@ -320,7 +326,7 @@ export const pictogram = recipe<PictogramParams>({
             text(e(`format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(`${labelW} + 14 + (${own} - ${last} * ${perLine}) * ${step}`), e(`${top} + (${last} + 0.5) * ${step} * 1.15`)], { key: "value", style: { size: "$size.label", ink: "$ink-2", baseline: "middle" } }),
           ],
         })),
-        per !== 1 && p.note !== false ? text(e(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(labelW + " + 8"), e(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null,
+        noted ? text(e(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e(labelW + " + 8"), e('scale.row.max() + token("size.small") * 0.8 + 8')], { key: "per", when: e('scale.row.max() + token("size.small") * 1.4 + 8 <= box.h'), style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null,
       ],
     });
   },

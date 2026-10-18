@@ -15,6 +15,7 @@ datars-geo.workspace = true
 datars-ir.workspace = true
 datars-icon = { workspace = true, features = ["bundled"] }
 datars-scene.workspace = true
+datars-render.workspace = true
 datars-render-svg.workspace = true
 datars-headless.workspace = true
 datars-math.workspace = true

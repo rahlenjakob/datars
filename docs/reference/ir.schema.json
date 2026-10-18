@@ -1191,7 +1191,7 @@
       ]
     },
     "TIcon": {
-      "description": "An `icon` node. Decorative unless it has `semantics` (a label: an icon that stands for a word).",
+      "description": "An `icon` node. Decorative unless it has `semantics` (a label: an icon that stands for a word).\nRead by hand from JSON (see [`fields`]), like [`TTextPath`].",
       "properties": {
         "anchor": {
           "$ref": "#/$defs/Prop",
@@ -1859,7 +1859,7 @@
           "type": "object"
         },
         {
-          "description": "A picture (a raster logo, a photo): `asset` names the file (a path relative to the\ndocument, an `https://` URL; PNG), drawn into `rect` (`[x, y, w, h]`) as `fit` says. The\nbuild step ships the file in the bundle; the engine never fetches it (P10).",
+          "description": "A picture (a raster logo, a photo): `asset` names the file (a path relative to the\ndocument, an `https://` URL; PNG, JPEG or WebP), drawn into `rect` (`[x, y, w, h]`) as `fit` says. The\nbuild step ships the file in the bundle; the engine never fetches it (P10).",
           "properties": {
             "asset": {
               "$ref": "#/$defs/Prop"

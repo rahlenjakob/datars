@@ -2466,14 +2466,14 @@ var pictogram = recipe9({
     const said = () => e9(`key.name(${fld(p.category)}) + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}${per !== 1 ? ` + " (one icon: " + format(${per}, ",~g") + ")"` : ""}`);
     if (p.layout === "grid") {
       const g = cx.table("pictogram-grid", u, op7.waffle({ columns: p.columns, rows: p.rows, width: e9("min(box.w, box.h)"), height: e9("min(box.w, box.h)"), gap: 0 }));
-      const off = "(box.w - min(box.w, box.h)) / 2";
+      const off2 = "(box.w - min(box.w, box.h)) / 2";
       const k = (1 - Math.min(0.6, Math.max(0, p.gap))) / 2;
       const gridNodes = kinds.map((ic, i) => {
         const mine = Object.keys(icons).filter((key) => icons[key] === ic);
         const others = Object.keys(icons).filter((key) => icons[key] !== ic);
         const keep = ic === p.icon ? others.map((key) => `${fld(p.category)} != ${JSON.stringify(key)}`).join(" && ") : mine.map((key) => `${fld(p.category)} == ${JSON.stringify(key)}`).join(" || ");
         const from = keep ? cx.table(`pictogram-grid-${i}`, g, op7.filter(e9(keep))) : g;
-        return instances3({ key: `icons-${i}`, from, icon: ic, x: e9(`d.x + d.w / 2 + ${off}`), y: e9("d.y + d.h / 2 + (box.h - min(box.w, box.h)) / 2"), r: e9(`min(d.w, d.h) * ${k.toFixed(3)}`), fill });
+        return instances3({ key: `icons-${i}`, from, icon: ic, x: e9(`d.x + d.w / 2 + ${off2}`), y: e9("d.y + d.h / 2 + (box.h - min(box.w, box.h)) / 2"), r: e9(`min(d.w, d.h) * ${k.toFixed(3)}`), fill });
       });
       const many = Object.keys(icons).length > 0;
       return group9({
@@ -2496,7 +2496,8 @@ var pictogram = recipe9({
     const n = `max(1, table.count(${JSON.stringify(p.data)}))`;
     const most = `max(1, table.max(${JSON.stringify(u)}, "__unit") + 1)`;
     const avail = `max(20, box.w - ${labelW} - ${valueW} - 14)`;
-    const room = `(box.h - ${p.per !== 1 ? 28 : 0})`;
+    const noted = per !== 1 && p.note !== false;
+    const room = `(box.h - ${noted ? '(token("size.small") * 2 + 8)' : 0})`;
     const sized = (k) => `min(${avail} / ceil(${most} / ${k}), 40, ${room} / (${n} * ${(k * 1.15 + 0.4).toFixed(2)}))`;
     const lines = `(${sized(2)} > ${sized(1)} * 1.5 ? 2 : 1)`;
     const best = `(${lines} == 2 ? ${sized(2)} : ${sized(1)})`;
@@ -2504,6 +2505,7 @@ var pictogram = recipe9({
     const step = `max(4, ${best})`;
     const rowH = `max(${lines} * ${step} * 1.15, token("size.label") * 2) + ${step} * 0.4`;
     const r = `${step} * ${((1 - Math.min(0.6, Math.max(0, p.gap))) / 2).toFixed(3)}`;
+    const off = `max(0, (box.h - ${n} * (${rowH}) - ${noted ? '(token("size.small") * 2 + 8)' : 0}) / 2)`;
     const top = `scale.row(${fld(p.category)}) + ${step} * 0.2`;
     const line2 = `floor(d.__unit / ${perLine})`;
     const x = `${labelW} + 8 + (d.__unit - ${line2} * ${perLine} + 0.5) * ${step}`;
@@ -2512,7 +2514,7 @@ var pictogram = recipe9({
     const last = `floor((${own} - 1) / ${perLine})`;
     return group9({
       key: "pictogram",
-      scales: { ...color, row: { type: "band", domain: { data: p.data, field: p.category }, range: [0, `=${n} * (${rowH})`], padding: 0 } },
+      scales: { ...color, row: { type: "band", domain: { data: p.data, field: p.category }, range: [`=${off}`, `=${off} + ${n} * (${rowH})`], padding: 0 } },
       semantics: { role: "group", label: "Pictogram" },
       children: [
         ...nodes(x, y, r),
@@ -2524,7 +2526,7 @@ var pictogram = recipe9({
             text8(e9(`format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(`${labelW} + 14 + (${own} - ${last} * ${perLine}) * ${step}`), e9(`${top} + (${last} + 0.5) * ${step} * 1.15`)], { key: "value", style: { size: "$size.label", ink: "$ink-2", baseline: "middle" } })
           ]
         })),
-        per !== 1 && p.note !== false ? text8(e9(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(labelW + " + 8"), e9(`scale.row.max() + 16`)], { key: "per", style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null
+        noted ? text8(e9(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(labelW + " + 8"), e9('scale.row.max() + token("size.small") * 0.8 + 8')], { key: "per", when: e9('scale.row.max() + token("size.small") * 1.4 + 8 <= box.h'), style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null
       ]
     });
   }

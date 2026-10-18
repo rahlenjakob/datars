@@ -21,7 +21,7 @@ datars-color = { path = "crates/datars-color" }
 datars-theme = { path = "crates/datars-theme" }
 datars-text = { path = "crates/datars-text", default-features = false }
 datars-scene = { path = "crates/datars-scene" }
-datars-icon = { path = "crates/datars-icon" }
+datars-icon = { path = "crates/datars-icon", default-features = false }
 datars-render = { path = "crates/datars-render" }
 datars-render-cpu = { path = "crates/datars-render-cpu" }
 datars-render-svg = { path = "crates/datars-render-svg" }
@@ -53,6 +53,8 @@ serde_json = { version = "1", features = ["float_roundtrip"] }
 # OS randomness for the CLI's signing keys (`datars keygen`); never in engine crates.
 getrandom = "0.2"
 png = "0.17"
+# JPEG pictures for the tools (MIT OR Apache-2.0 OR Zlib). Scalar only: the SIMD paths may round differently.
+zune-jpeg = { version = "0.5.15", default-features = false, features = ["std"] }
 harfrust = "0.5"
 skrifa = "0.40"
 # build-time only (datars-build font subsetting): the same fontations family as skrifa/harfrust —

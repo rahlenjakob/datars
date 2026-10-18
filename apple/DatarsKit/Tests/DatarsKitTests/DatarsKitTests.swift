@@ -32,6 +32,27 @@ final class DatarsKitTests: XCTestCase {
         XCTAssertEqual(at(250), 0x42, "the bar grew with the text")
     }
 
+    func testPicturesAreDecodedByImageIO() throws {
+        // The library carries no image decoder: a picture's file waits for the platform's
+        // (ImageIO here: PNG, JPEG, WebP, HEIC), and the app's view decodes it before the frame.
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../../..").standardized
+        let jpeg = try Data(contentsOf: root.appendingPathComponent("crates/datars-render/tests/grey8.jpg"))
+        let e = DatarsEngine(allowScript: false)
+        _ = e.loadDocument(json: #"{"datars":1,"size":{"width":100,"height":50},"scene":{"kind":"image","key":"j","asset":"p.jpg","rect":[0,0,100,50],"fit":"fill"}}"#)
+        XCTAssertEqual(e.dataRequests().first?["url"] as? String, "p.jpg")
+        XCTAssertTrue(e.provide(source: "image:p.jpg", csvOrJSON: jpeg))
+        XCTAssertEqual(e.picturesDecoding, 1)
+        XCTAssertEqual(e.dataRequests().first?["decode"] as? Bool, true)
+        e.decodePictures()
+        XCTAssertEqual(e.picturesDecoding, 0)
+        e.resize(width: 100, height: 50, scale: 1)
+        e.frame(now: 0)
+        let px = e.pixels()
+        let i = (25 * px.width + 50) * 4
+        XCTAssertEqual(Double(px.data[i]), 128, accuracy: 3, "the grey file, drawn")
+        XCTAssertEqual(px.data[i + 3], 255)
+    }
+
     func testDataRequestsAreFulfilledByTheHost() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().appendingPathComponent("../../../..").standardized
         let doc = try String(contentsOf: root.appendingPathComponent("examples/election/doc.json"), encoding: .utf8)

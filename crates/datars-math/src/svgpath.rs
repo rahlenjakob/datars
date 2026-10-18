@@ -5,7 +5,7 @@
 //! turn (deterministic trigonometry from `datars_math::m`). A malformed command ends the path
 //! there, keeping what came before (as browsers do).
 
-use datars_math::{PathData, PathEl, Vec2};
+use crate::{PathData, PathEl, Vec2};
 
 /// A small SVG path parser: M L H V C S Q T A Z, absolute and relative.
 pub fn parse_svg_path(d: &str) -> PathData {
@@ -151,7 +151,7 @@ pub fn parse_svg_path(d: &str) -> PathData {
 /// when too small to reach), as cubic Béziers of at most a quarter turn each.
 #[allow(clippy::too_many_arguments)]
 fn arc_to(p: &mut PathData, from: Vec2, rx: f64, ry: f64, rot_deg: f64, large: bool, sweep: bool, to: Vec2) {
-    use datars_math::m;
+    use crate::m;
     if from == to {
         return;
     }
@@ -225,8 +225,7 @@ pub fn exact_path_string(p: &PathData) -> String {
             if i > 0 {
                 out.push(' ');
             }
-            // `-0` reads back as 0 — the same point.
-            let v = if *v == 0.0 { 0.0 } else { *v };
+            // Every bit kept, `-0` too: a glyph read back hashes as the one written (scene identity).
             out.push_str(&format!("{v}"));
         }
     };

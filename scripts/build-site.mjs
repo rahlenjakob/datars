@@ -10,7 +10,7 @@
 // if missing) and the web runtime (`scripts/build-wasm.sh && pnpm -C packages/web build`).
 // Preview: `datars serve out/pages` (or any static server over the folder).
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -447,14 +447,14 @@ copyFileSync(join(dist, "datars.js"), join(out, "runtime/datars.js"));
 for (const f of readdirSync(join(dist, "wasm"))) {
   if (/^(datars_core|datars_host_web|wasi_shim)/.test(f)) copyFileSync(join(dist, "wasm", f), join(out, "runtime/wasm", f));
 }
-// The built-in atlas and default fonts, for documents a page builds in the browser (bundles carry
-// their own geometry and font subsets): `datars:atlas/…` and `datars:fonts/…` resolve next to the
-// runtime. Without the fonts, the theme studio's resolver, the extensibility workbench and the
-// developers bench asked for Inter and got 404s.
-for (const dir of ["atlas", "fonts"]) {
+// The built-in atlas, default fonts and default icon set, for documents a page builds in the
+// browser (bundles carry their own geometry, font subsets and icons): `datars:atlas/…`,
+// `datars:fonts/…` and `datars:icons/…` resolve next to the runtime. Without the fonts, the theme
+// studio's resolver, the extensibility workbench and the developers bench asked for Inter and got
+// 404s. The icons are one small file each (`icons/lucide/<name>.json`), fetched only when named.
+for (const dir of ["atlas", "fonts", "icons"]) {
   if (!existsSync(join(dist, dir))) continue;
-  mkdirSync(join(out, "runtime", dir), { recursive: true });
-  for (const f of readdirSync(join(dist, dir))) copyFileSync(join(dist, dir, f), join(out, "runtime", dir, f));
+  cpSync(join(dist, dir), join(out, "runtime", dir), { recursive: true });
 }
 const runtimeGz = gzipSync(readFileSync(join(dist, "wasm/datars_core_bg.wasm")), { level: 9 }).length + gzipSync(readFileSync(join(dist, "datars.js")), { level: 9 }).length;
 const runtime = `${(runtimeGz / 1048576).toFixed(1)} MB`;

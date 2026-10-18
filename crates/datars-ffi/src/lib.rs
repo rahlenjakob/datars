@@ -427,9 +427,11 @@ pub extern "C" fn datars_view_set_tokens(v: *mut DatarsView, json: *const u8, le
     }
 }
 
-/// Data the engine waits for, as JSON `[{"name", "url"} | {"name", "slot"}]`: URL sources (first
-/// loads and live refreshes) the host fetches relative to the bundle and hands to
-/// `datars_view_provide_source`; slots are for the app to fill.
+/// Data the engine waits for, as JSON `[{"name", "url"} | {"name", "slot"} | {"name", "decode"}]`:
+/// URL sources (first loads and live refreshes) the host fetches relative to the bundle and hands
+/// to `datars_view_provide_source`; slots are for the app to fill; `decode` is a picture whose file
+/// is here (`datars_view_picture_file`) for the platform's decoder (CGImageSource, BitmapFactory)
+/// to turn into pixels (`datars_view_provide_pixels`) — the library carries no image decoder.
 #[no_mangle]
 pub extern "C" fn datars_view_data_requests(v: *mut DatarsView) -> *mut c_char {
     let Some(v) = view(v) else { return std::ptr::null_mut() };
@@ -442,10 +444,50 @@ pub extern "C" fn datars_view_data_requests(v: *mut DatarsView) -> *mut c_char {
             datars_runtime::datars_engine::Request::Source { name, url } => Some(serde_json::json!({ "name": name, "url": url })),
             datars_runtime::datars_engine::Request::Slot { name, slot } => Some(serde_json::json!({ "name": name, "slot": slot })),
             datars_runtime::datars_engine::Request::Range { name, url, offset, length } => Some(serde_json::json!({ "name": name, "url": url, "range": [offset, length] })),
+            datars_runtime::datars_engine::Request::Decode { name } => Some(serde_json::json!({ "name": name, "decode": true })),
             _ => None,
         })
         .collect();
     out(serde_json::Value::Array(reqs))
+}
+
+/// The file of a picture to decode (a `decode` data request), its length in `len`; null when
+/// there's none. Valid until the next call on the view.
+#[no_mangle]
+pub extern "C" fn datars_view_picture_file(v: *mut DatarsView, name: *const u8, name_len: usize, len: *mut usize) -> *const u8 {
+    let Some(v) = view(v) else { return std::ptr::null() };
+    match v.core.engine.picture_file(&s(name, name_len)) {
+        Some(f) => {
+            if !len.is_null() {
+                // SAFETY: the caller passes a valid out-pointer (or null, checked above).
+                unsafe { *len = f.len() };
+            }
+            f.as_ptr()
+        }
+        None => std::ptr::null(),
+    }
+}
+
+/// A picture the platform decoded: `width` × `height` straight (not premultiplied) RGBA8, top
+/// row first, `width * height * 4` bytes. Returns 1 on success.
+#[no_mangle]
+pub extern "C" fn datars_view_provide_pixels(v: *mut DatarsView, name: *const u8, name_len: usize, width: u32, height: u32, rgba: *const u8, len: usize) -> i32 {
+    view(v).map_or(0, |v| v.core.engine.provide_pixels(&s(name, name_len), width, height, b(rgba, len)).is_ok() as i32)
+}
+
+/// How many pictures wait for the platform's decoder: a host decodes them before the next frame
+/// (no picture popping in after it).
+#[no_mangle]
+pub extern "C" fn datars_view_pictures_decoding(v: *mut DatarsView) -> u32 {
+    view(v).map_or(0, |v| v.core.engine.pictures_decoding() as u32)
+}
+
+/// A picture the platform couldn't decode, and why (a diagnostic; not asked for again).
+#[no_mangle]
+pub extern "C" fn datars_view_picture_failed(v: *mut DatarsView, name: *const u8, name_len: usize, why: *const u8, why_len: usize) {
+    if let Some(v) = view(v) {
+        v.core.engine.asset_failed(&s(name, name_len), &s(why, why_len));
+    }
 }
 
 /// Hand over bytes `offset …` of a tiles source's archive (answering a `range` data request).
@@ -865,6 +907,33 @@ pub mod android {
         let n = jstr(&mut env, &name);
         let b = env.convert_byte_array(&bytes).unwrap_or_default();
         (datars_view_provide_source(v as *mut DatarsView, n.as_ptr(), n.len(), b.as_ptr(), b.len()) != 0) as jboolean
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_picturesDecoding(_: JNIEnv, _: JClass, v: jlong) -> jint {
+        datars_view_pictures_decoding(v as *mut DatarsView) as jint
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_pictureFile<'a>(mut env: JNIEnv<'a>, _: JClass, v: jlong, name: JString) -> jbyteArray {
+        let n = jstr(&mut env, &name);
+        let mut len = 0usize;
+        let p = datars_view_picture_file(v as *mut DatarsView, n.as_ptr(), n.len(), &mut len);
+        if p.is_null() {
+            return std::ptr::null_mut();
+        }
+        // SAFETY: the engine keeps the file alive until the next call on the view; copied now.
+        let file = unsafe { std::slice::from_raw_parts(p, len) };
+        env.byte_array_from_slice(file).map(|a| a.into_raw()).unwrap_or(std::ptr::null_mut())
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_providePixels(mut env: JNIEnv, _: JClass, v: jlong, name: JString, w: jint, h: jint, rgba: JByteArray) -> jboolean {
+        let n = jstr(&mut env, &name);
+        let b = env.convert_byte_array(&rgba).unwrap_or_default();
+        (datars_view_provide_pixels(v as *mut DatarsView, n.as_ptr(), n.len(), w.max(0) as u32, h.max(0) as u32, b.as_ptr(), b.len()) != 0) as jboolean
+    }
+    #[no_mangle]
+    pub extern "system" fn Java_dev_datars_Native_pictureFailed(mut env: JNIEnv, _: JClass, v: jlong, name: JString, why: JString) {
+        let (n, w) = (jstr(&mut env, &name), jstr(&mut env, &why));
+        datars_view_picture_failed(v as *mut DatarsView, n.as_ptr(), n.len(), w.as_ptr(), w.len());
     }
     #[no_mangle]
     pub extern "system" fn Java_dev_datars_Native_status(mut env: JNIEnv, _: JClass, v: jlong) -> jstring {

@@ -166,7 +166,8 @@ pub struct Anchor {
     pub at: Vec2,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// Read by hand (see [`hand_read`]); written as derived.
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum Marker {
     Arrow { size: f64 },
@@ -215,7 +216,8 @@ impl Camera {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// Read by hand (see [`hand_read`]); written as derived.
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(tag = "type", rename_all = "lowercase")]
 pub enum Proto {
     Symbol { symbol: SymbolKind },
@@ -224,6 +226,86 @@ pub enum Proto {
     /// An icon centred on `x`/`y`, `size` its half box (like a symbol's radius), painted in the
     /// instance's fill where the icon says `currentColor`.
     Icon { icon: Arc<IconGlyph> },
+}
+
+/// The scene types that carry icon glyphs, read through `serde_json::Value` by hand: derived
+/// readers for internally tagged enums buffer and re-read their content, a few KB of the web
+/// runtime each, for nodes only baked scenes hold.
+mod hand_read {
+    use super::{Marker, Proto};
+    use crate::geom::SymbolKind;
+    use crate::icon::IconGlyph;
+    use serde::{Deserialize, Deserializer};
+    use serde_json::Value;
+    use std::sync::Arc;
+
+    fn num(v: &Value, k: &str) -> Result<f64, String> {
+        v[k].as_f64().ok_or_else(|| format!("missing field `{k}`"))
+    }
+    fn glyph(v: &Value) -> Result<Arc<IconGlyph>, String> {
+        IconGlyph::from_json(&v["icon"]).map(Arc::new)
+    }
+
+    impl Marker {
+        pub fn from_json(v: &Value) -> Result<Marker, String> {
+            match v["type"].as_str() {
+                Some("arrow") => Ok(Marker::Arrow { size: num(v, "size")? }),
+                Some("dot") => Ok(Marker::Dot { r: num(v, "r")? }),
+                Some("icon") => Ok(Marker::Icon { icon: glyph(v)?, size: num(v, "size")? }),
+                t => Err(format!("unknown marker type {t:?}")),
+            }
+        }
+    }
+
+    impl Proto {
+        pub fn from_json(v: &Value) -> Result<Proto, String> {
+            match v["type"].as_str() {
+                Some("symbol") => Ok(Proto::Symbol {
+                    symbol: match v["symbol"].as_str() {
+                        Some("circle") => SymbolKind::Circle,
+                        Some("square") => SymbolKind::Square,
+                        Some("diamond") => SymbolKind::Diamond,
+                        Some("triangle") => SymbolKind::Triangle,
+                        Some("cross") => SymbolKind::Cross,
+                        Some("star") => SymbolKind::Star,
+                        s => return Err(format!("unknown symbol {s:?}")),
+                    },
+                }),
+                Some("rect") => Ok(Proto::Rect),
+                Some("icon") => Ok(Proto::Icon { icon: glyph(v)? }),
+                t => Err(format!("unknown instance prototype {t:?}")),
+            }
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Marker {
+        fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Marker, D::Error> {
+            Marker::from_json(&Value::deserialize(d)?).map_err(serde::de::Error::custom)
+        }
+    }
+
+    impl<'de> Deserialize<'de> for Proto {
+        fn deserialize<D: Deserializer<'de>>(d: D) -> Result<Proto, D::Error> {
+            Proto::from_json(&Value::deserialize(d)?).map_err(serde::de::Error::custom)
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn markers_and_prototypes_read_back_as_written() {
+            let g = Arc::new(IconGlyph { name: Arc::from("x"), layers: Vec::new(), inks: Vec::new(), aspect: 2.0 });
+            for m in [Marker::Arrow { size: 6.0 }, Marker::Dot { r: 2.5 }, Marker::Icon { icon: g.clone(), size: 12.0 }] {
+                assert_eq!(serde_json::from_str::<Marker>(&serde_json::to_string(&m).unwrap()).unwrap(), m);
+            }
+            for p in [Proto::Symbol { symbol: SymbolKind::Diamond }, Proto::Rect, Proto::Icon { icon: g }] {
+                assert_eq!(serde_json::from_str::<Proto>(&serde_json::to_string(&p).unwrap()).unwrap(), p);
+            }
+            assert!(serde_json::from_str::<Marker>(r#"{"type": "arrow"}"#).is_err());
+        }
+    }
 }
 
 /// One prototype × N keyed instances with per-instance columns (the path to 10⁶ marks).

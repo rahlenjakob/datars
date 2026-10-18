@@ -117,12 +117,19 @@ fn settle_assets(engine: &mut Engine, fetch: &dyn Fn(&Request) -> Option<Vec<u8>
                 }
                 None => {
                     let why = match url.strip_prefix("datars:icons/").and_then(|r| r.split_once('/')) {
-                        Some((set, file)) => format!("the {set} set has no icon `{}` (`datars icons <word>` searches it)", file.trim_end_matches(".svg")),
+                        Some((set, file)) => format!("the {set} set has no icon `{}` (`datars icons <word>` searches it)", file.trim_end_matches(".json").trim_end_matches(".svg")),
                         None => format!("{url} could not be read"),
                     };
                     report.decisions.push(format!("warning: {name}: {why}"));
                     engine.asset_failed(&name, &why);
                 }
+            }
+        }
+        for r in engine.requests() {
+            if let Request::Decode { name } = r {
+                let why = datars_render::Raster::unreadable(engine.picture_file(&name).unwrap_or(&[]));
+                report.decisions.push(format!("warning: {name}: {why}"));
+                engine.asset_failed(&name, &why);
             }
         }
     }
@@ -215,6 +222,7 @@ pub fn build_with(doc_json: &str, opts: &Options, fetch: &dyn Fn(&Request) -> Op
                 runtime_text = true;
                 continue;
             }
+            Request::Decode { .. } => continue,
         };
         // Icons and pictures: fetched with every state's (`settle_assets`), shipped as their own chunks.
         if name.starts_with("icon:") || name.starts_with("image:") {

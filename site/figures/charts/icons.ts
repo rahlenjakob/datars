@@ -7,7 +7,7 @@ import { plot, bar, pictogram } from "@datars/std";
 
 const modes = ["Car", "Bus", "Train", "Bike", "Walk"];
 const transport = { Car: "car", Bus: "bus", Train: "train-front", Bike: "bike", Walk: "footprints" };
-const people = { Car: "user", Bus: "users", Train: "user-round", Bike: "person-standing", Walk: "baby" };
+const people = { Car: "user", Bus: "users", Train: "users-round", Bike: "user-round", Walk: "person-standing" };
 const pick = (set: "transport" | "people") => e(`set == "${set}"`);
 const when = (shape: string, set?: "transport" | "people") => e(set ? `shape == "${shape}" && set == "${set}"` : `shape == "${shape}"`);
 
@@ -15,7 +15,7 @@ export default doc({
   id: "charts-icons",
   title: "How Fernmouth gets to work, in icons",
   description: "A fictional city's 100,000 commuters by mode — 41,000 by car, 23,000 by bus, 17,000 by train, 12,000 by bike, 7,000 on foot — as bars, as a pictogram of one icon per two thousand, and as a grid of a hundred icons.",
-  size: [640, 360],
+  size: [640, 300],
   data: { trips: data.values({ mode: modes, thousands: [41, 23, 17, 12, 7] }, { key: "mode" }) },
   signals: { shape: signal.str("bars"), set: signal.str("transport") },
   motion: motion({ select: { role: "datum" }, matcher: "by-key" }),

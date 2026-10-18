@@ -2,7 +2,7 @@
 //!
 //! | name | source | fetched by |
 //! |---|---|---|
-//! | `heart`, `lucide:heart` | the default set (Lucide) | the build step / tools, from `datars:icons/lucide/heart.svg` |
+//! | `heart`, `lucide:heart` | the default set (Lucide) | the build step / tools, from `datars:icons/lucide/heart.json`; a raw document in the web runtime, from `icons/lucide/heart.json` beside the runtime |
 //! | `icons/logo.svg` | a project file, relative to the document | like data URLs |
 //! | `https://example.com/logo.svg` | a URL | the build step, once (bundles carry it) |
 //! | `<svg …>…</svg>` | inline markup | nobody: it's in the document |
@@ -48,7 +48,7 @@ impl Source {
     /// The URL a host fetches for it (`None`: nothing to fetch).
     pub fn url(&self) -> Option<String> {
         match self {
-            Source::Set { set, name } => Some(format!("datars:icons/{set}/{name}.svg")),
+            Source::Set { set, name } => Some(format!("datars:icons/{set}/{name}.json")),
             Source::File(f) => Some(f.clone()),
             Source::Inline(_) => None,
         }
@@ -105,6 +105,13 @@ impl Set {
         self.icons.get(name).map(|inner| format!("{}{}</svg>", self.root, inner))
     }
 
+    /// An icon in its compact form ([`crate::Icon::to_json`]): the files the web runtime fetches
+    /// for raw documents (`datars:icons/<set>/<name>.json`), read once here by the tools.
+    #[cfg(feature = "svg")]
+    pub fn compact(&self, name: &str) -> Option<Result<String, String>> {
+        self.svg(name).map(|s| crate::parse_svg(&s).map(|i| i.to_json()))
+    }
+
     pub fn len(&self) -> usize {
         self.icons.len()
     }
@@ -153,12 +160,14 @@ pub fn bundled(set: &str) -> Option<&'static Set> {
     }
 }
 
-/// The SVG for a `datars:icons/<set>/<name>.svg` URL from the compiled-in sets.
+/// The SVG for a `datars:icons/<set>/<name>.json` URL (or `….svg`) from the compiled-in sets:
+/// what tools answer the request with (they read SVG).
 #[cfg(feature = "bundled")]
 pub fn bundled_svg(url: &str) -> Option<String> {
     let rest = url.strip_prefix("datars:icons/")?;
     let (set, file) = rest.split_once('/')?;
-    bundled(set)?.svg(file.strip_suffix(".svg")?)
+    let name = file.strip_suffix(".json").or_else(|| file.strip_suffix(".svg"))?;
+    bundled(set)?.svg(name)
 }
 
 #[cfg(test)]
@@ -174,7 +183,7 @@ mod tests {
         assert_eq!(Source::parse("https://example.com/a.svg"), Some(Source::File("https://example.com/a.svg".into())));
         assert!(matches!(Source::parse("<svg/>"), Some(Source::Inline(_))));
         assert_eq!(Source::parse("not an icon"), None);
-        assert_eq!(Source::parse("heart").unwrap().url().as_deref(), Some("datars:icons/lucide/heart.svg"));
+        assert_eq!(Source::parse("heart").unwrap().url().as_deref(), Some("datars:icons/lucide/heart.json"));
         assert_eq!(Source::parse("heart").unwrap().key(), Source::parse("lucide:heart").unwrap().key());
     }
 
@@ -184,6 +193,10 @@ mod tests {
         assert_eq!(s.svg("dot").as_deref(), Some("<svg viewBox=\"0 0 24 24\"><circle cx=\"12\" cy=\"12\" r=\"4\"/></svg>"));
         assert_eq!(s.search("dot"), vec!["dot", "dots"]);
         assert_eq!(s.search("point"), vec!["dot"]);
-        assert!(crate::parse_svg(&s.svg("dot").unwrap()).is_ok());
+        #[cfg(feature = "svg")]
+        {
+            let c = s.compact("dot").unwrap().unwrap();
+            assert_eq!(crate::read_icon(c.as_bytes()).unwrap(), crate::parse_svg(&s.svg("dot").unwrap()).unwrap());
+        }
     }
 }

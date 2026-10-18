@@ -34,6 +34,8 @@ web-sys = { workspace = true, features = ["HtmlCanvasElement"] }
 wasm-bindgen.workspace = true
 
 [dev-dependencies]
+# The picture tests decode their PNGs with the Rust decoder.
+datars-render = { workspace = true, features = ["png"] }
 datars-theme.workspace = true
 png.workspace = true
 # The example's glyph source (real outlines from the bundled font, before datars-text exists).

@@ -31,10 +31,10 @@ test("wasm pixels equal the goldens for every example state", { skip: !ready && 
       let n = 0;
       for (const r of JSON.parse(view.data_requests())) {
         if (!r.url) continue;
-        // The default icon set ships with the toolchain, not the web runtime: answered from it.
-        const icon = r.url.match(/^datars:icons\/([\w-]+)\/([\w-]+)\.svg$/);
-        const set = icon && JSON.parse(readFileSync(join(root, "assets/icons", icon[1], "icons.json"), "utf8"));
-        const file = icon ? Buffer.from(`${set.root}${set.icons[icon[2]]}</svg>`) : readFileSync(r.url.startsWith("datars:") ? join(root, r.url.slice("datars:".length)) : join(root, "examples", name, r.url));
+        // The default icon set: the compact files beside the runtime, as a page fetches them (the
+        // runtime reads no SVG).
+        const icon = r.url.startsWith("datars:icons/");
+        const file = readFileSync(icon ? join(root, "packages/web/dist", r.url.slice("datars:".length)) : r.url.startsWith("datars:") ? join(root, r.url.slice("datars:".length)) : join(root, "examples", name, r.url));
         if (r.range) {
           const [offset, length] = r.range;
           view.provide_range(r.name, offset, file.subarray(offset, offset + length));

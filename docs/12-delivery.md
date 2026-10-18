@@ -215,6 +215,18 @@ everywhere (P1), and no runtime fetches what a chart needs from a CDN.
   `image:` requests — the default set from the toolchain (`datars:icons/lucide/…`, compiled into the
   CLI, never into the web runtime), project files next to the document, `https://` URLs once into
   the cache — and resolves again until nothing is missing (`settle_assets`).
+- **Read by the tools, not the runtime.** The web runtime carries no SVG reader and no image
+  decoder (≈ 48 KB gzipped they'd add to every chart). Icons ship read (the compact form below);
+  pictures ship as their files and the browser decodes them (`ImageDecoder`, else
+  `createImageBitmap`) before the chart's first frame, so none pops in after it. iOS and Android
+  decode with ImageIO and BitmapFactory (`Request::Decode`); the desktop host and the tools with
+  Rust's `png` and `zune-jpeg`.
+- **Raw documents in the browser** (`<datars-view doc>`, the theme studio, notebooks) get the
+  default set from the runtime's `icons/` folder — one compact file per icon
+  (`icons/lucide/heart.json`, ~400 B gzipped), fetched when named, like `fonts/` and `atlas/`.
+  Their own SVG files and inline markup need a tool to read them: `datars dev` serves the document
+  with every icon it draws already read (`doc.icons`), and `datars icons --compact logo.svg` writes
+  one icon's compact file to serve in place of the SVG.
 - **Subset to what the chart draws.** One `icons` chunk holds the drawings of the icons the chart
   draws (`{ "lucide:car": { "vb": […], "layers": […] }, … }`, exact: it reads back to the same
   paths), shipped with T2/T3 — T1's baked scenes already hold their icons' shapes. Each picture is

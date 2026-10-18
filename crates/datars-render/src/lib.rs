@@ -6,7 +6,7 @@
 //! Coordinates are CSS px; backends multiply by the device pixel ratio.
 
 mod flatten;
-mod raster;
+pub mod raster;
 mod trim;
 
 pub use flatten::{bounds, flatten, flatten_cached, FlattenCache};

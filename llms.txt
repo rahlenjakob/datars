@@ -54,7 +54,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   states    <doc>                                                               list program states
   check     <doc>                                                               diagnostics (incl. fonts with no source)
   fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
-  icons     [word…] | --slots <file.svg>                                        search the default icon set (Lucide); a file's colours, by ink slot
+  icons     [word…] | --slots <file.svg> | --compact <file.svg>                 search the default icon set (Lucide); a file's colours, by ink slot; its compact form
   semantics <doc> [--state N]                                                   the accessibility tree
   bundle    <doc> [--out f.datars] [--sign key]                                 publish: document → bundle (T0–T3 variants)
   bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays

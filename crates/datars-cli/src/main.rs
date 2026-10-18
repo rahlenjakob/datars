@@ -76,7 +76,7 @@ usage: datars <command> <doc.json|doc.ts> [options]
   states    <doc>                                                               list program states
   check     <doc>                                                               diagnostics (incl. fonts with no source)
   fonts     <doc>                                                               font tokens: family, weight, source, licence, cache
-  icons     [word…] | --slots <file.svg>                                        search the default icon set (Lucide); a file's colours, by ink slot
+  icons     [word…] | --slots <file.svg> | --compact <file.svg>                 search the default icon set (Lucide); a file's colours, by ink slot; its compact form
   semantics <doc> [--state N]                                                   the accessibility tree
   bundle    <doc> [--out f.datars] [--sign key]                                 publish: document → bundle (T0–T3 variants)
   bundle    inspect <f.datars>                                                  variants, chunk sizes, and which variant each runtime plays
@@ -1161,6 +1161,13 @@ fn labels_cmd(a: &Args, json: bool) -> Result<(), String> {
 /// `datars icons --slots logo.svg` — what an SVG draws: its ink slots (the colours it said, in the
 /// order `inks` takes them), its box, and what the reader skipped.
 fn icons_cmd(a: &Args, json: bool) -> Result<(), String> {
+    // `--compact file.svg`: the icon read, in the compact form a runtime without an SVG reader
+    // takes (serve it as the icon's file: `icons/logo.json` beside a raw document).
+    if let Some(file) = a.flags.get("compact") {
+        let src = std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
+        println!("{}", datars_icon::parse_svg(&src)?.to_json());
+        return Ok(());
+    }
     if let Some(file) = a.flags.get("slots") {
         let src = std::fs::read_to_string(file).map_err(|e| format!("{file}: {e}"))?;
         let icon = datars_icon::parse_svg(&src)?;

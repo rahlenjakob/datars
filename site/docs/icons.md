@@ -68,7 +68,7 @@ Gradients and patterns in a file draw as one slot each.
 
 ## What SVG is read
 
-datars reads SVG with its own small reader, so every platform draws a file the same way. It reads the parts icons and logos are made of:
+datars reads SVG with its own small reader, so every platform draws a file the same way. The reader runs in the tools (`datars publish`, `dev`, `render`): a published chart carries its icons already read, and the web runtime doesn't download a reader for them. It reads the parts icons and logos are made of:
 
 - shapes: `path`, `rect` (with `rx`, `ry`), `circle`, `ellipse`, `line`, `polyline`, `polygon`
 - structure: `g`, nested `svg`, and `use` or `symbol` of an element in the same file
@@ -122,7 +122,7 @@ import { image } from "@datars/sdk";
 image("assets/valley.png", [0, 0, 240, 150], { fit: "cover", alt: "A valley with a lake under the sun" })
 ```
 
-`image(src, rect, options)` draws a PNG — a file next to the document or an `https://` URL — into `rect` (`[x, y, w, h]`).
+`image(src, rect, options)` draws a picture — a PNG, JPEG or WebP file next to the document, or an `https://` URL — into `rect` (`[x, y, w, h]`).
 
 | `fit` | |
 |---|---|
@@ -133,7 +133,7 @@ image("assets/valley.png", [0, 0, 240, 150], { fit: "cover", alt: "A valley with
 
 <figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-image-fit" data-phone-ratio="1.6" data-caption></div></div><figcaption>One picture, four fits. The dashed frame is the rect. <a href="{{src}}/site/figures/sdk/image-fit.ts">Figure source</a></figcaption>{{alt:sdk-image-fit}}</figure>
 
-Pictures are read as PNG, which is lossless, so every platform shows the same pixels. JPEG, WebP and GIF files are refused with a message: convert them to PNG.
+Each platform decodes pictures with its own decoder: the browser on the web, ImageIO on iOS and macOS, BitmapFactory on Android, and Rust's PNG and JPEG decoders in the tools. A PNG is lossless, so it shows the same pixels everywhere. A JPEG or WebP can differ by a shade between platforms, so use PNG where a picture must match exactly. The tools read PNG and JPEG; a WebP file draws in browsers and apps, but `datars render` and a bundle's static fallback leave it out and say so.
 
 ## Text along a path
 
@@ -155,6 +155,7 @@ A text longer than its path is left out, not squeezed or run past the end, and `
 Icons and pictures travel with a published chart, like its fonts:
 
 - **Fetched when the chart is built.** `datars publish`, `bundle`, `render` and `dev` read the default set from the toolchain, project files from disk, and URLs once into a cache. A reader's device never fetches an icon or a picture.
+- **Read when the chart is built.** Icons travel already read, as compact drawings. A document you hand the web runtime directly (`<datars-view doc>`) gets the default set's icons one small file at a time from beside the runtime; for your own SVG files, serve it with `datars dev`, or write an icon's compact file with `datars icons --compact logo.svg` and serve that instead.
 - **Only what's drawn.** A bundle carries the icons its chart draws, a few hundred bytes each, in one chunk, and each picture as its own file. It never carries the whole set.
 - **Licences in the manifest.** The bundle's manifest lists the icon set, its version and licence (Lucide: ISC) and the icons drawn. Your own SVGs and pictures are listed by where they came from, and the build reminds you that it has no licence on record for them.
 
@@ -169,7 +170,7 @@ Until an icon arrives in a preview, nothing is drawn in its place, so nothing ju
 
 ## Limits
 
-- Pictures are PNG only.
+- The tools read PNG and JPEG pictures, not WebP. Browsers and apps draw all three.
 - Icons inside a map's tile layers aren't drawn yet. Use instances over the map's points.
 - SVG text, clip paths, masks, filters and dashes aren't read (see above).
 - A picture shrunk to a small fraction of its size can shimmer: export it near the size it's shown.

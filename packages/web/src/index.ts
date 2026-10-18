@@ -249,6 +249,46 @@ export function datarsAsset(url: string): string {
   return runtimeFile(url.slice("datars:".length));
 }
 
+/**
+ * A picture's file decoded by the browser, as straight RGBA8: the runtime carries no image decoder,
+ * so every format the browser reads works (PNG, JPEG, WebP, AVIF). WebCodecs' `ImageDecoder`
+ * where there is one — its frames come out unpremultiplied, exact for every pixel — else an
+ * `ImageBitmap` drawn into a canvas (exact for opaque pixels; translucent ones round-trip
+ * through the canvas's premultiplied store, a level off at most).
+ */
+async function decodePicture(file: Uint8Array): Promise<{ width: number; height: number; rgba: Uint8Array }> {
+  const type = file[0] === 0x89 ? "image/png" : file[0] === 0xff ? "image/jpeg" : file[0] === 0x52 ? "image/webp" : file[0] === 0x47 ? "image/gif" : "";
+  const Decoder = (globalThis as any).ImageDecoder;
+  if (Decoder && type && (await Decoder.isTypeSupported(type).catch(() => false))) {
+    try {
+      const dec = new Decoder({ data: file, type, premultiplyAlpha: "none", colorSpaceConversion: "none" });
+      const { image } = await dec.decode();
+      try {
+        const width = image.displayWidth as number, height = image.displayHeight as number;
+        const rgba = new Uint8Array(width * height * 4);
+        await image.copyTo(rgba, { format: "RGBA", colorSpace: "srgb" });
+        return { width, height, rgba };
+      } finally {
+        image.close();
+        dec.close();
+      }
+    } catch {
+      // A browser whose frames can't be copied as RGBA: the canvas below.
+    }
+  }
+  const bmp = await createImageBitmap(new Blob([file as BlobPart], type ? { type } : undefined), { premultiplyAlpha: "none", colorSpaceConversion: "none" });
+  try {
+    const { width, height } = bmp;
+    const canvas: OffscreenCanvas | HTMLCanvasElement = typeof OffscreenCanvas !== "undefined" ? new OffscreenCanvas(width, height) : Object.assign(document.createElement("canvas"), { width, height });
+    const ctx = canvas.getContext("2d", { willReadFrequently: true }) as CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D | null;
+    if (!ctx) throw new Error("no 2d canvas to decode a picture with");
+    ctx.drawImage(bmp, 0, 0);
+    return { width, height, rgba: new Uint8Array(ctx.getImageData(0, 0, width, height).data.buffer) };
+  } finally {
+    bmp.close();
+  }
+}
+
 /** A request for a font file (a theme face's `font:<face>`, or a font source by path or URL). */
 function isFontRequest(name: string, url: string): boolean {
   return name.startsWith("font:") || url.startsWith("google:") || /\.(ttf|otf|woff2?|ttc)(\?|$)/i.test(url);
@@ -998,6 +1038,11 @@ export class DatarsView extends ElementBase {
     }
     // At the reader's text size from the first frame: never a theme-sized chart that then grows.
     view.set_text_scale?.((this.textScaleTold = this.textScale));
+    // A bundle's pictures, decoded by the browser before the first frame (none pops in after it).
+    if (view.pictures_decoding?.()) {
+      await this.decodePictures(view);
+      if (!live()) return abandon();
+    }
     this.timed_("poster", () => this.showPoster(view));
     if (!view.ready()) return abandon(); // T0 only: the poster and text are the chart
     // The `state` attribute is where the chart opens (no transition from the first state).
@@ -1425,7 +1470,8 @@ export class DatarsView extends ElementBase {
     this.fetchChunks();
     // Answers go to the engine that asked: one freed meanwhile (the element left) gets nothing.
     const view = this.view;
-    const reqs: { name: string; url?: string; range?: [number, number]; atlas?: string }[] = JSON.parse(this.view?.data_requests() ?? "[]");
+    const reqs: { name: string; url?: string; range?: [number, number]; atlas?: string; decode?: boolean }[] = JSON.parse(this.view?.data_requests() ?? "[]");
+    if (view && reqs.some((r) => r.decode)) void this.decodePictures(view).then(() => { if (this.view === view) this.kick(); });
     for (const r of reqs) {
       if (r.atlas) {
         // A built-in atlas for a raw document: from the runtime's own `atlas/` folder (or the
@@ -1454,6 +1500,29 @@ export class DatarsView extends ElementBase {
         .catch((e) => console.warn("datars: data", r.name, e))
         .finally(() => this.fetching.delete(r.name));
     }
+  }
+
+  /** Decode the pictures the engine holds the files of (`decode` requests) with the browser's
+   * decoder, and hand it their pixels. */
+  private decodePictures(view: Wasm): Promise<void> {
+    const reqs: { name: string; decode?: boolean }[] = JSON.parse(view.data_requests() ?? "[]");
+    return Promise.all(reqs.filter((r) => r.decode && !this.fetching.has(`decode:${r.name}`)).map(async (r) => {
+      const id = `decode:${r.name}`;
+      const file: Uint8Array | undefined = view.picture_file(r.name);
+      if (!file) return;
+      this.fetching.add(id);
+      const got = await decodePicture(file).catch((e: unknown) => (e instanceof Error ? e.message : String(e)));
+      this.fetching.delete(id);
+      // The view may have been freed meanwhile (the element left, a new document): then nothing.
+      try {
+        if (typeof got === "string") {
+          console.warn("datars: picture", r.name, got);
+          view.picture_failed(r.name, `the browser couldn't decode it (${got})`);
+        } else {
+          view.provide_pixels(r.name, got.width, got.height, got.rgba);
+        }
+      } catch { /* freed */ }
+    })).then(() => undefined);
   }
 
   /** New rows (the page's, a live refresh): what the mirror says is stale — rebuilt once the

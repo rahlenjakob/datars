@@ -501,7 +501,8 @@ export function findRuntime(fromDir: string): Runtime {
 export function runtimeFiles(dir: string): string[] {
   const out: string[] = [];
   for (const f of ["wasm/datars_core.js", "wasm/datars_core_bg.wasm", "wasm/datars_core_gl.js", "wasm/datars_core_gl_bg.wasm", "wasm/datars_host_web.js", "wasm/datars_host_web_bg.wasm", "wasm/wasi_shim.js"]) if (existsSync(join(dir, f))) out.push(f);
-  for (const sub of ["fonts", "atlas"]) for (const f of listFiles(join(dir, sub))) out.push(`${sub}/${f}`);
+  // `icons/`: the default set, one compact file per icon, fetched only by raw documents that name one.
+  for (const sub of ["fonts", "atlas", "icons"]) for (const f of listFiles(join(dir, sub))) out.push(`${sub}/${f}`);
   return out;
 }
 

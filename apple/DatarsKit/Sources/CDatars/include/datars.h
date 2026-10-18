@@ -63,3 +63,9 @@ char *datars_view_status(DatarsView *v);
 char *datars_view_accessibility(DatarsView *v);
 char *datars_view_data_requests(DatarsView *v);
 int32_t datars_view_provide_range(DatarsView *v, const uint8_t *name, size_t name_len, uint64_t offset, const uint8_t *bytes, size_t len);
+/* Pictures the library doesn't decode (it carries no image decoder): a `decode` data request's
+ * file, the app's decoded pixels for it (straight RGBA8, top row first), or why it couldn't. */
+const uint8_t *datars_view_picture_file(DatarsView *v, const uint8_t *name, size_t name_len, size_t *len);
+int32_t datars_view_provide_pixels(DatarsView *v, const uint8_t *name, size_t name_len, uint32_t width, uint32_t height, const uint8_t *rgba, size_t len);
+void datars_view_picture_failed(DatarsView *v, const uint8_t *name, size_t name_len, const uint8_t *why, size_t why_len);
+uint32_t datars_view_pictures_decoding(DatarsView *v);

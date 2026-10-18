@@ -113,7 +113,7 @@ icon("logos/brand.svg", [0, 0], { anchor: "top-left", size: 32, inks: ["$ink", "
 
 {{sdk:image}}
 
-A PNG drawn into a rect as `fit` says; `alt` makes it read by screen readers, else it's decorative.
+A picture (PNG, JPEG or WebP) drawn into a rect as `fit` says; `alt` makes it read by screen readers, else it's decorative.
 
 <figure class="fig"><div class="frame"><div class="chart" data-chart="sdk-image-fit" data-phone-ratio="1.6" data-caption></div></div><figcaption>One picture, four fits. <a href="{{src}}/site/figures/sdk/image-fit.ts">Figure source</a></figcaption>{{alt:sdk-image-fit}}</figure>
 

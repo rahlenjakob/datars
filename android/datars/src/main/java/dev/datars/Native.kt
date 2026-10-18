@@ -41,6 +41,12 @@ internal object Native {
     /** JSON `[{name, url} | {name, slot}]`: data the engine waits for. */
     external fun dataRequests(v: Long): String?
     external fun provideSource(v: Long, name: String, bytes: ByteArray): Boolean
+    /** Pictures the library doesn't decode (it carries no decoder): how many wait, a `decode`
+     * request's file, the app's pixels for it (straight RGBA8, top row first), or why not. */
+    external fun picturesDecoding(v: Long): Int
+    external fun pictureFile(v: Long, name: String): ByteArray?
+    external fun providePixels(v: Long, name: String, width: Int, height: Int, rgba: ByteArray): Boolean
+    external fun pictureFailed(v: Long, name: String, why: String)
     /** Bytes of a tiles archive from `offset` (answering a `range` data request). */
     external fun provideRange(v: Long, name: String, offset: Long, bytes: ByteArray): Boolean
     /** Run the click intent of the mark at `path` (a semantics item's path). */

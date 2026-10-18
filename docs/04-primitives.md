@@ -302,20 +302,35 @@ pub enum Proto { Circle, Square, Rect, Symbol(SymbolKind), Geom(Geom), Glyph(Gly
   of what assistive technology reads; with one, it reads as that word. `datars lint` checks a
   labelled icon's ink against what's behind it for 3:1 (WCAG 1.4.11, `a11y/icon-contrast`).
 
-**Pictures** are `image(src, rect, { fit, alt })`: a PNG (lossless: every platform decodes the same
-pixels) drawn into `rect` as `fit` says — `contain` (default), `cover` (cut to the rect), `fill`,
-`none`. The CPU reference samples its premultiplied texels bilinearly with integer weights, wgpu
-from a texture, SVG embeds the file as a `data:` URL, PDF as an image XObject with its alpha as a
-soft mask. JPEG, WebP and GIF are refused with a message (a decoder would be a new dependency).
-Without `alt` a picture is decorative.
+**Pictures** are `image(src, rect, { fit, alt })`: a picture file drawn into `rect` as `fit` says —
+`contain` (default), `cover` (cut to the rect), `fill`, `none`. The engine is format-agnostic: a
+picture is straight RGBA handed in (`Engine::provide_pixels`), decoded by whoever has a decoder —
+the browser (`ImageDecoder`, else `createImageBitmap`), ImageIO on Apple platforms, BitmapFactory on
+Android — so the web runtime carries none and every format the platform reads works; the tools, the
+headless renderer and the desktop host decode PNG (`png`) and JPEG (`zune-jpeg`, its scalar path)
+in Rust (`Raster::decode`). A file the engine can't decode itself is a `Request::Decode`: the host
+reads it (`picture_file`) and hands back its pixels. PNG is lossless, so every decoder gives the
+same pixels (P1, and what the goldens use); JPEG and WebP are decoded by each platform's own
+decoder and may differ by a level here and there. The CPU reference samples premultiplied texels
+bilinearly with integer weights, wgpu from a texture, SVG embeds the file as a `data:` URL of its
+type, PDF as an image XObject with its alpha as a soft mask. Without `alt` a picture is decorative.
 
 **How they travel** — like fonts. The engine never fetches (P10): an icon or picture it needs is a
-request (`icon:lucide:heart` → `datars:icons/lucide/heart.svg`, `image:photo.png`) the host answers;
+request (`icon:lucide:heart` → `datars:icons/lucide/heart.json`, `image:photo.png`) the host answers;
 until it arrives nothing is drawn (no stand-in that would jump), and the scene resolves again when
 it does. Tools answer on the spot (`Engine::set_asset_fetch`); the build step fetches what every
 state draws and ships **only that** — one `icons` chunk of compact drawings, an `image` chunk per
 picture — with each set's licence in the manifest ([12](12-delivery.md#icons-and-pictures)). A
 bundle's chart asks for nothing, on any runtime.
+
+**Where SVG is read.** The SVG reader (XML, a CSS subset, the SVG subset: `datars-icon`'s `svg`
+feature) runs in the tools — the build step, `datars dev`, headless renders — and in the native
+hosts' development mode. The web runtime has none: what it draws arrives read, in the compact form
+(`{ "vb", "layers": [{ "d", "fill", "stroke": { "ink", "w", "cap", "join" } }] }`, exact) — a
+bundle's `icons` chunk, a document's `icons` (`datars dev` writes every icon a document draws there,
+inline markup included), or the default set's compact files beside the runtime
+(`icons/lucide/<name>.json`, one per icon, fetched only when a raw document names one). Markup it is
+handed anyway is refused with a message.
 
 ## Coordinates
 

@@ -229,7 +229,7 @@ export interface ImageOpts extends NodeOpts {
   alt?: Prop;
 }
 
-/** A picture (a raster logo, a photo — PNG) drawn into `rect` (`[x, y, w, h]`): a path relative
+/** A picture (a raster logo, a photo — PNG, JPEG or WebP) drawn into `rect` (`[x, y, w, h]`): a path relative
  * to the document or an `https://` URL, shipped in the bundle by the build step. */
 export function image(src: Prop, rect: [Prop, Prop, Prop, Prop], opts: ImageOpts = {}): Template {
   const { fit, alt, ...rest } = opts;

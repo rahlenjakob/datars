@@ -110,13 +110,24 @@ pub struct Manifest {
     pub fonts: Vec<FontCredit>,
     /// The icons and pictures the bundle ships (its `icons` and `image` chunks), by where they
     /// came from, with their licences.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[serde(default, skip_serializing_if = "Vec::is_empty", deserialize_with = "asset_credits")]
     pub assets: Vec<AssetCredit>,
 }
 
+/// The manifest's `assets`, read by hand from the `Value` (see [`AssetCredit`]).
+fn asset_credits<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<AssetCredit>, D::Error> {
+    match serde_json::Value::deserialize(d)? {
+        serde_json::Value::Array(a) => a.into_iter().map(AssetCredit::try_from).collect::<Result<_, _>>().map_err(serde::de::Error::custom),
+        serde_json::Value::Null => Ok(Vec::new()),
+        _ => Err(serde::de::Error::custom("a manifest's `assets` is a list")),
+    }
+}
+
 /// Icons or a picture a bundle ships: an icon set's icons (`from: datars:icons/lucide`, the names
-/// it draws), or one file.
+/// it draws), or one file. Read by hand (through the `Value` reader runtimes already carry): a
+/// runtime never looks at credits, and a derived reader would be code it ships for nothing.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "serde_json::Value")]
 pub struct AssetCredit {
     /// `icons` or `image`.
     pub kind: String,
@@ -130,6 +141,20 @@ pub struct AssetCredit {
     /// The icons drawn from a set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub names: Vec<String>,
+}
+
+impl TryFrom<serde_json::Value> for AssetCredit {
+    type Error = String;
+    fn try_from(v: serde_json::Value) -> Result<AssetCredit, String> {
+        let text = |k: &str| v[k].as_str().map(String::from);
+        Ok(AssetCredit {
+            kind: text("kind").ok_or("an asset credit needs `kind`")?,
+            from: text("from").ok_or("an asset credit needs `from`")?,
+            licence: text("licence").unwrap_or_default(),
+            version: text("version"),
+            names: v["names"].as_array().map(|a| a.iter().filter_map(|n| n.as_str().map(String::from)).collect()).unwrap_or_default(),
+        })
+    }
 }
 
 /// One font a bundle ships (as subsets): which face, where it came from, under what licence.

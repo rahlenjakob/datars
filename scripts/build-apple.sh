@@ -5,10 +5,11 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 TARGETS="aarch64-apple-darwin aarch64-apple-ios aarch64-apple-ios-sim"
 # The sandbox (QuickJS, for T3 bundles) is in by default; the app's policy (`allowScript`) decides
-# at runtime. Inter is compiled in for raw documents (bundles carry their own fonts). `gpu` draws
-# frames with Metal on the view's layer (wgpu); without it frames are CPU pixels. FEATURES=""
+# at runtime. Inter and the SVG reader are compiled in for raw documents (bundles carry their own
+# fonts and icons, read). `gpu` draws frames with Metal on the view's layer (wgpu); without it
+# frames are CPU pixels. Pictures are decoded by ImageIO (the library has no decoder). FEATURES=""
 # builds with none of them.
-FEATURES="${FEATURES-sandbox,bundled-fonts,gpu}"
+FEATURES="${FEATURES-sandbox,bundled-fonts,svg,gpu}"
 export IPHONEOS_DEPLOYMENT_TARGET=15.0 MACOSX_DEPLOYMENT_TARGET=12.0
 # QuickJS bindings are generated for iOS: bindgen needs libclang and the SDKs.
 export LIBCLANG_PATH="${LIBCLANG_PATH:-$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib}"

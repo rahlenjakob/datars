@@ -7,12 +7,12 @@
     },
     {
       "name": "icons",
-      "scene": "cfe129c151356d64",
-      "pixels": "c983533dbce55bcc"
+      "scene": "f7cb99d511c73fc1",
+      "pixels": "80adbd37b1891bc6"
     },
     {
       "name": "grid",
-      "scene": "ed76d5bc757de29a",
+      "scene": "12fd034eff04c0c7",
       "pixels": "96fa0d44da666732"
     }
   ],
@@ -20,13 +20,13 @@
     {
       "from": "bars",
       "to": "icons",
-      "sweep": "294be88eb2e47f1d",
+      "sweep": "238537d8efd9e19b",
       "samples": 64
     },
     {
       "from": "icons",
       "to": "grid",
-      "sweep": "f5ab2d05db14e79e",
+      "sweep": "f8da1d21c6df9eb8",
       "samples": 64
     }
   ]

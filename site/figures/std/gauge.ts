@@ -4,11 +4,12 @@ import { doc, e, group, story, step } from "@datars/sdk";
 import { gauge } from "@datars/std";
 
 const status = { bands: [70, 90, 100], inks: ["$negative", "$highlight", "$positive"] };
-// Three dials side by side (stacked on a phone), one set per step: keyed alike, they morph.
+// Three dials side by side (stacked only below 300 px: three tiny dials in a column leave their
+// values no room), one set per step: keyed alike, they morph.
 const dials = (state: string, o: Record<string, unknown> = {}) => group({
-  key: "dials", when: e(`state == "${state}"`), layout: { type: "columns", gap: 16, wrap: 420 },
+  key: "dials", when: e(`state == "${state}"`), layout: { type: "columns", gap: 12, wrap: 300 },
   children: [
-    gauge({ value: 86, label: "Satisfaction", suffix: " / 100", ...o }, { key: "satisfaction" }),
+    gauge({ value: 86, label: "Rating", suffix: " / 100", ...o }, { key: "satisfaction" }),
     gauge({ value: 94, label: "Orders on time", suffix: "%", ...o }, { key: "on-time" }),
     gauge({ value: 64, label: "Stock available", suffix: "%", ...o }, { key: "stock" }),
   ],
@@ -16,7 +17,7 @@ const dials = (state: string, o: Record<string, unknown> = {}) => group({
 
 export default doc({
   title: "A tea shop's service in three dials",
-  description: "Customer satisfaction, orders on time and stock available as dials filled to their values; then on red, amber and green bands with needles; then as half circles; then with each band named along the arc.",
+  description: "Customers' rating, orders on time and stock available as dials filled to their values; then on red, amber and green bands with needles; then as half circles; then with each band named along the arc.",
   size: [640, 240],
   scene: group({
     key: "root",

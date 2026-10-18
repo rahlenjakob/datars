@@ -15,15 +15,48 @@
 //!
 //! Sans-IO and deterministic: the same bytes give the same layers on every platform.
 
+// The SVG reader (XML, a CSS subset, the SVG subset) is for the tools: the build step, `datars dev`
+// and the native hosts' development mode read files and markup with it. The web runtime is built
+// without it (`svg` off) — bundles carry their icons already read ([`Icon::to_json`]), and a raw
+// document gets the default set as compact files beside the runtime (`datars:icons/…`).
+#[cfg(feature = "svg")]
 pub mod css;
-pub mod path;
+/// SVG path data (the reader and writers live with `PathData`, in `datars-math`).
+pub use datars_math::svgpath as path;
 pub mod set;
+#[cfg(feature = "svg")]
 pub mod svg;
+#[cfg(feature = "svg")]
 pub mod xml;
 
-pub use path::{exact_path_string, parse_svg_path, svg_path_string};
+pub use datars_math::svgpath::{exact_path_string, parse_svg_path, svg_path_string};
 pub use set::{Set, Source, DEFAULT_SET};
+#[cfg(feature = "svg")]
 pub use svg::parse_svg;
+
+/// Read an icon file's bytes: the compact form ([`Icon::to_json`], what bundles and the web
+/// runtime's default set carry), or SVG markup where the reader is compiled in (`svg`).
+pub fn read_icon(bytes: &[u8]) -> Result<Icon, String> {
+    let text = std::str::from_utf8(bytes).map_err(|_| "not text (an icon file is SVG or its compact JSON)".to_string())?;
+    if text.trim_start().starts_with('{') {
+        return Icon::from_json(text);
+    }
+    read_svg(text)
+}
+
+/// SVG markup read into an icon — or, without the reader (`svg` off: the web runtime), why not.
+pub fn read_svg(markup: &str) -> Result<Icon, String> {
+    #[cfg(feature = "svg")]
+    return parse_svg(markup);
+    #[cfg(not(feature = "svg"))]
+    {
+        let _ = markup;
+        Err(NO_SVG_READER.into())
+    }
+}
+
+/// What a runtime without the SVG reader says of markup it was handed.
+pub const NO_SVG_READER: &str = "this runtime reads no SVG: publish the chart or use `datars dev` (they read its icons), or serve `datars icons --compact` output";
 
 use datars_math::{Affine, FillRule, PathData, Rect, Vec2};
 use datars_scene::{Cap, IconGlyph, IconInk, IconLayer, IconStroke, Join};
@@ -131,33 +164,10 @@ impl Icon {
     }
 
     /// The compact form bundles carry (only the drawing: no notes), exact — it reads back to the
-    /// same icon, so a published chart draws what its author saw.
+    /// same icon, so a published chart draws what its author saw. Its layers are the scene's
+    /// glyph layers ([`datars_scene::icon::layer_json`]).
     pub fn to_json(&self) -> String {
-        let ink = |i: &IconInk| match i {
-            IconInk::Current => json!("c"),
-            IconInk::Slot(k) => json!(k),
-        };
-        let layers: Vec<Value> = self
-            .layers
-            .iter()
-            .map(|l| {
-                let mut o = serde_json::Map::new();
-                o.insert("d".into(), exact_path_string(&l.path).into());
-                if let Some(f) = &l.fill {
-                    o.insert("fill".into(), ink(f));
-                }
-                if l.rule == FillRule::EvenOdd {
-                    o.insert("rule".into(), "evenodd".into());
-                }
-                if let Some(s) = &l.stroke {
-                    o.insert("stroke".into(), json!({ "ink": ink(&s.ink), "w": s.width, "cap": s.cap, "join": s.join }));
-                }
-                if l.opacity != 1.0 {
-                    o.insert("o".into(), l.opacity.into());
-                }
-                Value::Object(o)
-            })
-            .collect();
+        let layers: Vec<Value> = self.layers.iter().map(|l| datars_scene::icon::layer_json(&l.path, l.fill, l.rule, l.stroke.as_ref(), l.opacity)).collect();
         let vb = self.view_box;
         let mut o = json!({ "vb": [vb.x, vb.y, vb.w, vb.h], "layers": layers });
         if !self.slots.is_empty() {
@@ -179,29 +189,15 @@ impl Icon {
         if vb.len() != 4 {
             return Err("an icon's `vb` is four numbers".into());
         }
-        let ink = |x: &Value| -> Option<IconInk> {
-            match x {
-                Value::String(s) if s == "c" => Some(IconInk::Current),
-                Value::Number(n) => n.as_u64().map(|k| IconInk::Slot(k.min(255) as u8)),
-                _ => None,
-            }
-        };
-        let mut layers = Vec::new();
-        for l in v["layers"].as_array().ok_or("an icon without `layers`")? {
-            let stroke = l.get("stroke").filter(|s| s.is_object()).map(|s| IconStroke {
-                ink: ink(&s["ink"]).unwrap_or(IconInk::Current),
-                width: s["w"].as_f64().unwrap_or(1.0),
-                cap: serde_json::from_value(s["cap"].clone()).unwrap_or_default(),
-                join: serde_json::from_value(s["join"].clone()).unwrap_or_default(),
-            });
-            layers.push(Layer {
-                path: parse_svg_path(l["d"].as_str().unwrap_or("")),
-                fill: l.get("fill").and_then(ink),
-                rule: if l["rule"].as_str() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero },
-                stroke,
-                opacity: l["o"].as_f64().unwrap_or(1.0),
-            });
-        }
+        let layers = v["layers"]
+            .as_array()
+            .ok_or("an icon without `layers`")?
+            .iter()
+            .map(|l| {
+                let (path, fill, rule, stroke, opacity) = datars_scene::icon::layer_of(l);
+                Layer { path, fill, rule, stroke, opacity }
+            })
+            .collect();
         let slots = v["slots"].as_array().map(|a| a.iter().filter_map(|s| s.as_str().map(String::from)).collect()).unwrap_or_default();
         Ok(Icon { view_box: Rect::new(vb[0], vb[1], vb[2], vb[3]), layers, slots, title: v["title"].as_str().map(String::from), notes: Vec::new() })
     }
@@ -253,6 +249,18 @@ mod tests {
         assert_eq!((b.x, b.y, b.w, b.h), (-1.0, -0.5, 2.0, 1.0));
         assert_eq!(g.layers[0].stroke.as_ref().unwrap().width, 2.0 / 12.0);
         assert_eq!(g.half_extent(), (1.0, 0.5));
+    }
+
+    #[test]
+    fn a_file_is_read_in_its_compact_form_or_as_markup_where_the_reader_is() {
+        let i = Icon::from_path("M0 0H20V10H0Z", None, Some(2.0)).unwrap();
+        assert_eq!(read_icon(i.to_json().as_bytes()).unwrap(), i);
+        let svg = br#"<svg viewBox="0 0 4 4"><rect width="4" height="4"/></svg>"#;
+        #[cfg(feature = "svg")]
+        assert_eq!(read_icon(svg).unwrap().view_box, Rect::new(0.0, 0.0, 4.0, 4.0));
+        // The web runtime's build: markup is refused, saying what to do instead.
+        #[cfg(not(feature = "svg"))]
+        assert!(read_icon(svg).unwrap_err().contains("datars dev"));
     }
 
     #[test]

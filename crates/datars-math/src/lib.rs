@@ -10,6 +10,7 @@ pub mod m;
 pub mod path;
 pub mod rect;
 pub mod rng;
+pub mod svgpath;
 pub mod vec2;
 
 pub use affine::Affine;

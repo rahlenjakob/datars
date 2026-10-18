@@ -1,5 +1,7 @@
 import CDatars
 import Foundation
+import ImageIO
+import CoreGraphics
 
 /// A datars runtime instance: load a document or a bundle, render frames, send events.
 public final class DatarsEngine {
@@ -147,6 +149,50 @@ public final class DatarsEngine {
         defer { datars_string_free(p) }
         let data = Data(String(cString: p).utf8)
         return (try? JSONSerialization.jsonObject(with: data)) as? [[String: Any]] ?? []
+    }
+
+    /// Pictures waiting for the platform's decoder (the library carries none).
+    public var picturesDecoding: Int { Int(datars_view_pictures_decoding(view)) }
+
+    /// Decode every picture waiting for it with ImageIO — PNG, JPEG, WebP, HEIC: whatever the
+    /// platform reads — and hand the pixels over. Hosts call it before a frame, so a chart's first
+    /// frame already has its pictures.
+    public func decodePictures() {
+        guard picturesDecoding > 0 else { return }
+        for r in dataRequests() where r["decode"] as? Bool == true {
+            guard let name = r["name"] as? String else { continue }
+            decodePicture(name)
+        }
+    }
+
+    private func decodePicture(_ name: String) {
+        let n = Data(name.utf8)
+        var len = 0
+        guard let p = withBytes(n, { np, nn in datars_view_picture_file(view, np, nn, &len) }) else { return }
+        let file = Data(bytes: p, count: len)
+        guard let src = CGImageSourceCreateWithData(file as CFData, nil),
+              let img = CGImageSourceCreateImageAtIndex(src, 0, [kCGImageSourceShouldCache: false] as CFDictionary) else {
+            let why = Data("the platform's decoder couldn't read the picture".utf8)
+            withBytes(n) { np, nn in withBytes(why) { wp, wn in datars_view_picture_failed(view, np, nn, wp, wn) } }
+            return
+        }
+        let (w, h) = (img.width, img.height)
+        var px = [UInt8](repeating: 0, count: w * h * 4)
+        // Core Graphics draws premultiplied only: draw into sRGB RGBA8, then undo the alpha.
+        let drawn: Bool = px.withUnsafeMutableBytes { raw in
+            guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+                  let ctx = CGContext(data: raw.baseAddress, width: w, height: h, bitsPerComponent: 8, bytesPerRow: w * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue) else { return false }
+            ctx.interpolationQuality = .none
+            ctx.draw(img, in: CGRect(x: 0, y: 0, width: w, height: h))
+            return true
+        }
+        guard drawn else { return }
+        for i in stride(from: 0, to: px.count, by: 4) where px[i + 3] != 0 && px[i + 3] != 255 {
+            let a = Int(px[i + 3])
+            for k in 0..<3 { px[i + k] = UInt8(min(255, (Int(px[i + k]) * 255 + a / 2) / a)) }
+        }
+        _ = withBytes(n) { np, nn in px.withUnsafeBufferPointer { pp in datars_view_provide_pixels(view, np, nn, UInt32(w), UInt32(h), pp.baseAddress!, pp.count) } }
     }
 
     /// Hand over bytes of a tiles archive (answering a `range` data request).
