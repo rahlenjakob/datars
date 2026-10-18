@@ -94,7 +94,7 @@ pub enum NodeKind {
 | `View` | A nested viewport with its own camera: plots, small multiples, insets, magnifiers, maps | a plot camera and a map camera are one mechanism, not two special cases |
 | `Shape` | Any single keyed drawable (bar, slice, region, ribbon, rule, arrow) | glyphs, polylines, rules and map regions share keys, paints and morphs |
 | `Text` | Engine-shaped text: labels, titles, tooltips, numbers that count | one shaper on every target, not Canvas2D text in page JS, a Rust rasterizer and SVG text side by side |
-| `Image` | Raster assets, icons, pictograms | — |
+| `Image` | Pictures: raster logos and photos (PNG), fitted to a rect | a picture is data a renderer samples, not geometry (§Icons and pictures) |
 | `Instances` | One prototype × N keyed instances with per-instance columns: 10³–10⁶ points, cells, seats | dot-density arrays and settled circles become instanced discs, not 10⁶ nodes |
 | `Field` | Continuous data on a grid (density, heat, raster values), coloured on the GPU, optional contours | — |
 | `Tiles` | Viewport-streamed content: vector/raster basemaps, LOD point clouds | a basemap is streamed content in the scene, not a separate map renderer |
@@ -172,6 +172,22 @@ pub struct TextLayout {
 - Spans can reference a key (`[the Social Democrats](S)`): the span takes that key's colour and
   follows it when it's recoloured.
 
+### Text along a path
+
+`text(…, { path: { arc: [cx, cy, r, a0, a1] } })` (or `path: { d }`, SVG path data) sets a label
+along a curve: a gauge's band names, a radial chart's rings, a circular axis. The text is shaped and
+measured as any text; then each glyph is placed on the path at the middle of its advance and turned
+to the path's direction there (`TextNode.along`: `[x, y, turn, advance]` per glyph), so every
+renderer draws the same glyphs at the same places. `offset` says where along the path the text's
+`align` point goes (default by alignment); `upright` (default on) reverses a path that runs right to
+left, so text on a circle's lower half still reads left to right.
+
+A text longer than its path is **left out**, not squeezed or run past the end — and `datars labels`
+reports it as cut. Recipes measure first (`measure()` against the arc length) and give way: the
+gauge leaves out a band name that doesn't fit its band, and sizes names to what the band's
+thickness holds, up to the reader's text size. Label audits judge curved labels by their glyphs'
+boxes, not the box around the curve.
+
 ### Text that stays readable
 
 `contain: true` on a text style nudges the label back inside the canvas after layout, only as far
@@ -241,6 +257,80 @@ pub enum Proto { Circle, Square, Rect, Symbol(SymbolKind), Geom(Geom), Glyph(Gly
   frame's budget of points (every row once they fit). Tiles are Morton-ordered and templated once
   per canonical cell, so pans and zooms never re-evaluate a row. The **galaxy** example: 4,000,000
   rows, pan frames ~1 ms (`datars profile`), hover on every star drawn.
+
+## Icons and pictures
+
+**Icons** are vector drawings: `icon(name, at, { size, ink, inks, rotate, anchor, label })` (an
+`icon` node in the IR). Where they come from:
+
+| Name | Source |
+|---|---|
+| `heart`, `lucide:heart` | the default set: [Lucide](https://lucide.dev) 1.49.0, ISC, 2,121 icons (`datars icons <word>` searches it) |
+| `$icon.up` | a theme icon token, naming one of the others ([18](18-themes.md#icons)) |
+| `icons/logo.svg`, `https://…/logo.svg` | a project file (relative to the document) or a URL |
+| `<svg …>…</svg>`, `{ d, viewBox, stroke }` | inline markup or path data |
+
+- **Read by `datars-icon`**, a small deterministic reader of the SVG subset icons and logos use:
+  `path`, `rect` (with `rx`/`ry`), `circle`, `ellipse`, `line`, `polyline`, `polygon`, `g`,
+  nested `svg`, `use` and `symbol` within the file; transforms; `viewBox` (or `width`/`height`);
+  `fill`, `fill-rule`, `fill-opacity`, `stroke`, `stroke-width`, `stroke-opacity`, caps, joins,
+  `opacity`, `display`, `visibility` — as attributes, inline `style`, or a `<style>` sheet of tag,
+  class and id rules. Scripts, event attributes, embedded pictures, XML entities and any reference
+  outside the file (`href`, `url(…)`, `@import`) are **refused**; text, clipping, masks, filters,
+  dashes and animation are skipped with a note (convert text to outlines). Transforms are baked
+  into the paths, stroke widths scaled with them.
+- **Colours are inks, never the file's hex.** `currentColor` — and a file drawn in a single colour,
+  like most icon sets' black — takes the node's `ink` (default `$ink`). A multi-colour file's other
+  colours become **slots**, numbered in the order the file first uses them, for the `inks` the
+  author passes (default `$categorical[i]`); `datars icons --slots file.svg` lists them. Gradients
+  draw as one slot each.
+- An `icon` node resolves to plain **shapes** (a group of one per layer), so hit tests, exports,
+  bounds and transitions treat it as any shape; it turns about its point (`rotate`), and `anchor`
+  says where `at` is on its box (the file's aspect, the longer side `size`, default the theme's
+  `size.icon` or 16 px).
+- **Icon symbols and markers:** `geom.symbol({ symbol: "lucide:star" })` draws the icon in the
+  shape's fill, `size` its half box (the built-in names `circle` … `star` stay symbols); a stroke
+  marker `{ type: "icon", icon, size }` sits centred on the line's end, turned along it, in the
+  stroke's paint.
+- **Instanced:** `instances({ icon, … })` (`proto: "icon"`) draws thousands of one icon as one node —
+  pictograms, unit charts, map markers. The icon is normalized once (`IconGlyph`, the box's longer
+  side −1…1, `r` its half size); CPU and PDF draw its layers per instance, SVG writes the drawing once
+  in `<defs>` and a `<use>` per instance, wgpu tessellates each layer once and draws it per instance.
+  An icon instance that flies to another shape (a pictogram's unit into a bar) travels as its own
+  drawing, so it looks like itself at both ends.
+- **Decorative unless labelled** (WCAG 1.1.1): without `label` (or `semantics`) an icon is left out
+  of what assistive technology reads; with one, it reads as that word. `datars lint` checks a
+  labelled icon's ink against what's behind it for 3:1 (WCAG 1.4.11, `a11y/icon-contrast`).
+
+**Pictures** are `image(src, rect, { fit, alt })`: a picture file drawn into `rect` as `fit` says —
+`contain` (default), `cover` (cut to the rect), `fill`, `none`. The engine is format-agnostic: a
+picture is straight RGBA handed in (`Engine::provide_pixels`), decoded by whoever has a decoder —
+the browser (`ImageDecoder`, else `createImageBitmap`), ImageIO on Apple platforms, BitmapFactory on
+Android — so the web runtime carries none and every format the platform reads works; the tools, the
+headless renderer and the desktop host decode PNG (`png`) and JPEG (`zune-jpeg`, its scalar path)
+in Rust (`Raster::decode`). A file the engine can't decode itself is a `Request::Decode`: the host
+reads it (`picture_file`) and hands back its pixels. PNG is lossless, so every decoder gives the
+same pixels (P1, and what the goldens use); JPEG and WebP are decoded by each platform's own
+decoder and may differ by a level here and there. The CPU reference samples premultiplied texels
+bilinearly with integer weights, wgpu from a texture, SVG embeds the file as a `data:` URL of its
+type, PDF as an image XObject with its alpha as a soft mask. Without `alt` a picture is decorative.
+
+**How they travel** — like fonts. The engine never fetches (P10): an icon or picture it needs is a
+request (`icon:lucide:heart` → `datars:icons/lucide/heart.json`, `image:photo.png`) the host answers;
+until it arrives nothing is drawn (no stand-in that would jump), and the scene resolves again when
+it does. Tools answer on the spot (`Engine::set_asset_fetch`); the build step fetches what every
+state draws and ships **only that** — one `icons` chunk of compact drawings, an `image` chunk per
+picture — with each set's licence in the manifest ([12](12-delivery.md#icons-and-pictures)). A
+bundle's chart asks for nothing, on any runtime.
+
+**Where SVG is read.** The SVG reader (XML, a CSS subset, the SVG subset: `datars-icon`'s `svg`
+feature) runs in the tools — the build step, `datars dev`, headless renders — and in the native
+hosts' development mode. The web runtime has none: what it draws arrives read, in the compact form
+(`{ "vb", "layers": [{ "d", "fill", "stroke": { "ink", "w", "cap", "join" } }] }`, exact) — a
+bundle's `icons` chunk, a document's `icons` (`datars dev` writes every icon a document draws there,
+inline markup included), or the default set's compact files beside the runtime
+(`icons/lucide/<name>.json`, one per icon, fetched only when a raw document names one). Markup it is
+handed anyway is refused with a message.
 
 ## Coordinates
 

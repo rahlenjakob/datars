@@ -130,7 +130,7 @@ var grid = recipe2({
 });
 
 // src/guides.ts
-import { e as e3, group as group3, recipe as recipe3, repeat as repeat3, shape as shape3, geom as geom3, t as t3, text as text2 } from "@datars/sdk";
+import { e as e3, group as group3, icon, recipe as recipe3, repeat as repeat3, shape as shape3, geom as geom3, t as t3, text as text2 } from "@datars/sdk";
 var DASH_SWATCHES = [void 0, [7, 4], [1.5, 3.5], [8, 3, 1.5, 3]];
 var legend = recipe3({
   id: "@datars/std/legend",
@@ -138,20 +138,29 @@ var legend = recipe3({
   params: {
     scale: t3.string("color"),
     title: t3.string(void 0, "A title above the entries (and the legend's accessible name)."),
-    dashes: t3.bool(false, "Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone.")
+    dashes: t3.bool(false, "Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone."),
+    icon: t3.string(void 0, "An icon in each entry's ink instead of a swatch (a pictogram's legend: `user`)."),
+    icons: t3.json('An icon per entry, by its value (`{ "Cars": "car" }`); entries without one keep the swatch (or `icon`).')
   },
   tokens: ["ink", "ink-2", "size.label"],
   expand(p) {
+    const map2 = p.icons && typeof p.icons === "object" ? p.icons : {};
+    const iconOf = Object.entries(map2).reduceRight((rest, [k, v]) => `(d.value == ${JSON.stringify(k)} ? ${JSON.stringify(v)} : ${rest})`, JSON.stringify(p.icon ?? ""));
+    const iconic = !!p.icon || Object.keys(map2).length > 0;
+    const mark = 'token("size.label") * 0.6 + 0.4';
     const items = repeat3({ legend: p.scale }, group3({
       semantics: { role: "legend-item", label: e3("key.name(d.label)") },
       children: [
-        // The swatch beside the label's letters, at any text size (2 and 11 px at the theme's).
+        // Dashes win over icons: a line legend says how each series is drawn.
         ...p.dashes ? DASH_SWATCHES.map((dash, k) => shape3(geom3.segment({ x1: 0, y1: e3('token("size.label") * 0.6 + 0.4'), x2: 22, y2: e3('token("size.label") * 0.6 + 0.4') }), {
           key: `swatch-${k}`,
           when: e3(`scale.${p.scale}.index(d.label) % ${DASH_SWATCHES.length} == ${k}`),
           stroke: { paint: e3("d.ink"), width: 2, cap: "round", dash }
-        })) : [shape3(geom3.rect({ x: 0, y: e3('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e3("d.ink") })],
-        text2(e3("key.name(d.label)"), [p.dashes ? 27 : 15, e3('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } })
+        })) : [
+          iconic ? icon(e3(iconOf), [5, e3(mark)], { key: "icon", size: e3('max(12, token("size.label") * 1.15)'), ink: e3("d.ink"), when: e3(`${iconOf} != ""`) }) : null,
+          shape3(geom3.rect({ x: 0, y: e3('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e3("d.ink"), when: iconic ? e3(`${iconOf} == ""`) : void 0 })
+        ],
+        text2(e3("key.name(d.label)"), [p.dashes ? 27 : iconic ? e3('max(15, 6 + max(12, token("size.label") * 1.15))') : 15, e3('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } })
       ]
     }));
     const semantics = { role: "legend", label: p.title ?? "Legend" };
@@ -271,6 +280,7 @@ var annotate = recipe3({
     connector: t3.oneOf(["line", "elbow", "curve", "none"], "line"),
     head: t3.bool(false, "An arrowhead at the point."),
     dot: t3.bool(true),
+    icon: t3.string(void 0, "An icon at the point instead of the dot (`map-pin`, `$icon.warning`): decorative \u2014 the note says what it means."),
     width: t3.number(160),
     ink: t3.ink("$ink"),
     pin: t3.bool(false, "Pinned at the point: dot, connector and text keep screen size under cameras (map callouts).")
@@ -286,7 +296,7 @@ var annotate = recipe3({
         semantics: { role: "annotation", label: p.text },
         children: [
           conn2,
-          p.dot ? shape3(geom3.circle({ cx: 0, cy: 0, r: 3 }), { key: "dot", fill: p.ink }) : null,
+          p.icon ? icon(p.icon, [0, 0], { key: "icon", size: 16, ink: p.ink }) : p.dot ? shape3(geom3.circle({ cx: 0, cy: 0, r: 3 }), { key: "dot", fill: p.ink }) : null,
           text2(p.text, [p.dx, p.dy], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: p.width, align: p.dx < 0 ? "end" : "start", baseline: p.dy < 0 ? "bottom" : "top" }, halo: ["$paper", 3] })
         ]
       });
@@ -310,7 +320,7 @@ var annotate = recipe3({
       semantics: { role: "annotation", label: p.text },
       children: [
         conn,
-        p.dot ? shape3(geom3.circle({ cx: x, cy: y, r: 3 }), { key: "dot", fill: p.ink }) : null,
+        p.icon ? icon(p.icon, [x, y], { key: "icon", size: 16, ink: p.ink }) : p.dot ? shape3(geom3.circle({ cx: x, cy: y, r: 3 }), { key: "dot", fill: p.ink }) : null,
         // Kept on the canvas: wrapped to the room it has before the edge, else nudged in.
         text2(p.text, [tx, ty], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: e3(W), align, contain: "wrap", baseline }, halo: ["$paper", 3] })
       ]
@@ -2445,6 +2455,110 @@ var waffle = recipe9({
     });
   }
 });
+var pictogram = recipe9({
+  id: "@datars/std/pictogram",
+  doc: "A pictogram (isotype): one icon per unit \u2014 per person, per thousand tonnes (`per`) \u2014 in a row per category with its name and value (`rows`), or filling a grid like a waffle (`grid`). Icons come from the default set (`user`, `car`, `tree-pine`) or a theme token, one for all or one per category (`icons`); every unit is an instance of one icon, so thousands draw as one node. Units are keyed (category, Unit i) as waffle's are, so a bar chart splits into its icons and back.",
+  params: {
+    data: t9.table(),
+    value: t9.field(),
+    category: t9.field(),
+    icon: t9.string("user", "The icon every unit draws (a default-set name, `lucide:\u2026`, `$icon.\u2026`, a `.svg` file)."),
+    icons: t9.json('An icon per category (`{ "Cars": "car", "Bikes": "bike" }`); others draw `icon`.'),
+    per: t9.number(1, "What one icon stands for (values are rounded to whole icons)."),
+    layout: t9.oneOf(["rows", "grid"], "rows", "`rows`: a row per category, labelled; `grid`: every unit in one grid (`columns` \xD7 `rows`), coloured by category."),
+    columns: t9.number(10, "`grid`: icons across."),
+    rows: t9.number(10, "`grid`: icons down."),
+    color: t9.bool(true, "Colour by category (`$categorical`); off, every icon in `ink`."),
+    ink: t9.ink("$mark", "The icons' ink without `color`."),
+    format: t9.string(",.0f", "The value's number format (rows)."),
+    unit: t9.string(void 0, "After the value (` people`)."),
+    gap: t9.number(0.18, "Space between icons, as a share of their size."),
+    legend: t9.bool(true, "`grid`: a legend of the categories (with their icons) below."),
+    note: t9.bool(true, "`rows` with `per`: say what one icon stands for under the rows (off when the page says it).")
+  },
+  tokens: ["mark", "ink", "ink-2", "muted", "size.label", "categorical"],
+  expand(p, cx) {
+    const per = p.per > 0 ? p.per : 1;
+    const icons = p.icons && typeof p.icons === "object" ? p.icons : {};
+    const u = cx.table("pictogram", p.data, op7.derive("__icons", e9(`round(${fld(p.value)} / ${per})`)), op7.units({ value: "__icons" }));
+    const fill = p.color ? e9(`scale.color(${fld(p.category)})`) : p.ink;
+    const color = p.color ? { color: { type: "categorical", domain: { data: p.data, field: p.category }, range: "$categorical" } } : {};
+    const kinds = [.../* @__PURE__ */ new Set([p.icon, ...Object.values(icons)])];
+    const nodes = (x2, y2, r2) => kinds.map((ic, i) => {
+      const mine = Object.keys(icons).filter((k) => icons[k] === ic);
+      const others = Object.keys(icons).filter((k) => icons[k] !== ic);
+      const keep = ic === p.icon ? others.map((k) => `${fld(p.category)} != ${JSON.stringify(k)}`).join(" && ") : mine.map((k) => `${fld(p.category)} == ${JSON.stringify(k)}`).join(" || ");
+      const from = keep ? cx.table(`pictogram-${i}`, u, op7.filter(e9(keep))) : u;
+      return instances3({ key: `icons-${i}`, from, icon: ic, x: e9(x2), y: e9(y2), r: e9(r2), fill });
+    });
+    const said = () => e9(`key.name(${fld(p.category)}) + ": " + format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}${per !== 1 ? ` + " (one icon: " + format(${per}, ",~g") + ")"` : ""}`);
+    if (p.layout === "grid") {
+      const g = cx.table("pictogram-grid", u, op7.waffle({ columns: p.columns, rows: p.rows, width: e9("min(box.w, box.h)"), height: e9("min(box.w, box.h)"), gap: 0 }));
+      const off2 = "(box.w - min(box.w, box.h)) / 2";
+      const k = (1 - Math.min(0.6, Math.max(0, p.gap))) / 2;
+      const gridNodes = kinds.map((ic, i) => {
+        const mine = Object.keys(icons).filter((key) => icons[key] === ic);
+        const others = Object.keys(icons).filter((key) => icons[key] !== ic);
+        const keep = ic === p.icon ? others.map((key) => `${fld(p.category)} != ${JSON.stringify(key)}`).join(" && ") : mine.map((key) => `${fld(p.category)} == ${JSON.stringify(key)}`).join(" || ");
+        const from = keep ? cx.table(`pictogram-grid-${i}`, g, op7.filter(e9(keep))) : g;
+        return instances3({ key: `icons-${i}`, from, icon: ic, x: e9(`d.x + d.w / 2 + ${off2}`), y: e9("d.y + d.h / 2 + (box.h - min(box.w, box.h)) / 2"), r: e9(`min(d.w, d.h) * ${k.toFixed(3)}`), fill });
+      });
+      const many = Object.keys(icons).length > 0;
+      return group9({
+        key: "pictogram",
+        scales: color,
+        semantics: { role: "group", label: "Pictogram" },
+        layout: { type: "rows", gap: 10 },
+        children: [
+          group9({ key: "grid", size: { h: "fill" }, children: [
+            ...gridNodes,
+            // What each category stands for, read once (not unit by unit).
+            repeat8(p.data, group9({ key: e9(fld(p.category)), semantics: { role: "series", label: said(), value: e9(fld(p.value)) }, children: [] }))
+          ] }),
+          p.legend !== false && p.color ? legend(many ? { scale: "color", icons } : { scale: "color", icon: p.icon }, { size: { h: "auto" } }) : null
+        ]
+      });
+    }
+    const labelW = "min(150, max(64, box.w * 0.24))";
+    const valueW = 'token("size.label") * 4';
+    const n = `max(1, table.count(${JSON.stringify(p.data)}))`;
+    const most = `max(1, table.max(${JSON.stringify(u)}, "__unit") + 1)`;
+    const avail = `max(20, box.w - ${labelW} - ${valueW} - 14)`;
+    const noted = per !== 1 && p.note !== false;
+    const room = `(box.h - ${noted ? '(token("size.small") * 2 + 8)' : 0})`;
+    const sized = (k) => `min(${avail} / ceil(${most} / ${k}), 40, ${room} / (${n} * ${(k * 1.15 + 0.4).toFixed(2)}))`;
+    const lines = `(${sized(2)} > ${sized(1)} * 1.5 ? 2 : 1)`;
+    const best = `(${lines} == 2 ? ${sized(2)} : ${sized(1)})`;
+    const perLine = `max(1, ceil(${most} / ${lines}))`;
+    const step = `max(4, ${best})`;
+    const rowH = `max(${lines} * ${step} * 1.15, token("size.label") * 2) + ${step} * 0.4`;
+    const r = `${step} * ${((1 - Math.min(0.6, Math.max(0, p.gap))) / 2).toFixed(3)}`;
+    const off = `max(0, (box.h - ${n} * (${rowH}) - ${noted ? '(token("size.small") * 2 + 8)' : 0}) / 2)`;
+    const top = `scale.row(${fld(p.category)}) + ${step} * 0.2`;
+    const line2 = `floor(d.__unit / ${perLine})`;
+    const x = `${labelW} + 8 + (d.__unit - ${line2} * ${perLine} + 0.5) * ${step}`;
+    const y = `${top} + (${line2} + 0.5) * ${step} * 1.15`;
+    const own = `max(1, round(${fld(p.value)} / ${per}))`;
+    const last = `floor((${own} - 1) / ${perLine})`;
+    return group9({
+      key: "pictogram",
+      scales: { ...color, row: { type: "band", domain: { data: p.data, field: p.category }, range: [`=${off}`, `=${off} + ${n} * (${rowH})`], padding: 0 } },
+      semantics: { role: "group", label: "Pictogram" },
+      children: [
+        ...nodes(x, y, r),
+        repeat8(p.data, group9({
+          key: e9(fld(p.category)),
+          semantics: { role: "series", label: said(), value: e9(fld(p.value)) },
+          children: [
+            text8(e9(`key.name(${fld(p.category)})`), [e9(labelW), e9(`${top} + ${step} * 0.575`)], { key: "name", style: { size: "$size.label", weight: 600, ink: "$ink", align: "end", baseline: "middle", maxWidth: e9(labelW) } }),
+            text8(e9(`format(${fld(p.value)}, ${JSON.stringify(p.format)})${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(`${labelW} + 14 + (${own} - ${last} * ${perLine}) * ${step}`), e9(`${top} + (${last} + 0.5) * ${step} * 1.15`)], { key: "value", style: { size: "$size.label", ink: "$ink-2", baseline: "middle" } })
+          ]
+        })),
+        noted ? text8(e9(`"One icon: " + format(${per}, ",~g")${p.unit ? ` + ${JSON.stringify(p.unit)}` : ""}`), [e9(labelW + " + 8"), e9('scale.row.max() + token("size.small") * 0.8 + 8')], { key: "per", when: e9('scale.row.max() + token("size.small") * 1.4 + 8 <= box.h'), style: { size: "$size.small", ink: "$muted", baseline: "middle" } }) : null
+      ]
+    });
+  }
+});
 var hemicycle = recipe9({
   id: "@datars/std/hemicycle",
   doc: "A parliament: one dot per seat on concentric arcs, grouped by party left to right. Seats are keyed (party, Unit i).",
@@ -4488,7 +4602,10 @@ var gauge = recipe16({
     suffix: t16.string(void 0, "After it (`%`, ` km/h`)."),
     bands: t16.json("Upper bounds of coloured ranges along the arc, ascending (`[60, 85, 100]`); with bands the value shows as a needle."),
     inks: t16.json('The bands\' inks, in order (default: from light to dark `$ink`; status inks like `["$positive", "$highlight", "$negative"]` read as good to bad).'),
+    names: t16.json('The bands\' names, in order (`["Fear", "Neutral", "Greed"]`): written in each band, along it, and said with the value. A name too long for its band is left out.'),
+    bandText: t16.oneOf(["curved", "rotated"], "curved", "Band names follow the arc (`curved`) or sit straight, turned to it (`rotated`)."),
     needle: t16.bool(void 0, "A needle instead of a filled arc (default: with bands)."),
+    needleStyle: t16.oneOf(["wedge", "line", "arrow"], "wedge", "The needle: a tapered wedge, a line, or a line with an arrowhead."),
     arc: t16.number(240, "The dial's sweep in degrees (180: a half circle; up to 300)."),
     ink: t16.ink("$mark", "The fill's ink (without bands)."),
     thickness: t16.number(0.22, "The arc's thickness, as a share of its radius.")
@@ -4496,6 +4613,7 @@ var gauge = recipe16({
   tokens: ["mark", "ink", "ink-2", "muted", "paper", "size.label", "size.small"],
   expand(p) {
     const sweep = Math.min(300, Math.max(60, p.arc || 240)) * Math.PI / 180;
+    const names = Array.isArray(p.names) ? p.names.map(String) : [];
     const half = sweep / 2;
     const [lo, hi] = [p.min ?? 0, p.max ?? 100];
     const v = vsrc(p.value, "null");
@@ -4511,7 +4629,7 @@ var gauge = recipe16({
     const R = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - (${ends}) - (${lab})) / ${(1 + extent).toFixed(4)}) - 2)`;
     const cy = `((box.h - (${ends}) - (${lab}) - ${R} * ${(1 + extent).toFixed(4)}) / 2 + ${R})`;
     const cxs = "box.w / 2";
-    const th = Math.min(0.6, Math.max(0.05, p.thickness ?? 0.22));
+    const th = Math.min(0.6, Math.max(0.05, p.thickness ?? (names.length ? 0.3 : 0.22)));
     const r0 = `${R} * ${1 - th}`;
     const bands = Array.isArray(p.bands) ? p.bands : [];
     const inks = Array.isArray(p.inks) ? p.inks : [];
@@ -4523,10 +4641,30 @@ var gauge = recipe16({
     });
     const valueText = affixed3(v, p.format, p.prefix, p.suffix);
     const counting = !(p.prefix || p.suffix);
-    const said = `${q2(p.label ? `${p.label}: ` : "")} + ${valueText} + ${q2(` (${lo} to ${hi})`)}`;
+    const bandName = names.length && bands.length ? bands.slice(0, names.length).reduceRight((rest, b, i) => `(${v} <= ${b} ? ${q2(names[i])} : ${rest})`, q2(names[Math.min(names.length, bands.length) - 1])) : "";
+    const said = `${q2(p.label ? `${p.label}: ` : "")} + ${valueText}${bandName ? ` + ", " + ${bandName}` : ""} + ${q2(` (${lo} to ${hi})`)}`;
+    const rm = `${R} * ${(1 - th / 2).toFixed(4)}`;
+    const nameSize = `min(token("size.small"), ${R} * ${(th * 0.5).toFixed(4)})`;
+    const bandNames = names.slice(0, bands.length).map((name, i) => {
+      const f0 = i === 0 ? 0 : (bands[i - 1] - lo) / (hi - lo || 1);
+      const f1 = (bands[i] - lo) / (hi - lo || 1);
+      const [c0, c1] = [Math.max(0, Math.min(1, f0)), Math.max(0, Math.min(1, f1))];
+      const ink = inks[i] ?? `$ink@${[0.12, 0.22, 0.34, 0.46, 0.58][Math.min(i, 4)]}`;
+      const span2 = (c1 - c0) * sweep;
+      const fits = `measure(${q2(name)}, ${nameSize}, 600) < ${rm} * ${(span2 * 0.86).toFixed(4)}`;
+      const style = { size: e16(nameSize), weight: 600, ink: `on(${ink})`, align: "middle", baseline: "middle" };
+      if (p.bandText === "rotated") {
+        const am = -half + (c0 + c1) / 2 * sweep;
+        const turn = (Math.abs(am) > Math.PI / 2 ? am + Math.PI : am) * 180 / Math.PI;
+        return text14(name, [e16(`${cxs} + (${rm}) * ${Math.sin(am).toFixed(6)}`), e16(`${cy} - (${rm}) * ${Math.cos(am).toFixed(6)}`)], { key: `name-${i}`, when: e16(fits), rotate: Number(turn.toFixed(4)), style });
+      }
+      return text14(name, [0, 0], { key: `name-${i}`, when: e16(fits), style, path: { arc: [e16(cxs), e16(cy), e16(rm), e16(ang(String(c0))), e16(ang(String(c1)))] } });
+    });
     const deg = `(${ang(frac)} * ${180 / Math.PI} / 2)`;
+    const reach = names.length ? 1 - th - 0.04 : 0.92;
+    const hand = p.needleStyle === "line" ? shape15(geom15.segment({ x1: 0, y1: 0, x2: 0, y2: e16(`-(${R}) * ${reach.toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5, cap: "round" }, semantics: { role: "decoration" } }) : p.needleStyle === "arrow" ? shape15(geom15.segment({ x1: 0, y1: 0, x2: 0, y2: e16(`-(${R}) * ${(reach - 0.02).toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5 }, markers: { end: { type: "arrow", size: 11 } }, semantics: { role: "decoration" } }) : shape15(geom15.path(e16(`\`M -3 0 L 0 \${-(${R}) * ${reach.toFixed(4)}} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } });
     const needleNode = group15({ key: "needle", transform: { translate: [e16(cxs), e16(cy)], rotate: e16(deg) }, children: [group15({ key: "turn", transform: { rotate: e16(deg) }, children: [
-      shape15(geom15.path(e16(`\`M -3 0 L 0 \${-(${R}) * 0.92} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } }),
+      hand,
       shape15(geom15.circle({ cx: 0, cy: 0, r: 5 }), { key: "hub", fill: "$ink", stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "decoration" } })
     ] })] });
     const vSize = `clamp(min(${R} * ${vS}, ${needle ? `${R} * 1.3` : `${r0} * 1.5`} * 10 / max(1, measure(${counting ? `format(${v}, ${q2(p.format)})` : valueText}, 10, 600))), 11, 56)`;
@@ -4541,6 +4679,7 @@ var gauge = recipe16({
         group15({ key: "dial", declutter: true, children: [
           arc("track", "0", "1", bands.length ? "$ink@0.06" : "$ink@0.1"),
           ...bandArcs,
+          ...bandNames,
           needle ? null : arc("fill", "0", frac, p.ink, { semantics: { role: "datum", label: e16(said), value: e16(v) }, pickable: true }),
           needle ? needleNode : null,
           text14(counting ? "" : e16(valueText), [e16(cxs), e16(vy)], { key: "value", number: counting ? { value: e16(v), format: p.format } : void 0, style: { size: e16(vSize), weight: 600, ink: "$ink", align: "middle", baseline: needle ? "top" : "alphabetic" }, semantics: needle ? { role: "datum", label: e16(said), value: e16(v) } : void 0, pickable: needle || void 0 }),
@@ -5219,6 +5358,7 @@ export {
   network,
   ohlc,
   pareto,
+  pictogram,
   pie,
   plot,
   point,

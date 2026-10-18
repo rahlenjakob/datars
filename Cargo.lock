@@ -832,6 +832,7 @@ dependencies = [
  "datars-geo",
  "datars-geo-build",
  "datars-headless",
+ "datars-icon",
  "datars-ir",
  "datars-math",
  "datars-render",
@@ -841,6 +842,7 @@ dependencies = [
  "datars-text",
  "datars-theme",
  "flate2",
+ "png",
  "read-fonts",
  "serde_json",
  "write-fonts",
@@ -865,6 +867,7 @@ dependencies = [
  "datars-devtools",
  "datars-engine",
  "datars-headless",
+ "datars-icon",
  "datars-ir",
  "datars-math",
  "datars-render-cpu",
@@ -926,6 +929,7 @@ dependencies = [
  "datars-expr",
  "datars-geo",
  "datars-graph",
+ "datars-icon",
  "datars-ir",
  "datars-layout",
  "datars-math",
@@ -936,6 +940,7 @@ dependencies = [
  "datars-text",
  "datars-theme",
  "indexmap",
+ "png",
  "rustc-hash",
  "serde",
  "serde_json",
@@ -997,6 +1002,7 @@ dependencies = [
  "datars-bundle",
  "datars-color",
  "datars-engine",
+ "datars-icon",
  "datars-ir",
  "datars-math",
  "datars-motion",
@@ -1045,6 +1051,16 @@ dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
+]
+
+[[package]]
+name = "datars-icon"
+version = "0.1.0"
+dependencies = [
+ "datars-math",
+ "datars-scene",
+ "datars-theme",
+ "serde_json",
 ]
 
 [[package]]
@@ -1109,7 +1125,9 @@ dependencies = [
  "datars-math",
  "datars-scene",
  "datars-theme",
+ "png",
  "serde",
+ "zune-jpeg",
 ]
 
 [[package]]
@@ -4649,6 +4667,21 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
+
+[[package]]
+name = "zune-core"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d56377fd46368984a170bc5aac5567e52ca5da874caa60bea39fcbca78fb658b"
+
+[[package]]
+name = "zune-jpeg"
+version = "0.5.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "27bc9d5b815bc103f142aa054f561d9187d191692ec7c2d1e2b4737f8dbd7296"
+dependencies = [
+ "zune-core",
+]
 
 [[package]]
 name = "zvariant"

@@ -102,6 +102,7 @@ fn line(n: &Node) -> String {
             let proto = match &i.proto {
                 Proto::Symbol { symbol } => format!("{symbol:?}").to_lowercase(),
                 Proto::Rect => "rect".into(),
+                Proto::Icon { icon } => format!("icon {}", icon.name),
             };
             line += &format!("{} instances {proto} ×{}", n.key, i.len());
         }

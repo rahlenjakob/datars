@@ -699,3 +699,60 @@ fn pinned_frame_hash() {
     assert_eq!((p.width, p.height), (240, 180));
     assert_eq!(p.hash(), 0x39a7_1296_444a_349f, "frame hash changed: {:#018x}", p.hash());
 }
+
+#[test]
+fn icon_instances_and_pictures() {
+    use datars_scene::{IconGlyph, IconInk, IconLayer, IconStroke};
+    use std::sync::Arc;
+    let red = Color::rgb8(255, 0, 0);
+    let blue = Color::rgb8(0, 0, 255);
+    let glyph = IconGlyph {
+        name: Arc::from("test:square"),
+        layers: vec![
+            IconLayer { path: Arc::new(PathData::rect(Rect::new(-1.0, -1.0, 2.0, 2.0))), fill: Some(IconInk::Current), rule: FillRule::NonZero, stroke: None, opacity: 1.0 },
+            IconLayer { path: Arc::new(PathData::polyline(&[Vec2::new(-1.0, 1.0), Vec2::new(1.0, -1.0)])), fill: None, rule: FillRule::NonZero, stroke: Some(IconStroke { ink: IconInk::Slot(0), width: 0.2, cap: datars_scene::Cap::Butt, join: datars_scene::Join::Miter }), opacity: 1.0 },
+        ],
+        inks: vec![datars_theme::Ink::Color(blue)],
+        aspect: 1.0,
+    };
+    let inst = datars_render::InstancesOp {
+        proto: datars_scene::Proto::Icon { icon: Arc::new(glyph) },
+        xf: Affine::IDENTITY,
+        x: vec![20.0, 60.0].into(),
+        y: vec![20.0, 20.0].into(),
+        size: vec![10.0, 10.0].into(),
+        w: None,
+        h: None,
+        fill: vec![red, red].into(),
+        opacity: vec![1.0, 1.0].into(),
+        alpha: 1.0,
+        stroke: None,
+        size_scale: 1.0,
+    };
+    let mut png = Vec::new();
+    {
+        let mut e = png::Encoder::new(&mut png, 2, 1);
+        e.set_color(png::ColorType::Rgba);
+        e.write_header().unwrap().write_image_data(&[255, 0, 0, 255, 0, 255, 0, 255]).unwrap();
+    }
+    let raster = Arc::new(datars_render::Raster::decode(&png).unwrap());
+    let list = DisplayList {
+        width: 80.0,
+        height: 60.0,
+        background: Color::WHITE,
+        ops: vec![
+            datars_render::Op::Instances(inst.clone()),
+            datars_render::Op::Image { asset: Arc::from("p.png"), rect: Rect::new(0.0, 40.0, 40.0, 20.0), xf: Affine::IDENTITY, opacity: 1.0, image: Some(raster) },
+        ],
+    };
+    let px = render(&list, &NoGlyphs, 1.0);
+    assert_eq!(px.pixel(14, 14), [255, 0, 0, 255], "the square in the instance's colour");
+    assert!(px.pixel(20, 20)[2] > 150, "the diagonal in slot 0's ink: {:?}", px.pixel(20, 20));
+    assert_eq!(px.pixel(40, 20), [255, 255, 255, 255]);
+    assert_eq!(px.pixel(2, 50), [255, 0, 0, 255], "the picture's first texel");
+    assert_eq!(px.pixel(37, 50), [0, 255, 0, 255], "and its last");
+    // The same as drawing its layers one by one.
+    let by_hand = DisplayList { ops: inst.icon_ops(), ..list.clone() };
+    let a = render(&DisplayList { ops: vec![datars_render::Op::Instances(inst)], ..list.clone() }, &NoGlyphs, 1.0);
+    assert_eq!(a.hash(), render(&by_hand, &NoGlyphs, 1.0).hash());
+}

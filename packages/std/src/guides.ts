@@ -1,8 +1,8 @@
 // Guides and annotations: legend, title, rule, span, annotate.
 
-import { e, group, recipe, repeat, shape, geom, t, text, Prop, Template } from "@datars/sdk";
+import { e, group, icon, recipe, repeat, shape, geom, t, text, Prop, Template } from "@datars/sdk";
 
-export interface LegendParams { scale: string; title: string; dashes: boolean }
+export interface LegendParams { scale: string; title: string; dashes: boolean; icon: string; icons: Record<string, string> }
 
 /** The dash patterns `line({ dashes: true })` gives series (kept in step with marks.ts). */
 const DASH_SWATCHES: (number[] | undefined)[] = [undefined, [7, 4], [1.5, 3.5], [8, 3, 1.5, 3]];
@@ -13,19 +13,29 @@ export const legend = recipe<LegendParams>({
   params: {
     scale: t.string("color"), title: t.string(undefined, "A title above the entries (and the legend's accessible name)."),
     dashes: t.bool(false, "Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone."),
+    icon: t.string(undefined, "An icon in each entry's ink instead of a swatch (a pictogram's legend: `user`)."),
+    icons: t.json("An icon per entry, by its value (`{ \"Cars\": \"car\" }`); entries without one keep the swatch (or `icon`).") as never,
   },
   tokens: ["ink", "ink-2", "size.label"],
   expand(p) {
+    const map = p.icons && typeof p.icons === "object" ? p.icons : {};
+    const iconOf = Object.entries(map).reduceRight((rest, [k, v]) => `(d.value == ${JSON.stringify(k)} ? ${JSON.stringify(v)} : ${rest})`, JSON.stringify(p.icon ?? ""));
+    const iconic = !!p.icon || Object.keys(map).length > 0;
+    // The swatch (or icon) beside the label's letters, at any text size (2 and 11 px at the theme's).
+    const mark = 'token("size.label") * 0.6 + 0.4';
     const items = repeat({ legend: p.scale }, group({
       semantics: { role: "legend-item", label: e("key.name(d.label)") },
       children: [
-        // The swatch beside the label's letters, at any text size (2 and 11 px at the theme's).
+        // Dashes win over icons: a line legend says how each series is drawn.
         ...(p.dashes
           ? DASH_SWATCHES.map((dash, k) => shape(geom.segment({ x1: 0, y1: e('token("size.label") * 0.6 + 0.4'), x2: 22, y2: e('token("size.label") * 0.6 + 0.4') }), {
             key: `swatch-${k}`, when: e(`scale.${p.scale}.index(d.label) % ${DASH_SWATCHES.length} == ${k}`), stroke: { paint: e("d.ink"), width: 2, cap: "round", dash },
           }))
-          : [shape(geom.rect({ x: 0, y: e('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e("d.ink") })]),
-        text(e("key.name(d.label)"), [p.dashes ? 27 : 15, e('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } }),
+          : [
+            iconic ? icon(e(iconOf), [5, e(mark)], { key: "icon", size: e('max(12, token("size.label") * 1.15)'), ink: e("d.ink"), when: e(`${iconOf} != ""`) }) : null,
+            shape(geom.rect({ x: 0, y: e('token("size.label") * 0.6 - 4.6'), w: 10, h: 10, r: 2 }), { fill: e("d.ink"), when: iconic ? e(`${iconOf} == ""`) : undefined }),
+          ]),
+        text(e("key.name(d.label)"), [p.dashes ? 27 : iconic ? e('max(15, 6 + max(12, token("size.label") * 1.15))') : 15, e('token("size.label")')], { style: { size: "$size.label", ink: "$ink-2" } }),
       ],
     }));
     const semantics = { role: "legend" as const, label: p.title ?? "Legend" };
@@ -158,14 +168,16 @@ function valueName(v: Prop): string {
   return String(v);
 }
 
-export interface AnnotateParams { x: Prop; y: Prop; text: string; dx: number; dy: number; connector: "line" | "elbow" | "curve" | "none"; head: boolean; dot: boolean; width: number; ink: string; pin: boolean }
+export interface AnnotateParams { x: Prop; y: Prop; text: string; dx: number; dy: number; connector: "line" | "elbow" | "curve" | "none"; head: boolean; dot: boolean; icon: string; width: number; ink: string; pin: boolean }
 
 export const annotate = recipe<AnnotateParams>({
   id: "@datars/std/annotate",
   doc: "A callout: text offset from a point (in plot coordinates via scales, or px), with a connector and a dot. On a line's point it moves with the line in transitions. Keyed (`annotate({…}, { key: \"note\" })`), one note carries across steps: from point to point along the line it sits on.",
   params: {
     x: t.prop("x position (expression, e.g. scale.x('SD'))"), y: t.prop(), text: t.string(""),
-    dx: t.number(40), dy: t.number(-36), connector: t.oneOf(["line", "elbow", "curve", "none"] as const, "line"), head: t.bool(false, "An arrowhead at the point."), dot: t.bool(true), width: t.number(160), ink: t.ink("$ink"),
+    dx: t.number(40), dy: t.number(-36), connector: t.oneOf(["line", "elbow", "curve", "none"] as const, "line"), head: t.bool(false, "An arrowhead at the point."), dot: t.bool(true),
+    icon: t.string(undefined, "An icon at the point instead of the dot (`map-pin`, `$icon.warning`): decorative — the note says what it means."),
+    width: t.number(160), ink: t.ink("$ink"),
     pin: t.bool(false, "Pinned at the point: dot, connector and text keep screen size under cameras (map callouts)."),
   },
   tokens: ["ink", "paper", "size.label"],
@@ -180,7 +192,7 @@ export const annotate = recipe<AnnotateParams>({
         semantics: { role: "annotation", label: p.text },
         children: [
           conn,
-          p.dot ? shape(geom.circle({ cx: 0, cy: 0, r: 3 }), { key: "dot", fill: p.ink }) : null,
+          p.icon ? icon(p.icon, [0, 0], { key: "icon", size: 16, ink: p.ink }) : p.dot ? shape(geom.circle({ cx: 0, cy: 0, r: 3 }), { key: "dot", fill: p.ink }) : null,
           text(p.text, [p.dx, p.dy], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: p.width, align: p.dx < 0 ? "end" : "start", baseline: p.dy < 0 ? "bottom" : "top" }, halo: ["$paper", 3] }),
         ],
       });
@@ -213,7 +225,7 @@ export const annotate = recipe<AnnotateParams>({
       semantics: { role: "annotation", label: p.text },
       children: [
         conn,
-        p.dot ? shape(geom.circle({ cx: x, cy: y, r: 3 }), { key: "dot", fill: p.ink }) : null,
+        p.icon ? icon(p.icon, [x, y], { key: "icon", size: 16, ink: p.ink }) : p.dot ? shape(geom.circle({ cx: x, cy: y, r: 3 }), { key: "dot", fill: p.ink }) : null,
         // Kept on the canvas: wrapped to the room it has before the edge, else nudged in.
         text(p.text, [tx, ty], { key: "text", style: { size: "$size.label", weight: 600, ink: p.ink, maxWidth: e(W), align, contain: "wrap", baseline }, halo: ["$paper", 3] }),
       ],

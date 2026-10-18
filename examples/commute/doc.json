@@ -1,0 +1,207 @@
+{
+ "datars": 1,
+ "id": "commute",
+ "title": "How Fernmouth gets to work",
+ "description": "A fictional city's commuters by mode: 41,000 by car, 23,000 by bus, 17,000 by train, 12,000 by bike and 7,000 on foot.",
+ "size": {
+  "width": 720,
+  "height": 440
+ },
+ "locale": "en",
+ "data": {
+  "trips": {
+   "values": {
+    "mode": [
+     "Car",
+     "Bus",
+     "Train",
+     "Bike",
+     "Walk"
+    ],
+    "thousands": [
+     41,
+     23,
+     17,
+     12,
+     7
+    ]
+   },
+   "key": [
+    "mode"
+   ]
+  }
+ },
+ "signals": {
+  "shape": {
+   "type": "str",
+   "default": "bars"
+  }
+ },
+ "scene": {
+  "kind": "group",
+  "key": "root",
+  "layout": {
+   "type": "stack",
+   "padding": [
+    16,
+    20,
+    12,
+    12
+   ]
+  },
+  "children": [
+   {
+    "kind": "group",
+    "key": "page",
+    "layout": {
+     "type": "rows",
+     "gap": 8
+    },
+    "children": [
+     {
+      "kind": "group",
+      "key": "body",
+      "size": {
+       "h": "fill"
+      },
+      "children": [
+       {
+        "kind": "use",
+        "recipe": "@datars/std/plot",
+        "params": {
+         "data": "trips",
+         "x": "mode",
+         "y": "thousands",
+         "color": "mode",
+         "title": "Commuters by mode (thousands)",
+         "children": [
+          {
+           "kind": "use",
+           "recipe": "@datars/std/bar",
+           "params": {
+            "labels": true
+           }
+          }
+         ]
+        },
+        "key": "chart",
+        "when": {
+         "expr": "shape == \"bars\""
+        }
+       },
+       {
+        "kind": "use",
+        "recipe": "@datars/std/pictogram",
+        "params": {
+         "data": "trips",
+         "value": "thousands",
+         "category": "mode",
+         "icons": {
+          "Car": "car",
+          "Bus": "bus",
+          "Train": "train-front",
+          "Bike": "bike",
+          "Walk": "footprints"
+         },
+         "per": 2,
+         "unit": "k",
+         "note": false
+        },
+        "key": "chart",
+        "when": {
+         "expr": "shape == \"icons\""
+        }
+       },
+       {
+        "kind": "use",
+        "recipe": "@datars/std/pictogram",
+        "params": {
+         "data": "trips",
+         "value": "thousands",
+         "category": "mode",
+         "icons": {
+          "Car": "car",
+          "Bus": "bus",
+          "Train": "train-front",
+          "Bike": "bike",
+          "Walk": "footprints"
+         },
+         "layout": "grid",
+         "columns": 10,
+         "rows": 10
+        },
+        "key": "chart",
+        "when": {
+         "expr": "shape == \"grid\""
+        }
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "use",
+    "recipe": "@datars/std/card",
+    "params": {
+     "title": {
+      "expr": "narration.title"
+     },
+     "text": {
+      "expr": "narration.text"
+     },
+     "width": 230
+    },
+    "key": "caption"
+   }
+  ]
+ },
+ "motion": {
+  "rules": [
+   {
+    "matcher": "by-key",
+    "select": {
+     "role": "datum"
+    }
+   }
+  ]
+ },
+ "program": {
+  "preset": "story",
+  "states": [
+   {
+    "name": "bars",
+    "set": {
+     "shape": "bars"
+    },
+    "narration": {
+     "title": "41,000",
+     "text": "drive to work, more than ride the bus and the train together."
+    }
+   },
+   {
+    "name": "icons",
+    "set": {
+     "shape": "icons"
+    },
+    "narration": {
+     "title": "One icon,",
+     "text": "two thousand commuters: each bar is its people."
+    }
+   },
+   {
+    "name": "grid",
+    "set": {
+     "shape": "grid"
+    },
+    "narration": {
+     "title": "A hundred",
+     "text": "thousand trips a morning, an icon each."
+    }
+   }
+  ],
+  "drivers": [
+   "steps",
+   "keys"
+  ]
+ }
+}

@@ -17,6 +17,7 @@ datars-math.workspace = true
 datars-color.workspace = true
 datars-theme.workspace = true
 datars-scene.workspace = true
+datars-icon.workspace = true
 datars-render.workspace = true
 datars-text.workspace = true
 datars-expr.workspace = true
@@ -39,3 +40,16 @@ sandbox = ["dep:datars-sandbox"]
 # Start every engine with the default family (Inter) compiled in. Without it (the web runtime),
 # faces come from bundle font chunks and `font:` requests the host answers, like any font.
 bundled-fonts = ["datars-text/bundled-fonts"]
+# Read SVG markup (icon files, URLs, inline icons) at runtime: the tools and native hosts'
+# development mode. Without it (the web runtime) icons arrive read — in a bundle's icons chunk, a
+# document's `icons` (`datars dev`), or the default set's compact files — and markup is refused.
+svg = ["datars-icon/svg"]
+# Decode pictures in Rust (the tools, headless, the desktop host). Without them the host decodes
+# with the platform's decoder and hands in pixels (`Request::Decode`, `Engine::provide_pixels`).
+png = ["datars-render/png"]
+jpeg = ["datars-render/jpeg"]
+
+[dev-dependencies]
+datars-icon = { workspace = true, features = ["bundled"] }
+datars-render = { workspace = true, features = ["png"] }
+png.workspace = true

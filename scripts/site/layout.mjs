@@ -26,7 +26,7 @@ export const FEATURES = [
  * open, and joins the reading order (previous / next) either way. */
 export const DOCS_NAV = [
   ["Start here", [["", "Overview"], ["getting-started", "Getting started"], ["react", "React, Vite and Next.js"], ["python", "Python and Jupyter"], ["concepts", "Core concepts"]]],
-  ["Write charts", [["documents", "Documents"], ["data", "Data and tables"], ["charts", "Charts, scales and marks"], ["expressions", "Expressions"], ["interaction", "Signals and interaction"], ["stories", "States and stories"], ["motion", "Motion"]]],
+  ["Write charts", [["documents", "Documents"], ["data", "Data and tables"], ["charts", "Charts, scales and marks"], ["icons", "Icons, pictures and curved text"], ["expressions", "Expressions"], ["interaction", "Signals and interaction"], ["stories", "States and stories"], ["motion", "Motion"]]],
   ["Style", [["theming", "Themes and brands"]]],
   ["Maps and big data", [["maps", "Maps"], ["big-data", "Big data"]]],
   ["Extend", [["custom-recipes", "Custom recipes and scenes"]]],

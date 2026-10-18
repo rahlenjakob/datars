@@ -72,3 +72,14 @@
   .fam-chart > .caption p, .prim > .caption p { min-height: calc(3 * 1.5em); }
   .prim-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* The icon lab: the pictogram's controls over it, the dial's slider. */
+.icons-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 18px; align-items: start; margin-top: 18px; }
+.icons-controls { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 10px; }
+.icons-controls .seg { flex: 0 1 auto; }
+.icons-controls .seg button { padding: 6px 10px; }
+.icons-slider { display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 8px; }
+.icons-slider span { flex: none; min-width: 6.5em; }
+.icons-slider input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.icons-lab pre { margin-top: 18px; }
+@media (max-width: 860px) { .icons-grid { grid-template-columns: minmax(0, 1fr); } }

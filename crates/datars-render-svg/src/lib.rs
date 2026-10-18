@@ -20,7 +20,12 @@
 //!   run's group scales it — text-heavy charts repeat digits and letters constantly.
 //!   A halo is the same outlines stroked (round joins) underneath. The run's source text becomes
 //!   the group's `aria-label` (and `role="img"`), so the export stays readable by assistive tech.
-//! - `Image` → an empty `<g data-image="…"/>` marker: images aren't supported yet.
+//! - Icon `Instances` → the icon once in `<defs>` (its layers in glyph units, `currentColor`
+//!   where it takes the instance's colour) and a `<use>` per instance (`color`, `opacity`): a
+//!   pictogram of a thousand people is one drawing and a thousand short lines.
+//! - `Image` → `<image>` with the picture's own PNG as a `data:` URL, stretched to its rect
+//!   (`preserveAspectRatio="none"`: the engine already fitted the rect); a picture that hasn't
+//!   arrived is an empty `<g data-image="…"/>` marker.
 //!
 //! Clips and layers must nest properly (as `datars_render::flatten` produces them): a pop closes
 //! the innermost open group of its kind and any group opened after it.
@@ -69,7 +74,7 @@ pub fn to_svg(list: &DisplayList, glyphs: &dyn GlyphSource) -> String {
 
 /// [`to_svg`] with options.
 pub fn to_svg_with(list: &DisplayList, glyphs: &dyn GlyphSource, opts: &SvgOptions) -> String {
-    let mut w = Writer { prefix: format!("d{:07x}", list.hash() >> 36), defs: String::new(), body: String::new(), open: Vec::new(), depth: 0, next_id: 0, glyph_ids: BTreeMap::new(), opts: *opts, stroke: None };
+    let mut w = Writer { prefix: format!("d{:07x}", list.hash() >> 36), defs: String::new(), body: String::new(), open: Vec::new(), depth: 0, next_id: 0, glyph_ids: BTreeMap::new(), icon_ids: BTreeMap::new(), opts: *opts, stroke: None };
     if list.background.a > 0.0 {
         w.line(&format!("<rect width=\"{}\" height=\"{}\"{}/>", num(list.width), num(list.height), color_attrs("fill", list.background, 1.0)));
     }
@@ -115,6 +120,8 @@ struct Writer {
     next_id: u32,
     /// Glyph outlines already in `<defs>`: (font, glyph id) → element id.
     glyph_ids: BTreeMap<(String, u16), Option<String>>,
+    /// Icons already in `<defs>`: (name, slot colours) → element id.
+    icon_ids: BTreeMap<String, String>,
     opts: SvgOptions,
     /// An opaque stroke not written yet — (attributes, path data) — that the next strokes with the
     /// same attributes join as subpaths: an axis's gridlines are one element, not eight.
@@ -202,7 +209,17 @@ impl Writer {
                 }
             }
             Op::Glyphs { font, size, glyphs: g, origin, scale, rotate, color, halo, text } => self.glyphs(glyphs, font, *size, g, *origin, *scale, *rotate, *color, *halo, text.as_deref()),
+            Op::Instances(i) if matches!(i.proto, Proto::Icon { .. }) => self.icon_instances(i),
             Op::Instances(i) => self.instances(i),
+            Op::Image { rect, xf, opacity, image: Some(img), .. } => {
+                let mut s = format!("<image x=\"{}\" y=\"{}\" width=\"{}\" height=\"{}\" preserveAspectRatio=\"none\"{}", num(rect.x), num(rect.y), num(rect.w), num(rect.h), transform_attr(xf));
+                if *opacity < 1.0 {
+                    let _ = write!(s, " opacity=\"{}\"", num(opacity.max(0.0) as f64));
+                }
+                let data = format!("data:{};base64,{}", datars_render::raster::media_type(&img.encoded), base64(&img.encoded));
+                let _ = write!(s, " href=\"{data}\" xlink:href=\"{data}\"/>");
+                self.line(&s);
+            }
             Op::Image { asset, .. } => self.line(&format!("<g data-image=\"{}\"/>", esc(asset))),
             Op::PushClip { path, xf, rule } => {
                 let id = self.id('c');
@@ -270,6 +287,60 @@ impl Writer {
             let _ = write!(s, " {attr}-opacity=\"{}\"", num(opacity.max(0.0) as f64));
         }
         s
+    }
+
+    /// Icon instances: the drawing once in `<defs>`, a `<use>` per instance.
+    fn icon_instances(&mut self, op: &InstancesOp) {
+        let Proto::Icon { icon } = &op.proto else { return };
+        let slots: Vec<Color> = icon.inks.iter().map(datars_render::literal).collect();
+        let key = format!("{}|{}", icon.name, slots.iter().map(|c| c.to_hex()).collect::<Vec<_>>().join(","));
+        let id = match self.icon_ids.get(&key) {
+            Some(id) => id.clone(),
+            None => {
+                let id = self.id('i');
+                let paint = |attr: &str, ink: &datars_scene::IconInk| match ink {
+                    datars_scene::IconInk::Current => format!(" {attr}=\"currentColor\""),
+                    datars_scene::IconInk::Slot(k) => color_attrs(attr, slots.get(*k as usize).copied().unwrap_or(Color::BLACK), 1.0),
+                };
+                let _ = writeln!(self.defs, "<g id=\"{id}\">");
+                for l in &icon.layers {
+                    let mut a = match &l.fill {
+                        Some(f) => paint("fill", f),
+                        None => " fill=\"none\"".to_string(),
+                    };
+                    if l.rule == FillRule::EvenOdd {
+                        a.push_str(" fill-rule=\"evenodd\"");
+                    }
+                    if let Some(st) = &l.stroke {
+                        a.push_str(&paint("stroke", &st.ink));
+                        a.push_str(&stroke_attrs(&StrokeStyle { width_px: st.width, cap: st.cap, join: st.join, miter_limit: 4.0, dash: None }));
+                    }
+                    if l.opacity < 1.0 {
+                        let _ = write!(a, " opacity=\"{}\"", num(l.opacity.max(0.0)));
+                    }
+                    let _ = writeln!(self.defs, "  <path d=\"{}\"{a}/>", path_d(&l.path));
+                }
+                self.defs.push_str("</g>\n");
+                self.icon_ids.insert(key, id.clone());
+                id
+            }
+        };
+        let fallback = op.fill.first().copied().unwrap_or(Color::BLACK);
+        for i in 0..op.len() {
+            let alpha = op.opacity_at(i);
+            let Some(at) = op.icon_xf(i) else { continue };
+            let c = op.fill.get(i).copied().unwrap_or(fallback);
+            let a = (c.a * alpha).clamp(0.0, 1.0);
+            if a <= 0.0 {
+                continue;
+            }
+            let mut el = format!("<use href=\"#{id}\" xlink:href=\"#{id}\" transform=\"{}\" color=\"{}\"", matrix(&at), hex(c));
+            if a < 1.0 {
+                let _ = write!(el, " opacity=\"{}\"", num(a as f64));
+            }
+            el.push_str("/>");
+            self.line(&el);
+        }
     }
 
     fn instances(&mut self, op: &InstancesOp) {
@@ -954,4 +1025,21 @@ mod dense_tests {
         let list = DisplayList { ops: vec![datars_render::Op::Instances(hidden)], ..list };
         assert!(!to_svg(&list, &datars_render::NoGlyphs).contains("<g>"), "nothing to draw, no group");
     }
+}
+
+/// Standard base64 (RFC 4648, padded): pictures as `data:` URLs.
+pub fn base64(b: &[u8]) -> String {
+    const T: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::with_capacity(b.len().div_ceil(3) * 4);
+    for c in b.chunks(3) {
+        let n = (c[0] as u32) << 16 | (*c.get(1).unwrap_or(&0) as u32) << 8 | *c.get(2).unwrap_or(&0) as u32;
+        for k in 0..4 {
+            if k <= c.len() {
+                out.push(T[(n >> (18 - 6 * k) & 63) as usize] as char);
+            } else {
+                out.push('=');
+            }
+        }
+    }
+    out
 }

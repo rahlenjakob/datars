@@ -111,6 +111,29 @@ In TypeScript: `font.file("Cambon", "fonts/Cambon-Bold.otf", { weight: 700 })`,
   `data.hebrew = { "font": "fonts/NotoSansHebrew.ttf" }` (or `"google:Noto Sans Hebrew"`) — whose
   families join every text's fallback chain.
 
+### Icons
+
+An icon token names an icon, so a theme can say which drawing means *up*, *warning* or *pin* —
+and a brand can swap the whole vocabulary for its own without touching a chart. Icon tokens are
+text tokens named `icon.*`; their value is any icon name ([04](04-primitives.md#icons-and-pictures)):
+
+```json
+"icon.up":      "lucide:arrow-up",
+"icon.warning": "icons/brand-warning.svg",
+"size.icon":    16
+```
+
+A chart says `icon("$icon.warning", …)` (or a `geom.symbol`, marker or instances `icon` of
+`$icon.…`). The built-in `datars/neutral` theme defines `icon.up`, `icon.down`, `icon.info`,
+`icon.warning`, `icon.check`, `icon.close` and `icon.pin` (all Lucide), and `size.icon`, the box an
+icon is drawn in when a chart doesn't say — a `size.*` token, so icons grow with the reader's text
+size. An unknown token is a diagnostic, not a silent blank.
+
+Icons are drawn in inks like everything else: `currentColor` takes the node's `ink`, other colours
+of a file take the `inks` passed, else `$categorical[i]` — never the file's hex, so a mode or theme
+switch repaints them. Like fonts, icons are acquired by the build step only and shipped with the
+chart: a bundle carries the icons it draws, with the set's licence in its manifest.
+
 ### Modes
 
 `light` (default), `dark`, `high-contrast` live inside one theme. Hosts select the mode from platform

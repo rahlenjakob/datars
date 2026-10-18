@@ -56,6 +56,7 @@
 - [`network`](#network)
 - [`ohlc`](#ohlc)
 - [`pareto`](#pareto)
+- [`pictogram`](#pictogram)
 - [`pie`](#pie)
 - [`plot`](#plot)
 - [`point`](#point)
@@ -102,6 +103,7 @@
 | `dx` | number | `40` |  |
 | `dy` | number | `-36` |  |
 | `head` | bool | `false` | An arrowhead at the point. |
+| `icon` | string |  | An icon at the point instead of the dot (`map-pin`, `$icon.warning`): decorative — the note says what it means. |
 | `ink` | ink | `"$ink"` |  |
 | `pin` | bool | `false` | Pinned at the point: dot, connector and text keep screen size under cameras (map callouts). |
 | `text` | string | `""` |  |
@@ -696,6 +698,7 @@ Theme tokens: `ink`, `ink-2`, `muted`, `mark`, `accent`, `paper`, `categorical`,
 | param | type | default | |
 |---|---|---|---|
 | `arc` | number | `240` | The dial's sweep in degrees (180: a half circle; up to 300). |
+| `bandText` | enum | `"curved"` | Band names follow the arc (`curved`) or sit straight, turned to it (`rotated`). |
 | `bands` | json |  | Upper bounds of coloured ranges along the arc, ascending (`[60, 85, 100]`); with bands the value shows as a needle. |
 | `format` | string | `",.0f"` | Number format of the value and the ends. |
 | `ink` | ink | `"$mark"` | The fill's ink (without bands). |
@@ -703,7 +706,9 @@ Theme tokens: `ink`, `ink-2`, `muted`, `mark`, `accent`, `paper`, `categorical`,
 | `label` | string |  | What it measures, under the dial. |
 | `max` | number | `100` | The arc's end. |
 | `min` | number | `0` | The arc's start. |
+| `names` | json |  | The bands' names, in order (`["Fear", "Neutral", "Greed"]`): written in each band, along it, and said with the value. A name too long for its band is left out. |
 | `needle` | bool |  | A needle instead of a filled arc (default: with bands). |
+| `needleStyle` | enum | `"wedge"` | The needle: a tapered wedge, a line, or a line with an arrowhead. |
 | `prefix` | string |  | Before the value (`$`). |
 | `suffix` | string |  | After it (`%`, ` km/h`). |
 | `thickness` | number | `0.22` | The arc's thickness, as a share of its radius. |
@@ -934,6 +939,8 @@ Theme tokens: `ink`, `ink-2`, `muted`, `positive`, `negative`, `mark`, `size.bod
 | param | type | default | |
 |---|---|---|---|
 | `dashes` | bool | `false` | Each entry as a short line in the dash pattern `line({ dashes: true })` gives it, not a colour swatch alone. |
+| `icon` | string |  | An icon in each entry's ink instead of a swatch (a pictogram's legend: `user`). |
+| `icons` | json |  | An icon per entry, by its value (`{ "Cars": "car" }`); entries without one keep the swatch (or `icon`). |
 | `scale` | string | `"color"` |  |
 | `title` | string |  | A title above the entries (and the legend's accessible name). |
 
@@ -1168,6 +1175,31 @@ Theme tokens: `up`, `down`, `ink`
 | `y` | field |  |  |
 
 Theme tokens: `ink-2`
+
+## pictogram
+
+`@datars/std/pictogram` — A pictogram (isotype): one icon per unit — per person, per thousand tonnes (`per`) — in a row per category with its name and value (`rows`), or filling a grid like a waffle (`grid`). Icons come from the default set (`user`, `car`, `tree-pine`) or a theme token, one for all or one per category (`icons`); every unit is an instance of one icon, so thousands draw as one node. Units are keyed (category, Unit i) as waffle's are, so a bar chart splits into its icons and back.
+
+| param | type | default | |
+|---|---|---|---|
+| `category` | field |  |  |
+| `color` | bool | `true` | Colour by category (`$categorical`); off, every icon in `ink`. |
+| `columns` | number | `10` | `grid`: icons across. |
+| `data` | table |  |  |
+| `format` | string | `",.0f"` | The value's number format (rows). |
+| `gap` | number | `0.18` | Space between icons, as a share of their size. |
+| `icon` | string | `"user"` | The icon every unit draws (a default-set name, `lucide:…`, `$icon.…`, a `.svg` file). |
+| `icons` | json |  | An icon per category (`{ "Cars": "car", "Bikes": "bike" }`); others draw `icon`. |
+| `ink` | ink | `"$mark"` | The icons' ink without `color`. |
+| `layout` | enum | `"rows"` | `rows`: a row per category, labelled; `grid`: every unit in one grid (`columns` × `rows`), coloured by category. |
+| `legend` | bool | `true` | `grid`: a legend of the categories (with their icons) below. |
+| `note` | bool | `true` | `rows` with `per`: say what one icon stands for under the rows (off when the page says it). |
+| `per` | number | `1` | What one icon stands for (values are rounded to whole icons). |
+| `rows` | number | `10` | `grid`: icons down. |
+| `unit` | string |  | After the value (` people`). |
+| `value` | field |  |  |
+
+Theme tokens: `mark`, `ink`, `ink-2`, `muted`, `size.label`, `categorical`
 
 ## pie
 

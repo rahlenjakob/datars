@@ -1,0 +1,70 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("page",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("body",)
+        group ("chart",) role=group "Commuters by mode (thousands)"
+          ("title",) text "Commuters by mode (thousands)" at (0.00, 0.00) size=17.00 ink=$ink role=title "Commuters by mode (thousands)"
+          group ("body",) transform=[1.00 0.00 0.00 1.00 0.00 26.57]
+            group ("axis-y",) transform=[1.00 0.00 0.00 1.00 22.05 0.00] role=axis "y axis"
+              ("domain",) segment (0.00, 0.00)→(0.00, 357.62) stroke=$rule/1.00
+              group (0,) role=tick "0"
+                ("#0",) segment (0.00, 357.62)→(-5.00, 357.62) stroke=$rule/1.00
+                ("#1",) text "0" at (-8.00, 357.62) size=11.00 ink=$muted
+              group (10,) role=tick "10"
+                ("#0",) segment (0.00, 286.10)→(-5.00, 286.10) stroke=$rule/1.00
+                ("#1",) text "10" at (-8.00, 286.10) size=11.00 ink=$muted
+              group (20,) role=tick "20"
+                ("#0",) segment (0.00, 214.57)→(-5.00, 214.57) stroke=$rule/1.00
+                ("#1",) text "20" at (-8.00, 214.57) size=11.00 ink=$muted
+              group (30,) role=tick "30"
+                ("#0",) segment (0.00, 143.05)→(-5.00, 143.05) stroke=$rule/1.00
+                ("#1",) text "30" at (-8.00, 143.05) size=11.00 ink=$muted
+              group (40,) role=tick "40"
+                ("#0",) segment (0.00, 71.52)→(-5.00, 71.52) stroke=$rule/1.00
+                ("#1",) text "40" at (-8.00, 71.52) size=11.00 ink=$muted
+              group (50,) role=tick "50"
+                ("#0",) segment (0.00, 0.00)→(-5.00, 0.00) stroke=$rule/1.00
+                ("#1",) text "50" at (-8.00, 0.00) size=11.00 ink=$muted
+            group ("center",) transform=[1.00 0.00 0.00 1.00 28.55 0.00]
+              group ("area",)
+                group ("grid-y",) role=decoration
+                  (0,) segment (0.00, 357.62)→(659.45, 357.62) stroke=$grid/1.00 role=decoration
+                  (10,) segment (0.00, 286.10)→(659.45, 286.10) stroke=$grid/1.00 role=decoration
+                  (20,) segment (0.00, 214.57)→(659.45, 214.57) stroke=$grid/1.00 role=decoration
+                  (30,) segment (0.00, 143.05)→(659.45, 143.05) stroke=$grid/1.00 role=decoration
+                  (40,) segment (0.00, 71.52)→(659.45, 71.52) stroke=$grid/1.00 role=decoration
+                  (50,) segment (0.00, 0.00)→(659.45, 0.00) stroke=$grid/1.00 role=decoration
+                group ("marks",) role=series "thousands by mode"
+                  ("Car",) rect x=14.51 y=64.37 w=102.87 h=293.25 fill=$categorical[0] role=datum "Car: 41"
+                  ("Bus",) rect x=146.40 y=193.12 w=102.87 h=164.51 fill=$categorical[1] role=datum "Bus: 23"
+                  ("Train",) rect x=278.29 y=236.03 w=102.87 h=121.59 fill=$categorical[2] role=datum "Train: 17"
+                  ("Bike",) rect x=410.18 y=271.79 w=102.87 h=85.83 fill=$categorical[3] role=datum "Bike: 12"
+                  ("Walk",) rect x=542.07 y=307.55 w=102.87 h=50.07 fill=$categorical[4] role=datum "Walk: 7"
+                  group ("labels",)
+                    ("Car",) text "41" at (65.95, 60.37) size=11.00 ink=$ink-2
+                    ("Bus",) text "23" at (197.84, 189.12) size=11.00 ink=$ink-2
+                    ("Train",) text "17" at (329.73, 232.03) size=11.00 ink=$ink-2
+                    ("Bike",) text "12" at (461.62, 267.79) size=11.00 ink=$ink-2
+                    ("Walk",) text "7" at (593.51, 303.55) size=11.00 ink=$ink-2
+              group ("axis-x",) transform=[1.00 0.00 0.00 1.00 0.00 364.12] role=axis "x axis"
+                ("domain",) segment (0.00, 0.00)→(659.45, 0.00) stroke=$rule/1.00
+                group ("Car",) role=tick "Car"
+                  ("#0",) segment (65.95, 0.00)→(65.95, 5.00) stroke=$rule/1.00
+                  ("#2",) text "Car" at (65.95, 8.00) size=11.00 ink=$muted
+                group ("Bus",) role=tick "Bus"
+                  ("#0",) segment (197.84, 0.00)→(197.84, 5.00) stroke=$rule/1.00
+                  ("#2",) text "Bus" at (197.84, 8.00) size=11.00 ink=$muted
+                group ("Train",) role=tick "Train"
+                  ("#0",) segment (329.73, 0.00)→(329.73, 5.00) stroke=$rule/1.00
+                  ("#2",) text "Train" at (329.73, 8.00) size=11.00 ink=$muted
+                group ("Bike",) role=tick "Bike"
+                  ("#0",) segment (461.62, 0.00)→(461.62, 5.00) stroke=$rule/1.00
+                  ("#2",) text "Bike" at (461.62, 8.00) size=11.00 ink=$muted
+                group ("Walk",) role=tick "Walk"
+                  ("#0",) segment (593.51, 0.00)→(593.51, 5.00) stroke=$rule/1.00
+                  ("#2",) text "Walk" at (593.51, 8.00) size=11.00 ink=$muted
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("box:drive to work, more than ride the bus and the train together.",) transform=[1.00 0.00 0.00 1.00 445.50 12.50] role=annotation "drive to work, more than ride the bus and the train together."
+        ("backdrop",) rect x=0.00 y=0.00 w=230.00 h=84.13 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("title",) text "41,000" at (0.00, 0.00) size=15.00 ink=$card-ink transform=[1.00 0.00 0.00 1.00 14.00 14.00]
+        ("text",) text "drive to work, more than ride the bus and the train together." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 38.15]

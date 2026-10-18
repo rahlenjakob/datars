@@ -22,6 +22,8 @@ pub enum Input {
     Provide { source: String, bytes: String },
     /// A tile archive's bytes at `offset` (a `Request::Range` answered), base64.
     Range { source: String, offset: u64, bytes: String },
+    /// A picture the host decoded (`Engine::provide_pixels`): straight RGBA8 as base64.
+    Pixels { name: String, width: u32, height: u32, rgba: String },
     Resize { width: f64, height: f64, dpr: f64 },
     Seek { pos: f64 },
     Playing { on: bool },

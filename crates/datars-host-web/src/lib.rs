@@ -103,6 +103,23 @@ mod web {
         pub fn provide_source(&mut self, name: &str, bytes: &[u8]) -> Result<(), JsValue> {
             self.core.engine.provide(name, bytes).map_err(js)
         }
+        /// The file of a picture to decode (a `decode` request from [`View::data_requests`]): the
+        /// runtime carries no image decoder — the browser's decodes it (any format it reads).
+        pub fn picture_file(&self, name: &str) -> Option<Vec<u8>> {
+            self.core.engine.picture_file(name).map(<[u8]>::to_vec)
+        }
+        /// A picture the page decoded: straight RGBA8, `width` × `height`.
+        pub fn provide_pixels(&mut self, name: &str, width: u32, height: u32, rgba: &[u8]) -> Result<(), JsValue> {
+            self.core.engine.provide_pixels(name, width, height, rgba).map_err(js)
+        }
+        /// A picture the browser couldn't decode, and why (said as a diagnostic, not asked again).
+        pub fn picture_failed(&mut self, name: &str, why: &str) {
+            self.core.engine.asset_failed(name, why);
+        }
+        /// Pictures still waiting for the browser's decoder (the first frame waits for them).
+        pub fn pictures_decoding(&self) -> usize {
+            self.core.engine.pictures_decoding()
+        }
         /// Bytes for a `range` request from [`View::data_requests`] (`offset` as a JS number:
         /// archives stay below 2^53 bytes).
         pub fn provide_range(&mut self, name: &str, offset: f64, bytes: &[u8]) -> Result<(), JsValue> {
@@ -305,6 +322,10 @@ mod web {
                     // A built-in atlas (`countries`, …): the page fetches it from the runtime's
                     // atlas folder (published bundles carry theirs; raw documents ask).
                     datars_engine::Request::Atlas { name, atlas } => Some(serde_json::json!({ "name": name, "atlas": atlas })),
+                    // A picture's file is here; the browser decodes it (`picture_file` →
+                    // `provide_pixels`).
+                    datars_engine::Request::Decode { name } => Some(serde_json::json!({ "name": name, "decode": true })),
+                    #[allow(unreachable_patterns)]
                     _ => None,
                 })
                 .collect();

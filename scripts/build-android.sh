@@ -7,9 +7,10 @@ NDK="${ANDROID_NDK_HOME:-$(ls -d "$ANDROID_HOME"/ndk/* | sort -V | tail -1)}"
 TOOLCHAIN="$NDK/toolchains/llvm/prebuilt/$(uname -s | tr A-Z a-z)-x86_64/bin"
 API=24
 # The sandbox (QuickJS, for T3 bundles) is in by default; the app's policy decides at runtime.
-# Inter is compiled in for raw documents (bundles carry their own fonts). `gpu` draws frames with
-# Vulkan or GLES on the view's Surface (wgpu); without it frames are CPU pixels.
-FEATURES="${FEATURES-sandbox,bundled-fonts,gpu}"
+# Inter and the SVG reader are compiled in for raw documents (bundles carry their own fonts and
+# icons, read). `gpu` draws frames with Vulkan or GLES on the view's Surface (wgpu); without it
+# frames are CPU pixels. Pictures are decoded by BitmapFactory (the library has no decoder).
+FEATURES="${FEATURES-sandbox,bundled-fonts,svg,gpu}"
 # QuickJS bindings are generated for Android: bindgen needs libclang and the NDK sysroot.
 export LIBCLANG_PATH="${LIBCLANG_PATH:-$(xcode-select -p 2>/dev/null)/Toolchains/XcodeDefault.xctoolchain/usr/lib}"
 SYSROOT="$NDK/toolchains/llvm/prebuilt/$(uname -s | tr A-Z a-z)-x86_64/sysroot"

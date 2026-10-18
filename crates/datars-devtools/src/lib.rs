@@ -74,6 +74,8 @@ pub fn lint(engine: &mut Engine) -> Vec<Finding> {
         let scene = engine.scene_for_state(i);
         credited |= drawn_labels(&scene).iter().any(|l| l.text.contains("OpenStreetMap"));
         out.extend(lint_scene(&scene, &names[i]));
+        let marks = engine.icon_marks(i);
+        out.extend(icon_contrast(&scene, &marks, engine.theme(), &names[i]));
     }
     // Our tile archives are OpenStreetMap data: its licence (ODbL) requires the credit, visible
     // on the map (std/attribution draws it, linked to the copyright page).
@@ -101,6 +103,51 @@ pub fn lint(engine: &mut Engine) -> Vec<Finding> {
     }
     out.sort_by(|a, b| (a.severity != "error", &a.rule).cmp(&(b.severity != "error", &b.rule)));
     out.dedup();
+    out
+}
+
+/// Icons that stand for something must stand out from what's behind them: 3:1, as WCAG 1.4.11
+/// asks of graphical objects needed to understand the content. Decorative icons (no label) aren't
+/// held to it. What's behind is the last filled shape drawn under the icon's centre before it,
+/// else the paper.
+pub fn icon_contrast(scene: &Scene, marks: &[datars_engine::assets::IconMark], theme: &datars_theme::ResolvedTheme, state: &str) -> Vec<Finding> {
+    use datars_math::Vec2;
+    // Every node in paint order: its path, its root bounds, and its fill (filled shapes).
+    let mut order: Vec<(String, Rect, Option<datars_color::Color>)> = Vec::new();
+    fn walk(n: &Node, path: &KeyPath, parent: Affine, theme: &datars_theme::ResolvedTheme, out: &mut Vec<(String, Rect, Option<datars_color::Color>)>) {
+        if !n.common.visible || n.common.opacity <= 0.01 {
+            return;
+        }
+        let here = path.push(&n.key);
+        let xf = n.common.placed(parent);
+        let rect = datars_engine::drawn_bounds(n, parent);
+        let fill = match &n.kind {
+            NodeKind::Shape { fill: Some(p), geom, .. } if geom.is_closed() => Some(p.representative(theme).fade(n.common.opacity as f32)),
+            _ => None,
+        };
+        out.push((here.to_string(), rect, fill));
+        let inner = match &n.kind {
+            NodeKind::View { viewport, camera, .. } => xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y))),
+            _ => xf,
+        };
+        for c in n.children() {
+            walk(c, &here, inner, theme, out);
+        }
+    }
+    walk(&scene.root, &KeyPath::default(), Affine::IDENTITY, theme, &mut order);
+    let paper = scene.background.resolve(theme);
+    let mut out = Vec::new();
+    for m in marks {
+        let Some(label) = &m.label else { continue };
+        let Some(at) = order.iter().position(|(p, ..)| *p == m.path) else { continue };
+        let c = order[at].1.center();
+        let behind = order[..at].iter().rev().filter(|(p, ..)| !m.path.starts_with(p.as_str())).find_map(|(_, r, f)| f.filter(|_| r.contains(Vec2::new(c.x, c.y)))).map(|f| f.over(paper)).unwrap_or(paper);
+        let ink = m.ink.resolve(theme).over(behind);
+        let ratio = datars_color::contrast_ratio(ink, behind);
+        if ratio < 3.0 {
+            out.push(f("a11y/icon-contrast", "warning", format!("{state}: icon \"{label}\" is {ratio:.1}:1 against what's behind it (WCAG 1.4.11 asks 3:1 of an icon that means something)"), "give it an ink that stands out (`$ink`, `on(…)` of its background), or leave it decorative (no label) if the text beside it says the same"));
+        }
+    }
     out
 }
 
@@ -134,6 +181,11 @@ pub struct DrawnLabel {
     pub in_camera: bool,
     /// Drawn over a halo, or in an ink chosen against what's under it (`on(…)`): legible over data.
     pub guarded: bool,
+    /// Set along a path (a curved label): each glyph's box as drawn — what two curved labels must
+    /// not share (their boxes around the curve may overlap, their letters mustn't).
+    pub pieces: Vec<[datars_math::Vec2; 4]>,
+    /// Set along a path it didn't fit: left out (a reader never sees it).
+    pub unfit: bool,
 }
 
 /// Every text the scene draws, where it lands on the canvas: through transforms, pins, views and
@@ -161,6 +213,17 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
             None => clip,
         };
         match &n.kind {
+            NodeKind::Text(t) if !t.text.trim().is_empty() && t.along.as_ref().is_some_and(|a| a.is_empty()) => {
+                let o = xf.apply(t.origin);
+                let q = [o; 4];
+                out.push(DrawnLabel { text: t.text.clone(), rect: Rect::new(o.x, o.y, 0.0, 0.0), quad: q, core: q, opacity, clip, in_camera: cam, guarded: true, pieces: Vec::new(), unfit: true });
+            }
+            NodeKind::Text(t) if !t.text.trim().is_empty() && t.along.is_some() && t.bounds.w > 0.0 => {
+                let rect = corners(xf, Rect::new(t.origin.x + t.bounds.x, t.origin.y + t.bounds.y, t.bounds.w, t.bounds.h));
+                let q = [(rect.x, rect.y), (rect.x1(), rect.y), (rect.x1(), rect.y1()), (rect.x, rect.y1())].map(|(x, y)| datars_math::Vec2::new(x, y));
+                let guarded = t.halo.as_ref().is_some_and(|(_, w)| *w >= 1.5) || matches!(t.style.ink, datars_theme::Ink::On { .. });
+                out.push(DrawnLabel { text: t.text.clone(), rect, quad: q, core: q, opacity, clip, in_camera: cam, guarded, pieces: datars_engine::textpath::glyph_quads(t, &xf), unfit: false });
+            }
             NodeKind::Text(t) if !t.text.trim().is_empty() && t.bounds.w > 0.0 => {
                 let (rect, quad, core) = if t.screen_size {
                     // Glyphs at screen size around the transformed origin, turned by `rotate`.
@@ -174,7 +237,7 @@ pub fn drawn_labels(scene: &Scene) -> Vec<DrawnLabel> {
                     (corners(m, local), q(local), q(Rect::new(local.x, local.y + lead, local.w, (local.h - 2.0 * lead).max(0.0))))
                 };
                 let guarded = t.halo.as_ref().is_some_and(|(_, w)| *w >= 1.5) || matches!(t.style.ink, datars_theme::Ink::On { .. });
-                out.push(DrawnLabel { text: t.text.clone(), rect, quad, core, opacity, clip, in_camera: cam, guarded });
+                out.push(DrawnLabel { text: t.text.clone(), rect, quad, core, opacity, clip, in_camera: cam, guarded, pieces: Vec::new(), unfit: false });
             }
             NodeKind::View { viewport, camera, clip: clips, children } => {
                 let inner = xf.mul(camera.map(|c| c.transform(*viewport)).unwrap_or(Affine::translate(viewport.x, viewport.y)));
@@ -227,6 +290,10 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
         })
         .collect();
     let mut out = LabelIssues::default();
+    // A curved label longer than its path was left out: the reader loses it.
+    for l in drawn.iter().filter(|l| l.unfit && l.opacity >= 0.35) {
+        out.cut.push(l.text.clone());
+    }
     let data = datars_engine::obstacles::Obstacles::collect(std::slice::from_ref(&scene.root));
     for (_, l) in labels.iter().filter(|(_, l)| !l.guarded && !l.in_camera) {
         if !data.is_empty() && data.cover_quad(&l.core).hurts() {
@@ -255,6 +322,16 @@ pub fn label_issues(scene: &Scene) -> LabelIssues {
     for i in 0..labels.len() {
         for j in i + 1..labels.len() {
             let (a, b) = (labels[i].0, labels[j].0);
+            // A curved label: by its glyphs' boxes (more than a px into the other's letters).
+            let (pa, pb) = (&labels[i].1.pieces, &labels[j].1.pieces);
+            if !pa.is_empty() || !pb.is_empty() {
+                let one = |l: &DrawnLabel| if l.pieces.is_empty() { vec![l.core] } else { l.pieces.clone() };
+                let (qa, qb) = (one(labels[i].1), one(labels[j].1));
+                if a.intersects(&b) && qa.iter().any(|x| qb.iter().any(|y| datars_engine::quads_overlap(x, y, -1.0))) {
+                    out.overlapping.push((labels[i].1.text.clone(), labels[j].1.text.clone()));
+                }
+                continue;
+            }
             // A turned label: by its slanted outline without the line spacing (more than a px into
             // the other's letters).
             if turned(labels[i].1) || turned(labels[j].1) {

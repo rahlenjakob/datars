@@ -1,0 +1,51 @@
+scene 720.00×440.00 background=$paper
+  group ("root",)
+    group ("page",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("body",)
+        group ("chart",) role=group "Pictogram"
+          ("icons-0",) instances icon lucide:user ×0
+          ("icons-1",) instances icon lucide:bike ×6
+            · ("Bike", Unit(0)) (169.43, 241.43) fill=$categorical[3]
+            · ("Bike", Unit(1)) (192.29, 241.43) fill=$categorical[3]
+            · ("Bike", Unit(2)) (215.14, 241.43) fill=$categorical[3]
+            · … 3 more
+          ("icons-2",) instances icon lucide:bus ×12
+            · ("Bus", Unit(0)) (169.43, 170.57) fill=$categorical[1]
+            · ("Bus", Unit(1)) (192.29, 170.57) fill=$categorical[1]
+            · ("Bus", Unit(2)) (215.14, 170.57) fill=$categorical[1]
+            · … 9 more
+          ("icons-3",) instances icon lucide:car ×21
+            · ("Car", Unit(0)) (169.43, 135.14) fill=$categorical[0]
+            · ("Car", Unit(1)) (192.29, 135.14) fill=$categorical[0]
+            · ("Car", Unit(2)) (215.14, 135.14) fill=$categorical[0]
+            · … 18 more
+          ("icons-4",) instances icon lucide:train-front ×9
+            · ("Train", Unit(0)) (169.43, 206.00) fill=$categorical[2]
+            · ("Train", Unit(1)) (192.29, 206.00) fill=$categorical[2]
+            · ("Train", Unit(2)) (215.14, 206.00) fill=$categorical[2]
+            · … 6 more
+          ("icons-5",) instances icon lucide:footprints ×4
+            · ("Walk", Unit(0)) (169.43, 276.86) fill=$categorical[4]
+            · ("Walk", Unit(1)) (192.29, 276.86) fill=$categorical[4]
+            · ("Walk", Unit(2)) (215.14, 276.86) fill=$categorical[4]
+            · … 1 more
+          group ("Car",) role=series "Car: 41k (one icon: 2)"
+            ("name",) text "Car" at (150.00, 135.14) size=11.00 ink=$ink
+            ("value",) text "41k" at (644.00, 135.14) size=11.00 ink=$ink-2
+          group ("Bus",) role=series "Bus: 23k (one icon: 2)"
+            ("name",) text "Bus" at (150.00, 170.57) size=11.00 ink=$ink
+            ("value",) text "23k" at (438.29, 170.57) size=11.00 ink=$ink-2
+          group ("Train",) role=series "Train: 17k (one icon: 2)"
+            ("name",) text "Train" at (150.00, 206.00) size=11.00 ink=$ink
+            ("value",) text "17k" at (369.71, 206.00) size=11.00 ink=$ink-2
+          group ("Bike",) role=series "Bike: 12k (one icon: 2)"
+            ("name",) text "Bike" at (150.00, 241.43) size=11.00 ink=$ink
+            ("value",) text "12k" at (301.14, 241.43) size=11.00 ink=$ink-2
+          group ("Walk",) role=series "Walk: 7k (one icon: 2)"
+            ("name",) text "Walk" at (150.00, 276.86) size=11.00 ink=$ink
+            ("value",) text "7k" at (255.43, 276.86) size=11.00 ink=$ink-2
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 12.00 16.00]
+      group ("box:two thousand commuters: each bar is its people.",) transform=[1.00 0.00 0.00 1.00 445.50 12.50] role=annotation "two thousand commuters: each bar is its people."
+        ("backdrop",) rect x=0.00 y=0.00 w=230.00 h=84.13 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("title",) text "One icon," at (0.00, 0.00) size=15.00 ink=$card-ink transform=[1.00 0.00 0.00 1.00 14.00 14.00]
+        ("text",) text "two thousand commuters: each bar is its people." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 38.15]

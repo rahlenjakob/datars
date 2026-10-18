@@ -144,13 +144,14 @@ css: features-charts.css
 <section class="fam" id="parts" data-family="Parts of a whole and flows" aria-labelledby="parts-h">
   <div class="wrap fam-grid">
     <div class="fam-text">
-      <p class="fam-count"><b>8</b> recipes · family 6 of 12</p>
+      <p class="fam-count"><b>9</b> recipes · family 6 of 12</p>
       <h2 id="parts-h">Parts of a whole and flows</h2>
       <p>Shares, units and running totals. One table of six channels drawn ten ways, each morphing into the next: a dot splits into its seats, the seats gather into their slice, a tile breaks into squares.</p>
       <ul class="fam-members" aria-label="The parts of a whole and flows recipes, each linking to its reference">
 <li><a href="/docs/std/pie/" data-recipe="pie" title="Parts of a whole as slices (set `inner` &gt; 0 for a donut)."><code>pie</code></a></li>
 <li><a href="/docs/std/treemap/" data-recipe="treemap" title="A squarified treemap: area ∝ value, one rectangle per category, labels where they fit."><code>treemap</code></a></li>
 <li><a href="/docs/std/waffle/" data-recipe="waffle" title="One square per unit (e.g."><code>waffle</code></a></li>
+<li><a href="/docs/std/pictogram/" data-recipe="pictogram" title="A pictogram (isotype): one icon per unit, in a row per category or a grid."><code>pictogram</code></a></li>
 <li><a href="/docs/std/hemicycle/" data-recipe="hemicycle" title="A parliament: one dot per seat on concentric arcs, grouped by party left to right."><code>hemicycle</code></a></li>
 <li><a href="/docs/std/funnel/" data-recipe="funnel" title="A funnel: stage names in a measured column, centred bars in stage order joined by tapering connectors, each labelled with the conversion from the stage before."><code>funnel</code></a></li>
 <li><a href="/docs/std/waterfall/" data-recipe="waterfall" title="A waterfall/bridge: each change floats from the running total; rows marked as totals (a boolean field, or keys starting with &#x27;=&#x27;) are bars from zero."><code>waterfall</code></a></li>
@@ -323,12 +324,42 @@ Ads,4</textarea>
   <div class="wrap fam-alt">{{alt:controls}}</div>
 </section>
 
+<section class="section icons-lab" id="icons" aria-labelledby="icons-h">
+  <div class="wrap">
+    <header class="section-head">
+      <p class="eyebrow">Icons, pictures and curved text</p>
+      <h2 id="icons-h">Icons are chart material, in your inks</h2>
+      <p>Draw any of the 2,121 icons of the built-in open set (Lucide, ISC), your own SVGs or logos, one at a time or thousands as one pictogram, and write labels along arcs. Every colour is an ink: switch the set or the inks below and the published chart redraws, no recipe code run. A bundle carries only the icons it draws, with their licence in its manifest — no reader's device ever fetches one.</p>
+    </header>
+    <div class="icons-grid">
+      <div class="fam-chart">
+        <div class="icons-controls" id="charts-icons-pills" role="group" aria-label="The icon lab">
+          <div class="seg" role="group" aria-label="Shape"><button type="button" data-icons-shape="bars" aria-pressed="true">Bars</button><button type="button" data-icons-shape="icons" aria-pressed="false">Pictogram</button><button type="button" data-icons-shape="grid" aria-pressed="false">Grid</button></div>
+          <div class="seg" role="group" aria-label="Icon set"><button type="button" data-icons-set="transport" aria-pressed="true">Transport</button><button type="button" data-icons-set="people" aria-pressed="false">People</button></div>
+          <div class="chips" role="group" aria-label="Inks"><button type="button" data-icons-inks="theme" aria-pressed="true"><span class="pal" style="--s: linear-gradient(90deg, #4269d0 0 20%, #efb118 20% 40%, #ff725c 40% 60%, #6cc5b0 60% 80%, #3ca951 80%)"></span>Theme</button><button type="button" data-icons-inks="sea" aria-pressed="false"><span class="pal" style="--s: linear-gradient(90deg, #2a6f97 0 20%, #2c9c94 20% 40%, #56b38a 40% 60%, #8cc084 60% 80%, #61a5c2 80%)"></span>Sea</button><button type="button" data-icons-inks="mono" aria-pressed="false"><span class="pal" style="--s: var(--ink)"></span>One ink</button></div>
+        </div>
+        <div class="chart" data-chart="charts-icons" data-phone-ratio="1.15"></div>
+      </div>
+      <div class="fam-chart">
+        <label class="icons-slider"><span>Mood <output id="mood-out">62</output></span><input type="range" id="mood" min="0" max="100" step="1" value="62" aria-describedby="mood-note"></label>
+        <div class="chart" data-chart="charts-dial" data-phone-ratio="0.75"></div>
+        <p class="fam-fine" id="mood-note">The slider sets the published dial's <code>mood</code> with <code>view.setSignal("mood", …)</code>: the needle turns, and the band names follow the arc.</p>
+      </div>
+    </div>
+<pre><code data-lang="ts">pictogram({ data: "trips", value: "thousands", category: "mode", icons: { Car: "car", Bus: "bus" }, per: 2 })
+icon("$icon.warning", [x, y], { size: 18, ink: "$highlight", label: "Delayed" })
+text("Neutral", [0, 0], { path: { arc: [cx, cy, r, a0, a1] } })</code></pre>
+    <div class="wrap fam-alt">{{alt:charts-icons}}{{alt:charts-dial}}</div>
+    <p class="fam-fine"><a href="/docs/icons/">Icons, pictures and curved text</a> · <a href="/docs/std/pictogram/">pictogram</a> · <a href="/docs/std/gauge/">gauge</a></p>
+  </div>
+</section>
+
 <section class="section prims" id="primitives">
   <div class="wrap">
     <header class="section-head">
       <p class="eyebrow">Under every recipe</p>
       <h2>The primitives they're made of — the same ones you get</h2>
-      <p>The engine knows no bar charts. It knows keyed shapes, text, repeats, instances, groups, scales, table operations, signals, views and motion — and the standard library builds all 88 recipes from them with the public SDK, no private hooks. A <code>plot</code> is a recipe that declares scales and draws <code>axis</code> and <code>grid</code> around its marks; a <code>bar</code> is a <code>repeat</code> of keyed rectangles. When no recipe fits, write your own from the same parts, or copy one with <code>datars eject</code>.</p>
+      <p>The engine knows no bar charts. It knows keyed shapes, text, repeats, instances, groups, scales, table operations, signals, views and motion — and the standard library builds all {{count:recipes}} recipes from them with the public SDK, no private hooks. A <code>plot</code> is a recipe that declares scales and draws <code>axis</code> and <code>grid</code> around its marks; a <code>bar</code> is a <code>repeat</code> of keyed rectangles. When no recipe fits, write your own from the same parts, or copy one with <code>datars eject</code>.</p>
     </header>
     <div class="prim-grid">
       <article class="prim">

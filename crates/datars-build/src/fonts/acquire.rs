@@ -181,6 +181,15 @@ pub fn fetch_with<'a>(fonts: &'a Fonts, dir: Option<&'a Path>) -> impl Fn(&datar
     }
 }
 
+/// Icons and pictures for an engine, the way the build tools fetch anything (`https://` through
+/// the cache, `datars:` defaults, files next to the document): what `Engine::set_asset_fetch`
+/// takes, owning what it needs.
+pub fn asset_fetch(dir: Option<&Path>) -> Box<datars_engine::AssetFetch> {
+    let fonts = Fonts::from_env();
+    let dir = dir.map(Path::to_path_buf);
+    Box::new(move |name, url| fetch_with(&fonts, dir.as_deref())(&datars_engine::Request::Source { name: name.to_string(), url: url.to_string() }))
+}
+
 /// The css2 API request for one static instance.
 pub fn google_css_url(family: &str, weight: u16, italic: bool) -> String {
     format!("https://fonts.googleapis.com/css2?family={}:ital,wght@{},{weight}", family.trim().replace(' ', "+"), italic as u8)

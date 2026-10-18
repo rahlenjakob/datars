@@ -444,6 +444,8 @@ open class DatarsChartView: PlatformView {
         if suspended { return }
         let now = Date().timeIntervalSince(start)
         let t0 = CACurrentMediaTime()
+        // Pictures are decoded by ImageIO before the frame that draws them (no pop-in).
+        engine.decodePictures()
         let moving = engine.frame(now: now)
         let cpuMs = (CACurrentMediaTime() - t0) * 1000
         if moving {

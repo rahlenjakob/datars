@@ -125,7 +125,7 @@ type Fonts = std::collections::BTreeMap<String, Vec<u8>>;
 fn load(json: &str, doc: &Path) -> Result<datars_engine::Engine, String> {
     let acquire = datars_build::fonts::acquire::Fonts::from_env();
     let fetch = datars_build::fonts::acquire::fetch_with(&acquire, doc.parent());
-    datars_headless::load_at_with(json, doc.parent(), &fetch)
+    datars_headless::load_at_with_assets(json, doc.parent(), &fetch, Some(datars_build::fonts::acquire::asset_fetch(doc.parent())))
 }
 
 /// The engine profile of build `version` at `dpr` — every state resolved cold and warm, every
@@ -155,10 +155,11 @@ fn profile(sh: &Shared, doc: &Path, version: u64, json: &str, dpr: f64) -> Strin
 fn rebuild(doc: &Path, read: &dyn Fn(&str) -> Result<String, String>) -> (String, String, Fonts) {
     let t0 = Instant::now();
     let path = doc.display().to_string();
-    let json = match read(&path) {
+    let mut json = match read(&path) {
         Ok(j) => j,
         Err(e) => return (String::new(), serde_json::json!({ "error": e, "path": path, "ms": ms(t0) }).to_string(), Fonts::new()),
     };
+    let mut icons = serde_json::Map::new();
     let acquire = datars_build::fonts::acquire::Fonts::from_env();
     let fetch = datars_build::fonts::acquire::fetch_with(&acquire, doc.parent());
     let fonts = std::cell::RefCell::new(Fonts::new());
@@ -171,11 +172,15 @@ fn rebuild(doc: &Path, read: &dyn Fn(&str) -> Result<String, String>) -> (String
         }
         Some(bytes)
     };
-    let report = match datars_headless::load_at_with(&json, doc.parent(), &record) {
+    let report = match datars_headless::load_at_with_assets(&json, doc.parent(), &record, Some(datars_build::fonts::acquire::asset_fetch(doc.parent()))) {
         Ok(mut e) => {
             let states = e.state_names();
             let lint: Vec<serde_json::Value> = datars_devtools::lint(&mut e).into_iter().map(|f| serde_json::json!({ "severity": f.severity, "rule": f.rule, "message": f.message, "fix": f.fix })).collect();
             let _ = e.scene();
+            // The icons it draws travel in the page's document (the runtime never fetches them).
+            for (k, i) in e.icons_drawn() {
+                icons.insert(k, serde_json::from_str(&i.to_json()).unwrap_or_default());
+            }
             // An automatic basemap is served by this server, not read from next to the document.
             let auto: Vec<String> = datars_build::auto::sources(e.doc()).iter().map(|s| format!("tiles `{s}`:")).collect();
             let diags: Vec<String> = e.diagnostics().iter().map(|d| d.message.clone()).filter(|m| !auto.iter().any(|a| m.starts_with(a.as_str()))).collect();
@@ -186,6 +191,12 @@ fn rebuild(doc: &Path, read: &dyn Fn(&str) -> Result<String, String>) -> (String
         }
         Err(e) => serde_json::json!({ "error": e, "path": path, "ms": ms(t0) }),
     };
+    if !icons.is_empty() {
+        if let Ok(mut v) = serde_json::from_str::<serde_json::Value>(&json) {
+            v["icons"] = serde_json::Value::Object(icons);
+            json = v.to_string();
+        }
+    }
     (json, report.to_string(), fonts.into_inner())
 }
 

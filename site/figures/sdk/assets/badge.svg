@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <title>Fernmouth Transit</title>
+  <style>.ring{fill:#1d4e89}.mark{fill:#ffffff}</style>
+  <circle class="ring" cx="24" cy="24" r="22"/>
+  <path class="mark" d="M14 30V18a4 4 0 0 1 4-4h12a4 4 0 0 1 4 4v12a2 2 0 0 1-2 2h-1v3h-4v-3h-6v3h-4v-3h-1a2 2 0 0 1-2-2zm4-11v5h12v-5zm1 8a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm10 0a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/>
+  <circle cx="38" cy="10" r="5" fill="#f5b53d"/>
+</svg>

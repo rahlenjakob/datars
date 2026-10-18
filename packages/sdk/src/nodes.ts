@@ -141,6 +141,9 @@ export const geom = {
   polyline: (g: { from: string; x: Prop; y: Prop; curve?: string; closed?: boolean }): Geom => clean({ type: "polyline", ...g }) as Geom,
   area: (g: { from: string; x: Prop; y0: Prop; y1: Prop; curve?: string }): Geom => clean({ type: "area", ...g }) as Geom,
   path: (d: Prop): Geom => clean({ type: "path", d }) as Geom,
+  /** A symbol at (x, y), `size` its radius: `circle` (default), `square`, `diamond`, `triangle`,
+   * `cross`, `star` — or an icon (`lucide:heart`, `$icon.up`, a `.svg` file; see `icon()`), drawn
+   * in the shape's fill in a box `2 × size` across. */
   symbol: (g: { symbol?: Prop; x: Prop; y: Prop; size: Prop }): Geom => clean({ type: "symbol", ...g }) as Geom,
   /** A feature of a geo source by id — or, with no arguments inside a `tiles` layer template, the
    * current tile feature's own geometry. */
@@ -155,12 +158,24 @@ function stroke(s?: StrokeOpts) {
   return clean({ ...rest, non_scaling: nonScaling || undefined });
 }
 
-export function shape(g: Geom, opts: NodeOpts & { fill?: Prop; stroke?: StrokeOpts; markers?: { start?: Json; end?: Json } } = {}): Template {
+/** A stroke's end marker: an arrowhead, a dot, or an icon centred on the end and turned along the
+ * line (`{ type: "icon", icon: "lucide:plane", size: 14 }`), in the stroke's paint. */
+export type Marker = { type: "arrow"; size: number } | { type: "dot"; r: number } | { type: "icon"; icon: IconSource; size?: number };
+
+export function shape(g: Geom, opts: NodeOpts & { fill?: Prop; stroke?: StrokeOpts; markers?: { start?: Marker | Json; end?: Marker | Json } } = {}): Template {
   const { fill, stroke: st, markers, ...rest } = opts;
   return node("shape", rest, { geom: g, fill, stroke: stroke(st), markers });
 }
 
 export interface TextStyleOpts { font?: string; size?: Prop; weight?: Prop; ink?: Prop; align?: Prop; baseline?: Prop; maxWidth?: Prop; /** Nudged back inside the canvas if it would cross an edge; `"wrap"`: first wrapped to the room it has before the edge. */ contain?: Prop }
+
+/** The line a text follows instead of a straight one (curved labels on arcs and circles): SVG
+ * path data `d`, or an `arc` `[cx, cy, r, a0, a1]` (radians clockwise from 12 o'clock, as
+ * `geom.arc`; the text runs from `a0` towards `a1`). `offset`: where along it the text's `align`
+ * point sits, as a share of its length (default by align: 0, 0.5, 1). `upright` (default true):
+ * on a stretch that runs right to left (a circle's lower half) the text reads left to right
+ * anyway. A text longer than its path is left out (and `datars labels` says so). */
+export interface TextPath { d?: Prop; arc?: [Prop, Prop, Prop, Prop, Prop]; offset?: Prop; upright?: Prop }
 
 /** Another place for a text: where, and how it hangs from there (default: as the text does). */
 export interface TextPlace { at: [Prop, Prop]; align?: Prop; baseline?: Prop }
@@ -168,10 +183,58 @@ export interface TextPlace { at: [Prop, Prop]; align?: Prop; baseline?: Prop }
 /** Text at `at`. `offset` shifts it in screen px (a label beside a point, at any camera zoom).
  * `alternatives`: other places, tried in order when where it is would sit on the data (a line
  * through it, a filled mark under most of it) or on other text; none clear: it stays, with a halo. */
-export function text(content: Prop, at: [Prop, Prop], opts: NodeOpts & { style?: TextStyleOpts; halo?: [Prop, Prop]; number?: { value: Prop; format?: Prop }; rotate?: Prop; offset?: [Prop, Prop]; alternatives?: TextPlace[] } = {}): Template {
-  const { style, halo, number, rotate, offset, alternatives, ...rest } = opts;
+export function text(content: Prop, at: [Prop, Prop], opts: NodeOpts & { style?: TextStyleOpts; halo?: [Prop, Prop]; number?: { value: Prop; format?: Prop }; rotate?: Prop; offset?: [Prop, Prop]; alternatives?: TextPlace[]; path?: TextPath } = {}): Template {
+  const { style, halo, number, rotate, offset, alternatives, path, ...rest } = opts;
   const st = style ? clean({ font: style.font, size: style.size, weight: style.weight, ink: style.ink, align: style.align, baseline: style.baseline, max_width: style.maxWidth, contain: style.contain }) : {};
-  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset, alternatives: alternatives?.length ? alternatives : undefined });
+  return node("text", rest, { text: content ?? "", at, style: st, halo, number, rotate, offset, alternatives: alternatives?.length ? alternatives : undefined, path: path ? clean({ ...path }) : undefined });
+}
+
+/** Where an icon comes from: a name in the default set (`"heart"`, `"lucide:heart"` — Lucide,
+ * ISC), a theme icon token (`"$icon.up"`), a project SVG or an `https://` URL (`"icons/logo.svg"`),
+ * inline markup (`"<svg …>"`, or `{ svg }`), or path data (`{ d, viewBox, stroke }`: filled in
+ * the ink, or stroked `stroke` units wide). The build step ships only the icons a chart draws;
+ * no runtime fetches one. */
+export type IconSource = Prop | { svg: string } | { d: string; viewBox?: [number, number, number, number]; stroke?: number };
+
+export interface IconOpts extends Omit<NodeOpts, "size"> {
+  /** The side of the box it fits in, px (its aspect kept). Default: the theme's `size.icon`, else 16. */
+  size?: Prop;
+  /** The ink of `currentColor` — and of a file drawn in one colour. Default `$ink`. */
+  ink?: Prop;
+  /** Inks for a multi-colour file's other colours, by slot (the order the file first uses them;
+   * `datars icons --slots file.svg` lists them). Unset: `$categorical[i]`. Never hex from the file. */
+  inks?: Prop[];
+  /** Degrees clockwise about `at`. */
+  rotate?: Prop;
+  /** Where `at` is on the box: `center` (default), `top`, `bottom`, `left`, `right`, `top-left`, … */
+  anchor?: Prop;
+  /** What it stands for, when it stands for a word ("Rising"): read by screen readers. Without
+   * one (or `semantics`) the icon is decorative and left out. */
+  label?: Prop;
+}
+
+/** An icon at `at`: a vector drawing from the default set, a theme token, a file or inline,
+ * drawn in the node's ink (see `IconSource`, `IconOpts`). Decorative unless it has a `label`. */
+export function icon(name: IconSource, at: [Prop, Prop], opts: IconOpts = {}): Template {
+  const { size, ink, inks, rotate, anchor, label, ...rest } = opts;
+  const semantics = rest.semantics ?? (label !== undefined ? { role: "label" as Role, label } : undefined);
+  return node("icon", { ...rest, semantics }, { icon: name as Prop, at, icon_size: size, ink, inks: inks?.length ? inks : undefined, rotate, anchor });
+}
+
+export interface ImageOpts extends NodeOpts {
+  /** `contain` (default: all of it, aspect kept, centred), `cover` (fills the rect, cut to it),
+   * `fill` (stretched), `none` (its own size, centred, cut). */
+  fit?: "contain" | "cover" | "fill" | "none";
+  /** What the picture shows, for screen readers. Without it the picture is decorative. */
+  alt?: Prop;
+}
+
+/** A picture (a raster logo, a photo — PNG, JPEG or WebP) drawn into `rect` (`[x, y, w, h]`): a path relative
+ * to the document or an `https://` URL, shipped in the bundle by the build step. */
+export function image(src: Prop, rect: [Prop, Prop, Prop, Prop], opts: ImageOpts = {}): Template {
+  const { fit, alt, ...rest } = opts;
+  const semantics = rest.semantics ?? (alt !== undefined ? { role: "label" as Role, label: alt } : undefined);
+  return node("image", { ...rest, semantics }, { asset: src, rect, fit });
 }
 
 export type RepeatFrom = string | { groups: string; by: string } | { ticks: string; count?: Prop } | { legend: string } | { count: Prop };
@@ -182,7 +245,13 @@ export function repeat(from: RepeatFrom, template: Template): Template {
 
 export interface InstancesOpts extends NodeOpts {
   from: string;
-  proto?: "circle" | "square" | "diamond" | "triangle" | "cross" | "star" | "rect";
+  proto?: "circle" | "square" | "diamond" | "triangle" | "cross" | "star" | "rect" | "icon";
+  /** `proto: "icon"`: the icon every instance draws (see `IconSource`; one for the whole node),
+   * in each row's `fill`, `r` half its box — thousands of one icon as one node (pictograms, unit
+   * charts, map markers). */
+  icon?: IconSource;
+  /** `proto: "icon"`: inks for the icon's other colours, by slot. */
+  inks?: Prop[];
   instanceKey?: Prop;
   x: Prop; y: Prop;
   /** Radius (symbols). */
@@ -204,9 +273,9 @@ export interface InstancesOpts extends NodeOpts {
 }
 
 export function instances(o: InstancesOpts): Template {
-  const { from, proto, instanceKey, x, y, r, w, h, fill, opacity, stroke: st, screenSize, label, hit, reach, lod, ...rest } = o;
+  const { from, proto, icon: ic, inks, instanceKey, x, y, r, w, h, fill, opacity, stroke: st, screenSize, label, hit, reach, lod, ...rest } = o;
   const l = lod === true ? {} : lod ? clean({ points: lod.points, budget: lod.budget }) : undefined;
-  return node("instances", rest, { from, proto: proto ?? "circle", instance_key: instanceKey, x, y, r, w, h, fill, instance_opacity: opacity, stroke: stroke(st), screen_size: screenSize || undefined, label, hit, reach, lod: l });
+  return node("instances", rest, { from, proto: proto ?? (ic !== undefined ? "icon" : "circle"), icon: ic as Prop, inks: inks?.length ? inks : undefined, instance_key: instanceKey, x, y, r, w, h, fill, instance_opacity: opacity, stroke: stroke(st), screen_size: screenSize || undefined, label, hit, reach, lod: l });
 }
 
 /** One layer of a `tiles` node: the archive layer's features through a template (resolved once per

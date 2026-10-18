@@ -176,10 +176,21 @@ pub enum TKind {
         #[serde(default)]
         params: serde_json::Value,
     },
+    /// A picture (a raster logo, a photo): `asset` names the file (a path relative to the
+    /// document, an `https://` URL; PNG, JPEG or WebP), drawn into `rect` (`[x, y, w, h]`) as `fit` says. The
+    /// build step ships the file in the bundle; the engine never fetches it (P10).
     Image {
-        asset: String,
+        asset: Prop,
         rect: [Prop; 4],
+        /// `contain` (the default: all of it, its aspect kept, centred), `cover` (fills the rect,
+        /// cut to it), `fill` (stretched to the rect), `none` (its own size, centred, cut).
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        fit: Option<String>,
     },
+    /// An icon (docs/04-primitives.md §Icons): a vector drawing from the default set
+    /// (`"heart"`, `"lucide:heart"`), a theme icon token (`"$icon.up"`), a project SVG or an
+    /// `https://` URL, or inline SVG markup — drawn `size` px at `at`, in `ink`.
+    Icon(TIcon),
     /// Features of a vector-tile source, streamed for what the enclosing view shows: the engine
     /// picks the tiles covering the view at a zoom matching the camera, and draws each tile layer's
     /// features through a template in the enclosing `geo` coordinate system. Resolved late — per
@@ -193,6 +204,104 @@ impl Default for TKind {
     }
 }
 
+
+/// An `icon` node. Decorative unless it has `semantics` (a label: an icon that stands for a word).
+/// Read by hand from JSON (see [`fields`]), like [`TTextPath`].
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "serde_json::Value")]
+// The schema describes the fields, not the `Value` they are read through.
+#[cfg_attr(feature = "schema", schemars(!try_from))]
+pub struct TIcon {
+    /// Which icon: a name (`heart`, `lucide:heart`), `$icon.<token>`, a file or URL ending in
+    /// `.svg`, inline markup (`<svg …>`), or path data (`{ "d": "M…", "viewBox": [0, 0, 24, 24],
+    /// "stroke": 2 }`, filled — or stroked that wide — in `ink`). May be an expression.
+    pub icon: Prop,
+    /// The anchor point (by default the icon's centre; see `anchor`).
+    pub at: [Prop; 2],
+    /// The side of the square box the icon fits in, px (default: the theme's `size.icon`, else
+    /// 16). Not `size`, which is the node's layout size.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub icon_size: Prop,
+    /// The ink of `currentColor` (and of a one-colour file). Default `$ink`.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub ink: Prop,
+    /// Inks for the file's other colours, by slot (the order it first uses them); unset slots
+    /// take `$categorical[i]`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inks: Vec<Prop>,
+    /// Degrees clockwise, about `at`.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub rotate: Prop,
+    /// Where `at` is on the box: `center` (default), `top`, `bottom`, `left`, `right`,
+    /// `top-left`, `top-right`, `bottom-left`, `bottom-right`.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub anchor: Prop,
+}
+
+/// Reading newer node types by hand (`#[serde(try_from = "serde_json::Value")]`): every struct
+/// a derive reads inside the internally tagged [`TKind`] is a few KB of the web runtime (serde
+/// buffers it, and generates a reader per buffer kind); these go through the `Value` reader the
+/// runtime already has, and cost a few hundred bytes each. Unknown fields are ignored, as derived.
+mod fields {
+    use super::Prop;
+    use serde_json::{Map, Value};
+
+    pub fn object(v: Value, what: &str) -> Result<Map<String, Value>, String> {
+        match v {
+            Value::Object(o) => Ok(o),
+            _ => Err(format!("{what} is an object")),
+        }
+    }
+    pub fn prop(o: &mut Map<String, Value>, k: &str) -> Prop {
+        Prop(o.remove(k).unwrap_or(Value::Null))
+    }
+    pub fn props<const N: usize>(o: &mut Map<String, Value>, k: &str, what: &str) -> Result<Option<[Prop; N]>, String> {
+        match o.remove(k) {
+            None | Some(Value::Null) => Ok(None),
+            Some(Value::Array(a)) if a.len() == N => {
+                let mut it = a.into_iter().map(Prop);
+                Ok(Some(std::array::from_fn(|_| it.next().unwrap_or_default())))
+            }
+            Some(_) => Err(format!("{what} is an array of {N}")),
+        }
+    }
+    pub fn list(o: &mut Map<String, Value>, k: &str) -> Vec<Prop> {
+        match o.remove(k) {
+            Some(Value::Array(a)) => a.into_iter().map(Prop).collect(),
+            _ => Vec::new(),
+        }
+    }
+}
+
+impl TryFrom<serde_json::Value> for TIcon {
+    type Error = String;
+    fn try_from(v: serde_json::Value) -> Result<TIcon, String> {
+        use fields::*;
+        let mut o = object(v, "an icon node")?;
+        if !o.contains_key("icon") {
+            return Err("an icon node needs `icon`".into());
+        }
+        Ok(TIcon {
+            icon: prop(&mut o, "icon"),
+            at: props(&mut o, "at", "an icon's `at`")?.ok_or("an icon node needs `at` ([x, y])")?,
+            icon_size: prop(&mut o, "icon_size"),
+            ink: prop(&mut o, "ink"),
+            inks: list(&mut o, "inks"),
+            rotate: prop(&mut o, "rotate"),
+            anchor: prop(&mut o, "anchor"),
+        })
+    }
+}
+
+impl TryFrom<serde_json::Value> for TTextPath {
+    type Error = String;
+    fn try_from(v: serde_json::Value) -> Result<TTextPath, String> {
+        use fields::*;
+        let mut o = object(v, "a text's `path`")?;
+        Ok(TTextPath { d: prop(&mut o, "d"), arc: props(&mut o, "arc", "a text path's `arc` ([cx, cy, r, a0, a1])")?, offset: prop(&mut o, "offset"), upright: prop(&mut o, "upright") })
+    }
+}
 
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -325,6 +434,35 @@ pub struct TText {
     /// with none clear it stays and gets a halo (a reference line's label, a note).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub alternatives: Vec<TTextPlace>,
+    /// Set along a path instead of a straight line (curved labels on arcs and circles): each
+    /// glyph sits on the path, turned with it. `at` is then ignored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<TTextPath>,
+}
+
+/// The line a text follows: SVG path data, or an arc. Measured like any text; a text longer than
+/// its path is left out (and said so by `datars labels`) rather than run off its end.
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(try_from = "serde_json::Value")]
+// The schema describes the fields, not the `Value` they are read through.
+#[cfg_attr(feature = "schema", schemars(!try_from))]
+pub struct TTextPath {
+    /// SVG path data (literal or an expression).
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub d: Prop,
+    /// An arc instead: `[cx, cy, r, a0, a1]`, angles in radians clockwise from 12 o'clock (as
+    /// `geom.arc`). Text runs from `a0` towards `a1`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub arc: Option<[Prop; 5]>,
+    /// Where along the path the text's `align` point goes, as a share of its length (default by
+    /// `align`: 0 for start, 0.5 middle, 1 end).
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub offset: Prop,
+    /// Keep the text reading left to right: on a path that runs right to left (the lower half of
+    /// a circle) it's set along the path reversed. Default true.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub upright: Prop,
 }
 
 /// One more place a text may go: where, and how it hangs from there.
@@ -399,9 +537,17 @@ pub enum RepeatFrom {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct TInstances {
     pub from: String,
-    /// `circle | square | diamond | triangle | cross | star | rect`
+    /// `circle | square | diamond | triangle | cross | star | rect | icon`
     #[serde(default = "circle")]
     pub proto: String,
+    /// `proto: icon`: which icon every instance draws (as an `icon` node's `icon`; evaluated
+    /// once, not per row), in its row's `fill` — thousands of one icon as one node (pictograms,
+    /// unit charts, map markers). `r` is half the icon's box.
+    #[serde(default, skip_serializing_if = "Prop::is_null")]
+    pub icon: Prop,
+    /// `proto: icon`: inks for the icon's other colours, by slot.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub inks: Vec<Prop>,
     /// Per-instance key (an expression over the row). Separate from the node's own `key`: the
     /// instances node keeps one identity, each instance another.
     #[serde(default, skip_serializing_if = "Prop::is_null")]
@@ -725,4 +871,24 @@ fn is_zero(v: &f64) -> bool {
 enum PaddingInput {
     All(f64),
     Sides(Vec<f64>),
+}
+
+#[cfg(test)]
+mod hand_read {
+    use super::*;
+
+    #[test]
+    fn icon_and_text_path_nodes_read_by_hand_as_derived() {
+        let t: Template = serde_json::from_str(r#"{"kind": "icon", "key": "i", "icon": "heart", "at": [1, {"expr": "x"}], "icon_size": 18, "inks": ["$accent"], "when": true}"#).unwrap();
+        let TKind::Icon(i) = &t.kind else { panic!("{t:?}") };
+        assert_eq!((i.icon.as_str(), i.at[0].0.clone(), i.icon_size.0.clone(), i.inks.len()), (Some("heart"), serde_json::json!(1), serde_json::json!(18), 1));
+        assert_eq!(t.key.as_str(), Some("i"));
+        // Written back as derived: the same JSON.
+        let again: Template = serde_json::from_str(&serde_json::to_string(&t).unwrap()).unwrap();
+        assert_eq!(again, t);
+        assert!(serde_json::from_str::<Template>(r#"{"kind": "icon", "icon": "heart"}"#).unwrap_err().to_string().contains("`at`"));
+        let p: TTextPath = serde_json::from_str(r#"{"arc": [0, 0, 10, 0, 3.14], "upright": false}"#).unwrap();
+        assert_eq!((p.arc.as_ref().map(|a| a[2].0.clone()), p.upright.0.clone(), p.d.is_null()), (Some(serde_json::json!(10)), serde_json::json!(false), true));
+        assert!(serde_json::from_str::<TTextPath>(r#"{"arc": [0, 0]}"#).is_err());
+    }
 }

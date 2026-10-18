@@ -5,6 +5,7 @@
 
 pub mod geom;
 pub mod hash;
+pub mod icon;
 pub mod key;
 pub mod node;
 pub mod paint;
@@ -12,6 +13,7 @@ pub mod snapshot;
 pub mod text;
 
 pub use geom::{Curve, Geom, SymbolKind};
+pub use icon::{IconGlyph, IconInk, IconLayer, IconStroke};
 pub use key::{Key, KeyPart, KeyPath, Sym};
 pub use node::{FLOAT_Z, 
     Anchor, Blend, Camera, Clip, Common, Instances, Marker, Markers, Node, NodeKind, Proto, Role, Scene, Semantics,

@@ -45,6 +45,11 @@ pub struct Doc {
     pub motion: serde_json::Value,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub program: Option<Program>,
+    /// Icons the document carries itself, by key (`lucide:heart`, `logo.svg`), in the compact
+    /// form `datars-icon` reads (`{ "vb": [...], "layers": [...] }`): a tool that has read them
+    /// (`datars dev`) writes them here, so any runtime draws them without asking.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub icons: BTreeMap<String, serde_json::Value>,
 }
 
 fn default_locale() -> String {

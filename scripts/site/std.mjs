@@ -14,7 +14,7 @@ export const STD_GROUPS = [
   ["Comparisons", "Before and after, ranks and gaps.", ["slope", "dumbbell", "bump", "lollipop", "pyramid", "marimekko"]],
   ["KPIs and planning", "Numbers that matter, and what happens when.", ["kpi", "bullet", "gauge", "progress", "gantt", "timeline"]],
   ["Tables and profiles", "Many values per thing.", ["dataTable", "radar"]],
-  ["Parts of a whole and flows", "Shares, units, bridges and flows.", ["pie", "treemap", "waffle", "hemicycle", "funnel", "waterfall", "pareto", "sankey"]],
+  ["Parts of a whole and flows", "Shares, units, bridges and flows.", ["pie", "treemap", "waffle", "pictogram", "hemicycle", "funnel", "waterfall", "pareto", "sankey"]],
   ["Networks and hierarchies", "Links between things and things inside things.", ["network", "arcDiagram", "chord", "matrix", "tree", "dendrogram", "sunburst", "icicle"]],
   ["Distributions and time", "How values spread — binned, summarised, smoothed or every row visible — and time as the axis.", ["histogram", "boxplot", "violin", "ridgeline", "errorBars", "swarm", "stackedArea", "connectedScatter", "stripes", "calendar", "track"]],
   ["Finance", "Prices, volumes and returns over time.", ["candlestick", "ohlc", "volume", "movingAverage", "bollinger", "indexed", "drawdown", "sparkline"]],

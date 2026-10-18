@@ -22,7 +22,7 @@ jni = { version = "0.21", default-features = false }
 log = "0.4"
 
 [features]
-default = ["sandbox", "bundled-fonts", "gpu"]
+default = ["sandbox", "bundled-fonts", "svg", "gpu"]
 # Frames on the GPU (wgpu): Metal on an app's CAMetalLayer (iOS, macOS), Vulkan or GLES on an
 # Android Surface. Until a surface is attached — and without this feature — frames are CPU pixels
 # (`datars_view_pixels`), which is also what the goldens compare.
@@ -33,3 +33,6 @@ sandbox = ["datars-runtime/sandbox"]
 # development mode (`DatarsSource.document`, `loadDocument`) draw text without a bundle. Bundles
 # carry their own font chunks: apps that only play bundles can build without it.
 bundled-fonts = ["datars-runtime/bundled-fonts"]
+# Icon files and inline SVG read on the device, for raw documents in development mode (bundles
+# carry their icons read). Pictures are decoded by the app (CGImageSource, BitmapFactory).
+svg = ["datars-runtime/svg"]

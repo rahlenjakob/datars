@@ -22,8 +22,12 @@
 //! buffers composited with opacity and Normal, Multiply or Screen blending. Glyph halos are the
 //! glyph outlines stroked (width = halo width × scale, round joins) beneath the fill.
 //!
-//! Not supported yet: **images** (`Op::Image` draws nothing), dash offsets (the display list has
-//! no field for one; [`stroke::StrokeParams::dash_offset`] is ready for it).
+//! Pictures (`Op::Image`) are sampled bilinearly from their premultiplied texels with integer
+//! weights, through the inverse of the op's transform, and filled into their rect with the same
+//! coverage as any path. Icon instances draw as their layers' fills and strokes.
+//!
+//! Not supported yet: dash offsets (the display list has no field for one;
+//! [`stroke::StrokeParams::dash_offset`] is ready for it).
 
 mod canvas;
 mod paint;

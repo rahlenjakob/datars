@@ -106,6 +106,8 @@ pub(crate) enum Item {
     /// frame's instance buffer at `offset`.
     Inst { pipe: Pipe, slot: u32, offset: u64, count: u32, stencil: u32, kept: Option<crate::gpu::SlabSpan> },
     Composite { pipe: Pipe, slot: u32, level: usize },
+    /// A picture: its rect's mesh painted from the picture's texture (`image`, a content hash).
+    Image { slot: u32, mesh: GpuMesh, stencil: u32, image: u64 },
 }
 
 pub(crate) struct Frame {
@@ -522,7 +524,18 @@ impl Renderer {
                 Op::Glyphs { font, size, glyphs: g, origin, scale, rotate, color, halo, .. } => {
                     self.glyphs_op(&mut fr, glyphs, font, *size, g, *origin, *scale, *rotate, *color, *halo)
                 }
+                // Icons: their layers' meshes, tessellated once and drawn per instance.
+                Op::Instances(i) if matches!(i.proto, Proto::Icon { .. }) => {
+                    for o in i.icon_ops() {
+                        match &o {
+                            Op::Fill { path, xf, paint, rule, opacity } => self.fill_op(&mut fr, path, xf, paint, *rule, *opacity),
+                            Op::Stroke { path, xf, style, paint, opacity } => self.stroke_op(&mut fr, path, xf, style, paint, *opacity),
+                            _ => {}
+                        }
+                    }
+                }
                 Op::Instances(i) => self.instances_op(&mut fr, i),
+                Op::Image { rect, xf, opacity, image: Some(img), .. } => self.image_op(&mut fr, img, *rect, xf, *opacity),
                 Op::Image { .. } => fr.skipped += 1,
                 Op::PushClip { path, xf, rule } => self.push_clip(&mut fr, path, xf, *rule),
                 Op::PopClip => pop_clip(&mut fr),
@@ -571,6 +584,42 @@ impl Renderer {
         let mut u = fr.base(&dev, mesh.centre);
         self.paint(&mut u, paint, mesh.centre, opacity);
         fr.draw_mesh(Pipe::Fill, u, mesh);
+    }
+
+    /// A picture: its rect filled (MSAA edges, clips, layers as any fill), each sample from the
+    /// picture's texture — premultiplied texels, bilinear, as the CPU reference samples.
+    fn image_op(&mut self, fr: &mut Frame, img: &std::sync::Arc<datars_render::Raster>, rect: datars_math::Rect, xf: &Affine, opacity: f32) {
+        if opacity <= 0.0 || !(rect.w.abs() > 0.0 && rect.h.abs() > 0.0) {
+            return;
+        }
+        let dev = device(fr.dpr, xf);
+        let Some(tol) = tol_bucket(&dev) else { return };
+        if !self.images.contains_key(&img.hash) {
+            let tex = crate::gpu::texture(&self.gpu.device, "image", (img.width, img.height), wgpu::TextureFormat::Rgba8Unorm, 1, wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST);
+            self.gpu.queue.write_texture(
+                wgpu::TexelCopyTextureInfo { texture: &tex, mip_level: 0, origin: wgpu::Origin3d::ZERO, aspect: wgpu::TextureAspect::All },
+                &img.premul,
+                wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(img.width * 4), rows_per_image: Some(img.height) },
+                wgpu::Extent3d { width: img.width, height: img.height, depth_or_array_layers: 1 },
+            );
+            let bind = self.gpu.texture_bind(&tex.create_view(&Default::default()));
+            self.images.insert(img.hash, (tex, bind, self.frame));
+        }
+        if let Some(e) = self.images.get_mut(&img.hash) {
+            e.2 = self.frame;
+        }
+        let path = datars_render::SharedPath::new(datars_math::PathData::rect(rect));
+        let key = MeshKey::Fill { path: path.hash, rule: FillRule::NonZero as u8, tol: STRAIGHT };
+        let mesh = self.mesh(key, |t| t.fill(&path.path, FillRule::NonZero, tol_local(tol)));
+        if mesh.count == 0 {
+            return;
+        }
+        let mut u = fr.base(&dev, mesh.centre);
+        u.misc[0] = opacity.clamp(0.0, 1.0);
+        u.misc[1] = 3.0;
+        u.grad = [(rect.x - mesh.centre.x) as f32, (rect.y - mesh.centre.y) as f32, rect.w as f32, rect.h as f32];
+        let slot = fr.push_uniform(u);
+        fr.items.push(Item::Image { slot, mesh, stencil: fr.depth, image: img.hash });
     }
 
     fn stroke_op(&mut self, fr: &mut Frame, path: &SharedPath, xf: &Affine, style: &StrokeStyle, paint: &DPaint, opacity: f32) {
@@ -1041,6 +1090,22 @@ impl Renderer {
                         set(&mut pass, *pipe, 0, *slot);
                         pass.set_bind_group(1, bind, &[]);
                         pass.draw(0..3, 0..1);
+                        pass.set_bind_group(1, &self.ramp_bind, &[]);
+                        draws += 1;
+                    }
+                    Item::Image { slot, mesh, stencil, image } => {
+                        let found = match (&mesh.arena, &mesh.pool) {
+                            (Some(span), _) => self.arena.buffers(span).map(|(vb, ib)| (vb, ib, span.first)),
+                            (None, Some(span)) => self.pool.buffers(span).map(|(vb, ib)| (vb, ib, span.first)),
+                            _ => None,
+                        };
+                        let (Some((vb, ib, first)), Some((_, bind, _))) = (found, self.images.get(image)) else { continue };
+                        set(&mut pass, Pipe::Fill, *stencil, *slot);
+                        pass.set_vertex_buffer(0, vb.slice(..));
+                        pass.set_index_buffer(ib.slice(..), wgpu::IndexFormat::Uint32);
+                        bound = Some((vb as *const _, ib as *const _));
+                        pass.set_bind_group(1, bind, &[]);
+                        pass.draw_indexed(first..first + mesh.count, 0, 0..1);
                         pass.set_bind_group(1, &self.ramp_bind, &[]);
                         draws += 1;
                     }

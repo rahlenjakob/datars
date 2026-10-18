@@ -280,6 +280,7 @@ fn fulfil(core: &mut Core, origin: &Origin) {
                 }
                 continue;
             }
+            datars_engine::Request::Decode { .. } => continue,
         };
         if let Some(bytes) = datars_headless::fetch_from_disk(&req, dir) {
             if let Err(e) = core.engine.provide(&name, &bytes) {
@@ -287,6 +288,7 @@ fn fulfil(core: &mut Core, origin: &Origin) {
             }
         }
     }
+    datars_headless::decline_decodes(&mut core.engine);
 }
 
 fn fulfil_web(core: &mut Core, base: &str) {
@@ -312,6 +314,7 @@ fn fulfil_web(core: &mut Core, base: &str) {
             _ => {}
         }
     }
+    datars_headless::decline_decodes(&mut core.engine);
 }
 
 fn load(source: Source, origin: &Origin) -> Result<Core, String> {

@@ -196,15 +196,17 @@ pub fn check_motion(frames: &[Scene], diag: f64) -> Vec<String> {
         let ops: Vec<f64> = series.iter().map(|s| s.map(|x| x.op).unwrap_or(0.0)).collect();
         // Scenery (a basemap's labels) may come and go as the camera passes; data must not.
         let decor = series.iter().flatten().all(|e| e.decor);
-        if !decor && entering && ops.windows(2).any(|w| w[1] + 1e-6 < w[0] && w[0] > 0.05) {
+        // (An element drawn as a crossfade pair — a bar's piece becoming an icon, two prototypes
+        // under one key — dims on purpose while one copy gives way to the other.)
+        let swapped = pairs.iter().any(|p| p.contains(k));
+        if !decor && entering && !swapped && ops.windows(2).any(|w| w[1] + 1e-6 < w[0] && w[0] > 0.05) {
             v.push(format!("flash: entering {k} fades back out mid-transition"));
         }
-        if !decor && exiting && ops.windows(2).any(|w| w[1] > w[0] + 1e-6 && w[1] > 0.05) {
+        if !decor && exiting && !swapped && ops.windows(2).any(|w| w[1] > w[0] + 1e-6 && w[1] > 0.05) {
             v.push(format!("flash: exiting {k} comes back mid-transition"));
         }
         // A crossfade between two versions of an element (a title whose text changes) dims on
         // purpose: the old text is out before the new one comes in.
-        let swapped = pairs.iter().any(|p| p.contains(k));
         if !decor && !entering && !exiting && !swapped && first.contains_key(k) {
             let lo = ops[0].min(ops[n - 1]);
             if lo > 0.2 && ops.iter().any(|o| *o < lo * 0.25) {

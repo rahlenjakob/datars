@@ -10,7 +10,7 @@
 // if missing) and the web runtime (`scripts/build-wasm.sh && pnpm -C packages/web build`).
 // Preview: `datars serve out/pages` (or any static server over the folder).
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
@@ -87,6 +87,8 @@ const CHARTS = {
   inflation: { src: "examples/inflation/doc.json", min: 280 },
   scatter: { src: "examples/scatter/doc.json", min: 300 },
   business: { src: "examples/business/doc.json", min: 280 },
+  commute: { src: "examples/commute/doc.json", min: 300, phone: 1.4 },
+  mood: { src: "examples/mood/doc.json", min: 300, phone: 1.2 },
   serif: { src: "examples/serif/doc.json", min: 280 },
   spending: { src: "examples/spending/doc.json", min: 280, files: { "examples/spending/web/user.json": "data/spending/this.json", "examples/spending/web/other.json": "data/spending/other.json" } },
   election: { src: "examples/election/doc.json", min: 300, files: { "examples/election/count.json.d": "data/election" } },
@@ -190,6 +192,19 @@ function stageDoc(alias, src) {
     }
   };
   fonts(doc.theme);
+  // Icons and pictures a document names by a relative path (`assets/badge.svg`) are read at build
+  // time and shipped in the bundle: stage them next to the staged document, at the same path.
+  const assets = (v) => {
+    if (Array.isArray(v)) v.forEach(assets);
+    else if (v && typeof v === "object") Object.values(v).forEach(assets);
+    else if (typeof v === "string" && /^[\w./-]+\.(svg|png)$/i.test(v) && !v.startsWith("/") && !v.includes("..")) {
+      const from = resolve(dirname(file), v);
+      if (!existsSync(from)) return;
+      mkdirSync(dirname(join(stage, "c", v)), { recursive: true });
+      copyFileSync(from, join(stage, "c", v));
+    }
+  };
+  assets(doc.scene);
   // An automatic basemap is found next to the document: stage its archive and lockfile with it.
   const staged = join(stage, "c", `${alias}.json`);
   for (const [name, s] of Object.entries(doc.data ?? {})) {
@@ -433,14 +448,14 @@ copyFileSync(join(dist, "datars.js"), join(out, "runtime/datars.js"));
 for (const f of readdirSync(join(dist, "wasm"))) {
   if (/^(datars_core|datars_host_web|wasi_shim)/.test(f)) copyFileSync(join(dist, "wasm", f), join(out, "runtime/wasm", f));
 }
-// The built-in atlas and default fonts, for documents a page builds in the browser (bundles carry
-// their own geometry and font subsets): `datars:atlas/…` and `datars:fonts/…` resolve next to the
-// runtime. Without the fonts, the theme studio's resolver, the extensibility workbench and the
-// developers bench asked for Inter and got 404s.
-for (const dir of ["atlas", "fonts"]) {
+// The built-in atlas, default fonts and default icon set, for documents a page builds in the
+// browser (bundles carry their own geometry, font subsets and icons): `datars:atlas/…`,
+// `datars:fonts/…` and `datars:icons/…` resolve next to the runtime. Without the fonts, the theme
+// studio's resolver, the extensibility workbench and the developers bench asked for Inter and got
+// 404s. The icons are one small file each (`icons/lucide/<name>.json`), fetched only when named.
+for (const dir of ["atlas", "fonts", "icons"]) {
   if (!existsSync(join(dist, dir))) continue;
-  mkdirSync(join(out, "runtime", dir), { recursive: true });
-  for (const f of readdirSync(join(dist, dir))) copyFileSync(join(dist, dir, f), join(out, "runtime", dir, f));
+  cpSync(join(dist, dir), join(out, "runtime", dir), { recursive: true });
 }
 const runtimeGz = gzipSync(readFileSync(join(dist, "wasm/datars_core_bg.wasm")), { level: 9 }).length + gzipSync(readFileSync(join(dist, "datars.js")), { level: 9 }).length;
 const runtime = `${(runtimeGz / 1048576).toFixed(1)} MB`;
@@ -486,6 +501,9 @@ function stdList() {
   }).join("");
 }
 
+/** Recipes that draw icons or curved text: the gallery's "Icons & curved text" filter finds them. */
+const ICON_RECIPES = new Set(["pictogram", "gauge", "legend", "annotate"]);
+
 /** A recipe family's slug (the chart reference's heading ids): "Parts of a whole and flows" →
  * "parts-of-a-whole-and-flows". */
 const familySlug = (h) => h.toLowerCase().replace(/[^a-z]+/g, "-").replace(/^-|-$/g, "");
@@ -503,7 +521,7 @@ function stdCards() {
     const cards = here.map((n) => {
       const doc = std[`@datars/std/${n}`].doc ?? "";
       const a = figureAlias(n);
-      return `<article class="g-card g-type" id="${a}" data-kind="types" data-families="${fam}" data-tags="" data-words="${escapeAttr(`${n} ${h} ${doc}`)}"><div class="chart" data-chart="${a}"></div><div class="g-text"><p class="g-kicker">${escapeHtml(h)}</p><h3><code>${escapeHtml(n)}</code></h3><p>${inline(firstSentence(doc))}</p><div class="g-foot"><span class="g-meta"><a href="/docs/std/${n}/">Reference</a> · <a href="/features/charts/#play=${n}">Playground</a></span><button type="button" class="g-open" data-lab="${a}" aria-label="Open ${escapeAttr(n)} in the lab">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div></div></article>`;
+      return `<article class="g-card g-type" id="${a}" data-kind="types" data-families="${fam}" data-tags="${ICON_RECIPES.has(n) ? "icons" : ""}" data-words="${escapeAttr(`${n} ${h} ${doc}`)}"><div class="chart" data-chart="${a}"></div><div class="g-text"><p class="g-kicker">${escapeHtml(h)}</p><h3><code>${escapeHtml(n)}</code></h3><p>${inline(firstSentence(doc))}</p><div class="g-foot"><span class="g-meta"><a href="/docs/std/${n}/">Reference</a> · <a href="/features/charts/#play=${n}">Playground</a></span><button type="button" class="g-open" data-lab="${a}" aria-label="Open ${escapeAttr(n)} in the lab">Open in the lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-8 8M10 5H5v14h14v-5"/></svg></button></div></div></article>`;
     }).join("");
     return `<section class="g-group g-family" id="${fam}" data-group="types" data-family="${fam}"><div class="wrap"><header class="g-group-head"><h3 class="g-fam-h">${escapeHtml(h)} <small>${here.length}</small></h3>${blurb ? `<p>${escapeHtml(blurb)}</p>` : ""}</header><div class="g-grid g-grid-types">${cards}</div></div></section>`;
   }).join("\n");

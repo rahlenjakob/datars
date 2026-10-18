@@ -22,3 +22,5 @@ default = ["sandbox", "bundled-fonts"]
 sandbox = ["datars-engine/sandbox"]
 # The default family compiled in (see datars-engine). The web runtime leaves it out.
 bundled-fonts = ["datars-engine/bundled-fonts"]
+# Read SVG icon markup on the device (native hosts' development mode). The web runtime leaves it out.
+svg = ["datars-engine/svg"]

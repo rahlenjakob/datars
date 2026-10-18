@@ -173,6 +173,43 @@ export function typedColumns({ columns, rows }) {
 if (typeof document !== "undefined") {
   const fits = document.getElementById("fits");
   if (fits) yourData(fits);
+  const icons = document.getElementById("icons");
+  if (icons) iconLab(icons);
+}
+
+// ---- the icon lab: a pictogram's shape, icon set and inks; a dial's needle -------------------------
+
+/** Palettes the lab's ink chips set (`setTokens({ categorical })`); `theme` clears them. */
+const ICON_INKS = {
+  theme: null,
+  sea: ["#2a6f97", "#2c9c94", "#56b38a", "#8cc084", "#61a5c2"],
+  mono: null, // one ink: the theme's own
+};
+
+function iconLab(section) {
+  const press = (buttons, on) => buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === on)));
+  const shapes = [...section.querySelectorAll("[data-icons-shape]")];
+  const sets = [...section.querySelectorAll("[data-icons-set]")];
+  const inks = [...section.querySelectorAll("[data-icons-inks]")];
+  const slot = section.querySelector('.chart[data-chart="charts-icons"]');
+  if (slot) whenReady(slot).then((view) => {
+    shapes.forEach((b) => b.addEventListener("click", () => { press(shapes, b); view.setSignal("shape", b.dataset.iconsShape); }));
+    sets.forEach((b) => b.addEventListener("click", () => { press(sets, b); view.setSignal("set", b.dataset.iconsSet); }));
+    inks.forEach((b) => b.addEventListener("click", () => {
+      press(inks, b);
+      const k = b.dataset.iconsInks;
+      view.setTokens(k === "mono" ? { categorical: ["$ink"] } : ICON_INKS[k] ? { categorical: ICON_INKS[k] } : {});
+    }));
+  });
+  const dial = section.querySelector('.chart[data-chart="charts-dial"]');
+  const range = section.querySelector("#mood");
+  const out = section.querySelector("#mood-out");
+  if (dial && range) whenReady(dial).then((view) => {
+    range.addEventListener("input", () => {
+      if (out) out.textContent = range.value;
+      view.setSignal("mood", Number(range.value));
+    });
+  });
 }
 
 /** The slot's <datars-view> once its engine is running. */

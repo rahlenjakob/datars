@@ -15,7 +15,8 @@ struct Draw {
     // Vertex space → gradient space, 2×2 column-major (identity for meshes in local units; the
     // inverse linear transform for strokes built in device space).
     gm: vec4<f32>,
-    // Opacity, paint mode (0 solid, 1 linear, 2 radial), ramp row, 1 if the target is sRGB.
+    // Opacity, paint mode (0 solid, 1 linear, 2 radial, 3 picture), ramp row, 1 if the target is
+    // sRGB. A picture's rect (x, y, w, h, relative to the mesh's reference point) is in `grad`.
     misc: vec4<f32>,
     // Instances: outline width px, px per size unit, symbol extent factor, polygon vertex count
     // (0 = analytic circle).
@@ -93,10 +94,15 @@ fn fs_paint(i: MeshOut) -> @location(0) vec4<f32> {
         t = length(gp - d.grad.xy) / max(d.grad.z, 1e-30);
     }
     let rows = f32(textureDimensions(tex).y);
-    let uv = vec2<f32>((clamp(t, 0.0, 1.0) * (RAMP_W - 1.0) + 0.5) / RAMP_W, (d.misc.z + 0.5) / rows);
+    let ramp_uv = vec2<f32>((clamp(t, 0.0, 1.0) * (RAMP_W - 1.0) + 0.5) / RAMP_W, (d.misc.z + 0.5) / rows);
+    // A picture: the texture is the picture's (premultiplied texels), stretched over its rect.
+    let picture = mode > 2.5;
+    let uv = select(ramp_uv, (i.local - d.grad.xy) / d.grad.zw, picture);
     // Sampled unconditionally (explicit LOD: legal outside uniform control flow, and cheap).
     let g = textureSampleLevel(tex, samp, uv, 0.0);
-    var c = select(d.color, g, mode > 0.5);
+    // Back to straight alpha for `finish`, which premultiplies again.
+    let straight = vec4<f32>(g.rgb / max(g.a, 1e-6), g.a);
+    var c = select(select(d.color, g, mode > 0.5), straight, picture);
     c.a = c.a * d.misc.x;
     return finish(c);
 }

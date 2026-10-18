@@ -16,5 +16,8 @@ datars-render.workspace = true
 png.workspace = true
 
 [dev-dependencies]
+# The picture tests decode their PNGs with the Rust decoder.
+datars-render = { workspace = true, features = ["png"] }
+png.workspace = true
 datars-theme.workspace = true
 datars-render-svg.workspace = true

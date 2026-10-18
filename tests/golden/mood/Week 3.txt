@@ -1,0 +1,32 @@
+scene 640.00×420.00 background=$paper
+  group ("root",)
+    group ("page",) transform=[1.00 0.00 0.00 1.00 20.00 16.00]
+      group ("title",)
+        ("#0",) text "Market mood" at (0.00, 0.00) size=17.00 ink=$ink role=title "Market mood"
+        ("#1",) text "Investor sentiment index, 0–100 (illustrative)" at (0.00, 0.00) size=13.00 ink=$ink-2 transform=[1.00 0.00 0.00 1.00 0.00 24.57]
+      group ("dial",) transform=[1.00 0.00 0.00 1.00 0.00 46.30] role=group "This week"
+        group ("dial",)
+          ("track",) arc c=(300.00, 130.53) r=100.57..128.94 a=-1.75..1.75 fill=$ink@0.06 role=decoration
+          ("band-0",) arc c=(300.00, 130.53) r=100.57..128.94 a=-1.75..-1.05 fill=$diverging~0 role=decoration
+          ("band-1",) arc c=(300.00, 130.53) r=100.57..128.94 a=-1.05..-0.35 fill=$diverging~0.25 role=decoration
+          ("band-2",) arc c=(300.00, 130.53) r=100.57..128.94 a=-0.35..0.35 fill=$diverging~0.5 role=decoration
+          ("band-3",) arc c=(300.00, 130.53) r=100.57..128.94 a=0.35..1.05 fill=$diverging~0.75 role=decoration
+          ("band-4",) arc c=(300.00, 130.53) r=100.57..128.94 a=1.05..1.75 fill=$diverging~1 role=decoration
+          ("name-0",) text "Panic" at (0.00, 0.00) size=10.00 ink=on($diverging~0)
+          ("name-1",) text "Fear" at (0.00, 0.00) size=10.00 ink=on($diverging~0.25)
+          ("name-2",) text "Neutral" at (0.00, 0.00) size=10.00 ink=on($diverging~0.5)
+          ("name-3",) text "Greed" at (0.00, 0.00) size=10.00 ink=on($diverging~0.75)
+          ("name-4",) text "Euphoria" at (0.00, 0.00) size=10.00 ink=on($diverging~1)
+          group ("needle",) transform=[0.93 -0.37 0.37 0.93 300.00 130.53]
+            group ("turn",) transform=[0.93 -0.37 0.37 0.93 0.00 0.00]
+              ("hand",) path els=4 bounds=[-3.00 -95.42 6.00 95.42] fill=$ink role=decoration
+              ("hub",) ellipse c=(0.00, 0.00) r=(5.00, 5.00) fill=$ink stroke=$paper/1.50 role=decoration
+          ("value",) text "28" at (300.00, 169.21) size=33.52 ink=$ink role=datum "This week: 28, Fear (0 to 100)"
+          ("min",) text "0" at (186.99, 168.64) size=10.00 ink=$muted
+          ("max",) text "100" at (413.01, 168.64) size=10.00 ink=$muted
+        ("label",) text "This week" at (300.00, 212.09) size=13.00 ink=$ink-2
+    group ("caption",) transform=[1.00 0.00 0.00 1.00 20.00 308.87]
+      group ("box:Bank results sent the index into fear.",) transform=[1.00 0.00 0.00 1.00 12.00 12.50] role=annotation "Bank results sent the index into fear."
+        ("backdrop",) rect x=0.00 y=0.00 w=220.00 h=84.13 r=8.00 fill=$card stroke=$card-line/1.00 role=decoration
+        ("title",) text "Week 3" at (0.00, 0.00) size=15.00 ink=$card-ink transform=[1.00 0.00 0.00 1.00 14.00 14.00]
+        ("text",) text "Bank results sent the index into fear." at (0.00, 0.00) size=13.00 ink=$card-ink-2 transform=[1.00 0.00 0.00 1.00 14.00 38.15]

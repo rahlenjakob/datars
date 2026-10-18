@@ -6,14 +6,17 @@
 //! Coordinates are CSS px; backends multiply by the device pixel ratio.
 
 mod flatten;
+pub mod raster;
 mod trim;
 
 pub use flatten::{bounds, flatten, flatten_cached, FlattenCache};
+pub use raster::Raster;
 pub use trim::trim_path;
 
 use datars_color::Color;
 use datars_math::{Affine, FillRule, Hash64, PathData, PathEl, Rect, Vec2};
-use datars_scene::{Blend, Cap, GlyphPos, Join, Proto, Sym};
+use datars_scene::{Blend, Cap, GlyphPos, IconInk, Join, Proto, Sym};
+use datars_theme::Ink;
 use std::sync::Arc;
 
 /// A path plus its content hash (resource identity for GPU caches), and whether it is all
@@ -166,7 +169,10 @@ pub enum Op {
     /// search, selection); rasterizers ignore it.
     Glyphs { font: Sym, size: f64, glyphs: Arc<[GlyphPos]>, origin: Vec2, scale: f64, rotate: f64, color: Color, halo: Option<(Color, f64)>, text: Option<Arc<str>> },
     Instances(InstancesOp),
-    Image { asset: Sym, rect: Rect, xf: Affine, opacity: f32 },
+    /// A picture drawn into `rect` (local units, stretched to it), through `xf`. `image` is the
+    /// decoded picture — `None` until it has arrived (nothing is drawn). The engine attaches it
+    /// from its picture store after flattening.
+    Image { asset: Sym, rect: Rect, xf: Affine, opacity: f32, image: Option<Arc<Raster>> },
     PushClip { path: SharedPath, xf: Affine, rule: FillRule },
     PopClip,
     PushLayer { opacity: f32, blend: Blend },
@@ -220,7 +226,69 @@ impl InstancesOp {
                 let r = datars_scene::Geom::rect(self.x[i], self.y[i], w, h).to_path();
                 r.transform(&self.xf)
             }
+            // The icon's box (its drawing is `icon_ops`).
+            Proto::Icon { icon } => {
+                let s = self.size.get(i).copied().unwrap_or(3.0) * self.size_scale;
+                let (hx, hy) = icon.half_extent();
+                PathData::rect(Rect::new(c.x - hx * s, c.y - hy * s, 2.0 * hx * s, 2.0 * hy * s))
+            }
         }
+    }
+
+    /// Where instance `i`'s icon is drawn: its glyph units (−1…1) → device px, centred on the
+    /// instance, `size` × the size scale per unit (unturned, like symbols). `None` for an instance
+    /// that draws nothing (no size, not finite).
+    pub fn icon_xf(&self, i: usize) -> Option<Affine> {
+        let (x, y) = (*self.x.get(i)?, *self.y.get(i)?);
+        let s = self.size.get(i).copied().unwrap_or(3.0) * self.size_scale;
+        if !(x.is_finite() && y.is_finite() && s.is_finite() && s > 0.0) {
+            return None;
+        }
+        let c = self.xf.apply(Vec2::new(x, y));
+        Some(Affine::translate(c.x, c.y).mul(Affine::scale(s, s)))
+    }
+
+    /// An icon set as the fills and strokes it draws, instance by instance in order (each layer
+    /// a path shared by every instance, so a GPU tessellates it once): what backends without an
+    /// instanced icon path draw. Empty for other prototypes.
+    pub fn icon_ops(&self) -> Vec<Op> {
+        let Proto::Icon { icon } = &self.proto else { return Vec::new() };
+        let paths: Vec<SharedPath> = icon.layers.iter().map(|l| SharedPath::from_shared(&l.path)).collect();
+        let slots: Vec<Color> = icon.inks.iter().map(literal).collect();
+        let fallback = self.fill.first().copied().unwrap_or(Color::BLACK);
+        let mut out = Vec::new();
+        for i in 0..self.len() {
+            let o = self.opacity_at(i);
+            let Some(at) = self.icon_xf(i).filter(|_| o > 0.0) else { continue };
+            let s = at.0[0];
+            let cur = self.fill.get(i).copied().unwrap_or(fallback);
+            let ink = |k: &IconInk| match k {
+                IconInk::Current => cur,
+                IconInk::Slot(n) => slots.get(*n as usize).copied().unwrap_or(MISSING),
+            };
+            for (l, path) in icon.layers.iter().zip(&paths) {
+                let op = o * l.opacity as f32;
+                if let Some(f) = &l.fill {
+                    out.push(Op::Fill { path: path.clone(), xf: at, paint: DPaint::Solid(ink(f)), rule: l.rule, opacity: op });
+                }
+                if let Some(st) = &l.stroke {
+                    let style = StrokeStyle { width_px: st.width * s, cap: st.cap, join: st.join, miter_limit: 4.0, dash: None };
+                    out.push(Op::Stroke { path: path.clone(), xf: at, style, paint: DPaint::Solid(ink(&st.ink)), opacity: op });
+                }
+            }
+        }
+        out
+    }
+}
+
+/// What an unresolved ink draws as in a backend (flattening resolves icon inks first).
+const MISSING: Color = Color { r: 1.0, g: 0.0, b: 1.0, a: 1.0 };
+
+/// An ink flattening resolved to a colour (anything else: [`MISSING`]).
+pub fn literal(i: &Ink) -> Color {
+    match i {
+        Ink::Color(c) => *c,
+        _ => MISSING,
     }
 }
 
@@ -358,6 +426,16 @@ fn hash_op(h: &mut Hash64, op: &Op) {
                     h.u8(*symbol as u8);
                 }
                 Proto::Rect => h.u8(1),
+                Proto::Icon { icon } => {
+                    h.u8(2);
+                    h.str(&icon.name);
+                    for l in &icon.layers {
+                        h.u64(SharedPath::from_shared(&l.path).hash);
+                    }
+                    for c in icon.inks.iter().map(literal) {
+                        hash_color(h, c);
+                    }
+                }
             }
             for col in [&i.w, &i.h] {
                 match col {
@@ -389,9 +467,10 @@ fn hash_op(h: &mut Hash64, op: &Op) {
             }
             h.f64(i.size_scale);
         }
-        Op::Image { asset, rect, xf, opacity } => {
+        Op::Image { asset, rect, xf, opacity, image } => {
             h.u8(5);
             h.str(asset);
+            h.u64(image.as_ref().map_or(0, |i| i.hash));
             for v in [rect.x, rect.y, rect.w, rect.h] {
                 h.f64(v);
             }

@@ -6,7 +6,7 @@ export { grid } from "./grid.js";
 export { bar, line, area, point, dot, pareto } from "./marks.js";
 export { pie, donut } from "./pie.js";
 export { legend, title, rule, span, annotate, card } from "./guides.js";
-export { cell, stripes, stacked, grouped, treemap, waffle, hemicycle, swarm, sankey, waterfall, funnel, calendar, facet } from "./charts.js";
+export { cell, stripes, stacked, grouped, treemap, waffle, pictogram, hemicycle, swarm, sankey, waterfall, funnel, calendar, facet } from "./charts.js";
 export { map, symbols, geoPoints, geoLines, route, track, dotDensity } from "./map.js";
 export * from "./controls.js";
 export { basemap, attribution } from "./basemap.js";

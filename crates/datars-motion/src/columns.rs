@@ -48,14 +48,14 @@ impl InstState {
     pub fn center(&self, proto: &Proto) -> Vec2 {
         match proto {
             Proto::Rect => Vec2::new(self.x + self.w / 2.0, self.y + self.h / 2.0),
-            Proto::Symbol { .. } => Vec2::new(self.x, self.y),
+            Proto::Symbol { .. } | Proto::Icon { .. } => Vec2::new(self.x, self.y),
         }
     }
 
     pub fn bounds(&self, proto: &Proto) -> Rect {
         match proto {
             Proto::Rect => Rect::new(self.x, self.y, self.w, self.h),
-            Proto::Symbol { .. } => Rect::new(self.x - self.size, self.y - self.size, 2.0 * self.size, 2.0 * self.size),
+            Proto::Symbol { .. } | Proto::Icon { .. } => Rect::new(self.x - self.size, self.y - self.size, 2.0 * self.size, 2.0 * self.size),
         }
     }
 
@@ -69,7 +69,7 @@ impl InstState {
                 self.x = c.x - self.w / 2.0;
                 self.y = c.y - self.h / 2.0;
             }
-            Proto::Symbol { .. } => {
+            Proto::Symbol { .. } | Proto::Icon { .. } => {
                 self.x = c.x;
                 self.y = c.y;
             }
@@ -80,11 +80,11 @@ impl InstState {
     /// The same instance expressed in another prototype's terms (centre and extent preserved).
     pub fn convert(&self, from: &Proto, to: &Proto) -> InstState {
         match (from, to) {
-            (Proto::Rect, Proto::Symbol { .. }) => {
+            (Proto::Rect, Proto::Symbol { .. } | Proto::Icon { .. }) => {
                 let c = self.center(from);
                 InstState { x: c.x, y: c.y, size: self.w.abs().min(self.h.abs()) / 2.0, ..self.clone() }
             }
-            (Proto::Symbol { .. }, Proto::Rect) => {
+            (Proto::Symbol { .. } | Proto::Icon { .. }, Proto::Rect) => {
                 InstState { x: self.x - self.size, y: self.y - self.size, w: 2.0 * self.size, h: 2.0 * self.size, ..self.clone() }
             }
             _ => self.clone(),
@@ -97,7 +97,7 @@ impl InstState {
         s.opacity *= g.opacity_factor();
         if let Some((o, sx, sy)) = g.scaling(self.bounds(proto), self.center(proto)) {
             match proto {
-                Proto::Symbol { .. } => {
+                Proto::Symbol { .. } | Proto::Icon { .. } => {
                     s.x = o.x + (s.x - o.x) * sx;
                     s.y = o.y + (s.y - o.y) * sy;
                     s.size *= sx.min(sy).max(0.0);
@@ -514,7 +514,7 @@ impl ColumnTrack {
                     let c = &self.cols;
                     let (ca, cb) = match self.proto {
                         Proto::Rect => (Vec2::new(c.x0[k] + c.w0[k] / 2.0, c.y0[k] + c.h0[k] / 2.0), Vec2::new(c.x1[k] + c.w1[k] / 2.0, c.y1[k] + c.h1[k] / 2.0)),
-                        Proto::Symbol { .. } => (Vec2::new(c.x0[k], c.y0[k]), Vec2::new(c.x1[k], c.y1[k])),
+                        Proto::Symbol { .. } | Proto::Icon { .. } => (Vec2::new(c.x0[k], c.y0[k]), Vec2::new(c.x1[k], c.y1[k])),
                     };
                     self.route.offset(ca, cb, e[k].clamp(0.0, 1.0), self.hashes.get(k).copied().unwrap_or(0), &self.rcx)
                 })
@@ -541,7 +541,7 @@ impl ColumnTrack {
                     Some((0..n).map(|k| mix_size(c.w0[k], c.w1[k], e[k])).collect()),
                     Some((0..n).map(|k| mix_size(c.h0[k], c.h1[k], e[k])).collect()),
                 ),
-                Proto::Symbol { .. } => ((0..n).map(|k| mix_size(c.s0[k], c.s1[k], e[k])).collect(), None, None),
+                Proto::Symbol { .. } | Proto::Icon { .. } => ((0..n).map(|k| mix_size(c.s0[k], c.s1[k], e[k])).collect(), None, None),
             };
             Instances {
                 proto: proto.clone(),

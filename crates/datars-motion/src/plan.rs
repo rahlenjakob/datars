@@ -688,7 +688,7 @@ impl NodeTrack {
                         Geom::path(mg.morph.at(e))
                     }
                 };
-                NodeKind::Shape { geom, fill, stroke, markers: if late { *mb } else { *ma } }
+                NodeKind::Shape { geom, fill, stroke, markers: if late { mb.clone() } else { ma.clone() } }
             }
             (NodeKind::Text(ta), NodeKind::Text(tb)) => NodeKind::Text(text_at(&self.text, ta, tb, e, u, shaper)),
             (NodeKind::Image { rect: ra, .. }, NodeKind::Image { asset, rect: rb }) => NodeKind::Image { asset: asset.clone(), rect: lerp_rect(ra, rb, e) },

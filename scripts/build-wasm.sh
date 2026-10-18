@@ -31,6 +31,10 @@ cp scripts/wasi_shim.js "$OUT/wasi_shim.js"
 # (`<datars-view doc>`, `datars dev`) fetch the default family from here (`datars:fonts/…`).
 mkdir -p packages/web/dist/fonts
 cp fonts/Inter-Regular.ttf fonts/Inter-SemiBold.ttf fonts/Inter-Bold.ttf fonts/Inter-LICENSE.txt packages/web/dist/fonts/
+# No SVG reader either: bundles carry their icons read. Raw documents fetch the default set's icons
+# from here (`datars:icons/lucide/<name>.json`), one compact file each, read once by the tools now.
+rm -rf packages/web/dist/icons
+cargo run -q --release -p datars-icon --features bundled --example export-set -- packages/web/dist/icons
 # wasm-bindgen, then the glue's fix-ups: the web target's files for engine $1 in directory $2.
 bindgen() {
   wasm-bindgen --target web --no-typescript --out-name "$1" --out-dir "$2" target/wasm32-unknown-unknown/wasm-release/datars_host_web.wasm

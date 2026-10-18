@@ -21,7 +21,9 @@ datars-text = { workspace = true, features = ["bundled-fonts"] }
 datars-render-cpu.workspace = true
 datars-render-svg.workspace = true
 datars-render-pdf.workspace = true
-datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts"] }
+# The tools read SVG and decode pictures themselves (no platform decoder to hand them to).
+datars-engine = { workspace = true, features = ["sandbox", "bundled-fonts", "svg", "png", "jpeg"] }
 datars-ir.workspace = true
+datars-icon = { workspace = true, features = ["bundled"] }
 datars-motion.workspace = true
 serde_json.workspace = true

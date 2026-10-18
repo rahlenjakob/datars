@@ -14,3 +14,15 @@ datars-color.workspace = true
 datars-theme.workspace = true
 datars-scene.workspace = true
 serde.workspace = true
+png = { workspace = true, optional = true }
+zune-jpeg = { workspace = true, optional = true }
+
+[features]
+# Decoders in Rust, for builds with no platform decoder (the tools, headless renders, the desktop
+# host). Platform hosts (web, iOS, Android) decode with their own and hand in RGBA.
+png = ["dep:png"]
+# The portable scalar decoder (no SIMD paths): the same pixels on every target.
+jpeg = ["dep:zune-jpeg"]
+
+[dev-dependencies]
+png.workspace = true

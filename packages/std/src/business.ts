@@ -239,7 +239,7 @@ export const bullet = recipe<BulletParams>({
 
 // ---- gauge ----------------------------------------------------------------------------------------
 
-export interface GaugeParams { value: Prop; min: number; max: number; label: string; format: string; prefix: string; suffix: string; bands: number[]; inks: string[]; needle: boolean; arc: number; ink: string; thickness: number }
+export interface GaugeParams { value: Prop; min: number; max: number; label: string; format: string; prefix: string; suffix: string; bands: number[]; inks: string[]; names: string[]; bandText: "curved" | "rotated"; needle: boolean; needleStyle: "wedge" | "line" | "arrow"; arc: number; ink: string; thickness: number }
 
 export const gauge = recipe<GaugeParams>({
   id: "@datars/std/gauge",
@@ -252,7 +252,10 @@ export const gauge = recipe<GaugeParams>({
     prefix: t.string(undefined, "Before the value (`$`)."), suffix: t.string(undefined, "After it (`%`, ` km/h`)."),
     bands: t.json("Upper bounds of coloured ranges along the arc, ascending (`[60, 85, 100]`); with bands the value shows as a needle.") as never,
     inks: t.json("The bands' inks, in order (default: from light to dark `$ink`; status inks like `[\"$positive\", \"$highlight\", \"$negative\"]` read as good to bad).") as never,
+    names: t.json("The bands' names, in order (`[\"Fear\", \"Neutral\", \"Greed\"]`): written in each band, along it, and said with the value. A name too long for its band is left out.") as never,
+    bandText: t.oneOf(["curved", "rotated"] as const, "curved", "Band names follow the arc (`curved`) or sit straight, turned to it (`rotated`)."),
     needle: t.bool(undefined, "A needle instead of a filled arc (default: with bands)."),
+    needleStyle: t.oneOf(["wedge", "line", "arrow"] as const, "wedge", "The needle: a tapered wedge, a line, or a line with an arrowhead."),
     arc: t.number(240, "The dial's sweep in degrees (180: a half circle; up to 300)."),
     ink: t.ink("$mark", "The fill's ink (without bands)."),
     thickness: t.number(0.22, "The arc's thickness, as a share of its radius."),
@@ -260,6 +263,7 @@ export const gauge = recipe<GaugeParams>({
   tokens: ["mark", "ink", "ink-2", "muted", "paper", "size.label", "size.small"],
   expand(p) {
     const sweep = Math.min(300, Math.max(60, p.arc || 240)) * Math.PI / 180;
+    const names = Array.isArray(p.names) ? p.names.map(String) : [];
     const half = sweep / 2;
     const [lo, hi] = [p.min ?? 0, p.max ?? 100];
     const v = vsrc(p.value, "null");
@@ -280,7 +284,8 @@ export const gauge = recipe<GaugeParams>({
     const R = `max(8, min(box.w / ${wUnits.toFixed(4)}, (box.h - (${ends}) - (${lab})) / ${(1 + extent).toFixed(4)}) - 2)`;
     const cy = `((box.h - (${ends}) - (${lab}) - ${R} * ${(1 + extent).toFixed(4)}) / 2 + ${R})`;
     const cxs = "box.w / 2";
-    const th = Math.min(0.6, Math.max(0.05, p.thickness ?? 0.22));
+    // Named bands get a band their names fit in.
+    const th = Math.min(0.6, Math.max(0.05, p.thickness ?? (names.length ? 0.3 : 0.22)));
     const r0 = `${R} * ${1 - th}`;
     const bands = Array.isArray(p.bands) ? p.bands : [];
     const inks = Array.isArray(p.inks) ? p.inks : [];
@@ -294,12 +299,40 @@ export const gauge = recipe<GaugeParams>({
     const valueText = affixed(v, p.format, p.prefix, p.suffix);
     // A plain number counts when it changes; with a prefix or suffix it's formatted text.
     const counting = !(p.prefix || p.suffix);
-    const said = `${q(p.label ? `${p.label}: ` : "")} + ${valueText} + ${q(` (${lo} to ${hi})`)}`;
+    // The band the value is in, by name ("Fear"), said with it.
+    const bandName = names.length && bands.length ? bands.slice(0, names.length).reduceRight((rest, b, i) => `(${v} <= ${b} ? ${q(names[i])} : ${rest})`, q(names[Math.min(names.length, bands.length) - 1])) : "";
+    const said = `${q(p.label ? `${p.label}: ` : "")} + ${valueText}${bandName ? ` + ", " + ${bandName}` : ""} + ${q(` (${lo} to ${hi})`)}`;
+    // Band names, in each band: along it, or straight and turned to it. The size the reader asked
+    // for, up to what the band's thickness holds; a name longer than its band is left out.
+    const rm = `${R} * ${(1 - th / 2).toFixed(4)}`;
+    const nameSize = `min(token("size.small"), ${R} * ${(th * 0.5).toFixed(4)})`;
+    const bandNames = names.slice(0, bands.length).map((name, i) => {
+      const f0 = i === 0 ? 0 : (bands[i - 1] - lo) / (hi - lo || 1);
+      const f1 = (bands[i] - lo) / (hi - lo || 1);
+      const [c0, c1] = [Math.max(0, Math.min(1, f0)), Math.max(0, Math.min(1, f1))];
+      const ink = inks[i] ?? `$ink@${[0.12, 0.22, 0.34, 0.46, 0.58][Math.min(i, 4)]}`;
+      const span = (c1 - c0) * sweep;
+      const fits = `measure(${q(name)}, ${nameSize}, 600) < ${rm} * ${(span * 0.86).toFixed(4)}`;
+      const style = { size: e(nameSize), weight: 600, ink: `on(${ink})`, align: "middle", baseline: "middle" };
+      if (p.bandText === "rotated") {
+        const am = -half + ((c0 + c1) / 2) * sweep;
+        const turn = (Math.abs(am) > Math.PI / 2 ? am + Math.PI : am) * 180 / Math.PI;
+        return text(name, [e(`${cxs} + (${rm}) * ${Math.sin(am).toFixed(6)}`), e(`${cy} - (${rm}) * ${Math.cos(am).toFixed(6)}`)], { key: `name-${i}`, when: e(fits), rotate: Number(turn.toFixed(4)), style });
+      }
+      return text(name, [0, 0], { key: `name-${i}`, when: e(fits), style, path: { arc: [e(cxs), e(cy), e(rm), e(ang(String(c0))), e(ang(String(c1)))] } });
+    });
     // The needle: a thin wedge from the hub to near the rim, turned in two halves (each under
     // 180°) so a large change swings the long way round the dial, as a needle does.
     const deg = `(${ang(frac)} * ${180 / Math.PI} / 2)`;
+    // Over named bands the needle stops at their inner edge, leaving the names whole.
+    const reach = names.length ? (1 - th) - 0.04 : 0.92;
+    const hand = p.needleStyle === "line"
+      ? shape(geom.segment({ x1: 0, y1: 0, x2: 0, y2: e(`-(${R}) * ${reach.toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5, cap: "round" }, semantics: { role: "decoration" } })
+      : p.needleStyle === "arrow"
+        ? shape(geom.segment({ x1: 0, y1: 0, x2: 0, y2: e(`-(${R}) * ${(reach - 0.02).toFixed(4)}`) }), { key: "hand", stroke: { paint: "$ink", width: 2.5 }, markers: { end: { type: "arrow", size: 11 } }, semantics: { role: "decoration" } })
+        : shape(geom.path(e(`\`M -3 0 L 0 \${-(${R}) * ${reach.toFixed(4)}} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } });
     const needleNode = group({ key: "needle", transform: { translate: [e(cxs), e(cy)], rotate: e(deg) }, children: [group({ key: "turn", transform: { rotate: e(deg) }, children: [
-      shape(geom.path(e(`\`M -3 0 L 0 \${-(${R}) * 0.92} L 3 0 Z\``)), { key: "hand", fill: "$ink", semantics: { role: "decoration" } }),
+      hand,
       shape(geom.circle({ cx: 0, cy: 0, r: 5 }), { key: "hub", fill: "$ink", stroke: { paint: "$paper", width: 1.5 }, semantics: { role: "decoration" } }),
     ] })] });
     // As big as the dial allows, but never wider than the hole (or the room under the hub).
@@ -316,6 +349,7 @@ export const gauge = recipe<GaugeParams>({
         group({ key: "dial", declutter: true, children: [
           arc("track", "0", "1", bands.length ? "$ink@0.06" : "$ink@0.1"),
           ...bandArcs,
+          ...bandNames,
           needle ? null : arc("fill", "0", frac, p.ink, { semantics: { role: "datum", label: e(said), value: e(v) }, pickable: true }),
           needle ? needleNode : null,
           text(counting ? "" : e(valueText), [e(cxs), e(vy)], { key: "value", number: counting ? { value: e(v), format: p.format } : undefined, style: { size: e(vSize), weight: 600, ink: "$ink", align: "middle", baseline: needle ? "top" : "alphabetic" }, semantics: needle ? { role: "datum", label: e(said), value: e(v) } : undefined, pickable: needle || undefined }),

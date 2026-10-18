@@ -237,9 +237,21 @@ impl Side {
                         }
                     }
                 }
+                // An icon travels as its own drawing (stroked where it strokes), so it looks like
+                // itself at both ends of a flight.
+                let (fill, stroke) = match &ins.proto {
+                    datars_scene::Proto::Icon { icon } => {
+                        let k = if ins.screen_size { inode.xf_root.scale_factor().max(1e-9) } else { 1.0 };
+                        let (path, fills, st) = icon.as_shape(Vec2::new(ins.x[*i], ins.y[*i]), ins.size_at(*i) / k);
+                        g = Geom::Path { path: std::sync::Arc::new(path) };
+                        let ink = Paint::Solid(ins.fill_at(*i));
+                        (fills.then(|| ink.clone()), st.map(|st| datars_scene::Stroke { paint: ink, width: st.width, dash: None, cap: st.cap, join: st.join, non_scaling: false }))
+                    }
+                    _ => (Some(Paint::Solid(ins.fill_at(*i))), ins.stroke.clone()),
+                };
                 Node {
                     key: ins.keys[*i].clone(),
-                    kind: NodeKind::Shape { geom: g, fill: Some(Paint::Solid(ins.fill_at(*i))), stroke: ins.stroke.clone(), markers: None },
+                    kind: NodeKind::Shape { geom: g, fill, stroke, markers: None },
                     common: Common { transform: inode.xf_root, opacity: (inode.acc_opacity * inode.node_opacity() * ins.opacity_at(*i)).clamp(0.0, 1.0), ..Common::default() },
                     semantics: None,
                     pickable: inode.node.pickable,

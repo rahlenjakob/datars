@@ -8,7 +8,7 @@ use crate::Diag;
 use datars_data::{Column, Table};
 use datars_expr::{Compiled, Value};
 use datars_ir::{Action, Doc, Prop, RepeatFrom, TCamera, TGeom, TInstances, TKind, TStroke, TText, Template};
-use datars_math::{Affine, PathData, Rect, Vec2};
+use datars_math::{Affine, Rect, Vec2};
 use datars_scene::text::{Align, Baseline, TextStyle};
 use datars_scene::{
     Anchor, Camera, Cap, Clip, Common, Curve, Geom, Instances, Join, Key, KeyPart, KeyPath, Node, NodeKind, NumberText, Paint, Proto, Role, Semantics, Stroke, SymbolKind, TextNode,
@@ -221,6 +221,13 @@ pub struct Resolver<'a> {
     /// one asked is held, so no other element's path can take its address meanwhile).
     pub(crate) hover_asked: RefCell<Vec<KeyPath>>,
     pub(crate) hover_last: RefCell<Option<Rc<KeyPath>>>,
+    /// The document's icons and pictures (none: a tile's or a point cell's resolve, which draws
+    /// none).
+    pub(crate) assets: Option<&'a crate::assets::Assets>,
+    /// Icons and pictures this resolve needed and didn't have (request name → URL).
+    pub(crate) asks: crate::assets::Asks,
+    /// The icons this resolve drew (for the contrast check).
+    pub(crate) icon_marks: RefCell<Vec<crate::assets::IconMark>>,
 }
 
 /// A `dodge` group: its path, its box and inset, and the anchors to try in order.
@@ -250,7 +257,7 @@ impl<'a> Resolver<'a> {
         geo: &'a crate::geo::GeoStore,
         tables: crate::tables::TableStore,
     ) -> Resolver<'a> {
-        Resolver { doc, signals, theme, fonts, expander, size_class, geo, tables: RefCell::new(tables), exprs: SharedExprs::default(), fixed: RefCell::new(BTreeMap::new()), inks: RefCell::new(BTreeMap::new()), diags: RefCell::new(Vec::new()), actions: RefCell::new(Vec::new()), tiles: RefCell::new(Vec::new()), points: RefCell::new(Vec::new()), origins: None, focus: None, dodges: RefCell::new(Vec::new()), declutters: RefCell::new(BTreeSet::new()), motion: RefCell::new(Vec::new()), banded: BTreeSet::new(), crowded: RefCell::new(Vec::new()), dodge_pins: BTreeMap::new(), dodge_chosen: RefCell::new(BTreeMap::new()), hovered: None, hover_asked: RefCell::new(Vec::new()), hover_last: RefCell::new(None) }
+        Resolver { doc, signals, theme, fonts, expander, size_class, geo, tables: RefCell::new(tables), exprs: SharedExprs::default(), fixed: RefCell::new(BTreeMap::new()), inks: RefCell::new(BTreeMap::new()), diags: RefCell::new(Vec::new()), actions: RefCell::new(Vec::new()), tiles: RefCell::new(Vec::new()), points: RefCell::new(Vec::new()), origins: None, focus: None, dodges: RefCell::new(Vec::new()), declutters: RefCell::new(BTreeSet::new()), motion: RefCell::new(Vec::new()), banded: BTreeSet::new(), crowded: RefCell::new(Vec::new()), dodge_pins: BTreeMap::new(), dodge_chosen: RefCell::new(BTreeMap::new()), hovered: None, hover_asked: RefCell::new(Vec::new()), hover_last: RefCell::new(None), assets: None, asks: RefCell::new(crate::assets::AssetMap::default()), icon_marks: RefCell::new(Vec::new()) }
     }
 
     /// Record every node's [`Origin`] while resolving (for `explain`; costs a template clone and
@@ -562,12 +569,39 @@ impl<'a> Resolver<'a> {
                     }
                     None => cx,
                 };
-                let kind = match self.resolve_kind(t, cx, &path) {
-                    Some(k) => k,
-                    None => return Vec::new(),
+                // Icons and pictures place themselves (an icon turns about its point; a covering
+                // picture is cut to its rect).
+                let (mut place, mut cut, mut icon_ink) = (None, None, None);
+                let kind = match &t.kind {
+                    TKind::Icon(ti) => self.icon_node(ti, cx).map(|(k, xf, ink)| {
+                        place = Some(xf);
+                        icon_ink = Some(ink);
+                        k
+                    }),
+                    TKind::Image { asset, rect, fit } => self.image_node(asset, rect, fit.as_deref(), cx).map(|(k, clip)| {
+                        cut = clip;
+                        k
+                    }),
+                    _ => self.resolve_kind(t, cx, &path),
                 };
+                let Some(kind) = kind else { return Vec::new() };
                 let mut n = Node::new(key, kind);
                 self.apply_common(&mut n, t, cx, &path);
+                if let Some(xf) = place {
+                    n.common.transform = n.common.transform.mul(xf);
+                }
+                if let (Some(r), None) = (cut, &n.common.clip) {
+                    n.common.clip = Some(Clip::Rect { rect: r });
+                }
+                // Decorative unless labelled (WCAG 1.1.1): an icon or picture without semantics
+                // is left out of what assistive technology reads.
+                if matches!(t.kind, TKind::Icon(_) | TKind::Image { .. }) && n.semantics.is_none() {
+                    n.semantics = Some(Semantics::new(Role::Decoration, ""));
+                }
+                if let Some(ink) = icon_ink {
+                    let label = n.semantics.as_ref().filter(|s| s.role != Role::Decoration).map(|s| s.label.clone());
+                    self.icon_marks.borrow_mut().push(crate::assets::IconMark { path: path.to_string(), label, ink });
+                }
                 pin_text_at_its_point(&mut n);
                 self.record(t, cx, &path);
                 if let (TKind::Instances(ti), NodeKind::Instances(inst)) = (&t.kind, &n.kind) {
@@ -810,19 +844,22 @@ impl<'a> Resolver<'a> {
                 let clip = !matches!(t.clip.0, serde_json::Value::Bool(false));
                 NodeKind::View { viewport, camera: cam, clip, children: kids }
             }
+            // A symbol that names an icon draws the icon (in the shape's fill).
+            TKind::Shape { geom: TGeom::Symbol { symbol, x, y, size }, fill, stroke, .. } if !symbol.is_null() && crate::assets::is_icon_symbol(&self.string(symbol, cx)) => {
+                let n = |p: &Prop| self.num(p, cx, 0.0);
+                let st = stroke.as_ref().and_then(|s| self.stroke(s, cx));
+                self.icon_symbol(symbol, n(x), n(y), n(size), self.ink(fill, cx).as_ref(), st.as_ref(), cx)?
+            }
             TKind::Shape { geom, fill, stroke, markers } => NodeKind::Shape {
                 geom: self.geom(geom, cx)?,
                 fill: self.ink(fill, cx).map(Paint::Solid),
                 stroke: stroke.as_ref().and_then(|s| self.stroke(s, cx)),
-                markers: markers.as_ref().and_then(|m| serde_json::from_value(m.clone()).ok()),
+                markers: markers.as_ref().and_then(|m| self.markers(m, cx)),
             },
             TKind::Text(tt) => NodeKind::Text(self.text(tt, cx)),
             TKind::Instances(ti) if ti.lod.is_some() => crate::points::resolve(self, ti, cx, path)?,
             TKind::Instances(ti) => NodeKind::Instances(Arc::new(self.instances(ti, cx)?)),
-            TKind::Image { asset, rect } => NodeKind::Image {
-                asset: Arc::from(asset.as_str()),
-                rect: Rect::new(self.num(&rect[0], cx, 0.0), self.num(&rect[1], cx, 0.0), self.num(&rect[2], cx, 0.0), self.num(&rect[3], cx, 0.0)),
-            },
+            TKind::Image { .. } | TKind::Icon(_) => unreachable!("placed in resolve"),
             TKind::Tiles(tt) => crate::tiles::resolve(self, tt, cx, path)?,
             TKind::Use { .. } | TKind::Repeat { .. } => unreachable!("handled in resolve"),
         })
@@ -1414,7 +1451,23 @@ impl<'a> Resolver<'a> {
                 node.halo = Some((i, self.num(&h[1], cx, 2.0)));
             }
         }
+        if t.path.is_some() {
+            // One line along the path: no wrapping.
+            node.style.max_width = None;
+        }
         datars_text::layout(self.fonts, &mut node);
+        if let Some(tp) = &t.path {
+            let pts = match &tp.arc {
+                Some(a) => {
+                    let n = |i: usize| self.num(&a[i], cx, 0.0);
+                    crate::textpath::arc_points(n(0), n(1), n(2), n(3), n(4))
+                }
+                None => crate::textpath::path_points(&parse_svg_path(&self.string(&tp.d, cx))),
+            };
+            let offset = (!tp.offset.is_null()).then(|| self.num(&tp.offset, cx, 0.5));
+            let upright = tp.upright.is_null() || self.truthy(&tp.upright, cx);
+            crate::textpath::set_along(&mut node, &pts, offset, upright);
+        }
         node
     }
 
@@ -1493,6 +1546,11 @@ impl<'a> Resolver<'a> {
         let size = if ti.r.is_null() { vec![self.theme.number("point.radius").unwrap_or(3.0); n] } else { nums(&ti.r) };
         let proto = match ti.proto.as_str() {
             "rect" => Proto::Rect,
+            // Not here yet: no instances until it is (asked for meanwhile).
+            "icon" => match self.icon_glyph(&ti.icon, &ti.inks, cx) {
+                Some(icon) => Proto::Icon { icon },
+                None => return Instances::concat(&[]),
+            },
             s => Proto::Symbol { symbol: symbol_of(s) },
         };
         let (w, h) = if matches!(proto, Proto::Rect) { (Some(self.column_values(&ti.w, table, cx)), Some(self.column_values(&ti.h, table, cx))) } else { (None, None) };
@@ -2251,234 +2309,8 @@ pub(crate) fn role_of(s: &str) -> Role {
     }
 }
 
-/// A small SVG path parser: M L H V C S Q T A Z, absolute and relative.
-pub fn parse_svg_path(d: &str) -> PathData {
-    let mut p = PathData::new();
-    let bytes = d.as_bytes();
-    let mut i = 0;
-    let mut cmd = b'M';
-    let (mut cur, mut start, mut last_c) = (Vec2::ZERO, Vec2::ZERO, Vec2::ZERO);
-    let num = |i: &mut usize| -> Option<f64> {
-        while *i < bytes.len() && (bytes[*i].is_ascii_whitespace() || bytes[*i] == b',') {
-            *i += 1;
-        }
-        let st = *i;
-        if *i < bytes.len() && (bytes[*i] == b'-' || bytes[*i] == b'+') {
-            *i += 1;
-        }
-        let mut dot = false;
-        while *i < bytes.len() && (bytes[*i].is_ascii_digit() || (bytes[*i] == b'.' && !dot)) {
-            dot |= bytes[*i] == b'.';
-            *i += 1;
-        }
-        if *i < bytes.len() && (bytes[*i] == b'e' || bytes[*i] == b'E') {
-            *i += 1;
-            if *i < bytes.len() && (bytes[*i] == b'-' || bytes[*i] == b'+') {
-                *i += 1;
-            }
-            while *i < bytes.len() && bytes[*i].is_ascii_digit() {
-                *i += 1;
-            }
-        }
-        std::str::from_utf8(&bytes[st..*i]).ok()?.parse().ok()
-    };
-    loop {
-        while i < bytes.len() && (bytes[i].is_ascii_whitespace() || bytes[i] == b',') {
-            i += 1;
-        }
-        if i >= bytes.len() {
-            break;
-        }
-        if bytes[i].is_ascii_alphabetic() {
-            cmd = bytes[i];
-            i += 1;
-            if cmd == b'Z' || cmd == b'z' {
-                p.close();
-                cur = start;
-                continue;
-            }
-        }
-        let rel = cmd.is_ascii_lowercase();
-        let base = if rel { cur } else { Vec2::ZERO };
-        let pt = |i: &mut usize| -> Option<Vec2> { Some(Vec2::new(num(i)?, num(i)?)) };
-        match cmd.to_ascii_uppercase() {
-            b'M' => {
-                let Some(q) = pt(&mut i) else { break };
-                cur = base + q;
-                start = cur;
-                p.move_to(cur);
-                cmd = if rel { b'l' } else { b'L' };
-            }
-            b'L' => {
-                let Some(q) = pt(&mut i) else { break };
-                cur = base + q;
-                p.line_to(cur);
-            }
-            b'H' => {
-                let Some(x) = num(&mut i) else { break };
-                cur = Vec2::new(if rel { cur.x + x } else { x }, cur.y);
-                p.line_to(cur);
-            }
-            b'V' => {
-                let Some(y) = num(&mut i) else { break };
-                cur = Vec2::new(cur.x, if rel { cur.y + y } else { y });
-                p.line_to(cur);
-            }
-            b'C' => {
-                let (Some(a), Some(b), Some(c)) = (pt(&mut i), pt(&mut i), pt(&mut i)) else { break };
-                let (a, b, c) = (base + a, base + b, base + c);
-                p.cubic_to(a, b, c);
-                last_c = b;
-                cur = c;
-            }
-            b'S' => {
-                let (Some(b), Some(c)) = (pt(&mut i), pt(&mut i)) else { break };
-                let a = cur * 2.0 - last_c;
-                let (b, c) = (base + b, base + c);
-                p.cubic_to(a, b, c);
-                last_c = b;
-                cur = c;
-            }
-            b'Q' => {
-                let (Some(a), Some(c)) = (pt(&mut i), pt(&mut i)) else { break };
-                let (a, c) = (base + a, base + c);
-                p.quad_to(a, c);
-                last_c = a;
-                cur = c;
-            }
-            b'T' => {
-                let Some(c) = pt(&mut i) else { break };
-                let a = cur * 2.0 - last_c;
-                let c = base + c;
-                p.quad_to(a, c);
-                last_c = a;
-                cur = c;
-            }
-            b'A' => {
-                // rx ry rotation large-arc sweep x y. The flags are single digits, which SVG lets
-                // run into what follows (`a10 10 0 1017 20`).
-                let flag = |i: &mut usize| -> Option<bool> {
-                    while *i < bytes.len() && (bytes[*i].is_ascii_whitespace() || bytes[*i] == b',') {
-                        *i += 1;
-                    }
-                    let f = match bytes.get(*i)? {
-                        b'0' => false,
-                        b'1' => true,
-                        _ => return None,
-                    };
-                    *i += 1;
-                    Some(f)
-                };
-                let (Some(rx), Some(ry), Some(rot), Some(large), Some(sweep), Some(q)) = (num(&mut i), num(&mut i), num(&mut i), flag(&mut i), flag(&mut i), pt(&mut i)) else { break };
-                let to = base + q;
-                arc_to(&mut p, cur, rx, ry, rot, large, sweep, to);
-                cur = to;
-            }
-            _ => break,
-        }
-    }
-    p
-}
-
-/// An SVG elliptical arc from `from` to `to` (SVG 1.1 F.6.5: endpoint to centre form, radii grown
-/// when too small to reach), as cubic Béziers of at most a quarter turn each.
-#[allow(clippy::too_many_arguments)]
-fn arc_to(p: &mut PathData, from: Vec2, rx: f64, ry: f64, rot_deg: f64, large: bool, sweep: bool, to: Vec2) {
-    use datars_math::m;
-    if from == to {
-        return;
-    }
-    let (mut rx, mut ry) = (rx.abs(), ry.abs());
-    if rx == 0.0 || ry == 0.0 || !rx.is_finite() || !ry.is_finite() {
-        p.line_to(to);
-        return;
-    }
-    let (sin_p, cos_p) = m::sin_cos(rot_deg.to_radians());
-    let (dx, dy) = ((from.x - to.x) / 2.0, (from.y - to.y) / 2.0);
-    let (x1, y1) = (cos_p * dx + sin_p * dy, -sin_p * dx + cos_p * dy);
-    let lambda = x1 * x1 / (rx * rx) + y1 * y1 / (ry * ry);
-    if lambda > 1.0 {
-        rx *= lambda.sqrt();
-        ry *= lambda.sqrt();
-    }
-    let (rx2, ry2) = (rx * rx, ry * ry);
-    let den = rx2 * y1 * y1 + ry2 * x1 * x1;
-    let coef = if den > 0.0 { ((rx2 * ry2 - den) / den).max(0.0).sqrt() } else { 0.0 } * if large == sweep { -1.0 } else { 1.0 };
-    let (cxp, cyp) = (coef * rx * y1 / ry, -coef * ry * x1 / rx);
-    let c = Vec2::new(cos_p * cxp - sin_p * cyp + (from.x + to.x) / 2.0, sin_p * cxp + cos_p * cyp + (from.y + to.y) / 2.0);
-    let angle = |ux: f64, uy: f64, vx: f64, vy: f64| m::atan2(ux * vy - uy * vx, ux * vx + uy * vy);
-    let (ux, uy) = ((x1 - cxp) / rx, (y1 - cyp) / ry);
-    let (vx, vy) = ((-x1 - cxp) / rx, (-y1 - cyp) / ry);
-    let start = angle(1.0, 0.0, ux, uy);
-    let mut span = angle(ux, uy, vx, vy);
-    if !sweep && span > 0.0 {
-        span -= m::TAU;
-    } else if sweep && span < 0.0 {
-        span += m::TAU;
-    }
-    let at = |a: f64| {
-        let (s, co) = m::sin_cos(a);
-        (Vec2::new(c.x + rx * cos_p * co - ry * sin_p * s, c.y + rx * sin_p * co + ry * cos_p * s), Vec2::new(-rx * cos_p * s - ry * sin_p * co, -rx * sin_p * s + ry * cos_p * co))
-    };
-    let n = (span.abs() / (m::PI / 2.0)).ceil().max(1.0) as usize;
-    let step = span / n as f64;
-    let k = 4.0 / 3.0 * m::tan(step / 4.0);
-    for j in 0..n {
-        let (a0, a1) = (start + step * j as f64, start + step * (j + 1) as f64);
-        let ((p0, d0), (p1, d1)) = (at(a0), at(a1));
-        let end = if j + 1 == n { to } else { p1 };
-        p.cubic_to(p0 + d0 * k, p1 - d1 * k, end);
-    }
-}
-
-/// SVG path data for a path (for expressions that return geometry, e.g. `geo.geodesic`).
-pub fn svg_path_string(p: &PathData) -> String {
-    use datars_math::PathEl;
-    let mut out = String::new();
-    let f = |v: f64| format!("{:.2}", v);
-    for e in &p.els {
-        match e {
-            PathEl::Move { p } => out += &format!("M{} {}", f(p.x), f(p.y)),
-            PathEl::Line { p } => out += &format!("L{} {}", f(p.x), f(p.y)),
-            PathEl::Quad { c, p } => out += &format!("Q{} {} {} {}", f(c.x), f(c.y), f(p.x), f(p.y)),
-            PathEl::Cubic { c1, c2, p } => out += &format!("C{} {} {} {} {} {}", f(c1.x), f(c1.y), f(c2.x), f(c2.y), f(p.x), f(p.y)),
-            PathEl::Close => out += "Z",
-        }
-    }
-    out
-}
-
-#[cfg(test)]
-mod svg_arc_tests {
-    use datars_math::{PathEl, Vec2};
-
-    fn ends(d: &str) -> Vec<Vec2> {
-        super::parse_svg_path(d).els.iter().filter_map(|e| match e { PathEl::Move { p } | PathEl::Line { p } | PathEl::Quad { p, .. } | PathEl::Cubic { p, .. } => Some(*p), PathEl::Close => None }).collect()
-    }
-
-    #[test]
-    fn an_arc_is_a_curve_through_the_circle_not_a_chord() {
-        // A half circle of radius 50 from (0, 50) to (100, 50), sweeping through the top (y = 0).
-        let p = super::parse_svg_path("M0 50 A50 50 0 0 1 100 50");
-        let cubics: Vec<_> = p.els.iter().filter(|e| matches!(e, PathEl::Cubic { .. })).collect();
-        assert_eq!(cubics.len(), 2, "two quarter turns: {:?}", p.els);
-        let pts = ends("M0 50 A50 50 0 0 1 100 50");
-        assert!((pts[1] - Vec2::new(50.0, 0.0)).len() < 1e-9, "through the top: {:?}", pts);
-        assert!((pts[2] - Vec2::new(100.0, 50.0)).len() < 1e-12, "ends exactly where it says");
-        // The other sweep goes through the bottom.
-        assert!((ends("M0 50 A50 50 0 0 0 100 50")[1] - Vec2::new(50.0, 100.0)).len() < 1e-9);
-    }
-
-    #[test]
-    fn flags_may_run_into_the_numbers_after_them_and_radii_grow_to_reach() {
-        // Radius 1 can't span 100 px: it grows to 50 (a half circle), as SVG says.
-        let a = ends("M0 50 A1 1 0 0 1 100 50");
-        assert!((a[1] - Vec2::new(50.0, 0.0)).len() < 1e-9, "{a:?}");
-        // `a50 50 0 01100 0` is rx 50, ry 50, rotation 0, large 0, sweep 1, then 100 0.
-        let b = ends("M0 50 a50 50 0 01100 0");
-        assert!((b.last().unwrap().x - 100.0).abs() < 1e-9 && (b[1].y - 0.0).abs() < 1e-9, "{b:?}");
-    }
-}
+/// SVG path data → a path (the icon crate's reader: absolute and relative commands, arcs).
+pub use datars_icon::path::{parse_svg_path, svg_path_string};
 
 #[cfg(test)]
 mod table_ref_tests {

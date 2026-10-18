@@ -1,0 +1,44 @@
+{
+  "states": [
+    {
+      "name": "Week 1",
+      "scene": "fbd2e73fb90a12d4",
+      "pixels": "0ea670981b907a08"
+    },
+    {
+      "name": "Week 2",
+      "scene": "c0e693d5b75e21cd",
+      "pixels": "4ab026ac3efe5893"
+    },
+    {
+      "name": "Week 3",
+      "scene": "0bb9de51ee628789",
+      "pixels": "7402c96c53e35e51"
+    },
+    {
+      "name": "Week 4",
+      "scene": "d35cc1d328a841a2",
+      "pixels": "1cf09a72e4b10f6e"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "Week 1",
+      "to": "Week 2",
+      "sweep": "852a7ff2b912b6dd",
+      "samples": 64
+    },
+    {
+      "from": "Week 2",
+      "to": "Week 3",
+      "sweep": "6e9c692e66f9819d",
+      "samples": 64
+    },
+    {
+      "from": "Week 3",
+      "to": "Week 4",
+      "sweep": "48f6e52564b068e0",
+      "samples": 64
+    }
+  ]
+}

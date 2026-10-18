@@ -1190,6 +1190,52 @@
         }
       ]
     },
+    "TIcon": {
+      "description": "An `icon` node. Decorative unless it has `semantics` (a label: an icon that stands for a word).\nRead by hand from JSON (see [`fields`]), like [`TTextPath`].",
+      "properties": {
+        "anchor": {
+          "$ref": "#/$defs/Prop",
+          "description": "Where `at` is on the box: `center` (default), `top`, `bottom`, `left`, `right`,\n`top-left`, `top-right`, `bottom-left`, `bottom-right`."
+        },
+        "at": {
+          "description": "The anchor point (by default the icon's centre; see `anchor`).",
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "icon": {
+          "$ref": "#/$defs/Prop",
+          "description": "Which icon: a name (`heart`, `lucide:heart`), `$icon.<token>`, a file or URL ending in\n`.svg`, inline markup (`<svg …>`), or path data (`{ \"d\": \"M…\", \"viewBox\": [0, 0, 24, 24],\n\"stroke\": 2 }`, filled — or stroked that wide — in `ink`). May be an expression."
+        },
+        "icon_size": {
+          "$ref": "#/$defs/Prop",
+          "description": "The side of the square box the icon fits in, px (default: the theme's `size.icon`, else\n16). Not `size`, which is the node's layout size."
+        },
+        "ink": {
+          "$ref": "#/$defs/Prop",
+          "description": "The ink of `currentColor` (and of a one-colour file). Default `$ink`."
+        },
+        "inks": {
+          "description": "Inks for the file's other colours, by slot (the order it first uses them); unset slots\ntake `$categorical[i]`.",
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "type": "array"
+        },
+        "rotate": {
+          "$ref": "#/$defs/Prop",
+          "description": "Degrees clockwise, about `at`."
+        }
+      },
+      "required": [
+        "icon",
+        "at"
+      ],
+      "type": "object"
+    },
     "TInstances": {
       "properties": {
         "fill": {
@@ -1207,6 +1253,17 @@
             "string",
             "null"
           ]
+        },
+        "icon": {
+          "$ref": "#/$defs/Prop",
+          "description": "`proto: icon`: which icon every instance draws (as an `icon` node's `icon`; evaluated\nonce, not per row), in its row's `fill` — thousands of one icon as one node (pictograms,\nunit charts, map markers). `r` is half the icon's box."
+        },
+        "inks": {
+          "description": "`proto: icon`: inks for the icon's other colours, by slot.",
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "type": "array"
         },
         "instance_key": {
           "$ref": "#/$defs/Prop",
@@ -1232,7 +1289,7 @@
         },
         "proto": {
           "default": "circle",
-          "description": "`circle | square | diamond | triangle | cross | star | rect`",
+          "description": "`circle | square | diamond | triangle | cross | star | rect | icon`",
           "type": "string"
         },
         "r": {
@@ -1434,6 +1491,17 @@
             "null"
           ]
         },
+        "path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TTextPath"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Set along a path instead of a straight line (curved labels on arcs and circles): each\nglyph sits on the path, turned with it. `at` is then ignored."
+        },
         "rotate": {
           "$ref": "#/$defs/Prop"
         },
@@ -1449,6 +1517,36 @@
         "text",
         "at"
       ],
+      "type": "object"
+    },
+    "TTextPath": {
+      "description": "The line a text follows: SVG path data, or an arc. Measured like any text; a text longer than\nits path is left out (and said so by `datars labels`) rather than run off its end.",
+      "properties": {
+        "arc": {
+          "description": "An arc instead: `[cx, cy, r, a0, a1]`, angles in radians clockwise from 12 o'clock (as\n`geom.arc`). Text runs from `a0` towards `a1`.",
+          "items": {
+            "$ref": "#/$defs/Prop"
+          },
+          "maxItems": 5,
+          "minItems": 5,
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "d": {
+          "$ref": "#/$defs/Prop",
+          "description": "SVG path data (literal or an expression)."
+        },
+        "offset": {
+          "$ref": "#/$defs/Prop",
+          "description": "Where along the path the text's `align` point goes, as a share of its length (default by\n`align`: 0 for start, 0.5 middle, 1 end)."
+        },
+        "upright": {
+          "$ref": "#/$defs/Prop",
+          "description": "Keep the text reading left to right: on a path that runs right to left (the lower half of\na circle) it's set along the path reversed. Default true."
+        }
+      },
       "type": "object"
     },
     "TTextPlace": {
@@ -1761,9 +1859,17 @@
           "type": "object"
         },
         {
+          "description": "A picture (a raster logo, a photo): `asset` names the file (a path relative to the\ndocument, an `https://` URL; PNG, JPEG or WebP), drawn into `rect` (`[x, y, w, h]`) as `fit` says. The\nbuild step ships the file in the bundle; the engine never fetches it (P10).",
           "properties": {
             "asset": {
-              "type": "string"
+              "$ref": "#/$defs/Prop"
+            },
+            "fit": {
+              "description": "`contain` (the default: all of it, its aspect kept, centred), `cover` (fills the rect,\ncut to it), `fill` (stretched to the rect), `none` (its own size, centred, cut).",
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "kind": {
               "const": "image",
@@ -1782,6 +1888,20 @@
             "kind",
             "asset",
             "rect"
+          ],
+          "type": "object"
+        },
+        {
+          "$ref": "#/$defs/TIcon",
+          "description": "An icon (docs/04-primitives.md §Icons): a vector drawing from the default set\n(`\"heart\"`, `\"lucide:heart\"`), a theme icon token (`\"$icon.up\"`), a project SVG or an\n`https://` URL, or inline SVG markup — drawn `size` px at `at`, in `ink`.",
+          "properties": {
+            "kind": {
+              "const": "icon",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind"
           ],
           "type": "object"
         },
@@ -1991,6 +2111,11 @@
     },
     "description": {
       "type": "string"
+    },
+    "icons": {
+      "additionalProperties": true,
+      "description": "Icons the document carries itself, by key (`lucide:heart`, `logo.svg`), in the compact\nform `datars-icon` reads (`{ \"vb\": [...], \"layers\": [...] }`): a tool that has read them\n(`datars dev`) writes them here, so any runtime draws them without asking.",
+      "type": "object"
     },
     "id": {
       "type": "string"

@@ -113,6 +113,34 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private fun io(block: () -> Unit) = Thread(block, "datars-io").start()
     private fun get(url: java.net.URL): ByteArray? = runCatching { url.openConnection().apply { useCaches = false }.getInputStream().use { it.readBytes() } }.getOrNull()
 
+    /** Decode the pictures the engine holds (it carries no decoder) with the platform's —
+     * PNG, JPEG, WebP, HEIF: whatever BitmapFactory reads — and hand over their pixels. */
+    private fun decodePictures() {
+        if (Native.picturesDecoding(handle) == 0) return
+        val reqs = org.json.JSONArray(Native.dataRequests(handle) ?: "[]")
+        for (i in 0 until reqs.length()) {
+            val r = reqs.getJSONObject(i)
+            if (!r.optBoolean("decode")) continue
+            val name = r.optString("name")
+            val file = Native.pictureFile(handle, name) ?: continue
+            val opts = android.graphics.BitmapFactory.Options().apply {
+                inPremultiplied = false
+                inPreferredConfig = Bitmap.Config.ARGB_8888
+                inScaled = false
+            }
+            val bmp = android.graphics.BitmapFactory.decodeByteArray(file, 0, file.size, opts)
+            if (bmp == null) {
+                Native.pictureFailed(handle, name, "the platform's decoder couldn't read the picture")
+                continue
+            }
+            // ARGB_8888 lies in memory as R, G, B, A bytes: straight RGBA8, as the engine takes it.
+            val px = ByteBuffer.allocate(bmp.byteCount)
+            bmp.copyPixelsToBuffer(px)
+            Native.providePixels(handle, name, bmp.width, bmp.height, px.array())
+            bmp.recycle()
+        }
+    }
+
     /** Fetch what the engine asks for (URL sources: first loads, live refreshes) and hand it over. */
     private fun fetchData() {
         val reqs = org.json.JSONArray(Native.dataRequests(handle) ?: "[]")
@@ -363,6 +391,8 @@ class DatarsView @JvmOverloads constructor(context: Context, attrs: AttributeSet
         if (surface == null) return
         val now = now()
         val t0 = System.nanoTime()
+        // Pictures are decoded by BitmapFactory before the frame that draws them (no pop-in).
+        decodePictures()
         val next: Boolean
         if (gpu) {
             next = Native.drawFrame(handle, now)
